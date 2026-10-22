@@ -1,9 +1,9 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.7-draft
+version: 1.8-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-10-18
+lastUpdated: 2026-10-22
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -42,6 +42,8 @@ We collect only what the service needs to work. The table below lists every cate
 | Device and technical | A random install id (app) or browser id (web) used to detect rewards abuse; device platform; app version; network address in server logs and rate-limit records; error reports with the screen or page and technical details | Your device / browser | Security, abuse prevention, reliability |
 | Rewards and referrals | Invite codes, which link you arrived from, who invited you, your Abonten Credit ledger, reward decisions and the risk signals behind them | You, your activity | To run the rewards programme fairly |
 | Field programme | For team members: role, assignments, GPS check-ins, work submitted, evidence photos, commission and payout records; for business owners: the phone number used to give consent | Team members, owners | To run and audit the field programme |
+| Abonten Safety (only if you use it) | The trusted contacts you name: their name, phone number, optional email, language and how they relate to you, and whether they accepted. For each SOS, "check in on me" or location share: when it started and ended, the note you wrote, the event you chose, your device's positions while it is open, who was told and whether each text, email or notification went, who opened the page and what each contact answered | You, your device | To alert the people you choose, when you ask, with where you are |
+| If someone names you as a trusted contact | Your name, phone number, optional email and language, as given by the person who named you; your answer to the invite; a request to stop all Abonten Safety texts to your number, if you make one | The person who named you; you | To ask whether you agree and, if you do, to alert you when they ask for help |
 | Support and moderation records | Support conversations, admin notes about your account, moderation actions, suspension or ban reasons | Abonten staff | To support you and enforce our terms |
 
 We do **not** collect your date of birth, government identity numbers, or full card numbers, and we do not use advertising trackers or analytics cookies. Visits to the website are counted without cookies, as described above (see the [Cookie Policy](/legal/cookies)). The app does not use Vercel Web Analytics.
@@ -73,8 +75,8 @@ Abonten runs on cloud services. The providers below process personal information
 | Vercel Web Analytics | Counts visits to website pages (section 2); no cookies | To be confirmed |
 | Cloudinary | Stores and serves images and videos (avatars, flyers, place photos, highlights, message attachments, ticket QR codes) | Global content network |
 | Paystack | Payment processing, card tokenization, refunds and payouts | Nigeria / Ghana |
-| Hubtel | Sends SMS one-time codes | Ghana |
-| Resend | Sends transactional emails (tickets, cancellations, rewards, sign-in codes) | United States |
+| Hubtel | Sends SMS one-time codes, and the Abonten Safety texts to trusted contacts | Ghana |
+| Resend | Sends transactional emails (tickets, cancellations, rewards, sign-in codes, Abonten Safety alerts to contacts who gave an email) | United States |
 | Google | Google sign-in; maps and geocoding; Google Workspace hosts our support, privacy and security mailboxes, so emails you send us are stored there | Global |
 | Expo | Delivers push notifications to the app | United States |
 | Sentry | Error monitoring for the website, admin console and app | United States |
@@ -90,6 +92,7 @@ Some information is visible to other users by design:
 - **Place owners** see the details in booking requests sent to them, and the name and review of anyone who reviews their place.
 - **Message recipients** see what you send them and when you were last active in the conversation.
 - **People you invite** see your first name or username on the invite page.
+- **Your trusted contacts** (Abonten Safety) see your name and phone number when they are asked to be your contact. Only while an SOS, a missed check-in or a location share is open do they see, on a private page opened from their text, where you are, how recently your position was updated, the note you wrote and the event you chose. They stop seeing where you are when you say you are safe or the share ends; an alert that nobody closed stays visible to them for one more day. Abonten Safety does not contact the police, an ambulance or any emergency service, and it does not tell event organizers.
 
 Favourites and bookings are private to you.
 
@@ -126,6 +129,9 @@ The website uses a small number of first-party cookies for signing in, rememberi
 | Page views of listings | No automatic deletion yet (to be confirmed); they hold no account or device identifier |
 | Website visit statistics | Kept by Vercel for the period its Web Analytics plan allows (to be confirmed) |
 | Error and performance monitoring | Sentry retains events per its plan; our own error records have no retention period yet (to be confirmed) |
+| Abonten Safety positions | 7 days after the SOS, check-in or share ends |
+| Abonten Safety history (when each session ran, who was told, their answers) | 180 days after it ends |
+| Trusted contacts | Until you remove them or delete your account; a contact's request to stop all Safety texts is kept so that it can be honoured |
 | Administrative audit log | Retained permanently; it cannot be edited or deleted |
 
 Where a period says "to be confirmed", no automatic deletion exists yet and a retention decision is pending. We will update this table when those decisions are made.
@@ -134,7 +140,7 @@ Where a period says "to be confirmed", no automatic deletion exists yet and a re
 
 You can delete your account yourself from Settings › Security on the web or in the app. Deletion is immediate and irreversible:
 
-- **Deleted**: your login, profile, phone and email, events and places you own, favourites, highlights, saved payout accounts, notification preferences, and rewards you were still waiting for.
+- **Deleted**: your login, profile, phone and email, events and places you own, favourites, highlights, saved payout accounts, notification preferences, rewards you were still waiting for, and your Abonten Safety contacts and history (including every position).
 - **Kept**: payment transactions and tickets already issued, ledger and refund records, reports you filed (with your identity removed), moderation and administrative logs, rewards ledger history, and — if you were a field-team member or gave onboarding consent — the programme's audit records. These are kept for financial accountability, security and legal reasons.
 - **Forfeited**: any Abonten Credit balance.
 

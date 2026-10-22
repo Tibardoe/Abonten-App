@@ -4,8 +4,8 @@ purpose: How to switch Abonten Safety on in stages, read whether alerts and text
 audience: Operations, support
 scope: Admin › Safety (Sessions, session detail, Settings), the safety.view / safety.configure permissions, the SAFETY_KILL_SWITCH deploy flag and the safety-dispatch and safety-housekeeping jobs
 status: Approved
-version: 1.0
-lastReviewed: 2026-10-21
+version: 1.1
+lastReviewed: 2026-10-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -63,7 +63,7 @@ Admin › Safety › Settings. Every change needs `safety.configure`, a fresh st
 | Longest share | 12 hours | |
 | Delete positions / sessions after | 7 / 180 days | J2 |
 
-The emergency numbers each SOS screen shows come from the market: Admin › Markets (`market.safety_config`); Ghana is seeded with 112, police 191, ambulance 193, fire 192 (J3).
+The emergency numbers each SOS screen shows come from the market: Admin › Markets (`market.safety_config`); Ghana shows 112 only (J3, 2026-10-22: the old 191/192/193 were folded into 112 in 2020). Add a number back only once the service itself confirms it answers.
 
 ## Stopping it
 
@@ -75,4 +75,4 @@ The emergency numbers each SOS screen shows come from the market: Admin › Mark
 
 1. Staff: add a contact (a phone you hold), check the invite text arrives and the invite page works; press SOS and read the alert page on that phone; answer from it and see the answer in the app; start a check-in, let it lapse, and check the alert text; share for an hour and stop it.
 2. Beta: add the pilot testers' ids; watch Messages for failures for a week.
-3. Everyone: only when J1's conditions are met.
+3. Everyone: only when J1's conditions are met. Then publish the help page: remove `listed: no` and the "Not available to everyone yet" notice from `apps/web/src/content/help/customers/safety.md` and its four translations (it is already written and opens at `/help/customers/safety`), send the updated privacy answers to both stores with the approved privacy policy, and set the audience to Everyone.

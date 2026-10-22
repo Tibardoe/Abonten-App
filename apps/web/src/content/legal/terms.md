@@ -1,9 +1,9 @@
 ---
 title: Terms and Conditions
 summary: The agreement between you and Abonten Hub when you use the website or the mobile app, whether you attend events, organize them, or run a place.
-version: 1.3-draft
+version: 1.4-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-22
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -148,6 +148,18 @@ The following always applies to Abonten Credit:
 - Abonten may change reward rules and rates, pause the programme, or end it. Changes do not remove credit already granted, but may affect how or where it can be spent.
 
 **Availability.** At the time of writing the rewards programme is being trialled internally and is **not generally available**: it may not be visible in your account, and no credit is being granted to the public. Rewards pages that are visible describe what the programme offers when it launches.
+
+## 12A. Abonten Safety
+
+Abonten Safety lets you name trusted contacts and, when you ask, send them a link to a page that shows where you are: when you press SOS, when you do not answer a check-in in time, or when you share your location.
+
+- **It is not an emergency service.** Abonten does not contact the police, an ambulance, the fire service or anyone other than the contacts you chose. If you are in danger, call the emergency number (112 in Ghana) first.
+- **No one is guaranteed to answer or to come.** Texts, emails and notifications can be late or fail; a contact's phone can be off or out of signal; a contact may not see the alert or be able to help. Your position is only as accurate as your device reports it, and in the current app it is sent only while the app or the Safety page is open.
+- **Only name people who would want to help you.** Each person you add is asked whether they agree, and can decline, stop being your contact, or stop all Abonten Safety texts to their number at any time.
+- **Use it honestly.** Do not use Safety to track, frighten or harass anyone, or to send alerts you know are false. We may switch Safety off for your account, or suspend your account, if you do (section 15).
+- **Responsibility.** Section 21 applies. Abonten is not responsible for what a contact does or does not do after an alert, or for a text, email or notification that is late or not delivered. [LIABILITY POSITION FOR ABONTEN SAFETY — TO BE CONFIRMED BY COUNSEL]
+
+**Availability.** At the time of writing Abonten Safety is being tried by Abonten staff and is **not generally available**.
 
 ## 13. Content and conduct
 

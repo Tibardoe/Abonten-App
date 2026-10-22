@@ -597,6 +597,94 @@ describe("the event team", () => {
   });
 });
 
+describe("deleting an account", () => {
+  it("removes the person's contacts, sessions and positions, and unlinks them from other people's contacts", async () => {
+    const ready = async (phone: string, name: string) => {
+      const user = await createTestUser(raw);
+      created.push(user.id);
+      await raw.auth.admin.updateUserById(user.id, {
+        phone,
+        phone_confirm: true,
+      });
+      await raw
+        .from("user_info")
+        .update({ full_name: name, country_code: "GH" })
+        .eq("id", user.id);
+      return user;
+    };
+    const leaver = await ready("233241110009", "Kwame Leaver");
+    const keeper = await ready("233241110010", "Akosua Keeper");
+
+    const added = await addSafetyContactCore(svc, leaver.id, {
+      name: "Efua",
+      dialCode: "+44",
+      phone: UK.slice(3),
+      email: null,
+      relationship: "family",
+      locale: "en",
+    });
+    expect(added.status).toBe(201);
+    const sos = await startSafetySessionCore(
+      svc,
+      leaver.id,
+      {
+        kind: "sos",
+        clientRequestId: crypto.randomUUID(),
+        location: point(),
+      },
+      { createdVia: "app" },
+    );
+    expect(sos.status).toBe(201);
+    const sessionId = must(sos.data).session.id;
+
+    // The leaver is also someone else's trusted contact, linked to their
+    // account.
+    const theirs = await addSafetyContactCore(svc, keeper.id, {
+      name: "Kwame",
+      dialCode: "+233",
+      phone: "241110009",
+      email: null,
+      relationship: "friend",
+      locale: "en",
+    });
+    const theirId = must(theirs.data).id;
+    await raw
+      .from("safety_contact")
+      .update({ contact_user_id: leaver.id, status: "accepted" })
+      .eq("id", theirId);
+
+    const { error } = await raw.rpc("anonymize_deleted_account", {
+      p_user_id: leaver.id,
+    });
+    expect(error).toBeNull();
+
+    const count = async (
+      table: "safety_contact" | "safety_session" | "safety_message",
+    ) =>
+      (
+        await raw
+          .from(table)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", leaver.id)
+      ).count;
+    expect(await count("safety_contact")).toBe(0);
+    expect(await count("safety_session")).toBe(0);
+    expect(await count("safety_message")).toBe(0);
+    const { count: positions } = await raw
+      .from("safety_location")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    expect(positions).toBe(0);
+
+    const { data: kept } = await raw
+      .from("safety_contact")
+      .select("contact_user_id, name")
+      .eq("id", theirId)
+      .single();
+    expect(kept).toEqual({ contact_user_id: null, name: "Kwame" });
+  });
+});
+
 describe("switches, expiry and housekeeping", () => {
   it("a switched-off programme refuses new sessions but never strands an open one", async () => {
     await closeOpenSessions(person.id);

@@ -16,12 +16,22 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-22 — Abonten Safety: ready for its next stages
+
+- Decisions J1–J6 Decided at the founder's instruction (`OPERATIONAL_DECISIONS_REQUIRED.md` 1.12): three-stage rollout (staff → pilot testers after one field test in Ghana → Everyone after I1–I3), retention 7/180 days, Ghana shows 112 only, pilot limits kept, event-team alerts off, background location in the next native build.
+- Ghana's SOS screens show 112 only: 191, 192 and 193 were folded into 112 in 2020 (migration `20261022130000`).
+- Account deletion now removes the person's Safety contacts, sessions, positions and queued texts, and unlinks them from other people's contacts (trigger `user_info_safety_forget`, migration `20261022140000`). Before this the soft delete left them behind.
+- Help page `customers/safety` in five languages, built but not listed (`listed: no`, new front-matter key: `DOCUMENTATION_STANDARD.md` 1.2) until the audience is Everyone.
+- Draft wording for counsel: Privacy Policy 1.8-draft (§2, §4, §5, §9, §10), Terms 1.4-draft §12A; `LEGAL_REVIEW_REQUIRED.md` 1.5. Updated `admin/safety.md` (1.1), `architecture/safety.md`, `privacy/data-retention-and-deletion.md` (1.5), `documentation-coverage-matrix.md` (1.2).
+- Permissions, jobs, env vars: none new.
+
 ## 2026-10-22 — Saved payment methods: written by the service only
 
 - Updated `finance/README.md` (1.1); `CLAUDE.md` money-path note.
 - Migration `20261022120000_payment_method_server_writes_only`: signed-in clients can no longer insert, change or delete `payment_method` rows through the Data API (owner insert/update policies dropped, grants revoked on the table and its partitions p0–p3). Owners still read their own rows. A direct write skipped the card verification and the mobile money number check added earlier the same day.
 - `payments/paymentMethodCore` writes (save, remove, default) go through the service role, scoped by `user_id`; reads stay on the caller's client.
 - Permissions, jobs, env vars: none.
+- Applied to Preview and Production on 2026-10-22 after the code was live; client roles keep SELECT only.
 
 ## 2026-10-21 — Abonten Safety: trusted contacts, SOS, check-ins and live location (built, switched off)
 

@@ -4,8 +4,8 @@ purpose: Show, for every major Abonten feature, exactly which public, internal a
 audience: Documentation maintainers, support, product, engineering
 scope: Every feature in the audit matrix, mapped to files; public pages are linked to their Markdown source in apps/web/src/content
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-04
+version: 1.2
+lastReviewed: 2026-10-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -87,6 +87,7 @@ Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the lin
 | Reporting and moderation | [Reporting a problem](../apps/web/src/content/help/customers/reporting-a-problem.md) · [Terms §14](../apps/web/src/content/legal/terms.md) | [Admin › Reports and moderation](admin/reports-and-moderation.md) · [Moderation policy](operations/content-moderation-policy.md) · [Abuse, spam, impersonation](incident-response/abuse-spam-impersonation.md) · [Malicious content and uploads](incident-response/malicious-content-and-uploads.md) | [Roles and permissions](architecture/roles-and-permissions.md) |
 | Notifications (in-app, push, email) | [Notifications](../apps/web/src/content/help/customers/notifications.md) | [Notifications and email operations](operations/notifications-and-email-operations.md) · [Admin › Notifications](admin/notifications.md) | [Scheduled jobs](operations/scheduled-jobs.md) · [Integrations — Expo, Resend](architecture/integrations.md) |
 | Spotlight, Stories, following, promoted Spotlights | [Spotlight, Stories and following](../apps/web/src/content/help/customers/spotlight-stories-and-following.md) | [Admin › Spotlight](admin/spotlight.md) · [Moderation policy](operations/content-moderation-policy.md) | [Spotlight and Stories architecture](architecture/spotlight-and-stories.md) |
+| Abonten Safety: trusted contacts, SOS, check-ins, location sharing (staff only; help page built but not listed until Everyone) | [Abonten Safety](../apps/web/src/content/help/customers/safety.md) · [Terms §12A](../apps/web/src/content/legal/terms.md) · [Privacy Policy §2, §5, §9](../apps/web/src/content/legal/privacy-policy.md) | [Admin › Safety](admin/safety.md) | [Safety architecture](architecture/safety.md) · [Data retention](privacy/data-retention-and-deletion.md) |
 
 ## Rewards and referrals (shadow mode — not generally available)
 
