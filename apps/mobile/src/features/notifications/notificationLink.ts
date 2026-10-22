@@ -115,6 +115,13 @@ function targetFromData(
       if (data.eventId) return `/(app)/event/${data.eventId}`;
       if (data.placeId) return `/(app)/place/${data.placeId}`;
       return "/(app)/for-you";
+    case "safety":
+      // A trusted contact opens the alert they were told about (their own
+      // link); the person opens their Safety screen.
+      if (data.safetyRole === "watcher" && data.safetyToken) {
+        return `/(app)/safety/watch/${data.safetyToken}`;
+      }
+      return "/(app)/safety";
     case "area": {
       // "Abonten is now in Kumasi": Explore, moved to that city unless the
       // app is already showing it (Explore reads these parameters once).

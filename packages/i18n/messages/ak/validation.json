@@ -93,5 +93,15 @@
   "usernameMustBe30CharactersOr": "Username must be 30 characters or fewer.",
   "usernameMustBeAtLeast3": "Username must be at least 3 characters.",
   "writeAReplyFirst": "Write a reply first.",
-  "writeSomethingFirst": "Write something first"
+  "writeSomethingFirst": "Write something first",
+  "chooseACountryCode": "Choose a country code",
+  "chooseAtLeast10Minutes": "Choose at least 10 minutes",
+  "chooseAtLeastOneContact": "Choose at least one contact",
+  "chooseAtMost12Hours": "Choose at most 12 hours",
+  "enterYourContactSName": "Enter your contact's name",
+  "enterYourContactSPhoneNumber": "Enter your contact's phone number",
+  "invalidTime": "Invalid time",
+  "keepTheNameUnder60Characters": "Keep the name under 60 characters",
+  "keepTheNoteUnder280Characters": "Keep the note under 280 characters",
+  "thisLinkIsNotValid": "This link is not valid"
 }

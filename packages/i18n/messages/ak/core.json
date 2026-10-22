@@ -827,6 +827,51 @@
     "welcome_credit": {
       "body": "{amount} off your first ticket order of {min} or more. Use it within {days} days.",
       "title": "You have welcome credit"
+    },
+    "safety_alert": {
+      "title": "SOS from {name}",
+      "body": "{name} pressed the help button and may need you. Tap to see where {name} is."
+    },
+    "safety_check_in_missed": {
+      "title": "{name} hasn't checked in",
+      "body": "{name} didn't check in{hasStartsAt, select, yes { by {dayTime}} other {}} as planned. Tap to see the last known location."
+    },
+    "safety_share": {
+      "title": "{name} is sharing live location with you",
+      "body": "{hasStartsAt, select, yes {Until {dayTime}. Tap to follow.} other {Tap to follow.}}"
+    },
+    "safety_safe": {
+      "title": "{name} is safe",
+      "body": "{name} has ended the alert."
+    },
+    "safety_false_alarm": {
+      "title": "The alert from {name} was a mistake",
+      "body": "{name} is OK."
+    },
+    "safety_event_team": {
+      "title": "{hasEvent, select, yes {A guest at {event} asked for help} other {A guest asked for help}}",
+      "body": "{name} pressed SOS at your event. Tap to see where {name} is and to call."
+    },
+    "safety_contact_viewed": {
+      "title": "{contact} opened your alert"
+    },
+    "safety_contact_ack": {
+      "title": "{ack, select, on_my_way {{contact} is on the way} calling {{contact} is calling you} other {{contact} can't help right now}}",
+      "body": "{ack, select, cant_help {Try another contact, or call emergency services.} other {Open Abonten to see who else has answered.}}"
+    },
+    "safety_check_in_due": {
+      "title": "Time to check in",
+      "body": "Open Abonten and tap I'm safe, or your trusted contacts will be alerted in {minutes, plural, one {# minute} other {# minutes}}."
+    },
+    "safety_check_in_escalated": {
+      "title": "Your trusted contacts were alerted",
+      "body": "You didn't check in on time. If you're OK, open Abonten and tap I'm safe."
+    },
+    "safety_contact_accepted": {
+      "title": "{contact} is now one of your trusted contacts"
+    },
+    "safety_contact_declined": {
+      "title": "{contact} declined to be your trusted contact"
     }
   },
   "openStatus": {

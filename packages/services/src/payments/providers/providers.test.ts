@@ -80,6 +80,7 @@ const market: MarketConfig = {
   launchedAt: null,
   coverageMode: "everywhere",
   browseFallback: { strategy: "choose", regionId: null, limit: 3 },
+  emergencyNumbers: [],
   version: 1,
 };
 

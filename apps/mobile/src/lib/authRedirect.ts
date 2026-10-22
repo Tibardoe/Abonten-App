@@ -28,6 +28,7 @@ const PROTECTED_PREFIXES = [
   "/checkout",
   "/organizer",
   "/settings",
+  "/safety",
   // Creating a place/event needs a session; the public detail routes
   // (`/place/<id>`, `/event/<id>`) stay open — these prefixes only match
   // the literal `/place/new` and `/event/new`.

@@ -184,3 +184,19 @@ export type {
   VerifyPaymentResult,
   VerifyPhoneOtpBody,
 } from "./types";
+export type {
+  AcknowledgeSafetyBody,
+  AddSafetyContactBody,
+  ResolveSafetySessionBody,
+  SafetyContactResult,
+  SafetyLocationBody,
+  SafetyLocationResult,
+  SafetyOverviewResult,
+  SafetyProgramResult,
+  SafetySessionResult,
+  SafetyViewResult,
+  StartSafetySessionBody,
+  StartSafetySessionResponse,
+  UpdateSafetyContactBody,
+  UpdateSafetySessionBody,
+} from "./types";

@@ -191,6 +191,8 @@ export const config = {
      *   /api/notifications/deliver with its token, no cookie either)
      * - api/maintenance (the storage-purge-dispatch pg_cron job calling
      *   /api/maintenance/storage-purge with its token -- same as above)
+     * - api/safety (the safety-dispatch pg_cron job calling
+     *   /api/safety/dispatch with the delivery token -- same as above)
      * - robots.txt / sitemap.xml (crawlers carry no cookie; both are
      *   public metadata routes)
      * - push-sw.js (the web push service worker: browsers refuse a
@@ -202,7 +204,7 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/safety|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

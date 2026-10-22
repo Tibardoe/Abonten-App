@@ -827,6 +827,51 @@
     "welcome_credit": {
       "body": "{amount} de réduction sur votre première commande de billets de {min} ou plus. À utiliser dans les {days} jours.",
       "title": "Vous avez un crédit de bienvenue"
+    },
+    "safety_alert": {
+      "title": "SOS de {name}",
+      "body": "{name} a appuyé sur le bouton d'aide et a peut-être besoin de vous. Touchez pour voir où se trouve {name}."
+    },
+    "safety_check_in_missed": {
+      "title": "{name} n'a pas donné de nouvelles",
+      "body": "{name} n'a pas donné de nouvelles{hasStartsAt, select, yes { avant {dayTime}} other {}} comme prévu. Touchez pour voir la dernière position connue."
+    },
+    "safety_share": {
+      "title": "{name} partage sa position en direct avec vous",
+      "body": "{hasStartsAt, select, yes {Jusqu'à {dayTime}. Touchez pour suivre.} other {Touchez pour suivre.}}"
+    },
+    "safety_safe": {
+      "title": "{name} est en sécurité",
+      "body": "{name} a mis fin à l'alerte."
+    },
+    "safety_false_alarm": {
+      "title": "L'alerte de {name} était une erreur",
+      "body": "{name} va bien."
+    },
+    "safety_event_team": {
+      "title": "{hasEvent, select, yes {{event} : une personne a demandé de l'aide} other {Une personne a demandé de l'aide}}",
+      "body": "{name} a appuyé sur SOS pendant votre événement. Touchez pour voir où se trouve {name} et pour appeler."
+    },
+    "safety_contact_viewed": {
+      "title": "{contact} a ouvert votre alerte"
+    },
+    "safety_contact_ack": {
+      "title": "{ack, select, on_my_way {{contact} est en route} calling {{contact} vous appelle} other {{contact} ne peut pas aider pour l'instant}}",
+      "body": "{ack, select, cant_help {Essayez un autre contact, ou appelez les services d'urgence.} other {Ouvrez Abonten pour voir qui d'autre a répondu.}}"
+    },
+    "safety_check_in_due": {
+      "title": "C'est l'heure de donner de vos nouvelles",
+      "body": "Ouvrez Abonten et touchez « Je suis en sécurité », sinon vos contacts de confiance seront alertés dans {minutes, plural, one {# minute} other {# minutes}}."
+    },
+    "safety_check_in_escalated": {
+      "title": "Vos contacts de confiance ont été alertés",
+      "body": "Vous n'avez pas donné de nouvelles à temps. Si tout va bien, ouvrez Abonten et touchez « Je suis en sécurité »."
+    },
+    "safety_contact_accepted": {
+      "title": "{contact} fait maintenant partie de vos contacts de confiance"
+    },
+    "safety_contact_declined": {
+      "title": "{contact} a refusé d'être votre contact de confiance"
     }
   },
   "openStatus": {

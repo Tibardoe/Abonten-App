@@ -119,6 +119,12 @@ import {
   listCreditAccountsCore,
   listPendingCreditAdjustmentsCore,
 } from "@abonten/services/admin/rewards/rewardsAdminCore";
+import {
+  getSafetyAdminOverviewCore,
+  getSafetySessionAdminCore,
+  getSafetySettingsCore,
+  listSafetySessionsCore,
+} from "@abonten/services/admin/safety/safetyAdminCore";
 import { globalSearchCore } from "@abonten/services/admin/search/globalSearchCore";
 import {
   getRoleMatrixCore,
@@ -839,4 +845,49 @@ export async function loadContentCampaign(campaignId: string) {
     campaignId,
   );
   return { ctx, detail };
+}
+
+// ── Abonten Safety ──────────────────────────────────────────
+
+export async function loadSafetySettings() {
+  const ctx = await requireAdmin();
+  const settings = await getSafetySettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
+}
+
+export async function loadSafetyOverview(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  const ctx = await requireAdmin();
+  const one = (k: string) => {
+    const v = searchParams[k];
+    return typeof v === "string" && v ? v : undefined;
+  };
+  const kind = one("kind");
+  const status = one("status");
+  const [overview, sessions] = await Promise.all([
+    getSafetyAdminOverviewCore(getServiceClient(), ctx, 30),
+    listSafetySessionsCore(getServiceClient(), ctx, {
+      kind:
+        kind === "sos" || kind === "check_in" || kind === "share"
+          ? kind
+          : undefined,
+      status:
+        status === "active" ||
+        status === "alerting" ||
+        status === "resolved" ||
+        status === "expired"
+          ? status
+          : undefined,
+      before: one("before"),
+      limit: 50,
+    }),
+  ]);
+  return { ctx, overview, sessions };
+}
+
+export async function loadSafetySession(id: string) {
+  const ctx = await requireAdmin();
+  const session = await getSafetySessionAdminCore(getServiceClient(), ctx, id);
+  return { ctx, session };
 }

@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useDirections } from "@/features/directions/DirectionsSheet";
+import { TicketSafetyButton } from "@/features/safety/TicketSafetyButton";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
@@ -211,6 +212,9 @@ export default function TicketDetailScreen() {
                 leftIcon="navigate-outline"
                 onPress={directions.show}
               />
+            ) : null}
+            {!cancelledByOrganizer ? (
+              <TicketSafetyButton event={ticket.event} />
             ) : null}
             <View className="mt-1">
               <TicketStatusBadge

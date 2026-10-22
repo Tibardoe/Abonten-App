@@ -109,6 +109,32 @@ const SESSION_CALLABLE: Call[] = [
 // with real fixtures in money-path-lockdown, so they are not repeated here.)
 const SERVICE_ROLE_ONLY: Call[] = [
   {
+    name: "safety_record_locations",
+    args: { p_session_id: ABSENT_ID, p_user_id: ABSENT_ID, p_points: [] },
+    why: "Abonten Safety positions are written by the service after it proved who is asking (2026-10-21)",
+  },
+  {
+    name: "safety_claim_messages",
+    args: { p_limit: 1, p_ids: [] },
+    why: "the Safety outbox is sent by the service and the safety-dispatch job only",
+  },
+  {
+    name: "safety_dispatch_due",
+    why: "read by the safety-dispatch job",
+  },
+  {
+    name: "safety_expire_sessions",
+    why: "run by the safety-dispatch job",
+  },
+  {
+    name: "safety_housekeeping",
+    why: "the daily safety-housekeeping job deletes old positions and sessions",
+  },
+  {
+    name: "run_safety_dispatch",
+    why: "pg_cron safety-dispatch only",
+  },
+  {
     name: "admin_listing_views",
     args: {
       p_from: "2026-01-01T00:00:00Z",

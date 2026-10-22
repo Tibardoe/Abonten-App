@@ -96,6 +96,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "spotlight.view",
   "spotlight.campaigns.review",
   "spotlight.configure",
+  "safety.view",
+  "safety.configure",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -177,6 +179,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "rewards.goodwill",
   "weekly.view",
   "spotlight.view",
+  "safety.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -326,6 +329,7 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "weekly.configure",
   "spotlight.campaigns.review",
   "spotlight.configure",
+  "safety.configure",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

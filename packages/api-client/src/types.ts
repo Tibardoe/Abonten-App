@@ -81,6 +81,18 @@ import type {
   VerificationUploadTicket,
 } from "@abonten/types/verificationType";
 
+import type {
+  SafetyAcknowledgement,
+  SafetyContact,
+  SafetyLocationPoint,
+  SafetyOverview,
+  SafetyProgram,
+  SafetyRelationship,
+  SafetySession,
+  SafetyView,
+  StartSafetySessionResult,
+} from "@abonten/types/safetyType";
+
 export type ApiEnvelope<T> = {
   status: number;
   message?: string;
@@ -2080,3 +2092,65 @@ export type ContentCampaignCheckoutResult = ApiEnvelope<
     campaign: import("@abonten/types/contentType").ContentCampaign;
   }
 >;
+
+// ── Abonten Safety (/api/mobile/safety/**) ───────────────────────────
+
+export type SafetyProgramResult = ApiEnvelope<SafetyProgram>;
+export type SafetyOverviewResult = ApiEnvelope<SafetyOverview>;
+export type SafetyContactResult = ApiEnvelope<SafetyContact>;
+export type SafetySessionResult = ApiEnvelope<SafetySession>;
+export type StartSafetySessionResponse = ApiEnvelope<StartSafetySessionResult>;
+export type SafetyLocationResult = ApiEnvelope<{
+  accepted: number;
+  lastLocatedAt: string | null;
+}>;
+export type SafetyViewResult = ApiEnvelope<SafetyView>;
+
+export type AddSafetyContactBody = {
+  name: string;
+  dialCode: string;
+  phone: string;
+  email?: string | null;
+  relationship: SafetyRelationship;
+  locale: string;
+};
+
+export type UpdateSafetyContactBody = {
+  name?: string;
+  email?: string | null;
+  relationship?: SafetyRelationship;
+  locale?: string;
+  makeFirst?: boolean;
+};
+
+export type SafetyLocationBody = SafetyLocationPoint & {
+  source?: "device" | "last_known" | "browser";
+};
+
+type StartSafetyBase = {
+  clientRequestId: string;
+  location?: SafetyLocationBody | null;
+  eventId?: string | null;
+  note?: string;
+};
+
+export type StartSafetySessionBody =
+  | (StartSafetyBase & { kind: "sos" })
+  | (StartSafetyBase & { kind: "check_in"; minutes: number })
+  | (StartSafetyBase & {
+      kind: "share";
+      hours?: number;
+      untilEventEnds?: boolean;
+      contactIds?: string[];
+    });
+
+export type UpdateSafetySessionBody = {
+  note?: string | null;
+  extendMinutes?: number;
+};
+
+export type ResolveSafetySessionBody = {
+  resolution: "safe" | "false_alarm" | "ended";
+};
+
+export type AcknowledgeSafetyBody = { acknowledgement: SafetyAcknowledgement };

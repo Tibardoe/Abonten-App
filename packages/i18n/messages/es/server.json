@@ -520,7 +520,8 @@
     "youHaveStartedALotOfConversations": "Has iniciado muchas conversaciones últimamente. Inténtalo de nuevo más tarde.",
     "yourAccountHasBeenRestricted": "Tu cuenta ha sido restringida.",
     "yourCreditBalanceIsNegative": "Tu saldo de crédito es negativo",
-    "yourCreditIsOnHold": "Tu crédito está retenido"
+    "yourCreditIsOnHold": "Tu crédito está retenido",
+    "youCanHaveAtMostTrustedContacts": "Puedes tener como máximo {0} contactos de confianza."
   },
   "defaultPaymentMethodUpdated": "Método de pago predeterminado actualizado",
   "defaultPayoutAccountUpdated": "Cuenta de cobro predeterminada actualizada",
@@ -1236,5 +1237,41 @@
   "yourRoleCanTDoThis": "Tu rol no puede hacer esto",
   "yourSpotlight": "Tu Spotlight",
   "thatPlaceCouldNotBeFound": "No se encontró ese lugar. Elige otra sugerencia.",
-  "confirmThisNumberWithA": "Confirma este número con el código que le enviamos por SMS. Si no ves dónde introducir el código, cierra la app y vuelve a abrirla para actualizarla."
+  "confirmThisNumberWithA": "Confirma este número con el código que le enviamos por SMS. Si no ves dónde introducir el código, cierra la app y vuelve a abrirla para actualizarla.",
+  "safety": {
+    "notAvailable": "La seguridad personal aún no está disponible en tu cuenta.",
+    "verifyPhoneFirst": "Primero verifica tu número de teléfono, para que tus contactos sepan que la alerta es realmente tuya y puedan devolverte la llamada.",
+    "addNameFirst": "Primero añade tu nombre a tu perfil, para que tus contactos sepan de quién es la alerta.",
+    "tooManyContacts": "Puedes tener como máximo {max} contactos de confianza.",
+    "contactExists": "Este número ya es uno de tus contactos de confianza.",
+    "contactIsYou": "Ese es tu propio número. Elige a otra persona.",
+    "contactOptedOut": "Esta persona ha pedido que no se la añada como contacto de emergencia.",
+    "tooManyAdds": "Hoy has añadido muchos contactos. Inténtalo de nuevo mañana.",
+    "contactNotFound": "No encontramos ese contacto.",
+    "inviteNotYet": "Podrás volver a enviar la invitación mañana.",
+    "inviteLimit": "Esta invitación ya se ha enviado el número máximo de veces permitido.",
+    "inviteAlreadyAnswered": "Este contacto ya ha respondido.",
+    "sessionNotFound": "No encontramos esa sesión de seguridad.",
+    "sessionClosed": "Esto ya ha terminado.",
+    "sessionChanged": "Esto ha cambiado hace un momento. Actualiza e inténtalo de nuevo.",
+    "alreadyOpen": "Ya tienes una comprobación o una ubicación compartida en curso. Termínala primero o pulsa SOS.",
+    "noContacts": "Primero añade un contacto de confianza.",
+    "checkInOff": "Las comprobaciones aún no están disponibles.",
+    "shareOff": "Compartir tu ubicación aún no está disponible.",
+    "eventTeamOff": "Avisar al equipo del evento aún no está disponible.",
+    "eventTeamNeedsAlert": "Solo se puede avisar al equipo del evento mientras haya una alerta abierta.",
+    "noEventForSession": "Esta alerta no está vinculada a ningún evento.",
+    "extendOnlyCheckIn": "Solo se puede ampliar una comprobación que siga en curso.",
+    "invalidLocation": "No se pudo leer esa ubicación.",
+    "linkInvalid": "Este enlace no es válido o ya no está activo.",
+    "tooManyRequests": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+    "sms": {
+      "invite": "{person} te ha añadido como contacto de emergencia en Abonten. Si {person} necesita ayuda, te avisaremos por aquí. Acepta o rechaza: {link}",
+      "share": "{person} comparte contigo su ubicación en tiempo real en Abonten{hasTime, select, yes { hasta las {time}} other {}}. Ver ubicación: {link}",
+      "alert": "SOS de {person}: {person} ha pulsado el botón de ayuda en Abonten y puede necesitarte. Mira dónde está {person}: {link}{hasPhone, select, yes { Llama a {person}: {phone}} other {}}{hasEmergency, select, yes { Emergencias: {emergency}} other {}}",
+      "checkInMissed": "{person} tenía que confirmar en Abonten que estaba bien antes de las {time} y no lo ha hecho. Última ubicación conocida: {link}{hasPhone, select, yes { Llama a {person}: {phone}} other {}}{hasEmergency, select, yes { Emergencias: {emergency}} other {}}",
+      "safe": "{person} está bien y ha cerrado la alerta en Abonten.",
+      "falseAlarm": "La alerta de {person} en Abonten fue un error. {person} está bien."
+    }
+  }
 }

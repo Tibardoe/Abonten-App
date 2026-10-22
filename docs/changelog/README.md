@@ -16,12 +16,20 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
-## 2026-10-21 — Saved payment methods: written by the service only
+## 2026-10-22 — Saved payment methods: written by the service only
 
 - Updated `finance/README.md` (1.1); `CLAUDE.md` money-path note.
-- Migration `20261021150000_payment_method_server_writes_only`: signed-in clients can no longer insert, change or delete `payment_method` rows through the Data API (owner insert/update policies dropped, grants revoked on the table and its partitions p0–p3). Owners still read their own rows. A direct write skipped the card verification and the mobile money number check added earlier the same day.
+- Migration `20261022120000_payment_method_server_writes_only`: signed-in clients can no longer insert, change or delete `payment_method` rows through the Data API (owner insert/update policies dropped, grants revoked on the table and its partitions p0–p3). Owners still read their own rows. A direct write skipped the card verification and the mobile money number check added earlier the same day.
 - `payments/paymentMethodCore` writes (save, remove, default) go through the service role, scoped by `user_id`; reads stay on the caller's client.
 - Permissions, jobs, env vars: none.
+
+## 2026-10-21 — Abonten Safety: trusted contacts, SOS, check-ins and live location (built, switched off)
+
+- New `architecture/safety.md` (1.0, review required) and `admin/safety.md` (1.0). Updated `LEGAL_REVIEW_REQUIRED.md` (1.4: section I, I1–I5), `OPERATIONAL_DECISIONS_REQUIRED.md` (1.11: J1–J6), `operations/scheduled-jobs.md` (1.4), `architecture/data-model-overview.md` (1.3), `architecture/roles-and-permissions.md` (1.1), `admin/settings-and-rbac.md` (1.1), `security/secrets-and-environment.md` (1.13), `deployment/rollback-and-recovery.md` (1.1), `INDEX.md` (1.5), `admin/README.md`, `architecture/README.md`, `PROJECT.md` §65.
+- A person names trusted contacts (each texted once to accept or decline). SOS texts them a link to a live page with where the person is; "Check in on me" alerts them only if a time is missed; "Share my location" sends a follow link. Contacts answer from the page and the person sees it. Works offline in the app by opening the phone's own Messages app. Website `/safety`, `/sos/<token>`, `/trusted/<token>`; app Safety screens; Admin › Safety.
+- Migration `20261021180000_safety_core`. Permissions `safety.view`, `safety.configure`. Jobs `safety-dispatch` (every minute), `safety-housekeeping` (03:50). Env var `SAFETY_KILL_SWITCH`. Ships off, audience staff. No public help page yet (it follows the audience Everyone, J1).
+- 2026-10-22: migration applied to Preview and Production; both off, audience staff; the two jobs are scheduled; Supabase advisors show nothing new above INFO.
+- 2026-10-22 · mobile · an SOS is never held by a slow or stalled server: SOS shows before the Safety screen has loaded, "still sending" offers the phone's Messages app after 6 s, a kept alert is retried every 30 s while the app is open, and app-wide the auth refresh has a 15 s deadline and no request waits more than 4 s for its token · (`architecture/safety.md` 1.1, `architecture/mobile-offline-media-and-sync.md` 1.7)
 
 ## 2026-10-21 — Directions you can choose; mobile money numbers confirmed by code
 

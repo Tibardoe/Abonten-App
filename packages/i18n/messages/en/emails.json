@@ -57,5 +57,47 @@
       "similarPlaces": "Similar to places you liked",
       "similarEvents": "Similar to events you liked"
     }
+  },
+  "safety": {
+    "callPerson": "Call {person}: {phone}",
+    "emergencyNote": "Abonten does not contact emergency services. If you think {person} is in danger, call {emergency}.",
+    "emergencyNoteNoNumber": "Abonten does not contact emergency services. If you think {person} is in danger, call the local emergency number.",
+    "footer": "You are getting this because {person} added you as a trusted contact on Abonten.",
+    "invite": {
+      "subject": "{person} added you as an emergency contact",
+      "heading": "{person} trusts you",
+      "intro": "{person} added you as an emergency contact on Abonten. If {person} ever needs help, for example on a night out, you will get a text or an email showing where {person} is. You can accept, or say no.",
+      "button": "Accept or say no"
+    },
+    "share": {
+      "subject": "{person} is sharing live location with you",
+      "heading": "{hasTime, select, yes {Follow {person} until {time}} other {Follow {person}}}",
+      "intro": "{hasEvent, select, yes {{person} is sharing live location with you on Abonten while at {event}.} other {{person} is sharing live location with you on Abonten.}} Nothing is wrong: this is so you can see {person} gets home safely.",
+      "button": "Follow {person}"
+    },
+    "alert": {
+      "subject": "SOS from {person}",
+      "heading": "{person} may need your help",
+      "intro": "{hasEvent, select, yes {{person} pressed the help button on Abonten at {event}.} other {{person} pressed the help button on Abonten.}} See where {person} is, and answer so {person} knows you saw it.",
+      "button": "See where {person} is"
+    },
+    "checkInMissed": {
+      "subject": "{person} has not checked in",
+      "heading": "{person} has not checked in",
+      "intro": "{person} planned to check in on Abonten by {time} and has not. See the last known location, and answer so {person} knows you saw it.",
+      "button": "See the last known location"
+    },
+    "safe": {
+      "subject": "{person} is safe",
+      "heading": "{person} is safe",
+      "intro": "{person} has ended the alert on Abonten. Thank you for being there.",
+      "button": "Open the page"
+    },
+    "falseAlarm": {
+      "subject": "The alert from {person} was a mistake",
+      "heading": "{person} is OK",
+      "intro": "The alert from {person} on Abonten was sent by mistake. Nothing is wrong.",
+      "button": "Open the page"
+    }
   }
 }

@@ -43,6 +43,7 @@ const PROTECTED_PREFIXES = [
   "/notifications",
   "/plans",
   "/rewards",
+  "/safety",
   "/settings",
   "/transactions",
   "/user-account",

@@ -57,5 +57,47 @@
     "time": "Heure",
     "venue": "Lieu",
     "viewMyTickets": "Voir mes billets"
+  },
+  "safety": {
+    "callPerson": "Appeler {person} : {phone}",
+    "emergencyNote": "Abonten ne contacte pas les services d'urgence. Si vous pensez que {person} est en danger, appelez le {emergency}.",
+    "emergencyNoteNoNumber": "Abonten ne contacte pas les services d'urgence. Si vous pensez que {person} est en danger, appelez le numéro d'urgence local.",
+    "footer": "Vous recevez ce message parce que {person} a fait de vous un contact de confiance sur Abonten.",
+    "invite": {
+      "subject": "{person} a fait de vous un contact d'urgence",
+      "heading": "{person} vous fait confiance",
+      "intro": "{person} a fait de vous un contact d'urgence sur Abonten. Si {person} a un jour besoin d'aide, par exemple lors d'une sortie, vous recevrez un SMS ou un e-mail indiquant où se trouve {person}. Vous pouvez accepter ou refuser.",
+      "button": "Accepter ou refuser"
+    },
+    "share": {
+      "subject": "{person} partage sa position en direct avec vous",
+      "heading": "{hasTime, select, yes {Suivez {person} jusqu'à {time}} other {Suivez {person}}}",
+      "intro": "{hasEvent, select, yes {{person} partage sa position en direct avec vous sur Abonten pendant {event}.} other {{person} partage sa position en direct avec vous sur Abonten.}} Rien d'inquiétant : c'est pour que vous puissiez voir que {person} rentre bien.",
+      "button": "Suivre {person}"
+    },
+    "alert": {
+      "subject": "SOS de {person}",
+      "heading": "{person} a peut-être besoin de votre aide",
+      "intro": "{hasEvent, select, yes {{person} a appuyé sur le bouton d'aide d'Abonten pendant {event}.} other {{person} a appuyé sur le bouton d'aide d'Abonten.}} Voyez où se trouve {person}, et répondez pour que {person} sache que vous avez vu l'alerte.",
+      "button": "Voir où se trouve {person}"
+    },
+    "checkInMissed": {
+      "subject": "{person} n'a pas donné de nouvelles",
+      "heading": "{person} n'a pas donné de nouvelles",
+      "intro": "{person} devait donner des nouvelles sur Abonten avant {time} et ne l'a pas fait. Consultez la dernière position connue, et répondez pour que {person} sache que vous avez vu l'alerte.",
+      "button": "Voir la dernière position connue"
+    },
+    "safe": {
+      "subject": "{person} est en sécurité",
+      "heading": "{person} est en sécurité",
+      "intro": "{person} a mis fin à l'alerte sur Abonten. Merci d'avoir été là.",
+      "button": "Ouvrir la page"
+    },
+    "falseAlarm": {
+      "subject": "L'alerte de {person} était une erreur",
+      "heading": "{person} va bien",
+      "intro": "L'alerte de {person} sur Abonten a été envoyée par erreur. Tout va bien.",
+      "button": "Ouvrir la page"
+    }
   }
 }

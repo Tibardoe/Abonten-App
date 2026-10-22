@@ -73,6 +73,20 @@ export const NOTICES: Record<string, NoticeTemplate> = {
     literalBody: "reason",
   },
   content_campaign_refunded: n("content_campaign_refunded"),
+  // Abonten Safety (services): to a trusted contact or the event team…
+  safety_alert: n("safety_alert"),
+  safety_check_in_missed: n("safety_check_in_missed"),
+  safety_share: n("safety_share"),
+  safety_safe: n("safety_safe"),
+  safety_false_alarm: n("safety_false_alarm"),
+  safety_event_team: n("safety_event_team"),
+  // …and to the person themselves.
+  safety_contact_viewed: n("safety_contact_viewed", false),
+  safety_contact_ack: n("safety_contact_ack"),
+  safety_check_in_due: n("safety_check_in_due"),
+  safety_check_in_escalated: n("safety_check_in_escalated"),
+  safety_contact_accepted: n("safety_contact_accepted", false),
+  safety_contact_declined: n("safety_contact_declined", false),
   // Places (services)
   place_booking_requested: n("place_booking_requested"),
   place_booking_cancelled: n("place_booking_cancelled"),

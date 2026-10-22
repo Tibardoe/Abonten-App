@@ -22,6 +22,7 @@ complianceReviewRequired: no
 | [trust-and-verification.md](trust-and-verification.md) | Place and organizer verification: model, state machine, evidence storage, permissions |
 | [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
 | [weekly-highlights.md](weekly-highlights.md) | Abonten Weekly: editions, sections and items, read-time validity, caching, editorial workflow, jobs, switches, rollout |
+| [safety.md](safety.md) | Abonten Safety: trusted contacts, SOS, check-ins, live location, the contact's page, the outbox and dispatcher, offline behaviour, privacy, rollout |
 | [mobile-offline-media-and-sync.md](mobile-offline-media-and-sync.md) | Mobile offline query cache, Spotlight player lifecycle, live comments and likes, search vocabulary and date parsing, search filters, follower counts |
 | [internationalisation.md](internationalisation.md) | The six languages: shared catalogs, how each surface picks a language, server and database text, number and date formatting, per-page messages on the website, the native app's Intl polyfills, the checks |
 | [search-languages.md](search-languages.md) | Search in the reader's language: one folding rule for letters (accents, Twi and Ewe letters), date words in five languages as data, everyday words of four more languages in the vocabulary and their direction, the typo fallback of a dated search, and every other place typed text is compared |

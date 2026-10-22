@@ -11,6 +11,7 @@
 //   paused       temporarily disabled (nothing new; existing data readable)
 //   maintenance  temporarily restricted (read-only for the public)
 
+import type { SafetyEmergencyNumber } from "@abonten/types/safetyType";
 import type { AddressSchema } from "../geo/addressSchema";
 import type { DistanceUnit } from "../units/distance";
 import type {
@@ -248,6 +249,8 @@ export type MarketConfig = {
   coverageMode: CoverageMode;
   /** Which launched cities Explore offers from a not-launched area. */
   browseFallback: BrowseFallback;
+  /** Abonten Safety: the numbers every SOS screen shows (market.safety_config). */
+  emergencyNumbers: SafetyEmergencyNumber[];
   version: number;
   paymentProviders: MarketPaymentProvider[];
   paymentMethods: MarketPaymentMethod[];

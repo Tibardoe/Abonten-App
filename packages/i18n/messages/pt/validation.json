@@ -93,5 +93,15 @@
   "usernameMustBe30CharactersOr": "O nome de utilizador tem de ter no máximo 30 caracteres.",
   "usernameMustBeAtLeast3": "O nome de utilizador tem de ter pelo menos 3 caracteres.",
   "writeAReplyFirst": "Escreva primeiro uma resposta.",
-  "writeSomethingFirst": "Escreva primeiro alguma coisa"
+  "writeSomethingFirst": "Escreva primeiro alguma coisa",
+  "chooseACountryCode": "Escolha um indicativo do país",
+  "chooseAtLeast10Minutes": "Escolha pelo menos 10 minutos",
+  "chooseAtLeastOneContact": "Escolha pelo menos um contacto",
+  "chooseAtMost12Hours": "Escolha no máximo 12 horas",
+  "enterYourContactSName": "Introduza o nome do seu contacto",
+  "enterYourContactSPhoneNumber": "Introduza o número de telefone do seu contacto",
+  "invalidTime": "Hora inválida",
+  "keepTheNameUnder60Characters": "O nome deve ter menos de 60 caracteres",
+  "keepTheNoteUnder280Characters": "A nota deve ter menos de 280 caracteres",
+  "thisLinkIsNotValid": "Esta ligação não é válida"
 }
