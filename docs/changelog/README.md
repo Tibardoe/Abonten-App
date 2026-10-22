@@ -25,6 +25,14 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - Draft wording for counsel: Privacy Policy 1.8-draft (§2, §4, §5, §9, §10), Terms 1.4-draft §12A; `LEGAL_REVIEW_REQUIRED.md` 1.5. Updated `admin/safety.md` (1.1), `architecture/safety.md`, `privacy/data-retention-and-deletion.md` (1.5), `documentation-coverage-matrix.md` (1.2).
 - Permissions, jobs, env vars: none new.
 
+## 2026-10-22 — Saved payment methods: written by the service only
+
+- Updated `finance/README.md` (1.1); `CLAUDE.md` money-path note.
+- Migration `20261022120000_payment_method_server_writes_only`: signed-in clients can no longer insert, change or delete `payment_method` rows through the Data API (owner insert/update policies dropped, grants revoked on the table and its partitions p0–p3). Owners still read their own rows. A direct write skipped the card verification and the mobile money number check added earlier the same day.
+- `payments/paymentMethodCore` writes (save, remove, default) go through the service role, scoped by `user_id`; reads stay on the caller's client.
+- Permissions, jobs, env vars: none.
+- Applied to Preview and Production on 2026-10-22 after the code was live; client roles keep SELECT only.
+
 ## 2026-10-21 — Abonten Safety: trusted contacts, SOS, check-ins and live location (built, switched off)
 
 - New `architecture/safety.md` (1.0, review required) and `admin/safety.md` (1.0). Updated `LEGAL_REVIEW_REQUIRED.md` (1.4: section I, I1–I5), `OPERATIONAL_DECISIONS_REQUIRED.md` (1.11: J1–J6), `operations/scheduled-jobs.md` (1.4), `architecture/data-model-overview.md` (1.3), `architecture/roles-and-permissions.md` (1.1), `admin/settings-and-rbac.md` (1.1), `security/secrets-and-environment.md` (1.13), `deployment/rollback-and-recovery.md` (1.1), `INDEX.md` (1.5), `admin/README.md`, `architecture/README.md`, `PROJECT.md` §65.

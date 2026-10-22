@@ -15,6 +15,14 @@ vi.mock("../markets/marketConfig", () => ({
   }),
 }));
 
+// Writes go through the service role (clients cannot write payment_method);
+// here that is the same stub as the caller's client, so one `insert` spy
+// sees every save.
+const service = vi.hoisted(() => ({ client: null as unknown }));
+vi.mock("../supabase/serviceClient", () => ({
+  getSupabaseServiceClient: () => service.client,
+}));
+
 // The number check has its own tests (mobileMoneyNumberCheck.test.ts); here
 // it passes unless a test says otherwise.
 vi.mock("./mobileMoneyNumberCheck", () => ({
@@ -61,7 +69,9 @@ function fakeClient(opts: {
     insert,
   });
 
-  return { client: { from } as unknown as SupabaseClient, insert };
+  const client = { from } as unknown as SupabaseClient;
+  service.client = client;
+  return { client, insert };
 }
 
 const savedCard = (details: Record<string, unknown>, id = "card-1") => ({
