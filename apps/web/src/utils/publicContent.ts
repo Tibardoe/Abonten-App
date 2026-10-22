@@ -40,7 +40,19 @@ export type PublicDocument = ParsedMarkdown & {
   effectiveDate: string | null;
   lastUpdated: string | null;
   status: string | null;
+  /** False for a help page written ahead of its feature (`listed: no`). */
+  listed: boolean;
 };
+
+/**
+ * `listed: no` in a help page's front matter: the page is built and opens
+ * from a direct link (staff and testers can read it), but stays out of the
+ * help centre's lists, the sitemap and search engines until its feature is
+ * open to everyone.
+ */
+function isListed(frontMatter: Record<string, string>): boolean {
+  return frontMatter.listed !== "no";
+}
 
 function toDocument(slug: string, source: string): PublicDocument {
   const parsed = parseMarkdown(source);
@@ -54,6 +66,7 @@ function toDocument(slug: string, source: string): PublicDocument {
     effectiveDate: fm.effectiveDate ?? null,
     lastUpdated: fm.lastUpdated ?? null,
     status: fm.status ?? null,
+    listed: isListed(fm),
   };
 }
 
@@ -152,9 +165,13 @@ function readHelpSource(
 
 /**
  * Every help page's front matter in `locale` (English where a page is not
- * translated), grouped by section and sorted by `order` then title.
+ * translated), grouped by section and sorted by `order` then title. Pages
+ * marked `listed: no` are left out unless `includeUnlisted` (to build them).
  */
-export function listHelpPages(locale?: string | null): HelpPageMeta[] {
+export function listHelpPages(
+  locale?: string | null,
+  { includeUnlisted = false }: { includeUnlisted?: boolean } = {},
+): HelpPageMeta[] {
   const out: HelpPageMeta[] = [];
   for (const section of HELP_SECTIONS) {
     const dir = path.join(CONTENT_ROOT, "help", section.dir);
@@ -171,6 +188,7 @@ export function listHelpPages(locale?: string | null): HelpPageMeta[] {
       const read = readHelpSource(section.dir, slug, locale);
       if (!read) continue;
       const { frontMatter } = parseFrontMatter(read.source);
+      if (!includeUnlisted && !isListed(frontMatter)) continue;
       out.push({
         section: section.dir,
         slug,

@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Abonten Safety
 
-**State (2026-10-22): built, switched off.** The migration is live on Preview and Production (2026-10-22); in both, `safety_program_setting.enabled = false`, audience `staff`, `SAFETY_KILL_SWITCH` available on the web deployment. With the programme off nothing shows on the website or in the app, contacts can still open a link they were already sent, and Admin › Safety works normally. Rollout: §11 and [admin/safety.md](../admin/safety.md). Legal items I1–I5 must be Decided before the audience is Everyone.
+**State (2026-10-22): built, switched off.** The help page (`/help/customers/safety`, five languages) is written but not listed until the audience is Everyone; draft privacy-policy and terms wording waits for counsel (I1–I3); decisions J1–J6 are Decided. The migration is live on Preview and Production (2026-10-22); in both, `safety_program_setting.enabled = false`, audience `staff`, `SAFETY_KILL_SWITCH` available on the web deployment. With the programme off nothing shows on the website or in the app, contacts can still open a link they were already sent, and Admin › Safety works normally. Rollout: §11 and [admin/safety.md](../admin/safety.md). Legal items I1–I5 must be Decided before the audience is Everyone.
 
 ## 1. What it is, and what it is not
 

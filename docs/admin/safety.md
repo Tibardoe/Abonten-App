@@ -75,4 +75,4 @@ The emergency numbers each SOS screen shows come from the market: Admin › Mark
 
 1. Staff: add a contact (a phone you hold), check the invite text arrives and the invite page works; press SOS and read the alert page on that phone; answer from it and see the answer in the app; start a check-in, let it lapse, and check the alert text; share for an hour and stop it.
 2. Beta: add the pilot testers' ids; watch Messages for failures for a week.
-3. Everyone: only when J1's conditions are met.
+3. Everyone: only when J1's conditions are met. Then publish the help page: remove `listed: no` and the "Not available to everyone yet" notice from `apps/web/src/content/help/customers/safety.md` and its four translations (it is already written and opens at `/help/customers/safety`), send the updated privacy answers to both stores with the approved privacy policy, and set the audience to Everyone.

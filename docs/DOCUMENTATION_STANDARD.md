@@ -4,8 +4,8 @@ purpose: Define the metadata, structure, language and review rules every Abonten
 audience: Anyone writing or reviewing documentation
 scope: All files under docs/ and apps/web/src/content
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-04
+version: 1.2
+lastReviewed: 2026-10-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -69,6 +69,8 @@ Never document a planned, flag-gated-off or shadow-mode feature as available. Sa
 ## 4. Public vs internal
 
 Public documents (`apps/web/src/content/**`) must not contain: file paths, table/function names, environment-variable names, staff procedures, permission keys, provider account details, security weaknesses, or any personal data. Internal documents may contain all of those except secrets and personal data.
+
+A help page written ahead of its feature carries `listed: no` in its front matter (and in each translation): it is built and opens from a direct link, so staff and testers can read it, but it stays out of the help centre's lists, the sitemap and search engines, and it says at the top that the feature is not available to everyone yet. Remove both when the feature opens to everyone.
 
 Never include a real credential, key, token, connection string or personal phone/email anywhere. Use `<PAYSTACK_SECRET_KEY>`-style placeholders only when describing configuration.
 

@@ -22,7 +22,10 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return listHelpPages().map((p) => ({ section: p.section, slug: p.slug }));
+  return listHelpPages(null, { includeUnlisted: true }).map((p) => ({
+    section: p.section,
+    slug: p.slug,
+  }));
 }
 
 export async function generateMetadata({
@@ -39,6 +42,7 @@ export async function generateMetadata({
     title: t("helpCentre3", { title: doc.title }),
     description: doc.summary ?? undefined,
     alternates: languageAlternates(`/help/${section}/${slug}`, locale),
+    ...(doc.listed ? {} : { robots: { index: false, follow: false } }),
   };
 }
 

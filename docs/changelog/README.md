@@ -16,6 +16,15 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-22 — Abonten Safety: ready for its next stages
+
+- Decisions J1–J6 Decided at the founder's instruction (`OPERATIONAL_DECISIONS_REQUIRED.md` 1.12): three-stage rollout (staff → pilot testers after one field test in Ghana → Everyone after I1–I3), retention 7/180 days, Ghana shows 112 only, pilot limits kept, event-team alerts off, background location in the next native build.
+- Ghana's SOS screens show 112 only: 191, 192 and 193 were folded into 112 in 2020 (migration `20261022130000`).
+- Account deletion now removes the person's Safety contacts, sessions, positions and queued texts, and unlinks them from other people's contacts (trigger `user_info_safety_forget`, migration `20261022140000`). Before this the soft delete left them behind.
+- Help page `customers/safety` in five languages, built but not listed (`listed: no`, new front-matter key: `DOCUMENTATION_STANDARD.md` 1.2) until the audience is Everyone.
+- Draft wording for counsel: Privacy Policy 1.8-draft (§2, §4, §5, §9, §10), Terms 1.4-draft §12A; `LEGAL_REVIEW_REQUIRED.md` 1.5. Updated `admin/safety.md` (1.1), `architecture/safety.md`, `privacy/data-retention-and-deletion.md` (1.5), `documentation-coverage-matrix.md` (1.2).
+- Permissions, jobs, env vars: none new.
+
 ## 2026-10-21 — Abonten Safety: trusted contacts, SOS, check-ins and live location (built, switched off)
 
 - New `architecture/safety.md` (1.0, review required) and `admin/safety.md` (1.0). Updated `LEGAL_REVIEW_REQUIRED.md` (1.4: section I, I1–I5), `OPERATIONAL_DECISIONS_REQUIRED.md` (1.11: J1–J6), `operations/scheduled-jobs.md` (1.4), `architecture/data-model-overview.md` (1.3), `architecture/roles-and-permissions.md` (1.1), `admin/settings-and-rbac.md` (1.1), `security/secrets-and-environment.md` (1.13), `deployment/rollback-and-recovery.md` (1.1), `INDEX.md` (1.5), `admin/README.md`, `architecture/README.md`, `PROJECT.md` §65.
