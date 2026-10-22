@@ -186,8 +186,17 @@ export function useStartSafety() {
       }
       if (isSos) {
         // Not sent by Abonten (switched off, no contacts, a server error):
-        // the person's own phone still can.
-        if (userId && res.status < 500) await clearPendingSos(userId);
+        // the person's own phone still can. A refused token or a rate limit
+        // is not a refusal of the alert: it is kept and sent again (same
+        // request id) with the next working token.
+        if (
+          userId &&
+          res.status < 500 &&
+          res.status !== 401 &&
+          res.status !== 429
+        ) {
+          await clearPendingSos(userId);
+        }
         return fallBack();
       }
       return { kind: "refused", message: res.message ?? "" };

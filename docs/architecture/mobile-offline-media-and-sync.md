@@ -4,8 +4,8 @@ purpose: How the mobile app keeps previously loaded data across restarts and off
 audience: Engineering, QA, security reviewers
 scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the browsing area (ExploreLocationProvider, AreaSwitcher, AreaSuggestionCard, ChangeLocationSheet, useCoarseLocation, @abonten/core/location/browsingArea), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail and checkout CTAs and the in-checkout wallet add (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow, PayBar, PaymentChoiceList, AddWalletSheet), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.6
-lastReviewed: 2026-10-02
+version: 1.7
+lastReviewed: 2026-10-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -105,6 +105,20 @@ Reproduced on the emulator (auth port unreachable, device clock +2 h): the
 old client got `/profile` 401 and the signed-out programme answer, and the
 tab vanished. The new client got `/profile` 200 and kept Spotlight, and
 reconnecting refetched everything.
+
+**A stalled auth server never holds the app.** React Native's fetch has no
+deadline on Android, and supabase-js refreshes the token while every other
+`getSession()` waits on it. A refresh whose connection was accepted and never
+answered (a half-open connection, a captive portal) therefore held every
+request, the start-up screen and an SOS for good. Since 2026-10-22 the
+Supabase client gives auth calls a 15-second deadline (`supabase.ts`
+`fetchWithAuthDeadline`; supabase-js treats the timeout as a retryable
+failure and keeps the stored session), and the API client waits at most
+4 seconds for `getSession()` before sending the stored token (`api.ts`
+`sessionInTime`). Measured on the emulator with the auth port pointed at a
+socket that never answers and the token expired: `getSession()` gave up
+after 30.9 s (two attempts), and an `/api/mobile` call in the meantime
+answered in 4.3 s.
 
 Hooks whose answer gates UI (programmes, own profile, rewards) throw on a
 401/429/5xx instead of returning "off"/"none", so a transient failure keeps

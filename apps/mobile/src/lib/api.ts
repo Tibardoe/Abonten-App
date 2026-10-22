@@ -1,10 +1,31 @@
 import { markStaleTokenUsed, readStoredSession } from "@/auth/storedSession";
 import { createApiClient } from "@abonten/api-client";
+import { withDeadline } from "@abonten/core/http/fetchWithTimeout";
 import { getCurrentLocale } from "@abonten/ui-native/i18n";
 import { Platform } from "react-native";
 import { getInstallId } from "./installId";
 import { handleAuthExpiry } from "./queryClient";
 import { supabase } from "./supabase";
+
+// With an expired token, getSession() waits for the refresh in flight, which
+// lasts until the auth server replies (up to ~30 s across its retries, see
+// supabase.ts). No request waits that long for its token, an SOS least of
+// all: past this deadline it goes with the stored token, as when the refresh
+// failed outright. `undefined` means "not known in time".
+const SESSION_WAIT_MS = 4_000;
+
+async function sessionInTime() {
+  try {
+    const { data } = await withDeadline(
+      supabase.auth.getSession(),
+      SESSION_WAIT_MS,
+      "getSession",
+    );
+    return data.session;
+  } catch {
+    return undefined;
+  }
+}
 
 const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -38,8 +59,7 @@ export const api = createApiClient({
       // user finished signing in — and signing out on that would tear down
       // the session they had only just created.
       const sent = new Headers(init?.headers).get("authorization");
-      const { data } = await supabase.auth.getSession();
-      const current = data.session?.access_token;
+      const current = (await sessionInTime())?.access_token;
 
       // handleAuthExpiry confirms with the auth server before signing out,
       // so a one-off 401 here costs a single extra call and nothing else.
@@ -49,14 +69,14 @@ export const api = createApiClient({
     return response;
   },
   getAccessToken: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) return data.session.access_token;
-    // No usable session, but one is still stored: the access token expired
-    // and the refresh could not reach the auth server (offline, flaky
-    // network). Sending nothing would ask as a signed-out person, and
-    // routes that also serve signed-out callers (feature switches, feeds)
-    // would answer 200 with the signed-out answer — cached for a signed-in
-    // person until it went stale. The stored token gets a 401 instead: the
+    const session = await sessionInTime();
+    if (session) return session.access_token;
+    // No usable session (or none in time), but one is still stored: the
+    // access token expired and the refresh could not reach the auth server
+    // (offline, flaky network). Sending nothing would ask as a signed-out
+    // person, and routes that also serve signed-out callers (feature
+    // switches, feeds) would answer 200 with the signed-out answer — cached
+    // for a signed-in person until it went stale. The stored token gets a 401 instead: the
     // hooks keep their last good value, and SessionProvider refetches
     // everything on the first working token.
     const stored = await readStoredSession();

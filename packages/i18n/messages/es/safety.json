@@ -72,6 +72,7 @@
   "textThemFromPhone": "{count, plural, one {Envíale un SMS desde tu teléfono (# sin avisar)} other {Envíales un SMS desde tu teléfono (# sin avisar)}}",
   "textFromPhoneToo": "Envíales también un SMS desde tu teléfono",
   "textFromPhoneAgain": "Volver a abrir la app de mensajes",
+  "sosStillSending": "Tu alerta todavía se está enviando. Si puedes, escribe también a tus contactos desde este teléfono.",
   "tellEventTeam": "Avisar al equipo del evento",
   "tellEventTeamTitle": "¿Avisar al equipo del evento?",
   "tellEventTeamBody": "El organizador recibirá tu nombre, tu número de teléfono, tu nota y tu ubicación para que su personal pueda encontrarte.",

@@ -65,6 +65,8 @@ import { Alert, Linking, ScrollView, View } from "react-native";
 // The screen works with no connection too: SOS then opens the phone's own
 // Messages app to the contacts saved on this phone.
 
+const SOS_SLOW_AFTER_MS = 6_000;
+
 function EmergencyNumbers({
   numbers,
   onCall,
@@ -199,10 +201,23 @@ export default function SafetyScreen() {
   const [eventId, setEventId] = useState<string | null | undefined>(undefined);
   const [locationAllowed, setLocationAllowed] = useState(true);
   const [offlineNotice, setOfflineNotice] = useState(false);
+  const [sosSending, setSosSending] = useState(false);
+  const [sosSlow, setSosSlow] = useState(false);
 
   useEffect(() => {
     if (userId) void readSafetySnapshot(userId).then(setSnapshot);
   }, [userId]);
+
+  // An SOS waits up to the server's deadline before the phone's own
+  // Messages app opens. Past a few seconds the person is offered it at once.
+  useEffect(() => {
+    if (!sosSending) {
+      setSosSlow(false);
+      return;
+    }
+    const timer = setTimeout(() => setSosSlow(true), SOS_SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [sosSending]);
 
   useFocusEffect(
     useCallback(() => {
@@ -217,6 +232,9 @@ export default function SafetyScreen() {
 
   const contacts = data?.contacts ?? [];
   const reachableContacts = contacts.filter((c) => c.status !== "declined");
+  const phonesToText = (
+    data ? reachableContacts : (snapshot?.contacts ?? [])
+  ).map((c) => c.phoneE164);
   const emergencyNumbers =
     data?.emergencyNumbers ?? snapshot?.emergencyNumbers ?? [];
   const timezone = data?.timezone ?? "UTC";
@@ -245,6 +263,7 @@ export default function SafetyScreen() {
         permission = await askSafetyLocationPermission();
       }
       setLocationAllowed(permission === "granted");
+      setSosSending(true);
       const outcome = await startSafety({
         kind: "sos",
         eventId: chosenEvent?.id ?? null,
@@ -256,9 +275,23 @@ export default function SafetyScreen() {
         setOfflineNotice(true);
       }
     } finally {
+      setSosSending(false);
       setBusy(false);
     }
   };
+
+  const slowSosCard = sosSlow ? (
+    <Card className="gap-2 border-warning">
+      <AppText variant="small">{t("sosStillSending")}</AppText>
+      <Button
+        title={t("textFromPhoneToo")}
+        variant="outline"
+        size="sm"
+        leftIcon="chatbubble-outline"
+        onPress={() => void textFromPhone(phonesToText)}
+      />
+    </Card>
+  ) : null;
 
   const startSession = async (request: StartSessionRequest) => {
     setBusy(true);
@@ -382,6 +415,40 @@ export default function SafetyScreen() {
     if (p === "blocked") Linking.openSettings().catch(() => {});
   };
 
+  // Still loading, with contacts saved on this phone: SOS is there at once
+  // (it tries Abonten first and falls back to the phone's Messages app). A
+  // slow or stalled connection must never leave a spinner where SOS is.
+  if (!data && view.kind === "loading" && snapshot?.contacts.length) {
+    return (
+      <View className="flex-1 bg-background">
+        <AppHeader
+          variant="title"
+          title={t("title")}
+          backFallback="/(app)/account"
+        />
+        <ScrollView contentContainerClassName="gap-5 p-4 pb-12">
+          {slowSosCard}
+          {offlineNotice ? (
+            <Card className="gap-2 border-warning">
+              <AppText variant="bodyStrong">{t("offlineSentTitle")}</AppText>
+              <AppText variant="small">{t("offlineSentBody")}</AppText>
+            </Card>
+          ) : null}
+          <View className="items-center gap-3">
+            <SosHoldButton
+              onTrigger={() => void triggerSos()}
+              disabled={busy}
+            />
+            <AppText variant="small" className="px-6 text-center">
+              {t("sosHoldHint")}
+            </AppText>
+          </View>
+          <EmergencyNumbers numbers={emergencyNumbers} onCall={callNumber} />
+        </ScrollView>
+      </View>
+    );
+  }
+
   // Offline with nothing loaded: SOS from the phone itself, to the contacts
   // saved on this phone.
   if (!data && (view.kind === "offline" || view.kind === "error")) {
@@ -441,6 +508,7 @@ export default function SafetyScreen() {
           refreshControl={<Refresher onRefresh={() => overview.refetch()} />}
           keyboardShouldPersistTaps="handled"
         >
+          {slowSosCard}
           {offlineNotice ? (
             <Card className="gap-2 border-warning">
               <AppText variant="bodyStrong">{t("offlineSentTitle")}</AppText>

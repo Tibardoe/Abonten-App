@@ -30,10 +30,12 @@ import {
 // how old it is.
 
 const MAX_BATCH = 20;
+const PENDING_SOS_RETRY_MS = 30_000;
 
 export function useSafetyLocationReporter(): void {
   const { session } = useSession();
   const userId = session?.user.id ?? null;
+  const accessToken = session?.access_token ?? null;
   const { program } = useSafetyProgram();
   const overview = useSafetyOverview({ enabled: program.enabled });
   const active = overview.data?.data?.active ?? null;
@@ -51,11 +53,15 @@ export function useSafetyLocationReporter(): void {
     }
   }, [appActive, userId, program.enabled, qc]);
 
-  // An SOS sent while offline goes again once the connection is back.
+  // An SOS that never reached the server (offline, or the server stalled
+  // and the phone's Messages app opened instead) goes again with the same
+  // request id: at once when the connection or the token comes back, then
+  // every half minute while the app is open, until the server answers.
   useEffect(() => {
-    if (!userId || !online) return;
+    if (!userId || !online || !accessToken || !appActive) return;
     let cancelled = false;
-    void (async () => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const attempt = async () => {
       const pending = await readPendingSos(userId);
       if (!pending || cancelled) return;
       if (Date.now() - pending.startedAt > PENDING_SOS_MAX_AGE_MS) {
@@ -63,12 +69,19 @@ export function useSafetyLocationReporter(): void {
         return;
       }
       const sent = await retryPendingSos(userId, pending);
-      if (sent && !cancelled) apply(sent);
-    })();
+      if (cancelled) return;
+      if (sent) {
+        apply(sent);
+        return;
+      }
+      timer = setTimeout(() => void attempt(), PENDING_SOS_RETRY_MS);
+    };
+    void attempt();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
-  }, [userId, online, apply]);
+  }, [userId, online, accessToken, appActive, apply]);
 
   const sessionId = active && isSessionOpen(active.status) ? active.id : null;
   const status = active?.status ?? null;

@@ -72,6 +72,7 @@
   "textThemFromPhone": "{count, plural, one {Von deinem Handy aus schreiben (# nicht erreicht)} other {Von deinem Handy aus schreiben (# nicht erreicht)}}",
   "textFromPhoneToo": "Auch von deinem Handy aus schreiben",
   "textFromPhoneAgain": "Nachrichten-App erneut öffnen",
+  "sosStillSending": "Dein Alarm wird noch gesendet. Wenn du kannst, schreib deinen Kontakten zusätzlich von diesem Handy aus.",
   "tellEventTeam": "Event-Team informieren",
   "tellEventTeamTitle": "Event-Team informieren?",
   "tellEventTeamBody": "Der Veranstalter bekommt deinen Namen, deine Telefonnummer, deine Notiz und deinen Standort, damit das Personal dich finden kann.",

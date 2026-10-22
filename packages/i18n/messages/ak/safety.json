@@ -72,6 +72,7 @@
   "textThemFromPhone": "{count, plural, one {Text them from your phone (# not reached)} other {Text them from your phone (# not reached)}}",
   "textFromPhoneToo": "Also text them from your phone",
   "textFromPhoneAgain": "Open messages again",
+  "sosStillSending": "Still sending your alert. If you can, text your contacts from this phone as well.",
   "tellEventTeam": "Tell the event team",
   "tellEventTeamTitle": "Tell the event team?",
   "tellEventTeamBody": "The organizer gets your name, phone number, note and location, so their staff can find you.",

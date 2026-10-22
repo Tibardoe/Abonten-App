@@ -4,8 +4,8 @@ purpose: How a person asks their own people for help from Abonten (SOS), asks Ab
 audience: Engineering, operations, security and privacy reviewers
 scope: The safety_* tables and functions, market.safety_config, @abonten/services safety and admin/safety modules, the /safety, /sos and /trusted web routes, /api/mobile/safety, /api/safety/dispatch, the app's Safety screens, Admin › Safety and the safety-dispatch and safety-housekeeping jobs. Not covered - background location, a contact picker and a home-screen shortcut, which need a native build (§12).
 status: Review required
-version: 1.0
-lastReviewed: 2026-10-21
+version: 1.1
+lastReviewed: 2026-10-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Abonten Safety
 
-**State (2026-10-21): built, switched off.** `safety_program_setting.enabled = false`, audience `staff`, `SAFETY_KILL_SWITCH` available on the web deployment. With the programme off nothing shows on the website or in the app, contacts can still open a link they were already sent, and Admin › Safety works normally. Rollout: §11 and [admin/safety.md](../admin/safety.md). Legal items I1–I5 must be Decided before the audience is Everyone.
+**State (2026-10-22): built, switched off.** The migration is live on Preview and Production (2026-10-22); in both, `safety_program_setting.enabled = false`, audience `staff`, `SAFETY_KILL_SWITCH` available on the web deployment. With the programme off nothing shows on the website or in the app, contacts can still open a link they were already sent, and Admin › Safety works normally. Rollout: §11 and [admin/safety.md](../admin/safety.md). Legal items I1–I5 must be Decided before the audience is Everyone.
 
 ## 1. What it is, and what it is not
 
@@ -119,6 +119,9 @@ Every message is written in the **recipient's** language (`safety_contact.locale
 | Situation | What happens |
 |---|---|
 | No connection when SOS is held | The pending start is kept in SecureStore; the phone's Messages app opens to the cached contacts with "SOS — I need help. My location: <maps pin>"; the screen shows "No internet: send the text from your phone", Call 112, and retries the server alert on reconnect (same `clientRequestId`, so it is never sent twice by Abonten) |
+| The server is slow or stalls (connection accepted, no answer) | After 6 seconds the screen says the alert is still being sent and offers "Also text them from your phone"; at the request's 25-second deadline the phone's Messages app opens as for no connection, and the kept alert is sent again (same `clientRequestId`) as soon as the server answers: at once when the connection or the token comes back or the person returns to the app, then every 30 seconds while the app is open (`useSafetyLocationReporter`). A 401 or 429 keeps it too |
+| The Safety screen has not loaded yet | If contacts are saved on this phone, SOS and the emergency numbers show at once instead of a spinner; holding SOS tries Abonten first and falls back to the phone's Messages app |
+| The auth server stalls | No request waits more than 4 seconds for the token, and a stalled token refresh gives up after 15 seconds per attempt ([mobile-offline-media-and-sync.md](mobile-offline-media-and-sync.md)), so an SOS is never held behind it |
 | Server reached, some texts failed | Per-contact state on screen; "Text them from your phone" pre-filled for those contacts; the dispatcher keeps retrying |
 | Location permission off | The alert goes without a position ("location not shared"); the screen offers to turn it on |
 | App killed during an alert | The alert stays open until "I'm safe" or `alert_hours`; the contact page shows the last position and its age |

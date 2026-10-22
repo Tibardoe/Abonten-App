@@ -1,4 +1,5 @@
 import "react-native-url-polyfill/auto";
+import { fetchWithTimeout } from "@abonten/core/http/fetchWithTimeout";
 import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { AppState } from "react-native";
@@ -19,10 +20,37 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// React Native's fetch has no deadline on Android, and with an expired token
+// every getSession() waits for the refresh in flight. A refresh that never
+// got an answer (a half-open connection, a captive portal, a stalled tunnel)
+// therefore held them all for good: the app's requests, the start-up screen
+// and an SOS hung. Auth calls get a deadline; a timed-out one is an ordinary
+// retryable failure to supabase-js (the session stays stored and refreshes
+// on the next tick). Data calls are left alone.
+const AUTH_REQUEST_DEADLINE_MS = 15_000;
+
+function fetchWithAuthDeadline(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.toString()
+        : null;
+  if (!url?.includes("/auth/v1/")) return fetch(input, init);
+  return fetchWithTimeout(url, {
+    ...init,
+    timeoutMs: AUTH_REQUEST_DEADLINE_MS,
+  });
+}
+
 export const supabase: SupabaseClient<Database> = createClient(
   supabaseUrl,
   supabaseAnonKey,
   {
+    global: { fetch: fetchWithAuthDeadline },
     auth: {
       storage: secureStorage,
       autoRefreshToken: true,
