@@ -66,7 +66,7 @@ Migration `supabase/migrations/20261021180000_safety_core.sql`. Every table has 
 | `safety_message` | Outbox: one row per text / email / push to send (`purpose` invite / share / alert / check_in_missed / safe / false_alarm / event_team, `channel` sms / email / push), with status, attempts, provider id, last error, `next_attempt_at` | `unique (recipient_id, purpose, channel)` and `unique (contact_id, purpose, channel, invite_count)` make sending idempotent |
 | `safety_session_event` | The session's timeline (started, alerted, note, extended, event team, viewed, acknowledged, resolved, expired) | Shown on the contact page and in Admin |
 
-`market.safety_config` (jsonb) holds each market's emergency numbers, `{"emergencyNumbers":[{"service":"all","number":"112"}, …]}`. Ghana is seeded with 112 (all emergencies), police 191, ambulance 193 and fire 192 (Government of Canada travel advice for Ghana, March 2026); operational decision J3 is to confirm them with Ghana's services. Staff edit them in Admin › Markets.
+`market.safety_config` (jsonb) holds each market's emergency numbers, `{"emergencyNumbers":[{"service":"all","number":"112"}, …]}`. Ghana shows **112 only** (decision J3, migration `20261022130000`): the Government of Ghana merged police, fire and ambulance into 112 in January 2020 and said the old 191, 192 and 193 were no longer in use; travel advice still lists the old codes, so they stay off the SOS screen until a Ghanaian authority confirms they answer (a button that rings a dead line costs seconds). It was seeded with all four on 2026-10-21. Staff edit the list in Admin › Markets.
 
 **Tokens.** A contact page link is `https://abontenhub.com/sos/<token>`; an invite is `/trusted/<token>`. The token is an HMAC of the row id with a key derived from the service-role key (`safety-view:v1`, `safety-invite:v1`), cut to 128 bits (22 characters) so the text stays short; only its SHA-256 is stored. The dispatcher can therefore rebuild a token for a retry without the plain token ever being stored.
 
@@ -156,8 +156,8 @@ The cached contacts (name and number only) live in SecureStore per account and a
 ## 10. Privacy
 
 - Data: the person's contacts (third-party personal data: name, phone, optional email), positions during sessions, session timing and notes. Lawful basis, notices and the privacy policy wording are legal items I2 and I3; the store privacy answers ("Contacts" collected; precise location already declared) change with the policy before the audience is Everyone (I3).
-- Retention: points and last-position columns 7 days after the session closes; sessions, recipients, outbox and timeline 180 days; contacts until the person removes them or deletes the account (cascade). Operational decision J2.
-- Deleting the account deletes everything (foreign keys cascade from `user_info`).
+- Retention: points and last-position columns 7 days after the session closes; sessions, recipients, outbox and timeline 180 days; contacts until the person removes them or deletes the account. Operational decision J2.
+- Deleting the account deletes everything: account deletion keeps the `user_info` row (status 4), so the cascades never fire, and the trigger `user_info_safety_forget` runs `safety_forget_account` instead (contacts, sessions, positions, texts, per-person opt-outs; links to the person as someone else's contact are set to null). Migration `20261022140000`, 2026-10-22; until then a deleted account's Safety data stayed.
 
 ## 11. Rollout
 

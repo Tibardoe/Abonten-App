@@ -135,6 +135,11 @@ const SERVICE_ROLE_ONLY: Call[] = [
     why: "pg_cron safety-dispatch only",
   },
   {
+    name: "safety_forget_account",
+    args: { p_user_id: ABSENT_ID },
+    why: "removes a deleted account's Safety data; called by the account-deletion trigger (2026-10-22)",
+  },
+  {
     name: "admin_listing_views",
     args: {
       p_from: "2026-01-01T00:00:00Z",

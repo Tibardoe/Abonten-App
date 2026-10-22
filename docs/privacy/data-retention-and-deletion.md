@@ -4,8 +4,8 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.4
-lastReviewed: 2026-10-04
+version: 1.5
+lastReviewed: 2026-10-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -36,6 +36,7 @@ complianceReviewRequired: yes
 | Browser push subscriptions | Removed on sign-out and opt-out; deleted on a 404/410 from the push service | event-driven | `webPushCore.ts`, `useWebPush.ts` |
 | "Tell me when it launches" waiting list (`area_waitlist`: account, city or ~1 km cell, area name) | Deleted by `area_waitlist_notify` when the launch notice goes out, when the person taps "Stop waiting", or on account deletion; kept while the area has not launched | until launch or leave | `20260930100000_area_launch_waitlist.sql`, `areaWaitlistCore.ts` |
 | Phone OTP pending state | Cleared on success, after 5 attempts, or after the 5-minute TTL | 5 minutes | `phoneOtpStore.ts` |
+| Abonten Safety positions and sessions | `safety_housekeeping()` (job `safety-housekeeping`, 03:50): positions and the session's last position `location_retention_days` (7) after a session closes; sessions with their recipients, outbox rows and timeline `session_retention_days` (180) after they close; invite texts 180 days after they were queued | 7 / 180 days after the session closes | `20261021180000_safety_core.sql` |
 | Field-programme reviews left open | `fieldops_run_housekeeping()` cron 02:25 closes reviews past `review_grace_days` (14) | 14 days after campaign completion | `20260911223818_fieldops_commissions.sql` |
 
 ## 2. Account deletion (user-initiated)
@@ -57,6 +58,7 @@ Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`)
 | **Events** | Upcoming published events with no active tickets → `canceled`; everything else `archived_at` set (leaves discovery and search; direct links still open, organizer shown as "Deleted user") |
 | **Places** | Kept published, `claimed = false`, verification cleared — the next owner can claim the listing |
 | **Verification cases** | Open cases withdrawn, an approved one revoked (`verification_transition`, actor `system`, reason `account_deleted`) |
+| **Abonten Safety** (since 2026-10-22) | Trigger `user_info_safety_forget` (on `status_id` becoming 4) runs `safety_forget_account`: the person's `safety_contact` rows (other people's names and numbers), every `safety_session` with its positions, recipients, timeline and texts, queued `safety_message` rows and their per-person opt-outs are deleted; where the person was someone else's linked contact, `contact_user_id` / `recipient_user_id` are set to null and the other person's contact row stays. Before this the soft delete left all of it behind, because the cascades fire only on a hard delete (migration `20261022140000`) |
 | **Kept with identity nulled** (`ON DELETE SET NULL`) | unchanged — nothing is deleted from `auth.users`, so these columns keep their ids and resolve to the anonymised profile |
 | **Kept, no FK to the user** | Credit ledger (`credit_*`), `reward_event`, field-ops member/owner ids |
 | **Kept as financial record** (verified cascade would have removed them) | `transaction`, `payment_attempt`, `ticket_checkout`, `ticket`, `organizer_ledger_entry`, `payout`, `platform_fee_entry` — all now point at the anonymised profile |
