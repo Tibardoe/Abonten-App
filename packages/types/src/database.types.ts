@@ -6106,6 +6106,7 @@ export type Database = {
           legal_config: Json
           name: string
           otp_provider: string | null
+          safety_config: Json
           status: string
           supported_currencies: string[]
           supported_locales: string[]
@@ -6136,6 +6137,7 @@ export type Database = {
           legal_config?: Json
           name: string
           otp_provider?: string | null
+          safety_config?: Json
           status?: string
           supported_currencies?: string[]
           supported_locales?: string[]
@@ -6166,6 +6168,7 @@ export type Database = {
           legal_config?: Json
           name?: string
           otp_provider?: string | null
+          safety_config?: Json
           status?: string
           supported_currencies?: string[]
           supported_locales?: string[]
@@ -11354,6 +11357,556 @@ export type Database = {
           },
         ]
       }
+      safety_contact: {
+        Row: {
+          contact_user_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          invite_count: number
+          invite_token_hash: string
+          invited_at: string | null
+          locale: string
+          name: string
+          phone_e164: string
+          position: number
+          relationship: string
+          responded_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          invite_count?: number
+          invite_token_hash: string
+          invited_at?: string | null
+          locale?: string
+          name: string
+          phone_e164: string
+          position?: number
+          relationship?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          invite_count?: number
+          invite_token_hash?: string
+          invited_at?: string | null
+          locale?: string
+          name?: string
+          phone_e164?: string
+          position?: number
+          relationship?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_contact_contact_user_id_fkey"
+            columns: ["contact_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_contact_contact_user_id_fkey"
+            columns: ["contact_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_contact_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_contact_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      safety_contact_optout: {
+        Row: {
+          created_at: string
+          id: number
+          phone_e164: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          phone_e164: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          phone_e164?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_contact_optout_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_contact_optout_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      safety_location: {
+        Row: {
+          accuracy_m: number | null
+          id: number
+          lat: number
+          lng: number
+          received_at: string
+          recorded_at: string
+          session_id: string
+          source: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          id?: never
+          lat: number
+          lng: number
+          received_at?: string
+          recorded_at: string
+          session_id: string
+          source?: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          id?: never
+          lat?: number
+          lng?: number
+          received_at?: string
+          recorded_at?: string
+          session_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_location_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "safety_session"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_message: {
+        Row: {
+          attempts: number
+          channel: string
+          claimed_at: string | null
+          contact_id: string | null
+          created_at: string
+          id: number
+          invite_round: number | null
+          last_error: string | null
+          next_attempt_at: string
+          provider_message_id: string | null
+          purpose: string
+          recipient_id: string | null
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          claimed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: never
+          invite_round?: number | null
+          last_error?: string | null
+          next_attempt_at?: string
+          provider_message_id?: string | null
+          purpose: string
+          recipient_id?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          claimed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          id?: never
+          invite_round?: number | null
+          last_error?: string | null
+          next_attempt_at?: string
+          provider_message_id?: string | null
+          purpose?: string
+          recipient_id?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_message_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "safety_contact"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_message_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "safety_recipient"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_message_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_message_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      safety_program_setting: {
+        Row: {
+          alert_hours: number
+          alerts_with_sms_per_day: number
+          audience: string
+          beta_user_ids: string[]
+          check_in_enabled: boolean
+          check_in_grace_minutes: number
+          enabled: boolean
+          event_team_alerts_enabled: boolean
+          id: number
+          invites_per_day: number
+          location_retention_days: number
+          max_contacts: number
+          session_retention_days: number
+          share_enabled: boolean
+          share_max_hours: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alert_hours?: number
+          alerts_with_sms_per_day?: number
+          audience?: string
+          beta_user_ids?: string[]
+          check_in_enabled?: boolean
+          check_in_grace_minutes?: number
+          enabled?: boolean
+          event_team_alerts_enabled?: boolean
+          id?: number
+          invites_per_day?: number
+          location_retention_days?: number
+          max_contacts?: number
+          session_retention_days?: number
+          share_enabled?: boolean
+          share_max_hours?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alert_hours?: number
+          alerts_with_sms_per_day?: number
+          audience?: string
+          beta_user_ids?: string[]
+          check_in_enabled?: boolean
+          check_in_grace_minutes?: number
+          enabled?: boolean
+          event_team_alerts_enabled?: boolean
+          id?: number
+          invites_per_day?: number
+          location_retention_days?: number
+          max_contacts?: number
+          session_retention_days?: number
+          share_enabled?: boolean
+          share_max_hours?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      safety_recipient: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledgement: string | null
+          contact_id: string | null
+          created_at: string
+          email: string | null
+          first_viewed_at: string | null
+          id: string
+          kind: string
+          last_viewed_at: string | null
+          locale: string
+          name: string
+          phone_e164: string | null
+          recipient_user_id: string | null
+          session_id: string
+          view_count: number
+          view_token_hash: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledgement?: string | null
+          contact_id?: string | null
+          created_at?: string
+          email?: string | null
+          first_viewed_at?: string | null
+          id: string
+          kind: string
+          last_viewed_at?: string | null
+          locale?: string
+          name: string
+          phone_e164?: string | null
+          recipient_user_id?: string | null
+          session_id: string
+          view_count?: number
+          view_token_hash: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledgement?: string | null
+          contact_id?: string | null
+          created_at?: string
+          email?: string | null
+          first_viewed_at?: string | null
+          id?: string
+          kind?: string
+          last_viewed_at?: string | null
+          locale?: string
+          name?: string
+          phone_e164?: string | null
+          recipient_user_id?: string | null
+          session_id?: string
+          view_count?: number
+          view_token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_recipient_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "safety_contact"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_recipient_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_recipient_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "safety_recipient_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "safety_session"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_session: {
+        Row: {
+          alert_reason: string | null
+          alerted_at: string | null
+          client_request_id: string
+          country_code: string | null
+          created_at: string
+          created_via: string
+          due_at: string | null
+          ends_at: string
+          event_id: string | null
+          event_team_notified_at: string | null
+          id: string
+          kind: string
+          last_accuracy_m: number | null
+          last_lat: number | null
+          last_lng: number | null
+          last_located_at: string | null
+          location_count: number
+          note: string | null
+          place_id: string | null
+          reminded_at: string | null
+          resolution: string | null
+          resolved_at: string | null
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_reason?: string | null
+          alerted_at?: string | null
+          client_request_id: string
+          country_code?: string | null
+          created_at?: string
+          created_via?: string
+          due_at?: string | null
+          ends_at: string
+          event_id?: string | null
+          event_team_notified_at?: string | null
+          id?: string
+          kind: string
+          last_accuracy_m?: number | null
+          last_lat?: number | null
+          last_lng?: number | null
+          last_located_at?: string | null
+          location_count?: number
+          note?: string | null
+          place_id?: string | null
+          reminded_at?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          started_at?: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_reason?: string | null
+          alerted_at?: string | null
+          client_request_id?: string
+          country_code?: string | null
+          created_at?: string
+          created_via?: string
+          due_at?: string | null
+          ends_at?: string
+          event_id?: string | null
+          event_team_notified_at?: string | null
+          id?: string
+          kind?: string
+          last_accuracy_m?: number | null
+          last_lat?: number | null
+          last_lng?: number | null
+          last_located_at?: string | null
+          location_count?: number
+          note?: string | null
+          place_id?: string | null
+          reminded_at?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_session_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_session_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_session_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_session_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      safety_session_event: {
+        Row: {
+          at: string
+          detail: Json
+          id: number
+          kind: string
+          recipient_id: string | null
+          session_id: string
+        }
+        Insert: {
+          at?: string
+          detail?: Json
+          id?: never
+          kind: string
+          recipient_id?: string | null
+          session_id: string
+        }
+        Update: {
+          at?: string
+          detail?: Json
+          id?: never
+          kind?: string
+          recipient_id?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_session_event_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "safety_recipient"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_session_event_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "safety_session"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       search_concept: {
         Row: {
           applies_to: string[]
@@ -15960,6 +16513,7 @@ export type Database = {
           legal_config: Json
           name: string
           otp_provider: string | null
+          safety_config: Json
           status: string
           supported_currencies: string[]
           supported_locales: string[]
@@ -16296,8 +16850,22 @@ export type Database = {
       run_financial_reconciliation: { Args: never; Returns: Json }
       run_notification_delivery: { Args: never; Returns: undefined }
       run_payment_reconcile_dispatch: { Args: never; Returns: undefined }
+      run_safety_dispatch: { Args: never; Returns: undefined }
       run_scheduled_health_check: { Args: never; Returns: undefined }
       run_storage_purge_dispatch: { Args: never; Returns: undefined }
+      safety_claim_check_in_reminders: { Args: never; Returns: string[] }
+      safety_claim_messages: {
+        Args: { p_ids?: number[]; p_limit?: number }
+        Returns: number[]
+      }
+      safety_dispatch_due: { Args: never; Returns: boolean }
+      safety_escalate_due_check_ins: { Args: never; Returns: string[] }
+      safety_expire_sessions: { Args: never; Returns: number }
+      safety_housekeeping: { Args: never; Returns: Json }
+      safety_record_locations: {
+        Args: { p_points: Json; p_session_id: string; p_user_id: string }
+        Returns: Json
+      }
       search_events: {
         Args: {
           p_as_of?: string

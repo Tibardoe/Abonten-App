@@ -1,4 +1,5 @@
 import { readStoredSession, takeStaleTokenUsed } from "@/auth/storedSession";
+import { clearSafetyStorage } from "@/features/safety/safetyStore";
 import { deleteQueryCacheFiles } from "@/lib/queryCacheFiles";
 import { queryClient } from "@/lib/queryClient";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +31,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let runningOnStoredSession = false;
+    // Whose data to remove from the phone when the session ends.
+    let lastUserId: string | null = null;
     supabase.auth.getSession().then(async ({ data, error }) => {
       let restored = data.session;
       // Offline with an access token past its hour: the refresh cannot
@@ -45,6 +48,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (restored) runningOnStoredSession = true;
       }
       if (cancelled) return;
+      lastUserId = restored?.user.id ?? lastUserId;
       setSession(restored);
       setInitializing(false);
     });
@@ -53,6 +57,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // An INITIAL_SESSION with nothing, while offline, is the same
       // unrefreshable-token case handled above: keep what we have.
       if (event === "INITIAL_SESSION" && !next) return;
+      const previousUserId = lastUserId;
+      lastUserId = next?.user.id ?? null;
       setSession(next);
       // First working token after running on the stored (expired) one:
       // whatever was fetched in between went out without a valid token
@@ -76,6 +82,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_OUT" || (event === "USER_UPDATED" && !next)) {
         queryClient.clear();
         deleteQueryCacheFiles("anon");
+        // Safety's offline copy of the trusted contacts goes too.
+        if (previousUserId) void clearSafetyStorage(previousUserId);
       }
     });
 

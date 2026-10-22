@@ -827,6 +827,51 @@
     "welcome_credit": {
       "body": "{amount} de descuento en tu primer pedido de entradas de {min} o más. Úsalo en los próximos {days} días.",
       "title": "Tienes crédito de bienvenida"
+    },
+    "safety_alert": {
+      "title": "SOS de {name}",
+      "body": "{name} ha pulsado el botón de ayuda y puede necesitarte. Toca para ver dónde está {name}."
+    },
+    "safety_check_in_missed": {
+      "title": "{name} no ha confirmado que está bien",
+      "body": "{name} no ha confirmado que está bien a la hora prevista{hasStartsAt, select, yes { ({dayTime})} other {}}. Toca para ver su última ubicación conocida."
+    },
+    "safety_share": {
+      "title": "{name} comparte contigo su ubicación en tiempo real",
+      "body": "{hasStartsAt, select, yes {Hasta el {dayTime}. Toca para seguir la ubicación.} other {Toca para seguir la ubicación.}}"
+    },
+    "safety_safe": {
+      "title": "{name} está bien",
+      "body": "{name} ha cerrado la alerta."
+    },
+    "safety_false_alarm": {
+      "title": "La alerta de {name} fue un error",
+      "body": "{name} está bien."
+    },
+    "safety_event_team": {
+      "title": "{hasEvent, select, yes {Alguien en {event} ha pedido ayuda} other {Alguien ha pedido ayuda}}",
+      "body": "{name} ha pulsado SOS en tu evento. Toca para ver dónde está {name} y para llamar."
+    },
+    "safety_contact_viewed": {
+      "title": "{contact} ha abierto tu alerta"
+    },
+    "safety_contact_ack": {
+      "title": "{ack, select, on_my_way {{contact} va en camino} calling {{contact} te está llamando} other {{contact} no puede ayudar ahora}}",
+      "body": "{ack, select, cant_help {Prueba con otro contacto o llama a los servicios de emergencia.} other {Abre Abonten para ver quién más ha respondido.}}"
+    },
+    "safety_check_in_due": {
+      "title": "Es hora de confirmar que estás bien",
+      "body": "Abre Abonten y toca «Estoy bien»; si no, se avisará a tus contactos de confianza dentro de {minutes, plural, one {# minuto} other {# minutos}}."
+    },
+    "safety_check_in_escalated": {
+      "title": "Se ha avisado a tus contactos de confianza",
+      "body": "No has confirmado a tiempo. Si estás bien, abre Abonten y toca «Estoy bien»."
+    },
+    "safety_contact_accepted": {
+      "title": "{contact} ya forma parte de tus contactos de confianza"
+    },
+    "safety_contact_declined": {
+      "title": "{contact} ha rechazado ser tu contacto de confianza"
     }
   },
   "openStatus": {

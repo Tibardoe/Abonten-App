@@ -4,8 +4,8 @@ purpose: Every scheduled job in production — what it does, when it runs, how t
 audience: Engineering, operations
 scope: pg_cron jobs in supabase/migrations
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-04
+version: 1.4
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -47,6 +47,8 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `recommendations-purge` | 03:40 | `recommendations_purge()` | Delete picks after 90 days, digests after 180, skip records after 30 | Tables grow; retention promise broken |
 | `weekly-publish-due` | */5 min | `weekly_publish_due()` | Publish scheduled Abonten Weekly editions whose time has come; one that fails its checks stays scheduled and opens an incident | Scheduled editions never go out; `weekly` health check down after 15 minutes |
 | `weekly-housekeeping` | 02:45 | `weekly_housekeeping()` | Remove edition listings whose event or place was deleted; archive editions older than `edition_retention_weeks` (104) | Orphan rows (hidden from readers anyway); old editions stay unarchived |
+| `safety-dispatch` | every minute | `run_safety_dispatch()` → `POST /api/safety/dispatch` (notification-delivery token; URL derived from `notification_delivery_config.dispatch_url`) | Abonten Safety: end shares and old alerts; when something is due, turn missed check-ins into alerts, push "time to check in", and send or retry texts, emails and pushes in the Safety outbox | **A missed check-in alerts nobody** and failed texts are not retried. The SOS button itself still texts at once (the request sends its own outbox rows). Check Admin › Monitoring › cron and Admin › Safety (messages waiting) |
+| `safety-housekeeping` | 03:50 | `safety_housekeeping()` | Delete positions `location_retention_days` (7) after a session closes; sessions with their recipients, outbox and timeline after `session_retention_days` (180) | Positions and old sessions are kept longer than promised (privacy) |
 | `content-stats-rollup` | :20 hourly | `content_rollup_stats(20000)` | Fold valid Spotlight/Story views and clicks into `content_post_daily_stat` | Creator insights and the admin overview stop moving (raw events are kept) |
 | `content-trending-refresh` | :25 hourly | `content_trending_refresh()` | Recompute `trending_score` over the trending window | Trending tab goes stale |
 | `content-housekeeping` | 03:50 | `content_housekeeping()` | Archive ended Stories, apply retention to deleted posts and raw views, queue unused uploads for Cloudinary deletion | Tables and Cloudinary storage grow; retention promise broken |

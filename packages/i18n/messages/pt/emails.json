@@ -57,5 +57,47 @@
     "time": "Hora",
     "venue": "Local",
     "viewMyTickets": "Ver os meus bilhetes"
+  },
+  "safety": {
+    "callPerson": "Ligue a {person}: {phone}",
+    "emergencyNote": "O Abonten não contacta os serviços de emergência. Se achar que {person} está em perigo, ligue para o {emergency}.",
+    "emergencyNoteNoNumber": "O Abonten não contacta os serviços de emergência. Se achar que {person} está em perigo, ligue para o número de emergência local.",
+    "footer": "Está a receber este e-mail porque é contacto de confiança de {person} no Abonten.",
+    "invite": {
+      "subject": "{person} pediu-lhe para ser contacto de emergência",
+      "heading": "{person} confia em si",
+      "intro": "{person} pediu-lhe, no Abonten, para ser contacto de emergência. Se {person} alguma vez precisar de ajuda, por exemplo numa saída à noite, vai receber uma SMS ou um e-mail a mostrar onde {person} está. Pode aceitar ou recusar.",
+      "button": "Aceitar ou recusar"
+    },
+    "share": {
+      "subject": "{person} está a partilhar consigo a localização em tempo real",
+      "heading": "{hasTime, select, yes {Acompanhe {person} até {time}} other {Acompanhe {person}}}",
+      "intro": "{hasEvent, select, yes {{person} está a partilhar consigo a localização em tempo real no Abonten enquanto está em {event}.} other {{person} está a partilhar consigo a localização em tempo real no Abonten.}} Está tudo bem: é só para que possa ver que {person} chega bem a casa.",
+      "button": "Acompanhar {person}"
+    },
+    "alert": {
+      "subject": "SOS de {person}",
+      "heading": "{person} pode precisar da sua ajuda",
+      "intro": "{hasEvent, select, yes {{person} carregou no botão de ajuda no Abonten em {event}.} other {{person} carregou no botão de ajuda no Abonten.}} Veja onde {person} está e responda, para que {person} saiba que viu a mensagem.",
+      "button": "Ver onde {person} está"
+    },
+    "checkInMissed": {
+      "subject": "{person} não confirmou que está bem",
+      "heading": "{person} não confirmou que está bem",
+      "intro": "{person} tinha combinado confirmar no Abonten, até {time}, que estava bem, e não o fez. Veja a última localização conhecida e responda, para que {person} saiba que viu a mensagem.",
+      "button": "Ver a última localização conhecida"
+    },
+    "safe": {
+      "subject": "{person} está em segurança",
+      "heading": "{person} está em segurança",
+      "intro": "{person} terminou o alerta no Abonten. Obrigado por estar presente.",
+      "button": "Abrir a página"
+    },
+    "falseAlarm": {
+      "subject": "O alerta de {person} foi um engano",
+      "heading": "{person} está bem",
+      "intro": "O alerta de {person} no Abonten foi enviado por engano. Está tudo bem.",
+      "button": "Abrir a página"
+    }
   }
 }

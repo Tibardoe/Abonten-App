@@ -206,6 +206,8 @@ export type WebPushPayload = {
   body?: string | null;
   link?: string | null;
   data?: Record<string, unknown>;
+  /** Someone may need help (Abonten Safety): delivered ahead of other traffic. */
+  urgent?: boolean;
 };
 
 type SendNotification = typeof webpush.sendNotification;
@@ -269,7 +271,7 @@ export async function sendWebPushToUser(
           body,
           {
             TTL: TTL_SECONDS,
-            urgency: "normal",
+            urgency: payload.urgent ? "high" : "normal",
             timeout: 10_000,
             vapidDetails: vapid,
           },

@@ -17,10 +17,6 @@
 // it cannot be replayed.
 
 import { randomBytes, randomInt } from "node:crypto";
-import {
-  HTTP_TIMEOUTS,
-  fetchWithTimeout,
-} from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 import { tr } from "../../i18n/requestLocale";
 import {
@@ -28,42 +24,18 @@ import {
   hmacBase64Url,
   signaturesMatch,
 } from "../../security/signing";
+import {
+  HUBTEL_SMS_ENV,
+  isHubtelSmsConfigured,
+  sendHubtelSms,
+} from "../../sms/hubtelSms";
 import { PENDING_OTP_TTL_MS } from "../phoneOtpStore";
 import type { OtpProvider, OtpSendResult, OtpVerifyResult } from "./types";
 
-const HUBTEL_SMS_SEND_URL = "https://sms.hubtel.com/v1/messages/send";
 const CODE_LENGTH = 6;
-// Hubtel's ceiling for an alphanumeric sender ID. The ID must also be one
-// Hubtel has approved for the account; an unapproved one is dropped by the
-// networks without an error.
-const SENDER_ID_MAX_LENGTH = 11;
 // Marks a pending code this provider issued. One still pending from the old
 // OTP product has no marker and is treated as expired.
 const HASH_VERSION = "h1.";
-
-type HubtelSmsSendResponse = {
-  messageId?: string | null;
-  status?: number | string;
-  statusDescription?: string;
-};
-
-function config(): {
-  clientId: string;
-  clientSecret: string;
-  senderId: string;
-} | null {
-  const clientId = process.env.HUBTEL_API_CLIENT_ID;
-  const clientSecret = process.env.HUBTEL_API_CLIENT_SECRET;
-  const senderId = process.env.HUBTEL_SMS_SENDER_ID?.trim();
-  if (!clientId || !clientSecret || !senderId) return null;
-  if (senderId.length > SENDER_ID_MAX_LENGTH) {
-    logger.error(
-      `HUBTEL_SMS_SENDER_ID is ${senderId.length} characters; Hubtel allows ${SENDER_ID_MAX_LENGTH}.`,
-    );
-    return null;
-  }
-  return { clientId, clientSecret, senderId };
-}
 
 function codeHash(requestId: string, code: string): string {
   return `${HASH_VERSION}${hmacBase64Url(deriveSigningKey("phone-otp:v1"), `${requestId}:${code}`)}`;
@@ -75,32 +47,15 @@ export function otpMessage(code: string): string {
   return tr("yourAbontenCodeIsItExpires", { code: code, minutes: minutes });
 }
 
-// Hubtel's numeric `status`: 0 accepted, 1 accepted for delivery. It says
-// the request was taken, not that the phone received anything. A missing,
-// null or empty status is not acceptance (Number() would read those as 0).
-function accepted(status: unknown): boolean {
-  const value =
-    typeof status === "number"
-      ? status
-      : typeof status === "string" && status.trim() !== ""
-        ? Number(status)
-        : Number.NaN;
-  return value === 0 || value === 1;
-}
-
 export const hubtelOtpProvider: OtpProvider = {
   code: "hubtel",
 
   isConfigured() {
-    return config() !== null;
+    return isHubtelSmsConfigured();
   },
 
   requiredEnv() {
-    return [
-      "HUBTEL_API_CLIENT_ID",
-      "HUBTEL_API_CLIENT_SECRET",
-      "HUBTEL_SMS_SENDER_ID",
-    ];
+    return [...HUBTEL_SMS_ENV];
   },
 
   codeLength() {
@@ -108,8 +63,7 @@ export const hubtelOtpProvider: OtpProvider = {
   },
 
   async send(phoneE164): Promise<OtpSendResult> {
-    const creds = config();
-    if (!creds) {
+    if (!isHubtelSmsConfigured()) {
       logger.error("Hubtel SMS credentials or sender ID are not configured.");
       return {
         ok: false,
@@ -125,54 +79,29 @@ export const hubtelOtpProvider: OtpProvider = {
     // Before the text goes out, so a missing signing key cannot leave a
     // paid message with no way to check it.
     const prefix = codeHash(requestId, code);
-    let response: Response;
-    let body: HubtelSmsSendResponse | null;
-    try {
-      response = await fetchWithTimeout(HUBTEL_SMS_SEND_URL, {
-        timeoutMs: HTTP_TIMEOUTS.hubtelOtp,
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          Authorization: `Basic ${Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString("base64")}`,
-        },
-        // The body holds the code: never log it or put it in an error.
-        body: JSON.stringify({
-          From: creds.senderId,
-          To: phoneE164.replace(/\D/g, ""),
-          Content: otpMessage(code),
-          ClientReference: requestId,
-        }),
-      });
-      body = (await response
-        .json()
-        .catch(() => null)) as HubtelSmsSendResponse | null;
-    } catch (error) {
-      // A timeout may still have texted; the send has been counted either
-      // way and is not retried here (a retry is a second paid message).
-      const detail = `Hubtel SMS send did not complete: ${error instanceof Error ? error.message : String(error)}`;
-      logger.error(detail);
-      return {
-        ok: false,
-        reason: "provider_error",
-        message: tr("couldnTSendTheVerificationCode"),
-        detail,
-      };
-    }
-    // An unfunded account is HTTP 400 with status 12 "Payment required on
-    // account" (seen 2026-09-20), so both numbers go into the detail.
-    if (!response.ok || !body || !accepted(body.status)) {
-      const detail = `Hubtel SMS send refused (HTTP ${response.status}, status ${body?.status ?? "none"}): ${body?.statusDescription ?? "no readable body"}`;
-      logger.error(detail);
-      return {
-        ok: false,
-        reason: "provider_error",
-        message: tr("couldnTSendTheVerificationCode"),
-        detail,
-      };
-    }
-    logger.info("Hubtel SMS code accepted", {
-      messageId: body.messageId ?? null,
+    // A timeout may still have texted; the send has been counted either
+    // way and is not retried here (a retry is a second paid message).
+    const sent = await sendHubtelSms({
+      toE164: phoneE164,
+      content: otpMessage(code),
+      clientReference: requestId,
     });
+    if (!sent.ok) {
+      logger.error(sent.detail);
+      return {
+        ok: false,
+        reason:
+          sent.reason === "not_configured"
+            ? "not_configured"
+            : "provider_error",
+        message:
+          sent.reason === "not_configured"
+            ? tr("somethingWentWrongPleaseTryAgain")
+            : tr("couldnTSendTheVerificationCode"),
+        detail: sent.detail,
+      };
+    }
+    logger.info("Hubtel SMS code accepted", { messageId: sent.messageId });
     return { ok: true, requestId, prefix };
   },
 

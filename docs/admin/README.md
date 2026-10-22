@@ -47,6 +47,7 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Discovery | `discovery.view` | [discovery.md](discovery.md) |
 | Spotlight & Stories | `spotlight.view` | [spotlight.md](spotlight.md) |
 | Abonten Weekly | `weekly.view` | [weekly.md](weekly.md) |
+| Safety | `safety.view` | [safety.md](safety.md) |
 | Support | `support.view` | [support.md](support.md) |
 | Blocked users, Users | `users.view` | [users.md](users.md) |
 | Organizers, Events, Places | `organizers.view`, `events.view`, `places.view` | [catalog.md](catalog.md) |

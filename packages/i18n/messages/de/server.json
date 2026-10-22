@@ -520,7 +520,8 @@
     "youHaveStartedALotOfConversations": "Du hast in letzter Zeit sehr viele Unterhaltungen begonnen. Bitte versuche es später erneut.",
     "yourAccountHasBeenRestricted": "Dein Konto wurde eingeschränkt.",
     "yourCreditBalanceIsNegative": "Dein Guthaben ist negativ",
-    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt"
+    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt",
+    "youCanHaveAtMostTrustedContacts": "Du kannst höchstens {0} Vertrauenspersonen haben."
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1236,5 +1237,41 @@
   "yourRoleCanTDoThis": "Deine Rolle darf das nicht",
   "yourSpotlight": "Dein Spotlight",
   "thatPlaceCouldNotBeFound": "Dieser Ort wurde nicht gefunden. Wähle einen anderen Vorschlag.",
-  "confirmThisNumberWithA": "Bestätige diese Nummer mit dem Code, den wir per SMS an sie senden. Wenn du nicht siehst, wo du den Code eingeben kannst, schließe die App und öffne sie erneut, um sie zu aktualisieren."
+  "confirmThisNumberWithA": "Bestätige diese Nummer mit dem Code, den wir per SMS an sie senden. Wenn du nicht siehst, wo du den Code eingeben kannst, schließe die App und öffne sie erneut, um sie zu aktualisieren.",
+  "safety": {
+    "notAvailable": "Die Sicherheitsfunktionen sind für dein Konto noch nicht verfügbar.",
+    "verifyPhoneFirst": "Bestätige zuerst deine Telefonnummer, damit deine Vertrauenspersonen wissen, dass ein Alarm wirklich von dir kommt, und dich zurückrufen können.",
+    "addNameFirst": "Füge zuerst deinen Namen zu deinem Profil hinzu, damit deine Vertrauenspersonen wissen, von wem ein Alarm kommt.",
+    "tooManyContacts": "Du kannst höchstens {max} Vertrauenspersonen haben.",
+    "contactExists": "Diese Nummer gehört bereits zu deinen Vertrauenspersonen.",
+    "contactIsYou": "Das ist deine eigene Nummer. Wähle jemand anderen.",
+    "contactOptedOut": "Diese Person möchte nicht als Notfallkontakt hinzugefügt werden.",
+    "tooManyAdds": "Du hast heute schon viele Vertrauenspersonen hinzugefügt. Versuche es morgen erneut.",
+    "contactNotFound": "Diese Vertrauensperson wurde nicht gefunden.",
+    "inviteNotYet": "Du kannst die Einladung morgen erneut senden.",
+    "inviteLimit": "Diese Einladung wurde bereits so oft gesendet wie erlaubt.",
+    "inviteAlreadyAnswered": "Diese Person hat bereits geantwortet.",
+    "sessionNotFound": "Diese Sicherheitssitzung wurde nicht gefunden.",
+    "sessionClosed": "Das ist bereits beendet.",
+    "sessionChanged": "Das hat sich gerade geändert. Aktualisiere die Seite und versuche es erneut.",
+    "alreadyOpen": "Bei dir läuft bereits ein Check-in oder eine Standortfreigabe. Beende sie zuerst oder drücke SOS.",
+    "noContacts": "Füge zuerst eine Vertrauensperson hinzu.",
+    "checkInOff": "Check-ins sind noch nicht verfügbar.",
+    "shareOff": "Das Teilen des Standorts ist noch nicht verfügbar.",
+    "eventTeamOff": "Das Event-Team zu informieren ist noch nicht verfügbar.",
+    "eventTeamNeedsAlert": "Das Event-Team kann nur informiert werden, solange ein Alarm aktiv ist.",
+    "noEventForSession": "Dieser Alarm ist mit keinem Event verknüpft.",
+    "extendOnlyCheckIn": "Nur ein Check-in, der noch läuft, kann verlängert werden.",
+    "invalidLocation": "Dieser Standort konnte nicht gelesen werden.",
+    "linkInvalid": "Dieser Link ist ungültig oder abgelaufen.",
+    "tooManyRequests": "Zu viele Anfragen. Warte einen Moment und versuche es erneut.",
+    "sms": {
+      "invite": "{person} hat dich bei Abonten als Notfallkontakt hinzugefügt. Falls {person} einmal Hilfe braucht, schicken wir dir hier eine SMS. Annehmen oder ablehnen: {link}",
+      "share": "{person} teilt auf Abonten den Live-Standort mit dir{hasTime, select, yes { bis {time}} other {}}. Hier verfolgen: {link}",
+      "alert": "SOS von {person}: {person} hat auf Abonten den Hilfe-Knopf gedrückt und braucht dich vielleicht. Hier siehst du, wo {person} ist: {link}{hasPhone, select, yes { {person} anrufen: {phone}} other {}}{hasEmergency, select, yes { Notruf: {emergency}} other {}}",
+      "checkInMissed": "{person} hat sich auf Abonten nicht wie geplant bis {time} gemeldet. Letzter bekannter Standort: {link}{hasPhone, select, yes { {person} anrufen: {phone}} other {}}{hasEmergency, select, yes { Notruf: {emergency}} other {}}",
+      "safe": "{person} ist in Sicherheit und hat den Alarm auf Abonten beendet.",
+      "falseAlarm": "Der Alarm von {person} auf Abonten war ein Versehen. {person} geht es gut."
+    }
+  }
 }

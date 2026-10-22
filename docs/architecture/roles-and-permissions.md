@@ -4,8 +4,8 @@ purpose: The complete role model as enforced — how end-user roles are derived,
 audience: Engineering, security/compliance reviewers
 scope: user_info, admin_* tables, fieldops_team_member, RLS policies in supabase/migrations
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -62,6 +62,8 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `weekly.edit` | Create, copy and edit editions, sections and listings; archive and restore | operations, moderator |
 | `weekly.publish` | Schedule, cancel a schedule, publish, unpublish — in `STEP_UP_PERMISSIONS` | operations |
 | `weekly.configure` | Areas and programme settings — in `STEP_UP_PERMISSIONS` | operations |
+| `safety.view` | Admin › Safety: sessions, who was told, delivery of texts, emails and pushes, settings. Never positions or notes | operations, support_admin |
+| `safety.configure` | Safety programme switches and limits — in `STEP_UP_PERMISSIONS` | operations |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

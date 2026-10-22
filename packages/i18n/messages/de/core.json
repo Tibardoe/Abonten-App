@@ -827,6 +827,51 @@
     "welcome_credit": {
       "body": "{amount} Rabatt auf deine erste Ticketbestellung ab {min}. Löse es innerhalb von {days} Tagen ein.",
       "title": "Du hast Willkommensguthaben"
+    },
+    "safety_alert": {
+      "title": "SOS von {name}",
+      "body": "{name} hat den Hilfe-Knopf gedrückt und braucht dich vielleicht. Tippe, um zu sehen, wo {name} ist."
+    },
+    "safety_check_in_missed": {
+      "title": "{name} hat sich nicht gemeldet",
+      "body": "{name} hat sich{hasStartsAt, select, yes { bis {dayTime}} other {}} nicht wie geplant gemeldet. Tippe, um den letzten bekannten Standort zu sehen."
+    },
+    "safety_share": {
+      "title": "{name} teilt den Live-Standort mit dir",
+      "body": "{hasStartsAt, select, yes {Bis {dayTime}. Tippe, um den Standort zu verfolgen.} other {Tippe, um den Standort zu verfolgen.}}"
+    },
+    "safety_safe": {
+      "title": "{name} ist in Sicherheit",
+      "body": "{name} hat den Alarm beendet."
+    },
+    "safety_false_alarm": {
+      "title": "Der Alarm von {name} war ein Versehen",
+      "body": "{name} geht es gut."
+    },
+    "safety_event_team": {
+      "title": "{hasEvent, select, yes {Ein Gast bei {event} hat um Hilfe gebeten} other {Ein Gast hat um Hilfe gebeten}}",
+      "body": "{name} hat bei deinem Event SOS gedrückt. Tippe, um zu sehen, wo {name} ist, und um anzurufen."
+    },
+    "safety_contact_viewed": {
+      "title": "{contact} hat deinen Alarm geöffnet"
+    },
+    "safety_contact_ack": {
+      "title": "{ack, select, on_my_way {{contact} ist unterwegs} calling {{contact} ruft dich an} other {{contact} kann gerade nicht helfen}}",
+      "body": "{ack, select, cant_help {Versuche es bei einer anderen Vertrauensperson oder ruf den Notruf an.} other {Öffne Abonten, um zu sehen, wer sonst noch geantwortet hat.}}"
+    },
+    "safety_check_in_due": {
+      "title": "Zeit, dich zu melden",
+      "body": "Öffne Abonten und tippe auf „Ich bin in Sicherheit“, sonst werden deine Vertrauenspersonen in {minutes, plural, one {# Minute} other {# Minuten}} alarmiert."
+    },
+    "safety_check_in_escalated": {
+      "title": "Deine Vertrauenspersonen wurden alarmiert",
+      "body": "Du hast dich nicht rechtzeitig gemeldet. Wenn alles in Ordnung ist, öffne Abonten und tippe auf „Ich bin in Sicherheit“."
+    },
+    "safety_contact_accepted": {
+      "title": "{contact} ist jetzt eine deiner Vertrauenspersonen"
+    },
+    "safety_contact_declined": {
+      "title": "{contact} hat abgelehnt, deine Vertrauensperson zu sein"
     }
   },
   "openStatus": {

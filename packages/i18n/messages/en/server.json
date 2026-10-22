@@ -495,6 +495,7 @@
     "weeklyWeekNotMonday": "weekly_week_not_monday",
     "youAlreadyHaveAPendingTicketCheckout": "You already have a pending ticket checkout for this event",
     "youAreSendingMessagesTooQuicklyPlease": "You are sending messages too quickly. Please slow down.",
+    "youCanHaveAtMostTrustedContacts": "You can have at most {0} trusted contacts.",
     "youCanOnlyAttachYourOwnEvents": "You can only attach your own events",
     "youCanOnlyAttachYourOwnPlaces": "You can only attach your own places",
     "youCanOnlyPostYourOwnReview": "You can only post your own review",
@@ -1236,5 +1237,41 @@
     "eventListedFor": "Event listed for {date}"
   },
   "thatPlaceCouldNotBeFound": "That place could not be found. Pick another suggestion.",
-  "confirmThisNumberWithA": "Confirm this number with the code we text to it. If you don't see where to enter a code, close the app and open it again to update it."
+  "confirmThisNumberWithA": "Confirm this number with the code we text to it. If you don't see where to enter a code, close the app and open it again to update it.",
+  "safety": {
+    "notAvailable": "Safety isn't available on your account yet.",
+    "verifyPhoneFirst": "Verify your phone number first, so your contacts know an alert is really from you and can call you back.",
+    "addNameFirst": "Add your name to your profile first, so your contacts know who an alert is from.",
+    "tooManyContacts": "You can have at most {max} trusted contacts.",
+    "contactExists": "This number is already one of your trusted contacts.",
+    "contactIsYou": "That's your own number. Choose someone else.",
+    "contactOptedOut": "This person asked not to be added as an emergency contact.",
+    "tooManyAdds": "You've added a lot of contacts today. Try again tomorrow.",
+    "contactNotFound": "We couldn't find that contact.",
+    "inviteNotYet": "You can send the invite again tomorrow.",
+    "inviteLimit": "This invite has already been sent as many times as we allow.",
+    "inviteAlreadyAnswered": "This contact has already answered.",
+    "sessionNotFound": "We couldn't find that safety session.",
+    "sessionClosed": "This has already ended.",
+    "sessionChanged": "This changed a moment ago. Refresh and try again.",
+    "alreadyOpen": "You already have a check-in or a location share running. End it first, or press SOS.",
+    "noContacts": "Add a trusted contact first.",
+    "checkInOff": "Check-ins aren't available yet.",
+    "shareOff": "Sharing your location isn't available yet.",
+    "eventTeamOff": "Telling the event team isn't available yet.",
+    "eventTeamNeedsAlert": "The event team can be told while an alert is open.",
+    "noEventForSession": "This alert isn't linked to an event.",
+    "extendOnlyCheckIn": "Only a check-in that is still running can be extended.",
+    "invalidLocation": "That location couldn't be read.",
+    "linkInvalid": "This link isn't valid, or it has ended.",
+    "tooManyRequests": "Too many requests. Wait a moment and try again.",
+    "sms": {
+      "invite": "{person} added you as an emergency contact on Abonten. If {person} ever needs help, we will text you here. Accept or say no: {link}",
+      "share": "{person} is sharing live location with you on Abonten{hasTime, select, yes { until {time}} other {}}. Follow here: {link}",
+      "alert": "SOS from {person}: {person} pressed the help button on Abonten and may need you. See where {person} is: {link}{hasPhone, select, yes { Call {person}: {phone}} other {}}{hasEmergency, select, yes { Emergency: {emergency}} other {}}",
+      "checkInMissed": "{person} did not check in on Abonten by {time} as planned. Last known location: {link}{hasPhone, select, yes { Call {person}: {phone}} other {}}{hasEmergency, select, yes { Emergency: {emergency}} other {}}",
+      "safe": "{person} is safe and has ended the alert on Abonten.",
+      "falseAlarm": "The alert from {person} on Abonten was a mistake. {person} is OK."
+    }
+  }
 }

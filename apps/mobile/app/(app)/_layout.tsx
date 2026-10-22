@@ -9,6 +9,7 @@ import { usePushRegistration } from "@/features/notifications/usePushRegistratio
 import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
 import { useRemindersSync } from "@/features/reminders/useRemindersSync";
 import { useInviteBinding } from "@/features/rewards/useInviteBinding";
+import { useSafetyLocationReporter } from "@/features/safety/useSafetyLocationReporter";
 import { useTheme, useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
 import { Platform } from "react-native";
@@ -35,6 +36,9 @@ function StackHost() {
   // thread opened straight from a notification, where the tabs may never
   // mount -- because the thread relies on it for the inbox row bump.
   useInboxRealtime();
+  // An open Safety session keeps getting positions on every screen, and an
+  // SOS sent while offline goes again when the connection is back.
+  useSafetyLocationReporter();
   const c = useThemeColors();
   const { scheme } = useTheme();
 

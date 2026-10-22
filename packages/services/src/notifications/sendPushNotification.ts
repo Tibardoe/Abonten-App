@@ -23,6 +23,13 @@ type PushPayload = {
   link?: string | null;
   /** Structured target (kind + entity ids) for native tap routing. */
   data?: Record<string, unknown>;
+  /**
+   * Someone may need help (Abonten Safety). Expo sends it at high priority
+   * (Android wakes the device; iOS delivers at once and, with the Time
+   * Sensitive capability in a later build, through Focus). No channelId: a
+   * channel an older app never created would hide the notice on Android.
+   */
+  urgent?: boolean;
 };
 
 /** What happened: at least one device accepted it, none registered, or it failed. */
@@ -70,6 +77,12 @@ async function sendExpoPushToUser(
     title: payload.title,
     body: payload.body ?? undefined,
     sound: "default" as const,
+    ...(payload.urgent
+      ? {
+          priority: "high" as const,
+          interruptionLevel: "time-sensitive" as const,
+        }
+      : {}),
     data: {
       ...(payload.link ? { link: payload.link } : {}),
       ...(payload.data ?? {}),

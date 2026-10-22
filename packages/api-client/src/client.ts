@@ -32,6 +32,22 @@ import type {
   WeeklyTeaser,
 } from "@abonten/types/weeklyType";
 import type {
+  AcknowledgeSafetyBody,
+  AddSafetyContactBody,
+  ResolveSafetySessionBody,
+  SafetyContactResult,
+  SafetyLocationBody,
+  SafetyLocationResult,
+  SafetyOverviewResult,
+  SafetyProgramResult,
+  SafetySessionResult,
+  SafetyViewResult,
+  StartSafetySessionBody,
+  StartSafetySessionResponse,
+  UpdateSafetyContactBody,
+  UpdateSafetySessionBody,
+} from "./types";
+import type {
   AddMomoWalletBody,
   AddPayoutAccountBody,
   AddPayoutAccountResult,
@@ -395,6 +411,8 @@ export function createApiClient(options: ApiClientOptions) {
       method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
       body?: unknown;
       auth: boolean;
+      /** This call's own deadline, when the client-wide one does not fit. */
+      timeoutMs?: number;
     },
   ): Promise<TResponse> {
     const headers: Record<string, string> = {};
@@ -419,7 +437,8 @@ export function createApiClient(options: ApiClientOptions) {
 
     const startedAt = Date.now();
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const deadline = init.timeoutMs ?? timeoutMs;
+    const timer = setTimeout(() => controller.abort(), deadline);
     let response: Response;
     try {
       response = await doFetch(joinUrl(options.baseUrl, path), {
@@ -439,7 +458,7 @@ export function createApiClient(options: ApiClientOptions) {
       const timedOut = controller.signal.aborted;
       throw new ApiTransportError(
         timedOut
-          ? `Request to ${path} timed out after ${timeoutMs}ms`
+          ? `Request to ${path} timed out after ${deadline}ms`
           : `Request to ${path} failed`,
         error,
       );
@@ -2492,6 +2511,99 @@ export function createApiClient(options: ApiClientOptions) {
      * business; an admin decides. Ships switched off — `program` reports
      * both switches false until the programme is opened.
      */
+    safety: {
+      program() {
+        return request<SafetyProgramResult>("/api/mobile/safety/program", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /** The whole Safety screen in one call. */
+      overview() {
+        return request<SafetyOverviewResult>("/api/mobile/safety/overview", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      addContact(body: AddSafetyContactBody) {
+        return request<SafetyContactResult>("/api/mobile/safety/contacts", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      updateContact(contactId: string, body: UpdateSafetyContactBody) {
+        return request<SafetyContactResult>(
+          `/api/mobile/safety/contacts/${encodeURIComponent(contactId)}`,
+          { method: "PATCH", body, auth: true },
+        );
+      },
+      removeContact(contactId: string) {
+        return request<{ status: number; message?: string }>(
+          `/api/mobile/safety/contacts/${encodeURIComponent(contactId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      resendInvite(contactId: string) {
+        return request<SafetyContactResult>(
+          `/api/mobile/safety/contacts/${encodeURIComponent(contactId)}/invite`,
+          { method: "POST", auth: true },
+        );
+      },
+      /**
+       * SOS, a check-in or a share. The texts go out inside this request, so
+       * it may take longer than other calls; the same clientRequestId twice
+       * is one session, which is what makes a retry after a lost answer safe.
+       */
+      start(body: StartSafetySessionBody) {
+        return request<StartSafetySessionResponse>(
+          "/api/mobile/safety/sessions",
+          {
+            method: "POST",
+            body,
+            auth: true,
+            timeoutMs: 25_000,
+          },
+        );
+      },
+      update(sessionId: string, body: UpdateSafetySessionBody) {
+        return request<SafetySessionResult>(
+          `/api/mobile/safety/sessions/${encodeURIComponent(sessionId)}`,
+          { method: "PATCH", body, auth: true },
+        );
+      },
+      recordLocation(sessionId: string, points: SafetyLocationBody[]) {
+        return request<SafetyLocationResult>(
+          `/api/mobile/safety/sessions/${encodeURIComponent(sessionId)}/location`,
+          { method: "POST", body: { points }, auth: true },
+        );
+      },
+      resolve(sessionId: string, body: ResolveSafetySessionBody) {
+        return request<SafetySessionResult>(
+          `/api/mobile/safety/sessions/${encodeURIComponent(sessionId)}/resolve`,
+          { method: "POST", body, auth: true, timeoutMs: 25_000 },
+        );
+      },
+      tellEventTeam(sessionId: string) {
+        return request<SafetySessionResult>(
+          `/api/mobile/safety/sessions/${encodeURIComponent(sessionId)}/event-team`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** A contact's own view of an alert (their token; no account needed). */
+      view(token: string) {
+        return request<SafetyViewResult>(
+          `/api/mobile/safety/view/${encodeURIComponent(token)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      acknowledge(token: string, body: AcknowledgeSafetyBody) {
+        return request<SafetyViewResult>(
+          `/api/mobile/safety/view/${encodeURIComponent(token)}/ack`,
+          { method: "POST", body, auth: true },
+        );
+      },
+    },
     verification: {
       program() {
         return request<VerificationProgramResult>(

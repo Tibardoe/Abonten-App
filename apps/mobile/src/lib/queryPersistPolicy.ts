@@ -51,6 +51,14 @@ export const PERSIST_RULES: readonly PersistRule[] = [
     maxEntries: 1,
   },
   { id: "weekly", prefix: ["mobile", "weekly"], maxEntries: 4 },
+  // Only the switch: the Safety screen itself (contacts, sessions) is never
+  // written to the cache file; its offline copy lives in SecureStore
+  // (features/safety/safetyStore).
+  {
+    id: "safety-program",
+    prefix: ["mobile", "safety", "program"],
+    maxEntries: 1,
+  },
   // Which market is being browsed, its currency and payment methods, the
   // display rates and the feature flags: public configuration plus the
   // person's own preferences. Without it an offline cold start would not

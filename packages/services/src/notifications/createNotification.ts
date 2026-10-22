@@ -153,6 +153,7 @@ export async function createNotificationCore(
     body: input.body ?? null,
     link: input.link ?? null,
     data: { ...(input.data ?? {}), notificationId: inserted?.id },
+    urgent: input.urgent === true,
   }).catch(() => {});
 
   return { status: 200 };

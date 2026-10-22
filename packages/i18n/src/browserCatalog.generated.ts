@@ -37,6 +37,7 @@ export const BROWSER_NAMESPACE_LOADERS: Record<
   profile: (locale) => import(`../messages/${locale}/profile.json`),
   reviews: (locale) => import(`../messages/${locale}/reviews.json`),
   rewards: (locale) => import(`../messages/${locale}/rewards.json`),
+  safety: (locale) => import(`../messages/${locale}/safety.json`),
   search: (locale) => import(`../messages/${locale}/search.json`),
   settings: (locale) => import(`../messages/${locale}/settings.json`),
   spotlight: (locale) => import(`../messages/${locale}/spotlight.json`),

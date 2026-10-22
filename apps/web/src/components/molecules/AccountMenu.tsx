@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFieldOpsMe } from "@/hooks/useFieldOpsMe";
 import { useRewardsProgram } from "@/hooks/useRewardsProgram";
+import { useSafetyProgram } from "@/hooks/useSafetyProgram";
 import { HELP_PATH } from "@abonten/core/brand/socialLinks";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -21,6 +22,7 @@ import {
   IoMapOutline,
   IoPersonOutline,
   IoSettingsOutline,
+  IoShieldCheckmarkOutline,
   IoTicketOutline,
 } from "react-icons/io5";
 import { MdOutlineReceipt } from "react-icons/md";
@@ -44,6 +46,7 @@ export default function AccountMenu({
 }: AccountMenuProps) {
   const t = useTranslations("navigation");
   const { data: rewards } = useRewardsProgram();
+  const { program: safety } = useSafetyProgram();
   const { data: fieldOps } = useFieldOpsMe();
   const showFieldWork = !!fieldOps?.programEnabled && !!fieldOps.current;
 
@@ -106,6 +109,15 @@ export default function AccountMenu({
             <Link href="/rewards">
               <IoGiftOutline className="text-lg" />
               {t("rewards")}
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        {safety.enabled && (
+          <DropdownMenuItem asChild className="gap-2">
+            <Link href="/safety">
+              <IoShieldCheckmarkOutline className="text-lg" />
+              {t("safety")}
             </Link>
           </DropdownMenuItem>
         )}

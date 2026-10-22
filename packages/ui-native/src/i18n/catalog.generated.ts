@@ -26,6 +26,7 @@ import akPlans from "@abonten/i18n/messages/ak/plans.json";
 import akProfile from "@abonten/i18n/messages/ak/profile.json";
 import akReviews from "@abonten/i18n/messages/ak/reviews.json";
 import akRewards from "@abonten/i18n/messages/ak/rewards.json";
+import akSafety from "@abonten/i18n/messages/ak/safety.json";
 import akSearch from "@abonten/i18n/messages/ak/search.json";
 import akSettings from "@abonten/i18n/messages/ak/settings.json";
 import akSpotlight from "@abonten/i18n/messages/ak/spotlight.json";
@@ -59,6 +60,7 @@ import dePlans from "@abonten/i18n/messages/de/plans.json";
 import deProfile from "@abonten/i18n/messages/de/profile.json";
 import deReviews from "@abonten/i18n/messages/de/reviews.json";
 import deRewards from "@abonten/i18n/messages/de/rewards.json";
+import deSafety from "@abonten/i18n/messages/de/safety.json";
 import deSearch from "@abonten/i18n/messages/de/search.json";
 import deSettings from "@abonten/i18n/messages/de/settings.json";
 import deSpotlight from "@abonten/i18n/messages/de/spotlight.json";
@@ -92,6 +94,7 @@ import enPlans from "@abonten/i18n/messages/en/plans.json";
 import enProfile from "@abonten/i18n/messages/en/profile.json";
 import enReviews from "@abonten/i18n/messages/en/reviews.json";
 import enRewards from "@abonten/i18n/messages/en/rewards.json";
+import enSafety from "@abonten/i18n/messages/en/safety.json";
 import enSearch from "@abonten/i18n/messages/en/search.json";
 import enSettings from "@abonten/i18n/messages/en/settings.json";
 import enSpotlight from "@abonten/i18n/messages/en/spotlight.json";
@@ -125,6 +128,7 @@ import esPlans from "@abonten/i18n/messages/es/plans.json";
 import esProfile from "@abonten/i18n/messages/es/profile.json";
 import esReviews from "@abonten/i18n/messages/es/reviews.json";
 import esRewards from "@abonten/i18n/messages/es/rewards.json";
+import esSafety from "@abonten/i18n/messages/es/safety.json";
 import esSearch from "@abonten/i18n/messages/es/search.json";
 import esSettings from "@abonten/i18n/messages/es/settings.json";
 import esSpotlight from "@abonten/i18n/messages/es/spotlight.json";
@@ -158,6 +162,7 @@ import frPlans from "@abonten/i18n/messages/fr/plans.json";
 import frProfile from "@abonten/i18n/messages/fr/profile.json";
 import frReviews from "@abonten/i18n/messages/fr/reviews.json";
 import frRewards from "@abonten/i18n/messages/fr/rewards.json";
+import frSafety from "@abonten/i18n/messages/fr/safety.json";
 import frSearch from "@abonten/i18n/messages/fr/search.json";
 import frSettings from "@abonten/i18n/messages/fr/settings.json";
 import frSpotlight from "@abonten/i18n/messages/fr/spotlight.json";
@@ -191,6 +196,7 @@ import ptPlans from "@abonten/i18n/messages/pt/plans.json";
 import ptProfile from "@abonten/i18n/messages/pt/profile.json";
 import ptReviews from "@abonten/i18n/messages/pt/reviews.json";
 import ptRewards from "@abonten/i18n/messages/pt/rewards.json";
+import ptSafety from "@abonten/i18n/messages/pt/safety.json";
 import ptSearch from "@abonten/i18n/messages/pt/search.json";
 import ptSettings from "@abonten/i18n/messages/pt/settings.json";
 import ptSpotlight from "@abonten/i18n/messages/pt/spotlight.json";
@@ -231,6 +237,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     profile: enProfile,
     reviews: enReviews,
     rewards: enRewards,
+    safety: enSafety,
     search: enSearch,
     settings: enSettings,
     spotlight: enSpotlight,
@@ -266,6 +273,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     profile: akProfile,
     reviews: akReviews,
     rewards: akRewards,
+    safety: akSafety,
     search: akSearch,
     settings: akSettings,
     spotlight: akSpotlight,
@@ -301,6 +309,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     profile: deProfile,
     reviews: deReviews,
     rewards: deRewards,
+    safety: deSafety,
     search: deSearch,
     settings: deSettings,
     spotlight: deSpotlight,
@@ -336,6 +345,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     profile: esProfile,
     reviews: esReviews,
     rewards: esRewards,
+    safety: esSafety,
     search: esSearch,
     settings: esSettings,
     spotlight: esSpotlight,
@@ -371,6 +381,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     profile: frProfile,
     reviews: frReviews,
     rewards: frRewards,
+    safety: frSafety,
     search: frSearch,
     settings: frSettings,
     spotlight: frSpotlight,
@@ -406,6 +417,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     profile: ptProfile,
     reviews: ptReviews,
     rewards: ptRewards,
+    safety: ptSafety,
     search: ptSearch,
     settings: ptSettings,
     spotlight: ptSpotlight,

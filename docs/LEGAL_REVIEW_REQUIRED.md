@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-18
+version: 1.4
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -120,6 +120,18 @@ Abonten asks place owners and event organizers to send business documents so a r
 | H2 | Retention period for business documents under the Data Protection Act, 2012 (Act 843) | `verification_program_setting`; nightly purge job; help pages | Confirm a lawful period for unapproved and for revoked cases. Ships at 90 and 365 days as a working default, changeable by setting. Ties to decision V1 and to the R-items in [specifications/retention-jobs.md](specifications/retention-jobs.md). | Open |
 | H3 | The public meaning of the Verified badge | `packages/core/src/verification/copy.ts`; badge popover on web and mobile; help pages | Confirm the wording: Abonten reviewed documents supporting the business's registration and its link to the account, and verification is **not** a guarantee of the business, its service, safety or quality. Nothing may be added that implies endorsement. | Open |
 | H4 | Whether a verification decision is subject to the appeals route | [specifications/appeals-workflow.md](specifications/appeals-workflow.md); Terms | Decide whether a rejected or revoked applicant has a formal appeal beyond simply reapplying, which the product already allows. | Open |
+
+## I — Abonten Safety
+
+A person names trusted contacts; SOS, a missed check-in or a location share texts them (and pushes or emails them) a link to a live page showing where the person is. Shipped 2026-10-21, switched off. Design: [architecture/safety.md](architecture/safety.md). Operator handbook: [admin/safety.md](admin/safety.md).
+
+| # | Item | Where it appears | What counsel must confirm or decide | Status |
+|---|---|---|---|---|
+| I1 | What Safety says it does and does not do | Safety screens on web and app; the texts, emails and pushes to contacts (`server.safety.sms.*`, `emails.safety.*`, `notices.safety_*`); the contact page | Confirm the wording never promises that anyone will answer or come, and says plainly that Abonten does not contact the police, an ambulance or any emergency service. Confirm the liability position if a text is late, fails, or a contact does not act, and whether the Terms need a Safety clause. | Open |
+| I2 | Holding trusted contacts' personal data (third parties: name, phone, optional email, language) | `safety_contact`; the invite text and page `/trusted/<token>`; `safety_contact_optout` | Confirm the lawful basis under the Data Protection Act, 2012 (Act 843) for a person giving Abonten someone else's number; whether the invite text is adequate notice; that "decline" and "stop all texts" are a sufficient right to object; and how long contacts may be kept after the person's account is deleted (today: deleted with it). | Open |
+| I3 | Sharing a person's location with their contacts during a session, and keeping it | `safety_location`, `safety_session` last position; privacy policy §2, §5, §9; `apps/mobile/store/apple/privacy.json`, `apps/mobile/store/google-play/data-safety.csv` | Approve the privacy-policy wording before the audience is Everyone: precise location shared with the person's chosen contacts only while a session is open, positions deleted 7 days after it ends, sessions after 180 days. Confirm the store answers: "Contacts" collected for app functionality; precise location shared at the user's direction (which Google Play does not count as sharing). | Open |
+| I4 | Telling an event's organizer about a guest's alert | "Tell the event team" (`event_team_alerts_enabled`, off) | Decide whether organizers may receive a guest's name, phone, note and location, what an organizer may do with it, and whether the organizer terms must say so. Off until Decided. | Open |
+| I5 | Texts to people who are not Abonten users | Invite and alert texts through Hubtel, sender ID `Abontenhub` | Confirm these are service (not marketing) messages under the Electronic Communications rules and the National Communications Authority's rules on unsolicited messages, and that one invite text per contact, with a way to stop, is acceptable. | Open |
 
 ## Specifications waiting on this register
 
