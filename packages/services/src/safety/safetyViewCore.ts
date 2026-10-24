@@ -117,7 +117,7 @@ async function buildView(
         ? svc
             .from("event")
             .select(
-              "id, title, event_code, starts_at, ends_at, timezone, address, place:place_id(name)",
+              "id, title, event_code, starts_at, ends_at, timezone, address, place:place_id(name, phone, whatsapp), organizer:user_info!organizer_id(username, full_name, organizer_verified, identity_verified, identity_valid_until, status_id)",
             )
             .eq("id", session.event_id)
             .maybeSingle()
@@ -147,8 +147,24 @@ async function buildView(
     ends_at: string | null;
     timezone: string;
     address: unknown;
-    place: { name: string } | null;
+    place: {
+      name: string;
+      phone: string | null;
+      whatsapp: string | null;
+    } | null;
+    organizer: {
+      username: string | null;
+      full_name: string | null;
+      organizer_verified: boolean | null;
+      identity_verified: boolean | null;
+      identity_valid_until: string | null;
+      status_id: number | null;
+    } | null;
   } | null;
+  const organizer =
+    event?.organizer && event.organizer.status_id === 1
+      ? event.organizer
+      : null;
   const address =
     event?.address && typeof event.address === "object"
       ? (((event.address as { full_address?: unknown }).full_address as
@@ -186,6 +202,20 @@ async function buildView(
           endsAt: event.ends_at,
           timezone: event.timezone,
           timing: "ongoing",
+          venuePhone: event.place?.phone?.trim() || null,
+          venueWhatsapp: event.place?.whatsapp?.trim() || null,
+          organizer:
+            organizer && (organizer.full_name || organizer.username)
+              ? {
+                  name: (organizer.full_name || organizer.username) as string,
+                  // The same rule as the public badge: a live check.
+                  identityChecked:
+                    !!organizer.identity_verified &&
+                    !!organizer.identity_valid_until &&
+                    Date.parse(organizer.identity_valid_until) > now,
+                  verified: !!organizer.organizer_verified,
+                }
+              : null,
         }
       : null,
     locationState: locationState(

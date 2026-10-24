@@ -571,6 +571,25 @@ describe("the event team", () => {
       );
       expect(sos.data?.session.event?.id).toBe(fixture.eventId);
       expect(sos.data?.session.canTellEventTeam).toBe(true);
+
+      // The contact sees who runs the event and whether their identity is
+      // checked — never their legal identity.
+      await raw
+        .from("user_info")
+        .update({ full_name: "Kwesi Events" })
+        .eq("id", organizer.id);
+      const contact = must(
+        sos.data?.session.recipients.find((r) => r.kind === "contact"),
+      );
+      const seen = await getSafetyViewCore(svc, viewTokenFor(contact.id), {
+        ip: IP,
+      });
+      expect(seen.data?.event?.organizer).toEqual({
+        name: "Kwesi Events",
+        identityChecked: false,
+        verified: false,
+      });
+      expect(seen.data?.event).toHaveProperty("venuePhone");
       const told = await tellEventTeamCore(
         svc,
         person.id,

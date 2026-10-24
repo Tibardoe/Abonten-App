@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.5
-lastReviewed: 2026-10-22
+version: 1.6
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -132,6 +132,20 @@ A person names trusted contacts; SOS, a missed check-in or a location share text
 | I3 | Sharing a person's location with their contacts during a session, and keeping it | `safety_location`, `safety_session` last position; privacy policy §2, §5, §9; `apps/mobile/store/apple/privacy.json`, `apps/mobile/store/google-play/data-safety.csv` | Approve the privacy-policy wording before the audience is Everyone: precise location shared with the person's chosen contacts only while a session is open, positions deleted 7 days after it ends, sessions after 180 days. Confirm the store answers: "Contacts" collected for app functionality; precise location shared at the user's direction (which Google Play does not count as sharing). | Open — draft wording for counsel (2026-10-22): Privacy Policy §2, §4, §5, §9 and §10. The store answers are not changed yet: they go to both stores together with the approved policy |
 | I4 | Telling an event's organizer about a guest's alert | "Tell the event team" (`event_team_alerts_enabled`, off) | Decide whether organizers may receive a guest's name, phone, note and location, what an organizer may do with it, and whether the organizer terms must say so. Off until Decided. | Open |
 | I5 | Texts to people who are not Abonten users | Invite and alert texts through Hubtel, sender ID `Abontenhub` | Confirm these are service (not marketing) messages under the Electronic Communications rules and the National Communications Authority's rules on unsolicited messages, and that one invite text per contact, with a way to stop, is acceptable. | Open |
+
+## K — Identity verification
+
+People who run events or places prove who they are with a government ID and a live selfie on Smile ID's hosted page; Abonten keeps the outcome, the name and date of birth on the document, the last four characters of its number, keyed hashes and the expiry, never the images. Built 2026-10-23, switched off. Design: [architecture/identity-verification.md](architecture/identity-verification.md). Operator handbook: [admin/identity.md](admin/identity.md).
+
+| # | Item | Where it appears | What counsel must confirm or decide | Status |
+|---|---|---|---|---|
+| K1 | Lawful basis for identity checks, and the Data Protection Commission registration | `identity_verification`; the consent box and notice on Settings › Identity verification (`identity.consent`, `identity.whatWeKeep`, `identity.whoSees`); Privacy Policy | Confirm the lawful basis under the Data Protection Act, 2012 (Act 843) for checking an ID and a face (consent, with a legitimate-interest basis for fraud prevention?), whether a selfie compared with the National Identification Authority's photo is biometric data needing more, and whether Abonten's registration (DPC PROV2609522) must be updated to cover it. Confirm the transfer to Smile ID (and from it to the NIA) and any transfer outside Ghana. | Open — consent recorded with time, notice version and language (`consent_at`, `consent_notice_version`, `consent_locale`); draft Privacy Policy section for counsel (2026-10-24) |
+| K2 | How long identity records are kept | `retention_days_unsuccessful` (1 year), `retention_days_after_deletion` (2 years), `retention_days_fraud` (5 years); `identity-housekeeping` | Approve or change the periods, in particular keeping a deleted account's identity for two years so an incident can still be traced, and five years for records tied to fraud. | Open — the periods are proposals |
+| K3 | What the "ID checked" badge says | `identity.badgeLabel` / `identity.badgeExplanation` (`@abonten/core/identity/copy`), event page, public profile, the Safety contact page | Confirm the badge may only say that Abonten checked a government ID and a live selfie, and that the explanation ("this does not mean Abonten vouches for this person, their events or their places") is enough. | Open |
+| K4 | Giving an organizer's or owner's identity to the police | Admin › Identity › Show identity details (`identity.view_pii`, step-up, reason, audit `identity.pii.view`); Safety (contacts never get it) | Set the process for a law-enforcement request: who may approve it, what the request must contain, what is disclosed, and how the person is told (if at all). Confirm that a Safety contact must never receive the organizer's legal identity. | Open — today only staff with `identity.view_pii` can see it, with a reason, and every look is audited |
+| K5 | Requiring a checked identity | `require_for_payouts`, `require_for_place_claims`, `require_for_verified_badges`, `require_for_paid_events` (all off) | Confirm Abonten may refuse payouts, claims, badges or ticket sales to someone who will not verify, and whether the Terms and the organizer terms must say so before a switch is turned on. | Open |
+| K6 | The contract with Smile ID | Smile ID as processor of the images and checks | A data-processing agreement: Smile ID's retention of the images and selfies, sub-processors (the NIA), security, breach notice, deletion on request, and where the data is held. | Open — no contract yet |
+| K7 | People under 18 | `minimum_age` (18) | Confirm 18 as the minimum for running events or places on Abonten, and that a rejected minor's record may be kept for the unsuccessful-check period. | Open |
 
 ## Specifications waiting on this register
 

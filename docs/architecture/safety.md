@@ -4,8 +4,8 @@ purpose: How a person asks their own people for help from Abonten (SOS), asks Ab
 audience: Engineering, operations, security and privacy reviewers
 scope: The safety_* tables and functions, market.safety_config, @abonten/services safety and admin/safety modules, the /safety, /sos and /trusted web routes, /api/mobile/safety, /api/safety/dispatch, the app's Safety screens, Admin › Safety and the safety-dispatch and safety-housekeeping jobs. Not covered - background location, a contact picker and a home-screen shortcut, which need a native build (§12).
 status: Review required
-version: 1.1
-lastReviewed: 2026-10-22
+version: 1.2
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -98,6 +98,8 @@ pg_cron `safety-dispatch` (every minute) runs `run_safety_dispatch()`: it expire
 ### 5.6 The contact's page (`/sos/<token>`, public, no sign-in)
 
 `getSafetyViewCore(token)` answers the status, the person's name, photo and phone, the note, the event (title, venue, address, start time in the event's zone), the emergency numbers of the session's market, the timeline, this contact's own answer, and — only while the location is visible (§2.4) — the latest position with its age and accuracy plus the last 20 points. The page polls every 15 seconds while the session is open, shows a map (the site's Google Maps key) and "Open in Google Maps" / "Directions". Opening it the first time records `first_viewed_at` and tells the person "Kofi opened your alert". The page is `noindex`, sends `Referrer-Policy: no-referrer`, is never cached, and is rate-limited per address. Abonten users who are linked contacts open the same view natively (`/(app)/safety/watch/<token>`).
+
+Since 2026-10-24, while the session is open and tied to an event, the page also shows who runs the event (the name on their public profile and the "ID checked" mark when their identity is verified) and buttons to call or WhatsApp the venue on its own public numbers from its Abonten page (`place.phone`, `place.whatsapp`), so a contact can reach the people on site. The organizer's legal identity is never shared with contacts; it stays with Abonten staff (decision L6, legal K4, [identity-verification.md](identity-verification.md) §8).
 
 ### 5.7 Tell the event team
 

@@ -289,6 +289,11 @@
     "functionWasNotRewrittenPatternNotFound": "Function {0} was not rewritten (pattern not found)",
     "getUserTransactionSummaryChangedSince20260925100000": "get_user_transaction_summary changed since 20260925100000; re-derive this fix",
     "goodwillLimitReachedForThisUserThis": "Goodwill limit reached for this user this month (used {0}, limit {1})",
+    "identityAccountIneligible": "identity_account_ineligible",
+    "identityInvalidTransition": "identity_invalid_transition",
+    "identityNotFound": "identity_not_found",
+    "identityReasonRequired": "identity_reason_required",
+    "identityVerificationEventRowsAreNeverChanged": "identity_verification_event rows are never changed",
     "insufficientCreditAvailableRequested": "Insufficient credit (available {0}, requested {1})",
     "invalidBucket": "invalid bucket: {0}",
     "invalidPayoutAccount": "Invalid payout account",
@@ -1272,6 +1277,27 @@
       "checkInMissed": "{person} did not check in on Abonten by {time} as planned. Last known location: {link}{hasPhone, select, yes { Call {person}: {phone}} other {}}{hasEmergency, select, yes { Emergency: {emergency}} other {}}",
       "safe": "{person} is safe and has ended the alert on Abonten.",
       "falseAlarm": "The alert from {person} on Abonten was a mistake. {person} is OK."
+    }
+  },
+  "identity": {
+    "accountNotFound": "We couldn't find your account.",
+    "notAvailable": "Identity verification isn't available on your account yet.",
+    "accountRestricted": "Your account is restricted, so you can't verify right now. Contact Abonten Support.",
+    "alreadyVerified": "Your identity is already verified.",
+    "documentNotOffered": "That document can't be used here. Choose one from the list.",
+    "notReady": "Identity checks aren't available yet. Please try again later.",
+    "stillChecking": "We're still checking your last attempt. Wait for the result before you start again.",
+    "tooManyToday": "You've tried several times today. Try again tomorrow.",
+    "tooManyMonth": "You've reached the number of checks allowed this month. Contact Abonten Support if you need help.",
+    "providerUnavailable": "Our verification partner couldn't be reached. Please try again in a few minutes.",
+    "notFound": "We couldn't find that check.",
+    "cannotCancel": "This check can't be stopped any more.",
+    "checkUnavailable": "We couldn't check your identity status. Please try again.",
+    "required": {
+      "payouts": "Verify your identity before you add a payout account. Go to Settings › Identity verification.",
+      "place_claims": "Verify your identity before your claim can be approved. Go to Settings › Identity verification.",
+      "verified_badges": "Verify your identity before you get a Verified badge. Go to Settings › Identity verification.",
+      "paid_events": "Verify your identity before you sell tickets. Go to Settings › Identity verification, or make the event free."
     }
   }
 }

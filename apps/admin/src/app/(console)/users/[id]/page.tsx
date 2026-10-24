@@ -8,9 +8,10 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
-import { loadUserDetail } from "@/lib/data";
+import { loadIdentitySummaries, loadUserDetail } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
+import { IdentitySummaryLink } from "../../identity/identityStatus";
 import { UserActions } from "./UserActions";
 
 export default async function UserDetailPage({
@@ -20,7 +21,10 @@ export default async function UserDetailPage({
 }) {
   const { id } = await params;
   const ctx = await requireAdmin();
-  const res = await loadUserDetail(id);
+  const [res, identity] = await Promise.all([
+    loadUserDetail(id),
+    loadIdentitySummaries([id]),
+  ]);
 
   if (res.status !== 200 || !res.data) {
     return <EmptyState>{res.message ?? "User not found."}</EmptyState>;
@@ -70,6 +74,14 @@ export default async function UserDetailPage({
               <dd>{u.username ?? "—"}</dd>
               <dt className="text-muted-foreground">Staff</dt>
               <dd>{u.isAdmin ? "yes" : "no"}</dd>
+              {ctx.permissions.includes("identity.view") ? (
+                <>
+                  <dt className="text-muted-foreground">Identity</dt>
+                  <dd>
+                    <IdentitySummaryLink summary={identity.get(id)} />
+                  </dd>
+                </>
+              ) : null}
               <dt className="text-muted-foreground">Joined</dt>
               <dd>
                 {u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}

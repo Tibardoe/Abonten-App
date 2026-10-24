@@ -56,3 +56,8 @@ export function isSafetyToken(value: unknown): value is string {
 export function telUrl(number: string): string {
   return `tel:${number.replace(/[^\d+*#]/g, "")}`;
 }
+
+/** A WhatsApp chat with a listed number (digits only, country code first). */
+export function whatsAppUrl(number: string): string {
+  return `https://wa.me/${number.replace(/\D/g, "")}`;
+}

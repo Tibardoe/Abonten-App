@@ -16,6 +16,7 @@ export const I18N_NAMESPACES = [
   "fieldOps",
   "finances",
   "help",
+  "identity",
   "landing",
   "legal",
   "manage",

@@ -4,8 +4,8 @@ purpose: The authoritative list of every business or policy question the code do
 audience: Founder, operations lead, finance, engineering
 scope: Product, operations, finance, support, security-operations and field-programme policy
 status: Approved
-version: 1.12
-lastReviewed: 2026-10-22
+version: 1.13
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -160,6 +160,19 @@ Built 2026-10-21, switched **off**. Design: [architecture/safety.md](architectur
 | J4 | Safety's limits | `max_contacts`, `alerts_with_sms_per_day`, `invites_per_day`, `check_in_grace_minutes`, `alert_hours`, `share_max_hours` | 5 contacts; texts for 6 alerts a day (an alert is never refused, only its texts); 10 invites a day; 5-minute grace; alerts open 24 hours; shares at most 12 hours. | Keep for the pilot; look at Admin › Safety (failed texts, mistakes) before Everyone. | **Decided (2026-10-22): keep these for the pilot.** Before Everyone, look at Admin › Safety (texts that failed, alerts marked a mistake, contacts who stopped all texts) and change a limit there if the pilot shows a reason. |
 | J5 | Telling the event team | `event_team_alerts_enabled` | Off. | Only after I4, and after the organizers of the first events agree to receive alerts and say who on their team will act on them. | **Decided (2026-10-22): stays off** until I4 is Decided and the organizers of the first events agree in writing and name who on their team acts on an alert. |
 | J6 | Background location and the next native build | `apps/mobile/app.json` (expo-location plugin), a future expo-task-manager task | Foreground only: the app sends positions while it is open. The iOS location sentence does not name Safety yet. | In the next native build (1.1): add "Always" location for an open session only, a foreground service on Android, and a location sentence that names Safety; tell App Review why (guideline 2.5.4). | **Decided (2026-10-22): in the next native build, not before.** Background location needs a new native module, and the app's runtime follows its version, so adding one means version 1.1.0, after which no over-the-air update reaches the 1.0.0 installs the pilot testers have. Build it into 1.1 as recommended ("Always" only while a session is open, an Android foreground service, an iOS sentence that names Safety, a note to App Review under 2.5.4). |
+
+## Identity verification
+
+Built 2026-10-23, switched **off**, not yet connected to a live provider. Design: [architecture/identity-verification.md](architecture/identity-verification.md). Operator handbook: [admin/identity.md](admin/identity.md). Legal items K1–K7.
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| L1 | Which identity provider, and its contract | `market.identity_config.provider`; `SMILE_ID_*` variables | Smile ID (v3 API), written against the published API, never called with a real account. | Smile ID: it covers the Ghana Card against the NIA record plus passports, driver's licences and voter IDs, and most African markets; sign, ask for Ghana to be enabled, test in its sandbox. | **Decided (2026-10-24, at the founder's instruction to decide): Smile ID.** The founder signs the contract and asks Smile ID to enable Ghana Biometric KYC and Document Verification (legal K6 covers the processing agreement). |
+| L2 | What a checked identity is required for, and when | The four `require_for_*` switches | All off. | Payouts first, before live Paystack keys (it is where fraud costs money); then place claims and Verified badges; paid events last, and only after organizers are told. | **Decided (2026-10-24): in that order, each only after K5.** Payouts are switched on before the live Paystack cutover; claims and badges once the first organizers have verified without trouble; paid events last. |
+| L3 | Who reviews checks, and how fast | `identity.review` (operations, moderator); `auto_approve_clear` | Clear checks with no match are approved automatically; the rest wait in Admin › Identity. | Operations reviews daily during the pilot; never promise a review time anywhere. | **Decided (2026-10-24): operations, from the queue, daily during the pilot; automatic approval stays on.** No review time is promised to anyone. |
+| L4 | How long a check lasts | `validity_months` (36), the document's expiry | 36 months or the document's expiry, whichever is first. | Keep 36 months. | **Decided (2026-10-24): 36 months, or the document's expiry.** |
+| L5 | Attempts and cost | `attempts_per_day` (3), `attempts_per_30_days` (6) | Each attempt is a paid provider check. | Keep for the pilot; look at the queue and the provider bill before Everyone. | **Decided (2026-10-24): keep 3 a day and 6 in 30 days for the pilot.** |
+| L6 | What a Safety contact learns about the event's organizer and venue | The Safety contact page (`SafetyView.event`) | While an alert or share is open: the organizer's public profile name and "ID checked" badge, and the venue's own public phone and WhatsApp numbers. The organizer's legal identity is never shared. | As implemented: contacts get what lets them reach the people on site; the legal identity stays with Abonten for staff and the police (K4). | **Decided (2026-10-24): as implemented.** |
 
 ## Product
 

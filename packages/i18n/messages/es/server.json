@@ -292,6 +292,11 @@
     "functionWasNotRewrittenPatternNotFound": "La función {0} no se reescribió (patrón no encontrado)",
     "getUserTransactionSummaryChangedSince20260925100000": "get_user_transaction_summary cambió desde 20260925100000; vuelve a derivar esta corrección",
     "goodwillLimitReachedForThisUserThis": "Se alcanzó el límite de cortesía para este usuario este mes (usado {0}, límite {1})",
+    "identityAccountIneligible": "identity_account_ineligible",
+    "identityInvalidTransition": "identity_invalid_transition",
+    "identityNotFound": "identity_not_found",
+    "identityReasonRequired": "identity_reason_required",
+    "identityVerificationEventRowsAreNeverChanged": "Las filas de identity_verification_event nunca se modifican",
     "insufficientCreditAvailableRequested": "Crédito insuficiente (disponible {0}, solicitado {1})",
     "invalidBucket": "bucket no válido: {0}",
     "invalidPayoutAccount": "Cuenta de cobro no válida",
@@ -499,6 +504,7 @@
     "weeklyWeekNotMonday": "weekly_week_not_monday",
     "youAlreadyHaveAPendingTicketCheckout": "Ya tienes una compra de entradas pendiente para este evento",
     "youAreSendingMessagesTooQuicklyPlease": "Estás enviando mensajes demasiado rápido. Ve más despacio.",
+    "youCanHaveAtMostTrustedContacts": "Puedes tener como máximo {0} contactos de confianza.",
     "youCanOnlyAttachYourOwnEvents": "Solo puedes adjuntar tus propios eventos",
     "youCanOnlyAttachYourOwnPlaces": "Solo puedes adjuntar tus propios lugares",
     "youCanOnlyPostYourOwnReview": "Solo puedes publicar tu propia reseña",
@@ -520,8 +526,7 @@
     "youHaveStartedALotOfConversations": "Has iniciado muchas conversaciones últimamente. Inténtalo de nuevo más tarde.",
     "yourAccountHasBeenRestricted": "Tu cuenta ha sido restringida.",
     "yourCreditBalanceIsNegative": "Tu saldo de crédito es negativo",
-    "yourCreditIsOnHold": "Tu crédito está retenido",
-    "youCanHaveAtMostTrustedContacts": "Puedes tener como máximo {0} contactos de confianza."
+    "yourCreditIsOnHold": "Tu crédito está retenido"
   },
   "defaultPaymentMethodUpdated": "Método de pago predeterminado actualizado",
   "defaultPayoutAccountUpdated": "Cuenta de cobro predeterminada actualizada",
@@ -1272,6 +1277,27 @@
       "checkInMissed": "{person} tenía que confirmar en Abonten que estaba bien antes de las {time} y no lo ha hecho. Última ubicación conocida: {link}{hasPhone, select, yes { Llama a {person}: {phone}} other {}}{hasEmergency, select, yes { Emergencias: {emergency}} other {}}",
       "safe": "{person} está bien y ha cerrado la alerta en Abonten.",
       "falseAlarm": "La alerta de {person} en Abonten fue un error. {person} está bien."
+    }
+  },
+  "identity": {
+    "accountNotFound": "No hemos encontrado tu cuenta.",
+    "notAvailable": "La verificación de identidad todavía no está disponible en tu cuenta.",
+    "accountRestricted": "Tu cuenta tiene restricciones, así que ahora no puedes verificarte. Ponte en contacto con el soporte de Abonten.",
+    "alreadyVerified": "Tu identidad ya está verificada.",
+    "documentNotOffered": "Ese documento no se puede usar aquí. Elige uno de la lista.",
+    "notReady": "La verificación de identidad todavía no está disponible. Vuelve a intentarlo más tarde.",
+    "stillChecking": "Todavía estamos revisando tu último intento. Espera al resultado antes de empezar de nuevo.",
+    "tooManyToday": "Ya lo has intentado varias veces hoy. Vuelve a intentarlo mañana.",
+    "tooManyMonth": "Has llegado al número de verificaciones permitidas este mes. Ponte en contacto con el soporte de Abonten si necesitas ayuda.",
+    "providerUnavailable": "No se ha podido conectar con nuestro socio de verificación. Vuelve a intentarlo en unos minutos.",
+    "notFound": "No hemos encontrado esa verificación.",
+    "cannotCancel": "Esta verificación ya no se puede detener.",
+    "checkUnavailable": "No hemos podido comprobar el estado de tu identidad. Vuelve a intentarlo.",
+    "required": {
+      "payouts": "Verifica tu identidad antes de añadir una cuenta de cobro. Ve a Ajustes › Verificación de identidad.",
+      "place_claims": "Verifica tu identidad antes de que se pueda aprobar tu reclamación. Ve a Ajustes › Verificación de identidad.",
+      "verified_badges": "Verifica tu identidad antes de obtener una insignia de Verificado. Ve a Ajustes › Verificación de identidad.",
+      "paid_events": "Verifica tu identidad antes de vender entradas. Ve a Ajustes › Verificación de identidad, o haz que el evento sea gratuito."
     }
   }
 }

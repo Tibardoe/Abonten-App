@@ -140,6 +140,24 @@ const SERVICE_ROLE_ONLY: Call[] = [
     why: "removes a deleted account's Safety data; called by the account-deletion trigger (2026-10-22)",
   },
   {
+    name: "identity_transition",
+    args: {
+      p_verification_id: ABSENT_ID,
+      p_action: "approve",
+      p_actor_kind: "staff",
+    },
+    why: "the only thing that moves an identity check and sets the ID-checked flags (2026-10-23)",
+  },
+  {
+    name: "identity_document_matches",
+    args: { p_hash: "x", p_person_hash: "x", p_user_id: ABSENT_ID },
+    why: "finds the other accounts that showed the same document; staff and the service only",
+  },
+  {
+    name: "identity_housekeeping",
+    why: "the daily identity-housekeeping job expires and deletes identity checks",
+  },
+  {
     name: "admin_listing_views",
     args: {
       p_from: "2026-01-01T00:00:00Z",

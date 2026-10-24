@@ -292,6 +292,11 @@
     "functionWasNotRewrittenPatternNotFound": "Die Funktion {0} wurde nicht umgeschrieben (Muster nicht gefunden)",
     "getUserTransactionSummaryChangedSince20260925100000": "get_user_transaction_summary hat sich seit 20260925100000 geändert; leite diese Korrektur neu ab",
     "goodwillLimitReachedForThisUserThis": "Kulanzlimit für diesen Nutzer in diesem Monat erreicht (verwendet {0}, Limit {1})",
+    "identityAccountIneligible": "identity_account_ineligible",
+    "identityInvalidTransition": "identity_invalid_transition",
+    "identityNotFound": "identity_not_found",
+    "identityReasonRequired": "identity_reason_required",
+    "identityVerificationEventRowsAreNeverChanged": "Zeilen von identity_verification_event werden nie geändert",
     "insufficientCreditAvailableRequested": "Guthaben reicht nicht aus (verfügbar {0}, angefordert {1})",
     "invalidBucket": "ungültiger Bucket: {0}",
     "invalidPayoutAccount": "Ungültiges Auszahlungskonto",
@@ -499,6 +504,7 @@
     "weeklyWeekNotMonday": "weekly_week_not_monday",
     "youAlreadyHaveAPendingTicketCheckout": "Du hast für dieses Event bereits einen offenen Ticket-Bezahlvorgang",
     "youAreSendingMessagesTooQuicklyPlease": "Du sendest Nachrichten zu schnell. Bitte mach langsamer.",
+    "youCanHaveAtMostTrustedContacts": "Du kannst höchstens {0} Vertrauenspersonen haben.",
     "youCanOnlyAttachYourOwnEvents": "Du kannst nur deine eigenen Events anhängen",
     "youCanOnlyAttachYourOwnPlaces": "Du kannst nur deine eigenen Orte anhängen",
     "youCanOnlyPostYourOwnReview": "Du kannst nur deine eigene Bewertung posten",
@@ -520,8 +526,7 @@
     "youHaveStartedALotOfConversations": "Du hast in letzter Zeit sehr viele Unterhaltungen begonnen. Bitte versuche es später erneut.",
     "yourAccountHasBeenRestricted": "Dein Konto wurde eingeschränkt.",
     "yourCreditBalanceIsNegative": "Dein Guthaben ist negativ",
-    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt",
-    "youCanHaveAtMostTrustedContacts": "Du kannst höchstens {0} Vertrauenspersonen haben."
+    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt"
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1272,6 +1277,27 @@
       "checkInMissed": "{person} hat sich auf Abonten nicht wie geplant bis {time} gemeldet. Letzter bekannter Standort: {link}{hasPhone, select, yes { {person} anrufen: {phone}} other {}}{hasEmergency, select, yes { Notruf: {emergency}} other {}}",
       "safe": "{person} ist in Sicherheit und hat den Alarm auf Abonten beendet.",
       "falseAlarm": "Der Alarm von {person} auf Abonten war ein Versehen. {person} geht es gut."
+    }
+  },
+  "identity": {
+    "accountNotFound": "Wir haben dein Konto nicht gefunden.",
+    "notAvailable": "Die Identitätsprüfung ist für dein Konto noch nicht verfügbar.",
+    "accountRestricted": "Dein Konto ist eingeschränkt, deshalb kannst du dich gerade nicht prüfen lassen. Wende dich an den Abonten-Support.",
+    "alreadyVerified": "Deine Identität ist bereits geprüft.",
+    "documentNotOffered": "Dieses Dokument kann hier nicht verwendet werden. Wähl eines aus der Liste.",
+    "notReady": "Die Identitätsprüfung ist noch nicht verfügbar. Bitte versuch es später noch einmal.",
+    "stillChecking": "Wir prüfen deinen letzten Versuch noch. Warte auf das Ergebnis, bevor du neu anfängst.",
+    "tooManyToday": "Du hast es heute schon mehrmals versucht. Versuch es morgen noch einmal.",
+    "tooManyMonth": "Du hast die Zahl der Prüfungen erreicht, die in diesem Monat möglich sind. Wende dich an den Abonten-Support, wenn du Hilfe brauchst.",
+    "providerUnavailable": "Unser Prüfpartner ist nicht erreichbar. Bitte versuch es in ein paar Minuten noch einmal.",
+    "notFound": "Wir haben diese Prüfung nicht gefunden.",
+    "cannotCancel": "Diese Prüfung kann nicht mehr abgebrochen werden.",
+    "checkUnavailable": "Wir konnten den Stand deiner Identitätsprüfung nicht abrufen. Bitte versuch es noch einmal.",
+    "required": {
+      "payouts": "Lass deine Identität prüfen, bevor du ein Auszahlungskonto hinzufügst. Geh zu Einstellungen › Identitätsprüfung.",
+      "place_claims": "Lass deine Identität prüfen, bevor dein Anspruch genehmigt werden kann. Geh zu Einstellungen › Identitätsprüfung.",
+      "verified_badges": "Lass deine Identität prüfen, bevor du ein Verifiziert-Abzeichen bekommst. Geh zu Einstellungen › Identitätsprüfung.",
+      "paid_events": "Lass deine Identität prüfen, bevor du Tickets verkaufst. Geh zu Einstellungen › Identitätsprüfung oder mach das Event kostenlos."
     }
   }
 }

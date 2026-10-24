@@ -2154,3 +2154,19 @@ export type ResolveSafetySessionBody = {
 };
 
 export type AcknowledgeSafetyBody = { acknowledgement: SafetyAcknowledgement };
+
+// ── Identity verification (/api/mobile/identity/**) ──────────────────
+
+export type IdentityOverviewResult = ApiEnvelope<
+  import("@abonten/types/identityType").IdentityOverview
+>;
+export type StartIdentityVerificationResponse = ApiEnvelope<
+  import("@abonten/types/identityType").StartIdentityVerificationResult
+>;
+
+export type StartIdentityVerificationBody = {
+  documentCountry: string;
+  documentType: string;
+  consent: true;
+  locale?: string;
+};

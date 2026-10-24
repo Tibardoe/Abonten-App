@@ -6041,6 +6041,286 @@ export type Database = {
           },
         ]
       }
+      identity_program_setting: {
+        Row: {
+          attempts_per_30_days: number
+          attempts_per_day: number
+          audience: string
+          auto_approve_clear: boolean
+          beta_user_ids: string[]
+          enabled: boolean
+          id: number
+          link_expiry_hours: number
+          minimum_age: number
+          require_for_paid_events: boolean
+          require_for_payouts: boolean
+          require_for_place_claims: boolean
+          require_for_verified_badges: boolean
+          retention_days_after_deletion: number
+          retention_days_fraud: number
+          retention_days_unsuccessful: number
+          updated_at: string
+          updated_by: string | null
+          validity_months: number
+        }
+        Insert: {
+          attempts_per_30_days?: number
+          attempts_per_day?: number
+          audience?: string
+          auto_approve_clear?: boolean
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          link_expiry_hours?: number
+          minimum_age?: number
+          require_for_paid_events?: boolean
+          require_for_payouts?: boolean
+          require_for_place_claims?: boolean
+          require_for_verified_badges?: boolean
+          retention_days_after_deletion?: number
+          retention_days_fraud?: number
+          retention_days_unsuccessful?: number
+          updated_at?: string
+          updated_by?: string | null
+          validity_months?: number
+        }
+        Update: {
+          attempts_per_30_days?: number
+          attempts_per_day?: number
+          audience?: string
+          auto_approve_clear?: boolean
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          link_expiry_hours?: number
+          minimum_age?: number
+          require_for_paid_events?: boolean
+          require_for_payouts?: boolean
+          require_for_place_claims?: boolean
+          require_for_verified_badges?: boolean
+          retention_days_after_deletion?: number
+          retention_days_fraud?: number
+          retention_days_unsuccessful?: number
+          updated_at?: string
+          updated_by?: string | null
+          validity_months?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      identity_verification: {
+        Row: {
+          account_deleted_at: string | null
+          consent_at: string
+          consent_locale: string
+          consent_notice_version: string
+          created_at: string
+          date_of_birth: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          decision_source: string | null
+          document_country: string
+          document_expires_on: string | null
+          document_type: string
+          fraud_detected: boolean | null
+          id: string
+          id_number_hash: string | null
+          id_number_last4: string | null
+          is_adult: boolean | null
+          legal_name: string | null
+          link_expires_at: string | null
+          link_url: string | null
+          matched_user_ids: string[]
+          person_hash: string | null
+          provider: string
+          provider_duplicate: boolean | null
+          provider_job_id: string | null
+          provider_link_ref: string | null
+          provider_user_ref: string
+          result_reason: string | null
+          result_received_at: string | null
+          result_status: string | null
+          risk_level: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+          verification_method: string
+        }
+        Insert: {
+          account_deleted_at?: string | null
+          consent_at: string
+          consent_locale: string
+          consent_notice_version: string
+          created_at?: string
+          date_of_birth?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          decision_source?: string | null
+          document_country: string
+          document_expires_on?: string | null
+          document_type: string
+          fraud_detected?: boolean | null
+          id?: string
+          id_number_hash?: string | null
+          id_number_last4?: string | null
+          is_adult?: boolean | null
+          legal_name?: string | null
+          link_expires_at?: string | null
+          link_url?: string | null
+          matched_user_ids?: string[]
+          person_hash?: string | null
+          provider: string
+          provider_duplicate?: boolean | null
+          provider_job_id?: string | null
+          provider_link_ref?: string | null
+          provider_user_ref: string
+          result_reason?: string | null
+          result_received_at?: string | null
+          result_status?: string | null
+          risk_level?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+          verification_method: string
+        }
+        Update: {
+          account_deleted_at?: string | null
+          consent_at?: string
+          consent_locale?: string
+          consent_notice_version?: string
+          created_at?: string
+          date_of_birth?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          decision_source?: string | null
+          document_country?: string
+          document_expires_on?: string | null
+          document_type?: string
+          fraud_detected?: boolean | null
+          id?: string
+          id_number_hash?: string | null
+          id_number_last4?: string | null
+          is_adult?: boolean | null
+          legal_name?: string | null
+          link_expires_at?: string | null
+          link_url?: string | null
+          matched_user_ids?: string[]
+          person_hash?: string | null
+          provider?: string
+          provider_duplicate?: boolean | null
+          provider_job_id?: string | null
+          provider_link_ref?: string | null
+          provider_user_ref?: string
+          result_reason?: string | null
+          result_received_at?: string | null
+          result_status?: string | null
+          risk_level?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+          verification_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_verification_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_verification_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "identity_verification_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "identity_verification_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      identity_verification_event: {
+        Row: {
+          actor_id: string | null
+          actor_kind: string
+          at: string
+          detail: Json
+          from_status: string | null
+          id: number
+          kind: string
+          reason: string | null
+          to_status: string | null
+          verification_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_kind: string
+          at?: string
+          detail?: Json
+          from_status?: string | null
+          id?: never
+          kind: string
+          reason?: string | null
+          to_status?: string | null
+          verification_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_kind?: string
+          at?: string
+          detail?: Json
+          from_status?: string | null
+          id?: never
+          kind?: string
+          reason?: string | null
+          to_status?: string | null
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_verification_event_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "identity_verification"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incident: {
         Row: {
           alerted_at: string | null
@@ -6101,6 +6381,7 @@ export type Database = {
           display_config: Json
           distance_unit: string
           fee_config: Json
+          identity_config: Json
           is_default: boolean
           launched_at: string | null
           legal_config: Json
@@ -6132,6 +6413,7 @@ export type Database = {
           display_config?: Json
           distance_unit?: string
           fee_config?: Json
+          identity_config?: Json
           is_default?: boolean
           launched_at?: string | null
           legal_config?: Json
@@ -6163,6 +6445,7 @@ export type Database = {
           display_config?: Json
           distance_unit?: string
           fee_config?: Json
+          identity_config?: Json
           is_default?: boolean
           launched_at?: string | null
           legal_config?: Json
@@ -12893,6 +13176,10 @@ export type Database = {
           distance_unit: string | null
           full_name: string | null
           id: string
+          identity_valid_until: string | null
+          identity_verification_id: string | null
+          identity_verified: boolean
+          identity_verified_at: string | null
           is_admin: boolean
           locale: string | null
           organizer_verification_case_id: string | null
@@ -12916,6 +13203,10 @@ export type Database = {
           distance_unit?: string | null
           full_name?: string | null
           id: string
+          identity_valid_until?: string | null
+          identity_verification_id?: string | null
+          identity_verified?: boolean
+          identity_verified_at?: string | null
           is_admin?: boolean
           locale?: string | null
           organizer_verification_case_id?: string | null
@@ -12939,6 +13230,10 @@ export type Database = {
           distance_unit?: string | null
           full_name?: string | null
           id?: string
+          identity_valid_until?: string | null
+          identity_verification_id?: string | null
+          identity_verified?: boolean
+          identity_verified_at?: string | null
           is_admin?: boolean
           locale?: string | null
           organizer_verification_case_id?: string | null
@@ -12959,6 +13254,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "currency"
             referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "user_info_identity_verification_id_fkey"
+            columns: ["identity_verification_id"]
+            isOneToOne: false
+            referencedRelation: "identity_verification"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "user_info_organizer_verification_case_id_fkey"
@@ -16366,6 +16668,73 @@ export type Database = {
         Returns: number
       }
       hidden_listing_countries: { Args: never; Returns: string[] }
+      identity_document_matches: {
+        Args: { p_hash: string; p_person_hash: string; p_user_id: string }
+        Returns: {
+          account_status_id: number
+          revoked: boolean
+          same_document: boolean
+          user_id: string
+          verification_status: string
+        }[]
+      }
+      identity_housekeeping: { Args: never; Returns: Json }
+      identity_transition: {
+        Args: {
+          p_action: string
+          p_actor_id?: string
+          p_actor_kind: string
+          p_reason?: string
+          p_result?: Json
+          p_verification_id: string
+        }
+        Returns: {
+          account_deleted_at: string | null
+          consent_at: string
+          consent_locale: string
+          consent_notice_version: string
+          created_at: string
+          date_of_birth: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          decision_source: string | null
+          document_country: string
+          document_expires_on: string | null
+          document_type: string
+          fraud_detected: boolean | null
+          id: string
+          id_number_hash: string | null
+          id_number_last4: string | null
+          is_adult: boolean | null
+          legal_name: string | null
+          link_expires_at: string | null
+          link_url: string | null
+          matched_user_ids: string[]
+          person_hash: string | null
+          provider: string
+          provider_duplicate: boolean | null
+          provider_job_id: string | null
+          provider_link_ref: string | null
+          provider_user_ref: string
+          result_reason: string | null
+          result_received_at: string | null
+          result_status: string | null
+          risk_level: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+          verification_method: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "identity_verification"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       incident_alert_claim: {
         Args: { p_limit?: number }
         Returns: {
@@ -16508,6 +16877,7 @@ export type Database = {
           display_config: Json
           distance_unit: string
           fee_config: Json
+          identity_config: Json
           is_default: boolean
           launched_at: string | null
           legal_config: Json
@@ -16861,6 +17231,7 @@ export type Database = {
       safety_dispatch_due: { Args: never; Returns: boolean }
       safety_escalate_due_check_ins: { Args: never; Returns: string[] }
       safety_expire_sessions: { Args: never; Returns: number }
+      safety_forget_account: { Args: { p_user_id: string }; Returns: undefined }
       safety_housekeeping: { Args: never; Returns: Json }
       safety_record_locations: {
         Args: { p_points: Json; p_session_id: string; p_user_id: string }

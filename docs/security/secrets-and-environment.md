@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.13
-lastReviewed: 2026-10-21
+version: 1.14
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -60,13 +60,18 @@ complianceReviewRequired: no
 | `SPOTLIGHT_PROMOTIONS_KILL_SWITCH` | flag | Paid promotions emergency stop: no new promotions sold and no sponsored posts shown; organic Spotlight keeps working | follows `content_program_setting.spotlight_promotions_enabled` / `sponsored_delivery_enabled` |
 | `WEEKLY_KILL_SWITCH` | flag | Abonten Weekly emergency stop: pages show the fallback, teaser and links hidden, mobile API reports it off | Abonten Weekly follows `weekly_program_setting` |
 | `SAFETY_KILL_SWITCH` | flag | Abonten Safety emergency stop: no new SOS, check-in, share or contact on web or app (entry points hidden). Sessions already open keep working, contacts can still open their links, the dispatcher still escalates missed check-ins | Abonten Safety follows `safety_program_setting` |
+| `SMILE_ID_PARTNER_ID`, `SMILE_ID_API_KEY` | secret | Smile ID (identity verification): hosted links, the status API, and the webhook signature (the API key signs it) | Identity checks can't start ("not available yet") |
+| `SMILE_ID_ENVIRONMENT` | no (config) | `production` for Smile ID's live API; anything else is its sandbox | Sandbox |
+| `IDENTITY_HASH_SECRET` | secret | At least 32 characters; keys the document and person hashes that find one document on two accounts. **Never rotate**: document numbers are not kept, so nothing can be re-hashed and matches across the change are missed | No identity check can start |
+| `IDENTITY_KILL_SWITCH` | flag | Identity verification emergency stop: no new checks, every requirement (payouts, claims, badges, paid events) lifted; approved checks keep their badge. Set on admin too | Identity follows `identity_program_setting` |
+| `IDENTITY_PROVIDER_OVERRIDE` | no (config) | Preview / local only: `test` uses the stand-in page `/identity/test`; refused on the production deployment and database | Smile ID |
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |
 | `TWILIO_*` (history) | — | The unused `twilio` SDK was removed 2026-09-19; since 2026-09-24 Twilio Verify is called over plain HTTPS with the three variables above (no SDK dependency) | — |
 
 ## apps/admin (Vercel project `abonten-app-admin`, CI `build-admin`)
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `WEB_BASE_URL` (optional; web origin for Abonten Weekly preview links, default `https://abontenhub.com`), `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` and `PAYMENTS_MODE` (for admin refund/payout actions via services — plus the matching `PAYSTACK_<CC>_SECRET_KEY` / `STRIPE_SECRET_KEY_<…>` of any other market being refunded; webhook secrets are not needed in the admin deployment), `GOOGLE_MAPS_API_KEY` (the server key: territory and Weekly-area geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` and `RECOMMENDATION_EMAIL_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them).
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `WEB_BASE_URL` (optional; web origin for Abonten Weekly preview links, default `https://abontenhub.com`), `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` and `PAYMENTS_MODE` (for admin refund/payout actions via services — plus the matching `PAYSTACK_<CC>_SECRET_KEY` / `STRIPE_SECRET_KEY_<…>` of any other market being refunded; webhook secrets are not needed in the admin deployment), `GOOGLE_MAPS_API_KEY` (the server key: territory and Weekly-area geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` and `RECOMMENDATION_EMAIL_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them), `IDENTITY_KILL_SWITCH` (enforced here too: staff payout, claim and badge approvals check the identity requirements).
 
 ## apps/mobile (EAS environments development / preview / production; local `apps/mobile/.env` mirror)
 
@@ -98,6 +103,7 @@ GitHub Dependabot alerts are on for the repository (2026-09-27). The two alerts 
 | Secret | Last rotated |
 |---|---|
 | Supabase anon + service-role keys | 2026-09 (twice, during the limitation audit) |
+| `IDENTITY_HASH_SECRET` | Never — must not be rotated (see the table above) |
 | Others | NOT RECORDED — start the register (decision S3) |
 
 ## Leak response

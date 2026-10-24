@@ -11,6 +11,7 @@ export const VALIDATION_SOURCE: Record<string, string> = {
   accountNumberMustBeAtLeast: "Account number must be at least 8 digits",
   accountNumberMustBeNoMore: "Account number must be no more than 20 digits",
   addAtLeastOnePhotoOr: "Add at least one photo or video",
+  agreeToTheIdentityCheckBefore: "Agree to the identity check before you start",
   amountCannotExceedYourAvailableBalance:
     "Amount cannot exceed your available balance",
   bankAccountNumberMustContainOnly:
@@ -22,11 +23,14 @@ export const VALIDATION_SOURCE: Record<string, string> = {
   chooseACountry: "Choose a country",
   chooseACountryCode: "Choose a country code",
   chooseADistance: "Choose a distance.",
+  chooseADocument: "Choose a document",
   chooseAReason: "Choose a reason",
   chooseAtLeast10Minutes: "Choose at least 10 minutes",
   chooseAtLeastOneContact: "Choose at least one contact",
   chooseAtMost12Hours: "Choose at most 12 hours",
   chooseOneOfTheStoryReactions: "Choose one of the Story reactions.",
+  chooseTheCountryThatIssuedYour:
+    "Choose the country that issued your document",
   chooseWhichPlaceIsPosting: "Choose which place is posting",
   chooseYourMobileMoneyNetwork: "Choose your mobile money network",
   confirmYouHaveTheRightsTo: "Confirm you have the rights to share this",

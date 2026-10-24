@@ -872,6 +872,26 @@
     },
     "safety_contact_declined": {
       "title": "{contact} declined to be your trusted contact"
+    },
+    "identity_approved": {
+      "title": "Your identity is verified",
+      "body": "Thanks for verifying. You'll see an “ID checked” badge next to your name."
+    },
+    "identity_in_review": {
+      "title": "We're checking your documents",
+      "body": "Someone at Abonten is looking at your identity check. We'll tell you when it's done."
+    },
+    "identity_rejected": {
+      "title": "We couldn't verify your identity",
+      "body": "Open Abonten to see why and to try again."
+    },
+    "identity_failed": {
+      "title": "Your identity check didn't finish",
+      "body": "Open Abonten to try again."
+    },
+    "identity_revoked": {
+      "title": "Your identity verification was withdrawn",
+      "body": "Contact Abonten Support to find out why."
     }
   },
   "openStatus": {
@@ -1220,5 +1240,9 @@
     "noSalesYet": "Starts {date} with no sales yet.",
     "lowSales": "Starts {date} with only {sold, plural, one {# ticket} other {# tickets}} sold so far.",
     "nearlySoldOut": "{type}: almost sold out ({remaining, plural, one {# ticket left} other {# tickets left}})."
+  },
+  "identity": {
+    "badgeLabel": "ID checked",
+    "badgeExplanation": "Abonten checked this person's government ID and a live selfie. It doesn't mean Abonten vouches for them, their events or their places."
   }
 }

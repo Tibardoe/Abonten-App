@@ -200,3 +200,8 @@ export type {
   UpdateSafetyContactBody,
   UpdateSafetySessionBody,
 } from "./types";
+export type {
+  IdentityOverviewResult,
+  StartIdentityVerificationBody,
+  StartIdentityVerificationResponse,
+} from "./types";

@@ -87,6 +87,12 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   safety_check_in_escalated: n("safety_check_in_escalated"),
   safety_contact_accepted: n("safety_contact_accepted", false),
   safety_contact_declined: n("safety_contact_declined", false),
+  // Identity verification (services)
+  identity_approved: n("identity_approved"),
+  identity_in_review: n("identity_in_review"),
+  identity_rejected: n("identity_rejected"),
+  identity_failed: n("identity_failed"),
+  identity_revoked: n("identity_revoked"),
   // Places (services)
   place_booking_requested: n("place_booking_requested"),
   place_booking_cancelled: n("place_booking_cancelled"),

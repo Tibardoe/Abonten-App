@@ -27,7 +27,8 @@ export type NotificationEntityKind =
   | "follow"
   | "content_campaign"
   | "area"
-  | "safety";
+  | "safety"
+  | "identity";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;

@@ -6,6 +6,10 @@ import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
+import {
+  IdentityCheckedPill,
+  showsIdentityBadge,
+} from "@/components/identity/IdentityCheckedPill";
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSection";
 import { EventDetailSkeleton } from "@/components/skeletons";
@@ -438,6 +442,9 @@ export default function EventDetailScreen() {
                   </AppText>
                   {showsOrganizerBadge(event.user_info) ? (
                     <VerifiedPill subjectType="organizer" />
+                  ) : null}
+                  {showsIdentityBadge(event.user_info) ? (
+                    <IdentityCheckedPill />
                   ) : null}
                 </View>
                 {/* No stars until someone has rated them: five grey stars

@@ -34,6 +34,7 @@ import type {
 import type {
   AcknowledgeSafetyBody,
   AddSafetyContactBody,
+  IdentityOverviewResult,
   ResolveSafetySessionBody,
   SafetyContactResult,
   SafetyLocationBody,
@@ -42,6 +43,8 @@ import type {
   SafetyProgramResult,
   SafetySessionResult,
   SafetyViewResult,
+  StartIdentityVerificationBody,
+  StartIdentityVerificationResponse,
   StartSafetySessionBody,
   StartSafetySessionResponse,
   UpdateSafetyContactBody,
@@ -2506,10 +2509,8 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     /**
-     * Trust & Verification (PROJECT.md §30). A place owner or an organizer
-     * asks Abonten to review documents supporting their link to the
-     * business; an admin decides. Ships switched off — `program` reports
-     * both switches false until the programme is opened.
+     * Abonten Safety (PROJECT.md §65): trusted contacts, SOS, check in on
+     * me and share my location. Ships switched off.
      */
     safety: {
       program() {
@@ -2604,6 +2605,43 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
     },
+    /**
+     * Identity verification (PROJECT.md §66). The person proves who they are
+     * on the provider's hosted page (a government ID and a live selfie);
+     * Abonten keeps the verdict and a few details. `overview.program` says
+     * whether it is open to this account; it ships switched off.
+     */
+    identity: {
+      /** The whole identity screen in one call. */
+      overview() {
+        return request<IdentityOverviewResult>(
+          "/api/mobile/identity/overview",
+          {
+            method: "GET",
+            auth: true,
+          },
+        );
+      },
+      /** Opens an attempt; answers with the provider page to open. */
+      start(body: StartIdentityVerificationBody) {
+        return request<StartIdentityVerificationResponse>(
+          "/api/mobile/identity/start",
+          { method: "POST", body, auth: true, timeoutMs: 25_000 },
+        );
+      },
+      cancel(verificationId: string) {
+        return request<{ status: number; message?: string }>(
+          `/api/mobile/identity/verifications/${encodeURIComponent(verificationId)}/cancel`,
+          { method: "POST", auth: true },
+        );
+      },
+    },
+    /**
+     * Trust & Verification (PROJECT.md §30). A place owner or an organizer
+     * asks Abonten to review documents supporting their link to the
+     * business; an admin decides. Ships switched off — `program` reports
+     * both switches false until the programme is opened.
+     */
     verification: {
       program() {
         return request<VerificationProgramResult>(

@@ -431,6 +431,21 @@
       "file": "packages/services/src/sms/hubtelSms.ts",
       "text": "no readable body",
       "reason": "A provider error for logs and the Safety outbox, never shown to a person."
+    },
+    {
+      "file": "packages/services/src/identity/providers/smileId.ts",
+      "text": "Smile ID is not configured",
+      "reason": "A provider adapter's detail for the server log; the person is answered with identity.* messages."
+    },
+    {
+      "file": "packages/services/src/identity/providers/smileId.ts",
+      "text": "no link",
+      "reason": "A provider adapter's detail for the server log, never shown to a person."
+    },
+    {
+      "file": "packages/services/src/identity/identityCore.ts",
+      "text": "Test Person {}",
+      "reason": "The stand-in provider's made-up legal name on local and Preview test checks only; refused on production."
     }
   ]
 }

@@ -98,7 +98,12 @@ export type AdminPermissionKey =
   | "spotlight.campaigns.review"
   | "spotlight.configure"
   | "safety.view"
-  | "safety.configure";
+  | "safety.configure"
+  | "identity.view"
+  | "identity.view_pii"
+  | "identity.review"
+  | "identity.revoke"
+  | "identity.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 

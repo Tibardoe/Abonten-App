@@ -872,6 +872,26 @@
     },
     "safety_contact_declined": {
       "title": "{contact} hat abgelehnt, deine Vertrauensperson zu sein"
+    },
+    "identity_approved": {
+      "title": "Deine Identität ist geprüft",
+      "body": "Danke fürs Prüfenlassen. Neben deinem Namen siehst du jetzt das Abzeichen „Ausweis geprüft“."
+    },
+    "identity_in_review": {
+      "title": "Wir prüfen deine Dokumente",
+      "body": "Jemand von Abonten sieht sich deine Identitätsprüfung an. Wir sagen dir Bescheid, wenn wir fertig sind."
+    },
+    "identity_rejected": {
+      "title": "Wir konnten deine Identität nicht prüfen",
+      "body": "Öffne Abonten, um den Grund zu sehen und es noch einmal zu versuchen."
+    },
+    "identity_failed": {
+      "title": "Deine Identitätsprüfung wurde nicht abgeschlossen",
+      "body": "Öffne Abonten, um es noch einmal zu versuchen."
+    },
+    "identity_revoked": {
+      "title": "Deine Identitätsprüfung wurde zurückgenommen",
+      "body": "Wende dich an den Abonten-Support, um den Grund zu erfahren."
     }
   },
   "openStatus": {
@@ -1220,5 +1240,9 @@
     "noSalesYet": "Beginnt am {date}, bisher ohne Verkäufe.",
     "lowSales": "Beginnt am {date}, bisher {sold, plural, one {nur # Ticket} other {nur # Tickets}} verkauft.",
     "nearlySoldOut": "{type}: fast ausverkauft ({remaining, plural, one {noch # Ticket} other {noch # Tickets}})."
+  },
+  "identity": {
+    "badgeLabel": "Ausweis geprüft",
+    "badgeExplanation": "Abonten hat den amtlichen Ausweis dieser Person und ein live aufgenommenes Selfie geprüft. Das heißt nicht, dass Abonten für diese Person, ihre Events oder ihre Orte bürgt."
   }
 }

@@ -29,6 +29,8 @@ export type PublicProfile = {
   average_rating: number;
   total_ratings: number;
   organizer_verified: boolean;
+  /** The person's ID and a live selfie were checked (and still valid). */
+  identity_verified: boolean;
   status_id: number | null;
   follower_count: number;
   viewer_follows: boolean;
@@ -66,6 +68,7 @@ async function fetchProfile(username: string): Promise<PublicProfile> {
     average_rating: roundRating(num(row.average_rating)),
     total_ratings: num(row.total_ratings),
     organizer_verified: row.organizer_verified === true,
+    identity_verified: row.identity_verified === true,
     status_id: typeof row.status_id === "number" ? row.status_id : null,
     follower_count: num(row.follower_count),
     viewer_follows: row.viewer_follows === true,

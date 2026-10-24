@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { useIdentityOverview } from "@/features/identity/useIdentity";
 import { HELP_URL, LEGAL_URLS, openExternalLink } from "@/lib/legalLinks";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -39,6 +40,12 @@ const ITEMS: {
     route: "/(app)/settings/security",
     icon: "shield-checkmark-outline",
     labelKey: "nav.security",
+  },
+  {
+    key: "identity",
+    route: "/(app)/settings/identity",
+    icon: "id-card-outline",
+    labelKey: "nav.identity",
   },
   {
     key: "blocked",
@@ -87,6 +94,9 @@ const ITEMS: {
 export default function SettingsHub() {
   const router = useRouter();
   const t = useTranslations("settings");
+  // Shown only while identity checks are open to this account.
+  const { program: identity } = useIdentityOverview({ staleTime: 5 * 60_000 });
+  const items = ITEMS.filter((i) => i.key !== "identity" || identity.enabled);
 
   return (
     <View className="flex-1 bg-background">
@@ -99,7 +109,7 @@ export default function SettingsHub() {
         className="flex-1 bg-background"
         contentContainerClassName="gap-2 p-4"
       >
-        {ITEMS.map((item) => (
+        {items.map((item) => (
           <Pressable
             key={item.key}
             accessibilityRole="button"

@@ -10,15 +10,27 @@ import SafetyLiveMap from "@/safety/molecules/SafetyLiveMap";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatDateTime } from "@abonten/core/i18n/format";
+import { identityBadgeLabel } from "@abonten/core/identity/copy";
 import { formatPhoneInternational } from "@abonten/core/phone/phone";
 import { primaryEmergencyNumber } from "@abonten/core/safety/emergencyNumbers";
-import { mapsDirectionsUrl, telUrl } from "@abonten/core/safety/links";
+import {
+  mapsDirectionsUrl,
+  telUrl,
+  whatsAppUrl,
+} from "@abonten/core/safety/links";
 import type {
   SafetyAcknowledgement,
   SafetyView,
 } from "@abonten/types/safetyType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Navigation, Phone, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  IdCard,
+  MessageCircle,
+  Navigation,
+  Phone,
+  ShieldCheck,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 
@@ -31,6 +43,7 @@ type Envelope = { status: number; message?: string; data?: SafetyView };
 
 export default function SafetyLiveView({ token }: { token: string }) {
   const t = useTranslations("safety");
+  const tc = useTranslations("core");
   const locale = useLocale();
   const toast = useToast();
   const qc = useQueryClient();
@@ -224,6 +237,60 @@ export default function SafetyLiveView({ token }: { token: string }) {
           </Button>
         ) : null}
       </div>
+
+      {/* The people on site: the venue's public numbers and who runs the
+          event, as their profile shows it (never their legal identity). */}
+      {open &&
+      view.event &&
+      (view.event.organizer ||
+        view.event.venuePhone ||
+        view.event.venueWhatsapp) ? (
+        <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
+          <h2 className="font-semibold">{view.event.title}</h2>
+          {view.event.organizer ? (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              {t("watch.organizedBy", {
+                organizer: view.event.organizer.name,
+              })}
+              {view.event.organizer.identityChecked ? (
+                <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
+                  <IdCard className="h-4 w-4" aria-hidden />
+                  {identityBadgeLabel(tc)}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
+          {view.event.venuePhone ? (
+            <Button asChild variant="outline">
+              <a href={telUrl(view.event.venuePhone)}>
+                <Phone className="h-4 w-4" aria-hidden />
+                {t("watch.callVenue", {
+                  venue: view.event.venue ?? view.event.title,
+                })}
+              </a>
+            </Button>
+          ) : null}
+          {view.event.venueWhatsapp ? (
+            <Button asChild variant="outline">
+              <a
+                href={whatsAppUrl(view.event.venueWhatsapp)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                {t("watch.whatsAppVenue", {
+                  venue: view.event.venue ?? view.event.title,
+                })}
+              </a>
+            </Button>
+          ) : null}
+          {view.event.venuePhone || view.event.venueWhatsapp ? (
+            <p className="text-xs text-muted-foreground">
+              {t("watch.venueNumberNote")}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {open ? (
         <section className="flex flex-col gap-2 rounded-2xl border bg-card p-4">

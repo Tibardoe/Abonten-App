@@ -13,6 +13,7 @@ import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
 import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerified";
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
+import IdentityCheckedBadge from "@/identity/molecules/IdentityCheckedBadge";
 import FollowButton from "@/spotlight/molecules/FollowButton";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -78,6 +79,7 @@ export default async function ProfileDetails({
     getOrganizerVerified(userId),
   ]);
   const organizerVerified = organizerVerifiedRes.data.verified;
+  const identityChecked = organizerVerifiedRes.data.identityChecked;
   const events = Number(data.total_posts ?? 0);
 
   return (
@@ -101,6 +103,7 @@ export default async function ProfileDetails({
               {organizerVerified ? (
                 <VerifiedBadgePopover subjectType="organizer" compact />
               ) : null}
+              {identityChecked ? <IdentityCheckedBadge compact /> : null}
             </div>
             {data.full_name?.trim() ? (
               <p className="text-muted-foreground">@{handle}</p>

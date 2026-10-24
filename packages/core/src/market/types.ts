@@ -11,6 +11,7 @@
 //   paused       temporarily disabled (nothing new; existing data readable)
 //   maintenance  temporarily restricted (read-only for the public)
 
+import type { IdentityMarketConfig } from "@abonten/types/identityType";
 import type { SafetyEmergencyNumber } from "@abonten/types/safetyType";
 import type { AddressSchema } from "../geo/addressSchema";
 import type { DistanceUnit } from "../units/distance";
@@ -251,6 +252,8 @@ export type MarketConfig = {
   browseFallback: BrowseFallback;
   /** Abonten Safety: the numbers every SOS screen shows (market.safety_config). */
   emergencyNumbers: SafetyEmergencyNumber[];
+  /** Identity checks: the provider and the documents accepted (market.identity_config). */
+  identity: IdentityMarketConfig;
   version: number;
   paymentProviders: MarketPaymentProvider[];
   paymentMethods: MarketPaymentMethod[];
