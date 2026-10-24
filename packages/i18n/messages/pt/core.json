@@ -872,6 +872,26 @@
     },
     "safety_contact_declined": {
       "title": "{contact} recusou ser o seu contacto de confiança"
+    },
+    "identity_approved": {
+      "title": "A sua identidade está verificada",
+      "body": "Obrigado por fazer a verificação. Vai ver um distintivo «Identidade verificada» junto ao seu nome."
+    },
+    "identity_in_review": {
+      "title": "Estamos a verificar os seus documentos",
+      "body": "Alguém do Abonten está a analisar a sua verificação de identidade. Avisamos quando terminarmos."
+    },
+    "identity_rejected": {
+      "title": "Não conseguimos verificar a sua identidade",
+      "body": "Abra o Abonten para ver porquê e tentar de novo."
+    },
+    "identity_failed": {
+      "title": "A sua verificação de identidade não foi concluída",
+      "body": "Abra o Abonten para tentar de novo."
+    },
+    "identity_revoked": {
+      "title": "A sua verificação de identidade foi retirada",
+      "body": "Contacte o apoio do Abonten para saber porquê."
     }
   },
   "openStatus": {
@@ -1220,5 +1240,9 @@
     "noSalesYet": "Começa a {date} e ainda não há vendas.",
     "lowSales": "Começa a {date} e só {sold, plural, one {foi vendido # bilhete} other {foram vendidos # bilhetes}} até agora.",
     "nearlySoldOut": "{type}: quase esgotado ({remaining, plural, one {resta # bilhete} other {restam # bilhetes}})."
+  },
+  "identity": {
+    "badgeLabel": "Identidade verificada",
+    "badgeExplanation": "O Abonten verificou o documento de identificação oficial desta pessoa e uma selfie tirada em direto. Isso não significa que o Abonten responda por esta pessoa, pelos seus eventos ou pelos seus locais."
   }
 }

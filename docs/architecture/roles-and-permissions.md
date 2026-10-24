@@ -4,8 +4,8 @@ purpose: The complete role model as enforced — how end-user roles are derived,
 audience: Engineering, security/compliance reviewers
 scope: user_info, admin_* tables, fieldops_team_member, RLS policies in supabase/migrations
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-21
+version: 1.2
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -64,6 +64,11 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `weekly.configure` | Areas and programme settings — in `STEP_UP_PERMISSIONS` | operations |
 | `safety.view` | Admin › Safety: sessions, who was told, delivery of texts, emails and pushes, settings. Never positions or notes | operations, support_admin |
 | `safety.configure` | Safety programme switches and limits — in `STEP_UP_PERMISSIONS` | operations |
+| `identity.view` | Admin › Identity: checks, status, the provider's verdict, fraud signals, matching accounts, timeline; identity status on Users and Payouts. No personal details | operations, moderator, finance_admin, support_admin |
+| `identity.view_pii` | The name, date of birth, last four and expiry of one check, with a reason, audited as `identity.pii.view` — in `STEP_UP_PERMISSIONS` | operations |
+| `identity.review` | Approve or reject a check in review | operations, moderator |
+| `identity.revoke` | Take a live check away — in `STEP_UP_PERMISSIONS` | operations |
+| `identity.configure` | Identity programme switches, requirements, limits and retention — in `STEP_UP_PERMISSIONS` | operations |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

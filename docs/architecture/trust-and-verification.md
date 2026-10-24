@@ -4,8 +4,8 @@ purpose: How Abonten verifies places and event organizers — the data model, th
 audience: Engineering, operations, security reviewers
 scope: verification_case and its companion tables, the verification-evidence bucket, the admin review module, the owner-facing flows on web and mobile, and the relationship to place claims
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -97,6 +97,8 @@ That is deliberate. The case row carries `reviewed_by` and `revoked_by`, and the
 Approving a claim now transfers **ownership only**. It sets `owner_id` and `claimed`; it no longer sets `verified`.
 
 A reviewer who judges a claim's attached documents good enough can tick "Also mark this place verified", which calls `approve_place_claim_and_verify()` — one transaction that does both and opens an approved case recording the claim it came from. That option needs `verification.review` on top of `claims.review`.
+
+**Identity of the person (2026-10-24).** When `identity_program_setting.require_for_verified_badges` is on, a badge is approved only if the place owner or organizer has a live identity check (government ID + live selfie, [identity-verification.md](identity-verification.md)); with `require_for_place_claims` on, a claim is approved only if the claimant has one. Both are off until decision L2 and legal K5; the reviewer sees the refusal ("verify your identity first") in the panel.
 
 Existing verified places were backfilled as approved cases with `source = 'legacy_claim'` when the migration ran.
 

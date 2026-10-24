@@ -47,6 +47,7 @@ import { MdOutlineDateRange } from "react-icons/md";
 import { PiTicketBold } from "react-icons/pi";
 
 import JsonLd from "@/components/atoms/JsonLd";
+import IdentityCheckedBadge from "@/identity/molecules/IdentityCheckedBadge";
 import { eventJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -147,6 +148,8 @@ export default async function page({
       avatar_version,
       username,
       organizer_verified,
+      identity_verified,
+      identity_valid_until,
       status_id
     ),
     ticket_type(
@@ -375,6 +378,13 @@ export default async function page({
                   {event.user_info.organizer_verified &&
                   event.user_info.status_id === 1 ? (
                     <VerifiedBadgePopover subjectType="organizer" compact />
+                  ) : null}
+                  {event.user_info.identity_verified &&
+                  event.user_info.status_id === 1 &&
+                  event.user_info.identity_valid_until &&
+                  Date.parse(event.user_info.identity_valid_until) >
+                    Date.now() ? (
+                    <IdentityCheckedBadge compact />
                   ) : null}
                 </div>
                 {/* No stars at all until someone has rated them: five grey

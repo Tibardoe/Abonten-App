@@ -115,6 +115,8 @@ function targetFromData(
       if (data.eventId) return `/(app)/event/${data.eventId}`;
       if (data.placeId) return `/(app)/place/${data.placeId}`;
       return "/(app)/for-you";
+    case "identity":
+      return "/(app)/settings/identity";
     case "safety":
       // A trusted contact opens the alert they were told about (their own
       // link); the person opens their Safety screen.

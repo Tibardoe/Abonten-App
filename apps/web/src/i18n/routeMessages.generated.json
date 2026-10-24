@@ -328,6 +328,53 @@
         "profileCompletion.group.account",
         "profileCompletion.group.profile"
       ],
+      "identity": [
+        "cancelBody",
+        "cancelCheck",
+        "cancelConfirm",
+        "cancelTitle",
+        "cancelled",
+        "checkingBody",
+        "checkingTitle",
+        "chooseDocument",
+        "consent",
+        "continueCheck",
+        "couldNotSave",
+        "couldNotStart",
+        "documentName",
+        "expiredBody",
+        "expiredTitle",
+        "failedTitle",
+        "intro",
+        "keepGoing",
+        "networkError",
+        "noAttemptsLeft",
+        "notAvailableYet",
+        "notReady",
+        "outcome",
+        "privacyLink",
+        "rejectedTitle",
+        "renewTitle",
+        "requiredFor",
+        "returnedBody",
+        "returnedTitle",
+        "reviewBody",
+        "reviewTitle",
+        "startCheck",
+        "startTitle",
+        "starting",
+        "step1",
+        "step2",
+        "step3",
+        "unfinishedBody",
+        "unfinishedTitle",
+        "validUntil",
+        "verifiedAs",
+        "verifiedNote",
+        "verifiedTitle",
+        "whatWeKeep",
+        "whoSees"
+      ],
       "settings": [
         "aPushWhenSomeoneYouTapped",
         "alertsAndPicks",
@@ -697,6 +744,8 @@
         "eventStatus.ended",
         "eventStatus.ongoing",
         "eventTypes",
+        "identity.badgeExplanation",
+        "identity.badgeLabel",
         "openStatus.closed",
         "openStatus.closedOpensAt",
         "openStatus.closedToday",
@@ -1344,6 +1393,8 @@
         "eventTypes",
         "filters.ratingFrom",
         "filters.upTo",
+        "identity.badgeExplanation",
+        "identity.badgeLabel",
         "member.former",
         "organizer",
         "placeCategories",
@@ -2156,6 +2207,18 @@
         "opening",
         "signInToContactSupport",
         "stillNeedHelp"
+      ]
+    },
+    "identity": {
+      "common": ["back"],
+      "identity": [
+        "couldNotSave",
+        "doneBody",
+        "openApp",
+        "testBack",
+        "testDone",
+        "testIntro",
+        "testOutcome"
       ]
     },
     "invite": {
@@ -4135,6 +4198,7 @@
       "verification": ["verified", "whatThisMeans"]
     },
     "sos": {
+      "core": ["identity.badgeExplanation", "identity.badgeLabel"],
       "safety": [
         "answerSent",
         "callEmergency",
@@ -4150,6 +4214,7 @@
         "watch.answerTitle",
         "watch.atEventVenue",
         "watch.call",
+        "watch.callVenue",
         "watch.directions",
         "watch.ended",
         "watch.lastSeen",
@@ -4159,8 +4224,11 @@
         "watch.mistake",
         "watch.noLocation",
         "watch.note",
+        "watch.organizedBy",
         "watch.safe",
-        "watch.sharing"
+        "watch.sharing",
+        "watch.venueNumberNote",
+        "watch.whatsAppVenue"
       ]
     },
     "spotlight": {
@@ -4650,6 +4718,8 @@
         "zoomX"
       ],
       "core": [
+        "identity.badgeExplanation",
+        "identity.badgeLabel",
         "report.category.copyright",
         "report.category.fake_listing",
         "report.category.fraud_scam",

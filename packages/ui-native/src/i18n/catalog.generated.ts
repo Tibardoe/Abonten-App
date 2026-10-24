@@ -14,6 +14,7 @@ import akFatal from "@abonten/i18n/messages/ak/fatal.json";
 import akFieldOps from "@abonten/i18n/messages/ak/fieldOps.json";
 import akFinances from "@abonten/i18n/messages/ak/finances.json";
 import akHelp from "@abonten/i18n/messages/ak/help.json";
+import akIdentity from "@abonten/i18n/messages/ak/identity.json";
 import akLanding from "@abonten/i18n/messages/ak/landing.json";
 import akLegal from "@abonten/i18n/messages/ak/legal.json";
 import akManage from "@abonten/i18n/messages/ak/manage.json";
@@ -48,6 +49,7 @@ import deFatal from "@abonten/i18n/messages/de/fatal.json";
 import deFieldOps from "@abonten/i18n/messages/de/fieldOps.json";
 import deFinances from "@abonten/i18n/messages/de/finances.json";
 import deHelp from "@abonten/i18n/messages/de/help.json";
+import deIdentity from "@abonten/i18n/messages/de/identity.json";
 import deLanding from "@abonten/i18n/messages/de/landing.json";
 import deLegal from "@abonten/i18n/messages/de/legal.json";
 import deManage from "@abonten/i18n/messages/de/manage.json";
@@ -82,6 +84,7 @@ import enFatal from "@abonten/i18n/messages/en/fatal.json";
 import enFieldOps from "@abonten/i18n/messages/en/fieldOps.json";
 import enFinances from "@abonten/i18n/messages/en/finances.json";
 import enHelp from "@abonten/i18n/messages/en/help.json";
+import enIdentity from "@abonten/i18n/messages/en/identity.json";
 import enLanding from "@abonten/i18n/messages/en/landing.json";
 import enLegal from "@abonten/i18n/messages/en/legal.json";
 import enManage from "@abonten/i18n/messages/en/manage.json";
@@ -116,6 +119,7 @@ import esFatal from "@abonten/i18n/messages/es/fatal.json";
 import esFieldOps from "@abonten/i18n/messages/es/fieldOps.json";
 import esFinances from "@abonten/i18n/messages/es/finances.json";
 import esHelp from "@abonten/i18n/messages/es/help.json";
+import esIdentity from "@abonten/i18n/messages/es/identity.json";
 import esLanding from "@abonten/i18n/messages/es/landing.json";
 import esLegal from "@abonten/i18n/messages/es/legal.json";
 import esManage from "@abonten/i18n/messages/es/manage.json";
@@ -150,6 +154,7 @@ import frFatal from "@abonten/i18n/messages/fr/fatal.json";
 import frFieldOps from "@abonten/i18n/messages/fr/fieldOps.json";
 import frFinances from "@abonten/i18n/messages/fr/finances.json";
 import frHelp from "@abonten/i18n/messages/fr/help.json";
+import frIdentity from "@abonten/i18n/messages/fr/identity.json";
 import frLanding from "@abonten/i18n/messages/fr/landing.json";
 import frLegal from "@abonten/i18n/messages/fr/legal.json";
 import frManage from "@abonten/i18n/messages/fr/manage.json";
@@ -184,6 +189,7 @@ import ptFatal from "@abonten/i18n/messages/pt/fatal.json";
 import ptFieldOps from "@abonten/i18n/messages/pt/fieldOps.json";
 import ptFinances from "@abonten/i18n/messages/pt/finances.json";
 import ptHelp from "@abonten/i18n/messages/pt/help.json";
+import ptIdentity from "@abonten/i18n/messages/pt/identity.json";
 import ptLanding from "@abonten/i18n/messages/pt/landing.json";
 import ptLegal from "@abonten/i18n/messages/pt/legal.json";
 import ptManage from "@abonten/i18n/messages/pt/manage.json";
@@ -225,6 +231,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     fieldOps: enFieldOps,
     finances: enFinances,
     help: enHelp,
+    identity: enIdentity,
     landing: enLanding,
     legal: enLegal,
     manage: enManage,
@@ -261,6 +268,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     fieldOps: akFieldOps,
     finances: akFinances,
     help: akHelp,
+    identity: akIdentity,
     landing: akLanding,
     legal: akLegal,
     manage: akManage,
@@ -297,6 +305,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     fieldOps: deFieldOps,
     finances: deFinances,
     help: deHelp,
+    identity: deIdentity,
     landing: deLanding,
     legal: deLegal,
     manage: deManage,
@@ -333,6 +342,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     fieldOps: esFieldOps,
     finances: esFinances,
     help: esHelp,
+    identity: esIdentity,
     landing: esLanding,
     legal: esLegal,
     manage: esManage,
@@ -369,6 +379,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     fieldOps: frFieldOps,
     finances: frFinances,
     help: frHelp,
+    identity: frIdentity,
     landing: frLanding,
     legal: frLegal,
     manage: frManage,
@@ -405,6 +416,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     fieldOps: ptFieldOps,
     finances: ptFinances,
     help: ptHelp,
+    identity: ptIdentity,
     landing: ptLanding,
     legal: ptLegal,
     manage: ptManage,

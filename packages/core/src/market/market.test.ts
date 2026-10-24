@@ -31,6 +31,7 @@ const ghana: MarketConfig = {
   coverageMode: "everywhere",
   browseFallback: { strategy: "choose", regionId: null, limit: 3 },
   emergencyNumbers: [],
+  identity: { provider: null, documents: [] },
   version: 1,
   paymentProviders: [
     {

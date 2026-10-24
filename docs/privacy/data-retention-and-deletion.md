@@ -4,8 +4,8 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.5
-lastReviewed: 2026-10-22
+version: 1.6
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -37,6 +37,7 @@ complianceReviewRequired: yes
 | "Tell me when it launches" waiting list (`area_waitlist`: account, city or ~1 km cell, area name) | Deleted by `area_waitlist_notify` when the launch notice goes out, when the person taps "Stop waiting", or on account deletion; kept while the area has not launched | until launch or leave | `20260930100000_area_launch_waitlist.sql`, `areaWaitlistCore.ts` |
 | Phone OTP pending state | Cleared on success, after 5 attempts, or after the 5-minute TTL | 5 minutes | `phoneOtpStore.ts` |
 | Abonten Safety positions and sessions | `safety_housekeeping()` (job `safety-housekeeping`, 03:50): positions and the session's last position `location_retention_days` (7) after a session closes; sessions with their recipients, outbox rows and timeline `session_retention_days` (180) after they close; invite texts 180 days after they were queued | 7 / 180 days after the session closes | `20261021180000_safety_core.sql` |
+| Identity verification records (name and date of birth on the document, last four characters, keyed hashes, expiry, the verdict; never images or the full number) | `identity_housekeeping()` (job `identity-housekeeping`, 04:10): unsuccessful checks (rejected, failed, cancelled, expired) `retention_days_unsuccessful` (365) after their last change unless still the person's record; a deleted account's checks `retention_days_after_deletion` (730) after deletion (the trigger `user_info_identity_account_closed` stamps the date and clears the flags); checks tied to fraud (revoked, blocked, fraud signal, matched another account) `retention_days_fraud` (1825) after the decision. The images stay with Smile ID under its retention (legal K6) | 1 / 2 / 5 years — proposals for counsel (legal K2) | `20261023100000_identity_verification.sql` |
 | Field-programme reviews left open | `fieldops_run_housekeeping()` cron 02:25 closes reviews past `review_grace_days` (14) | 14 days after campaign completion | `20260911223818_fieldops_commissions.sql` |
 
 ## 2. Account deletion (user-initiated)

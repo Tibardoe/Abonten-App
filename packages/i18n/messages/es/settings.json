@@ -102,7 +102,8 @@
     "overview": "Resumen",
     "region": "Región y moneda",
     "security": "Seguridad",
-    "switchAppearance": "Apariencia"
+    "switchAppearance": "Apariencia",
+    "identity": "Verificación de identidad"
   },
   "neededToPayForTicketsAnd": "Necesario para pagar entradas y promociones — tus entradas y recibos se te envían por correo. También puedes iniciar sesión con un código enviado allí.",
   "networkError": "Error de red",

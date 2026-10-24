@@ -872,6 +872,26 @@
     },
     "safety_contact_declined": {
       "title": "{contact} a refusé d'être votre contact de confiance"
+    },
+    "identity_approved": {
+      "title": "Votre identité est vérifiée",
+      "body": "Merci de vous être fait vérifier. Un badge « Identité vérifiée » apparaît désormais à côté de votre nom."
+    },
+    "identity_in_review": {
+      "title": "Nous vérifions vos documents",
+      "body": "Une personne d'Abonten examine votre vérification d'identité. Nous vous préviendrons quand ce sera terminé."
+    },
+    "identity_rejected": {
+      "title": "Nous n'avons pas pu vérifier votre identité",
+      "body": "Ouvrez Abonten pour en connaître la raison et réessayer."
+    },
+    "identity_failed": {
+      "title": "Votre vérification d'identité n'a pas abouti",
+      "body": "Ouvrez Abonten pour réessayer."
+    },
+    "identity_revoked": {
+      "title": "Votre vérification d'identité a été retirée",
+      "body": "Contactez l'assistance Abonten pour en connaître la raison."
     }
   },
   "openStatus": {
@@ -1220,5 +1240,9 @@
     "noSalesYet": "Commence le {date}, sans aucune vente pour l'instant.",
     "lowSales": "Commence le {date} avec seulement {sold, plural, one {# billet vendu} other {# billets vendus}} pour l'instant.",
     "nearlySoldOut": "{type} : presque complet ({remaining, plural, one {# billet restant} other {# billets restants}})."
+  },
+  "identity": {
+    "badgeLabel": "Identité vérifiée",
+    "badgeExplanation": "Abonten a vérifié la pièce d'identité officielle de cette personne et un selfie pris en direct. Cela ne signifie pas qu'Abonten se porte garant de cette personne, de ses événements ou de ses lieux."
   }
 }

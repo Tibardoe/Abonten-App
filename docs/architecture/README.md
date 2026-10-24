@@ -4,8 +4,8 @@ purpose: Index of the technical architecture documents for developers and techni
 audience: Engineering
 scope: Monorepo, database, APIs, jobs, integrations
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-02
+version: 1.4
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -22,6 +22,7 @@ complianceReviewRequired: no
 | [trust-and-verification.md](trust-and-verification.md) | Place and organizer verification: model, state machine, evidence storage, permissions |
 | [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
 | [weekly-highlights.md](weekly-highlights.md) | Abonten Weekly: editions, sections and items, read-time validity, caching, editorial workflow, jobs, switches, rollout |
+| [identity-verification.md](identity-verification.md) | Identity verification: government ID and live selfie through Smile ID, what is kept, duplicates across accounts, requirements, the Safety link, staff access, retention, rollout |
 | [safety.md](safety.md) | Abonten Safety: trusted contacts, SOS, check-ins, live location, the contact's page, the outbox and dispatcher, offline behaviour, privacy, rollout |
 | [mobile-offline-media-and-sync.md](mobile-offline-media-and-sync.md) | Mobile offline query cache, Spotlight player lifecycle, live comments and likes, search vocabulary and date parsing, search filters, follower counts |
 | [internationalisation.md](internationalisation.md) | The six languages: shared catalogs, how each surface picks a language, server and database text, number and date formatting, per-page messages on the website, the native app's Intl polyfills, the checks |

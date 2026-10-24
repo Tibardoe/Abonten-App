@@ -118,6 +118,22 @@ export type SafetyEventContext = {
   timezone: string;
   /** "ongoing" now, "upcoming" later, "ended" recently. */
   timing: "ongoing" | "upcoming" | "ended";
+  /**
+   * Contact view only: the venue's public numbers from its Abonten page, so
+   * a contact can ring the people on site.
+   */
+  venuePhone?: string | null;
+  venueWhatsapp?: string | null;
+  /**
+   * Contact view only: who runs the event, as their public profile shows
+   * it. Never their legal identity: that stays with Abonten staff
+   * (docs/architecture/identity-verification.md).
+   */
+  organizer?: {
+    name: string;
+    identityChecked: boolean;
+    verified: boolean;
+  } | null;
 };
 
 export type SafetyRecipientState = {

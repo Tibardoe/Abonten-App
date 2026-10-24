@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { IdentityCheckedPill } from "@/components/identity/IdentityCheckedPill";
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { useDirections } from "@/features/directions/DirectionsSheet";
 import { callNumber } from "@/features/safety/deviceSms";
@@ -10,7 +11,7 @@ import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatDateTime } from "@abonten/core/i18n/format";
 import { formatPhoneInternational } from "@abonten/core/phone/phone";
 import { primaryEmergencyNumber } from "@abonten/core/safety/emergencyNumbers";
-import { isSafetyToken } from "@abonten/core/safety/links";
+import { isSafetyToken, whatsAppUrl } from "@abonten/core/safety/links";
 import type {
   SafetyAcknowledgement,
   SafetyView,
@@ -28,7 +29,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 
 // What a trusted contact who is also on Abonten sees when they tap an
 // alert: the same view as the /sos/<token> page, natively. Where the person
@@ -233,6 +234,62 @@ export default function SafetyWatchScreen() {
             />
           ) : null}
         </View>
+
+        {/* The people on site: the venue's public numbers and who runs
+            the event, as their profile shows it (never their legal
+            identity). */}
+        {open &&
+        data.event &&
+        (data.event.organizer ||
+          data.event.venuePhone ||
+          data.event.venueWhatsapp) ? (
+          <Card className="gap-3">
+            <AppText variant="bodyStrong">{data.event.title}</AppText>
+            {data.event.organizer ? (
+              <View className="flex-row flex-wrap items-center gap-2">
+                <AppText variant="small" tone="muted">
+                  {t("watch.organizedBy", {
+                    organizer: data.event.organizer.name,
+                  })}
+                </AppText>
+                {data.event.organizer.identityChecked ? (
+                  <IdentityCheckedPill />
+                ) : null}
+              </View>
+            ) : null}
+            {data.event.venuePhone ? (
+              <Button
+                title={t("watch.callVenue", {
+                  venue: data.event.venue ?? data.event.title,
+                })}
+                variant="outline"
+                leftIcon="call-outline"
+                fullWidth
+                onPress={() => callNumber(data.event?.venuePhone as string)}
+              />
+            ) : null}
+            {data.event.venueWhatsapp ? (
+              <Button
+                title={t("watch.whatsAppVenue", {
+                  venue: data.event.venue ?? data.event.title,
+                })}
+                variant="outline"
+                leftIcon="logo-whatsapp"
+                fullWidth
+                onPress={() =>
+                  Linking.openURL(
+                    whatsAppUrl(data.event?.venueWhatsapp as string),
+                  ).catch(() => {})
+                }
+              />
+            ) : null}
+            {data.event.venuePhone || data.event.venueWhatsapp ? (
+              <AppText variant="caption" tone="muted">
+                {t("watch.venueNumberNote")}
+              </AppText>
+            ) : null}
+          </Card>
+        ) : null}
 
         {open ? (
           <Card className="gap-3">

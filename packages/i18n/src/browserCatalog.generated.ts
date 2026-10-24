@@ -25,6 +25,7 @@ export const BROWSER_NAMESPACE_LOADERS: Record<
   fieldOps: (locale) => import(`../messages/${locale}/fieldOps.json`),
   finances: (locale) => import(`../messages/${locale}/finances.json`),
   help: (locale) => import(`../messages/${locale}/help.json`),
+  identity: (locale) => import(`../messages/${locale}/identity.json`),
   landing: (locale) => import(`../messages/${locale}/landing.json`),
   legal: (locale) => import(`../messages/${locale}/legal.json`),
   manage: (locale) => import(`../messages/${locale}/manage.json`),

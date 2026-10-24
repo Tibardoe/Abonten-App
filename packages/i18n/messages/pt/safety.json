@@ -185,7 +185,11 @@
     "call": "Ligar a {name} ({phone})",
     "answerTitle": "Responder a {name}",
     "answer": "{answer, select, on_my_way {Vou a caminho} calling {Vou ligar já} other {Não posso ajudar agora}}",
-    "atEventVenue": "{hasVenue, select, yes {Em {event} · {venue}} other {Em {event}}}"
+    "atEventVenue": "{hasVenue, select, yes {Em {event} · {venue}} other {Em {event}}}",
+    "organizedBy": "Organizado por {organizer}",
+    "callVenue": "Ligar para {venue}",
+    "whatsAppVenue": "Enviar mensagem a {venue} pelo WhatsApp",
+    "venueNumberNote": "É o número do próprio local, tal como consta na sua página Abonten."
   },
   "timeline": "{kind, select, started {Começou} alerted {{reason, select, check_in_missed {{person} não confirmou que estava bem} other {{person} carregou no SOS}}} note {{person} adicionou uma nota} extended {{person} adicionou mais tempo} event_team {A equipa do evento foi avisada} acknowledged {{answer, select, on_my_way {{name} vai a caminho} calling {{name} vai ligar} other {{name} não pode ajudar agora}}} resolved {{outcome, select, false_alarm {{person} disse que foi um engano} ended {{person} parou a partilha} other {{person} está em segurança}}} expired {Terminou automaticamente} reminded {{person} recebeu um lembrete para confirmar que estava bem} other {{person} abriu a ligação}}",
   "tryAgain": "Tentar novamente",

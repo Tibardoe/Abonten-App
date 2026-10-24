@@ -10,9 +10,10 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
-import { loadPayouts } from "@/lib/data";
+import { loadIdentitySummaries, loadPayouts } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
+import { IdentitySummaryLink } from "../../identity/identityStatus";
 import { FinanceTabs } from "../FinanceTabs";
 import { PayoutReviewClear } from "../PayoutReviewClear";
 import { PayoutRowActions } from "../PayoutRowActions";
@@ -31,6 +32,11 @@ export default async function PayoutsPage({
     }),
   ]);
   const canManage = ctx.permissions.includes("finance.payout");
+  // Whether the person being paid has proved who they are (status only).
+  const identity =
+    ctx.permissions.includes("identity.view") && res.status === 200
+      ? await loadIdentitySummaries(res.data.map((p) => p.organizerId))
+      : null;
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
     Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
@@ -70,6 +76,13 @@ export default async function PayoutsPage({
                   >
                     {p.organizerName ?? `${p.organizerId.slice(0, 8)}…`}
                   </Link>
+                  {identity ? (
+                    <span className="mt-0.5 block">
+                      <IdentitySummaryLink
+                        summary={identity.get(p.organizerId)}
+                      />
+                    </span>
+                  ) : null}
                 </Td>
                 <Td className="tabular-nums">{money(p.amount, p.currency)}</Td>
                 <Td className="text-muted-foreground">

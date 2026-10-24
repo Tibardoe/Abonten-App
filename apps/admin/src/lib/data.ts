@@ -84,6 +84,12 @@ import {
   listTransactionsCore,
 } from "@abonten/services/admin/finance/financeAdminCore";
 import {
+  getIdentitySettingsCore,
+  getIdentityVerificationCore,
+  identitySummariesCore,
+  listIdentityVerificationsCore,
+} from "@abonten/services/admin/identity/identityAdminCore";
+import {
   type ListBlocksFilters,
   listConversationBlocksCore,
 } from "@abonten/services/admin/moderation/blocksAdminCore";
@@ -890,4 +896,64 @@ export async function loadSafetySession(id: string) {
   const ctx = await requireAdmin();
   const session = await getSafetySessionAdminCore(getServiceClient(), ctx, id);
   return { ctx, session };
+}
+
+// ── Identity verification ───────────────────────────────────
+
+const IDENTITY_STATUSES = new Set([
+  "created",
+  "submitted",
+  "processing",
+  "approved",
+  "needs_review",
+  "rejected",
+  "failed",
+  "expired",
+  "cancelled",
+  "revoked",
+]);
+
+export async function loadIdentityList(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  const ctx = await requireAdmin();
+  const one = (k: string) => {
+    const v = searchParams[k];
+    return typeof v === "string" && v ? v : undefined;
+  };
+  const status = one("status");
+  const userId = one("user");
+  const before = one("before");
+  const list = await listIdentityVerificationsCore(getServiceClient(), ctx, {
+    status:
+      status && IDENTITY_STATUSES.has(status)
+        ? (status as Parameters<
+            typeof listIdentityVerificationsCore
+          >[2]["status"])
+        : undefined,
+    userId: userId && /^[0-9a-f-]{36}$/i.test(userId) ? userId : undefined,
+    before: before && !Number.isNaN(Date.parse(before)) ? before : undefined,
+    limit: 50,
+  });
+  return { ctx, list };
+}
+
+export async function loadIdentityDetail(id: string) {
+  const ctx = await requireAdmin();
+  const detail = await getIdentityVerificationCore(getServiceClient(), ctx, id);
+  return { ctx, detail };
+}
+
+export async function loadIdentitySettings() {
+  const ctx = await requireAdmin();
+  const settings = await getIdentitySettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
+}
+
+/** Identity status (no details) for people shown on another screen. */
+export async function loadIdentitySummaries(userIds: string[]) {
+  const ctx = await requireAdmin();
+  return identitySummariesCore(getServiceClient(), ctx, userIds).catch(
+    () => new Map(),
+  );
 }

@@ -1,6 +1,10 @@
 import { ImageViewer } from "@/components/ImageViewer";
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { FollowButton } from "@/components/content/FollowButton";
+import {
+  IdentityCheckedPill,
+  showsIdentityBadge,
+} from "@/components/identity/IdentityCheckedPill";
 import { HighlightsRow } from "@/components/profile/HighlightsRow";
 import {
   VerifiedPill,
@@ -96,6 +100,7 @@ export function ProfileHeader({
             {showsOrganizerBadge(profile) ? (
               <VerifiedPill subjectType="organizer" />
             ) : null}
+            {showsIdentityBadge(profile) ? <IdentityCheckedPill /> : null}
           </View>
           {/* Followers is the number people look for first on a profile —
               yours included — so it sits next to Posts. */}

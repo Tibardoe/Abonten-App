@@ -21,6 +21,7 @@ import type {
   VerificationStatus,
   VerificationSubjectType,
 } from "@abonten/types/verificationType";
+import { requireVerifiedIdentity } from "../../identity/identityCore";
 import { createNotificationCore } from "../../notifications/createNotification";
 import {
   verificationLink,
@@ -543,6 +544,21 @@ export async function decideVerificationCaseCore(
   if (!data) return { status: 404, message: "Verification request not found" };
   const row = data as CaseRow;
   const before = row.status;
+
+  if (
+    input.decision === "approve" &&
+    (await requireVerifiedIdentity(
+      supabase,
+      row.requester_id,
+      "verified_badges",
+    ))
+  ) {
+    return {
+      status: 409,
+      message:
+        "The applicant has not verified their identity, which is required before a Verified badge. Ask them to verify under Settings › Identity.",
+    };
+  }
 
   const { error: rpcErr } = await supabase.rpc(
     "verification_transition",

@@ -11,6 +11,7 @@ import type {
 import { addPayoutAccountSchema } from "@abonten/validation/payoutAccountSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
+import { requireVerifiedIdentity } from "../identity/identityCore";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { confirmMobileMoneyNumber } from "../payments/mobileMoneyNumberCheck";
 import {
@@ -34,7 +35,7 @@ export type ListPayoutAccountsResult =
   | { status: 200; data: PayoutAccountRow[] };
 
 export type AddPayoutAccountResult =
-  | { status: 400 | 401 | 403 | 429 | 500; message: string }
+  | { status: 400 | 401 | 403 | 409 | 429 | 500; message: string }
   | { status: 200; data: PayoutAccountRow };
 
 export type MutatePayoutAccountResult = {
@@ -76,6 +77,18 @@ export async function addPayoutAccountCore(
   // and number format below are the checks a direct write skipped.
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
+  }
+  // Money goes only to a person Abonten can trace, when that is required.
+  const identityGate = await requireVerifiedIdentity(
+    getSupabaseServiceClient(),
+    userId,
+    "payouts",
+  );
+  if (identityGate) {
+    return {
+      status: identityGate.status === 503 ? 500 : 409,
+      message: identityGate.message ?? tr("somethingWentWrong"),
+    };
   }
   const parsed = addPayoutAccountSchema.safeParse(input);
 

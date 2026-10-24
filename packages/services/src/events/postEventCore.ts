@@ -22,6 +22,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
 import { coreT, tr } from "../i18n/requestLocale";
+import { requireVerifiedIdentity } from "../identity/identityCore";
 import {
   isAccountRestricted,
   restrictedAccountMessage,
@@ -162,6 +163,20 @@ export async function postEventCore(
       ...(input.singleTicket ? [input.singleTicket] : []),
       ...(input.multipleTickets ?? []),
     ];
+    // Selling tickets needs a traceable organizer, when that is required.
+    if (tiers.some((tier) => tier.price > 0)) {
+      const identityGate = await requireVerifiedIdentity(
+        getSupabaseServiceClient(),
+        userId,
+        "paid_events",
+      );
+      if (identityGate) {
+        return {
+          status: identityGate.status === 503 ? 500 : 409,
+          message: identityGate.message ?? "",
+        };
+      }
+    }
     for (const tier of tiers) {
       const problem = paidTierProblem(tier);
       if (problem) {

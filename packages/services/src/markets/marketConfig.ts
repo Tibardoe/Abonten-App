@@ -5,6 +5,7 @@
 // goes through these functions, never through a literal.
 
 import type { AddressSchema } from "@abonten/core/geo/addressSchema";
+import { parseIdentityConfig } from "@abonten/core/identity/config";
 import { logger } from "@abonten/core/logger";
 import { normalizeBrowseFallback } from "@abonten/core/market/coverage";
 import type {
@@ -157,6 +158,9 @@ function buildMarket(
       limit: m.browse_fallback_limit,
     }),
     emergencyNumbers: parseEmergencyNumbers(m.safety_config),
+    identity: parseIdentityConfig(
+      (m as { identity_config?: unknown }).identity_config,
+    ),
     version: m.version,
     paymentProviders: providers
       .filter((p) => p.country_code === m.country_code)

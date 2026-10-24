@@ -185,7 +185,11 @@
     "call": "Call {name} ({phone})",
     "answerTitle": "Let {name} know",
     "answer": "{answer, select, on_my_way {I'm on my way} calling {I'm calling} other {I can't help right now}}",
-    "atEventVenue": "{hasVenue, select, yes {At {event} · {venue}} other {At {event}}}"
+    "atEventVenue": "{hasVenue, select, yes {At {event} · {venue}} other {At {event}}}",
+    "organizedBy": "Organized by {organizer}",
+    "callVenue": "Call {venue}",
+    "whatsAppVenue": "Message {venue} on WhatsApp",
+    "venueNumberNote": "This is the venue's own number, from its Abonten page."
   },
   "timeline": "{kind, select, started {Started} alerted {{reason, select, check_in_missed {{person} didn't check in} other {{person} pressed SOS}}} note {{person} added a note} extended {{person} added more time} event_team {The event team was told} acknowledged {{answer, select, on_my_way {{name} is on the way} calling {{name} is calling} other {{name} can't help right now}}} resolved {{outcome, select, false_alarm {{person} said it was a mistake} ended {{person} stopped sharing} other {{person} is safe}}} expired {It ended by itself} reminded {{person} was reminded to check in} other {{person} opened it}}",
   "tryAgain": "Try again",

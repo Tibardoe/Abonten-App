@@ -1,9 +1,9 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.8-draft
+version: 1.9-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-10-22
+lastUpdated: 2026-10-24
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -44,9 +44,10 @@ We collect only what the service needs to work. The table below lists every cate
 | Field programme | For team members: role, assignments, GPS check-ins, work submitted, evidence photos, commission and payout records; for business owners: the phone number used to give consent | Team members, owners | To run and audit the field programme |
 | Abonten Safety (only if you use it) | The trusted contacts you name: their name, phone number, optional email, language and how they relate to you, and whether they accepted. For each SOS, "check in on me" or location share: when it started and ended, the note you wrote, the event you chose, your device's positions while it is open, who was told and whether each text, email or notification went, who opened the page and what each contact answered | You, your device | To alert the people you choose, when you ask, with where you are |
 | If someone names you as a trusted contact | Your name, phone number, optional email and language, as given by the person who named you; your answer to the invite; a request to stop all Abonten Safety texts to your number, if you make one | The person who named you; you | To ask whether you agree and, if you do, to alert you when they ask for help |
+| Identity verification (only if you verify) | The country and type of the document you chose; the name, date of birth and expiry date on it; the last four characters of its number; two codes made from the number and from your name and date of birth, which cannot be turned back into them; the result of the check and the fraud signals behind it; when you agreed and to which notice. **Not** the photos of your document or your selfie, and not the full number | You, through our identity provider Smile ID, which checks the document (for a Ghana Card, against the National Identification Authority's record) and your selfie | To confirm who is behind an organizer or a place, to trace them if something goes wrong at an event or a fraud is reported, and to stop a banned person coming back on a new account with the same document |
 | Support and moderation records | Support conversations, admin notes about your account, moderation actions, suspension or ban reasons | Abonten staff | To support you and enforce our terms |
 
-We do **not** collect your date of birth, government identity numbers, or full card numbers, and we do not use advertising trackers or analytics cookies. Visits to the website are counted without cookies, as described above (see the [Cookie Policy](/legal/cookies)). The app does not use Vercel Web Analytics.
+Unless you verify your identity (above), we do **not** collect your date of birth or anything from a government identity document; we never keep the full number of a document, nor full card numbers, and we do not use advertising trackers or analytics cookies. Visits to the website are counted without cookies, as described above (see the [Cookie Policy](/legal/cookies)). The app does not use Vercel Web Analytics.
 
 ## 3. How we use it
 
@@ -78,6 +79,7 @@ Abonten runs on cloud services. The providers below process personal information
 | Hubtel | Sends SMS one-time codes, and the Abonten Safety texts to trusted contacts | Ghana |
 | Resend | Sends transactional emails (tickets, cancellations, rewards, sign-in codes, Abonten Safety alerts to contacts who gave an email) | United States |
 | Google | Google sign-in; maps and geocoding; Google Workspace hosts our support, privacy and security mailboxes, so emails you send us are stored there | Global |
+| Smile ID | Checks your identity document and selfie when you verify your identity, and keeps the photos under its own retention; for a Ghana Card it checks against the National Identification Authority's record | To be confirmed |
 | Expo | Delivers push notifications to the app | United States |
 | Sentry | Error monitoring for the website, admin console and app | United States |
 
@@ -93,6 +95,9 @@ Some information is visible to other users by design:
 - **Message recipients** see what you send them and when you were last active in the conversation.
 - **People you invite** see your first name or username on the invite page.
 - **Your trusted contacts** (Abonten Safety) see your name and phone number when they are asked to be your contact. Only while an SOS, a missed check-in or a location share is open do they see, on a private page opened from their text, where you are, how recently your position was updated, the note you wrote and the event you chose. They stop seeing where you are when you say you are safe or the share ends; an alert that nobody closed stays visible to them for one more day. Abonten Safety does not contact the police, an ambulance or any emergency service, and it does not tell event organizers.
+
+- **If you verify your identity**, other people see an "ID checked" mark beside your name. Nothing from your document is shown to anyone: not your legal name, date of birth or number.
+- **A guest's trusted contacts** (Abonten Safety), while the guest's alert or location share is open, see the name on the organizer's public profile and whether their identity is checked, and the venue's own phone and WhatsApp numbers from its Abonten page, so they can reach the people on site. They never see an organizer's legal identity.
 
 Favourites and bookings are private to you.
 
@@ -132,6 +137,9 @@ The website uses a small number of first-party cookies for signing in, rememberi
 | Abonten Safety positions | 7 days after the SOS, check-in or share ends |
 | Abonten Safety history (when each session ran, who was told, their answers) | 180 days after it ends |
 | Trusted contacts | Until you remove them or delete your account; a contact's request to stop all Safety texts is kept so that it can be honoured |
+| Identity checks that did not succeed (rejected, failed, cancelled, expired) | 1 year |
+| Identity checks of a deleted account | 2 years after the account is deleted, so that someone can still be traced after an incident |
+| Identity checks tied to fraud (revoked, blocked, or the same document on another account) | 5 years after the decision |
 | Administrative audit log | Retained permanently; it cannot be edited or deleted |
 
 Where a period says "to be confirmed", no automatic deletion exists yet and a retention decision is pending. We will update this table when those decisions are made.
@@ -141,7 +149,7 @@ Where a period says "to be confirmed", no automatic deletion exists yet and a re
 You can delete your account yourself from Settings › Security on the web or in the app. Deletion is immediate and irreversible:
 
 - **Deleted**: your login, profile, phone and email, events and places you own, favourites, highlights, saved payout accounts, notification preferences, rewards you were still waiting for, and your Abonten Safety contacts and history (including every position).
-- **Kept**: payment transactions and tickets already issued, ledger and refund records, reports you filed (with your identity removed), moderation and administrative logs, rewards ledger history, and — if you were a field-team member or gave onboarding consent — the programme's audit records. These are kept for financial accountability, security and legal reasons.
+- **Kept**: payment transactions and tickets already issued, ledger and refund records, your identity verification record for the period in section 9, reports you filed (with your identity removed), moderation and administrative logs, rewards ledger history, and — if you were a field-team member or gave onboarding consent — the programme's audit records. These are kept for financial accountability, security and legal reasons.
 - **Forfeited**: any Abonten Credit balance.
 
 Deleting the app from your phone does not delete your account.
@@ -165,7 +173,7 @@ We protect your information with encryption in transit, an authentication system
 
 ## 13. Children
 
-Abonten is not directed at children, but does not currently verify age. A minimum age and any parental-consent process are pending decisions and will be published here. If you believe a child has created an account, contact support and we will remove it.
+Abonten is not directed at children, but does not currently verify age at sign-up. Verifying your identity, which running events or places may require, needs you to be at least 18. A minimum age and any parental-consent process are pending decisions and will be published here. If you believe a child has created an account, contact support and we will remove it.
 
 ## 14. Changes to this policy
 

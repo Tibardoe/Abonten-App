@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-10-21
+lastReviewed: 2026-10-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,15 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-24 — Identity verification (government ID and live selfie)
+
+- New: `architecture/identity-verification.md` (1.0), `admin/identity.md` (1.0); help page `organizers/verifying-your-identity` in five languages, built but not listed.
+- Registers: legal K1–K7 (`LEGAL_REVIEW_REQUIRED.md` 1.6), decisions L1–L6 Decided at the founder's instruction (`OPERATIONAL_DECISIONS_REQUIRED.md` 1.13): Smile ID, requirements in the order payouts → claims and badges → paid events, operations reviews, 36 months, 3 a day / 6 in 30 days, Safety contacts get the organizer's public name and badge and the venue's numbers only.
+- Draft wording for counsel: Privacy Policy 1.9-draft (§2, §4, §5, §9, §10, §13).
+- Safety: the contact page shows the event's organizer and the venue's numbers (`architecture/safety.md` 1.2). Trust & Verification: badges and claims can require a checked identity (`architecture/trust-and-verification.md` 1.1).
+- Permissions `identity.view` / `view_pii` / `review` / `revoke` / `configure` (`architecture/roles-and-permissions.md` 1.2, `admin/settings-and-rbac.md` 1.2); job `identity-housekeeping` (`operations/scheduled-jobs.md` 1.5); retention rows (`privacy/data-retention-and-deletion.md` 1.6); env vars `SMILE_ID_PARTNER_ID`, `SMILE_ID_API_KEY`, `SMILE_ID_ENVIRONMENT`, `IDENTITY_HASH_SECRET`, `IDENTITY_KILL_SWITCH`, `IDENTITY_PROVIDER_OVERRIDE` (`security/secrets-and-environment.md` 1.14, `deployment/rollback-and-recovery.md` 1.2).
+- Updated `INDEX.md` (1.6), `documentation-coverage-matrix.md` (1.3), `admin/README.md`, `architecture/README.md`.
 
 ## 2026-10-22 — Abonten Safety: ready for its next stages
 

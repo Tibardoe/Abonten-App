@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { fromMajor } from "@abonten/core/money/money";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { requireVerifiedIdentity } from "../../identity/identityCore";
 import { issueRefundCore } from "../../organizer/issueRefundCore";
 import {
   NoProviderError,
@@ -141,6 +142,9 @@ export async function settlePayoutAdminCore(
   };
 }
 
+const IDENTITY_PAYOUT_MESSAGE =
+  "This organizer has not verified their identity, which is required before a payout. Ask them to verify under Settings › Identity.";
+
 export async function createPayoutAdminCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
@@ -157,6 +161,9 @@ export async function createPayoutAdminCore(
     assertPermission(ctx, "finance.payout");
   } catch (e) {
     return { status: 403, message: (e as Error).message };
+  }
+  if (await requireVerifiedIdentity(supabase, input.organizerId, "payouts")) {
+    return { status: 409, message: IDENTITY_PAYOUT_MESSAGE };
   }
 
   const { data, error } = await supabase
@@ -244,6 +251,9 @@ export async function sendPayoutAdminCore(
     return { status: 500, message: "Couldn't load that payout." };
   }
   if (!payout) return { status: 404, message: "Payout not found" };
+  if (await requireVerifiedIdentity(supabase, payout.organizer_id, "payouts")) {
+    return { status: 409, message: IDENTITY_PAYOUT_MESSAGE };
+  }
 
   if (payout.status !== "processing") {
     return {

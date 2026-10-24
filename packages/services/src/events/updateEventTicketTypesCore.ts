@@ -9,6 +9,8 @@ import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
+import { requireVerifiedIdentity } from "../identity/identityCore";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
 // Post-auth body of updateEventTicketTypes, lifted so the
@@ -138,6 +140,26 @@ export async function updateEventTicketTypesCore(
       status: 409,
       message: tr("ticketTypesCanTBeChanged"),
     };
+  }
+
+  // Selling tickets needs a traceable organizer, when that is required.
+  if (
+    !freeEvent &&
+    [...(singleTicket ? [singleTicket] : []), ...multipleTickets].some(
+      (tier) => tier.price > 0,
+    )
+  ) {
+    const identityGate = await requireVerifiedIdentity(
+      getSupabaseServiceClient(),
+      userId,
+      "paid_events",
+    );
+    if (identityGate) {
+      return {
+        status: identityGate.status === 503 ? 500 : 409,
+        message: identityGate.message ?? tr("somethingWentWrong"),
+      };
+    }
   }
 
   // The quantities that are set must fit inside the event's capacity; the

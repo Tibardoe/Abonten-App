@@ -1,8 +1,12 @@
+import { getIdentityProgram } from "@/actions/identity/getIdentityProgram";
 import { getTranslations } from "next-intl/server";
 import SettingsNavLinks from "../atoms/SettingsNavLinks";
 
 export default async function SettingsDesktopSideBar() {
-  const t = await getTranslations("settings");
+  const [t, identity] = await Promise.all([
+    getTranslations("settings"),
+    getIdentityProgram(),
+  ]);
 
   return (
     <div className="flex flex-col gap-5 w-full md:min-w-fit">
@@ -33,6 +37,15 @@ export default async function SettingsDesktopSideBar() {
         arrowUrl="/assets/images/arrowRight.svg"
         text={t("nav.security")}
       />
+
+      {identity.data?.enabled ? (
+        <SettingsNavLinks
+          href="/settings/identity"
+          imgUrl="/assets/images/security.svg"
+          arrowUrl="/assets/images/arrowRight.svg"
+          text={t("nav.identity")}
+        />
+      ) : null}
 
       <SettingsNavLinks
         href="/settings/blocked"

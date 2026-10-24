@@ -13,6 +13,7 @@ import {
   Flag,
   Gift,
   Globe,
+  IdCard,
   LayoutDashboard,
   LifeBuoy,
   MapPinned,
@@ -71,6 +72,12 @@ const ITEMS: Item[] = [
     label: "Verification",
     icon: ShieldCheck,
     permission: "verification.view",
+  },
+  {
+    href: "/identity",
+    label: "Identity",
+    icon: IdCard,
+    permission: "identity.view",
   },
   {
     href: "/support",

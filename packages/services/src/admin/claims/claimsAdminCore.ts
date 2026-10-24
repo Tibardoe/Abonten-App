@@ -14,6 +14,7 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { requireVerifiedIdentity } from "../../identity/identityCore";
 import { createNotificationCore } from "../../notifications/createNotification";
 import {
   type AdminEnvelope,
@@ -325,6 +326,33 @@ export async function reviewClaimCore(
   const verifyToo = !!input.alsoVerify && input.decision === "approve";
 
   if (input.decision === "approve") {
+    // The person taking over a listing must be traceable, when required.
+    const identityGate = await requireVerifiedIdentity(
+      supabase,
+      claim.claimant_id,
+      "place_claims",
+    );
+    if (identityGate) {
+      return {
+        status: 409,
+        message:
+          "The claimant has not verified their identity, which is required before a claim is approved. Ask them to verify under Settings › Identity.",
+      };
+    }
+    if (
+      verifyToo &&
+      (await requireVerifiedIdentity(
+        supabase,
+        claim.claimant_id,
+        "verified_badges",
+      ))
+    ) {
+      return {
+        status: 409,
+        message:
+          "The claimant has not verified their identity, which is required before a Verified badge. Approve the claim without verifying, or ask them to verify first.",
+      };
+    }
     // Since 2026-09-12 approve_place_claim transfers ownership ONLY — the
     // verified badge is its own reviewed lifecycle (PROJECT.md §30). The
     // reviewer opts into verifying with alsoVerify, which runs both in one

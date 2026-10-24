@@ -231,6 +231,7 @@ const WEB_PAGE_NAMESPACES = {
   field: "fieldOps",
   "for-you": "discovery",
   help: "help",
+  identity: "identity",
   invite: "rewards",
   legal: "legal",
   manage: "manage",
