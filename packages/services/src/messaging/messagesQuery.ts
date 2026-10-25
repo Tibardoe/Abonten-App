@@ -222,7 +222,7 @@ async function loadAttachments(
   return byMessage;
 }
 
-async function loadReplyPreviews(
+export async function loadReplyPreviews(
   supabase: SupabaseClient<Database>,
   replyIds: string[],
 ): Promise<Map<string, MessageReplyPreview>> {
