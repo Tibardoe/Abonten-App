@@ -158,6 +158,63 @@ const SERVICE_ROLE_ONLY: Call[] = [
     why: "the daily identity-housekeeping job expires and deletes identity checks",
   },
   {
+    name: "ticket_plan_create",
+    args: {
+      p_user_id: ABSENT_ID,
+      p_event_id: ABSENT_ID,
+      p_occurrence_id: null,
+      p_lines: [],
+      p_currency: "GHS",
+      p_country_code: "GH",
+      p_ticket_minor: 1,
+      p_fee_minor: 0,
+      p_tax_minor: 0,
+      p_fee_bps: 500,
+      p_first_part_min_minor: 1,
+      p_part_min_minor: 1,
+      p_keep_fee_on_refund: true,
+      p_hold_expires_at: "2099-01-01T00:00:00Z",
+      p_deadline_at: "2099-01-02T00:00:00Z",
+      p_event_starts_at: "2099-01-03T00:00:00Z",
+    },
+    why: "starts a Pay small small plan and holds its seats at the price the service worked out (2026-10-25)",
+  },
+  {
+    name: "ticket_plan_record_payment",
+    args: {
+      p_attempt_id: ABSENT_ID,
+      p_amount_minor: 1,
+      p_provider_fee_minor: 0,
+      p_provider_transaction_id: "x",
+    },
+    why: "records a part finalizePayment verified with the provider; would let anyone pay a plan with nothing",
+  },
+  {
+    name: "ticket_plan_release",
+    args: { p_plan_id: ABSENT_ID, p_status: "cancelled", p_reason: "buyer" },
+    why: "ends a plan, releases its seats and plans its refund",
+  },
+  {
+    name: "ticket_plan_part_refund_outcome",
+    args: {
+      p_provider: "paystack",
+      p_reference: "x",
+      p_provider_transaction_id: null,
+      p_outcome: "processed",
+      p_detail: null,
+    },
+    why: "the provider's refund webhook for a plan's part",
+  },
+  {
+    name: "ticket_plan_admin_part_refund",
+    args: { p_payment_id: ABSENT_ID, p_action: "retry", p_note: "x" },
+    why: "Admin › Pay small small: retry a refund share or record it as done",
+  },
+  {
+    name: "run_ticket_plan_dispatch",
+    why: "pg_cron ticket-plans-dispatch only",
+  },
+  {
     name: "admin_listing_views",
     args: {
       p_from: "2026-01-01T00:00:00Z",

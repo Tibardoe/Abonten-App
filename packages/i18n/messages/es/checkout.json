@@ -127,6 +127,7 @@
   "yourPaymentCouldNotBeCompleted": "No se pudo completar tu pago.",
   "yourPaymentIsStillBeingConfirmed": "Tu pago aún se está confirmando. Normalmente se resuelve en menos de un minuto.",
   "yourPaymentWasSuccessfulWeRe": "Tu pago se realizó correctamente. Estamos completando tu promoción — toca Reintentar para terminar.",
+  "yourPaymentWasSuccessfulTickets": "Tu pago se completó, pero aún no hemos podido terminar de emitirlo todo. Toca Reintentar para terminar — no se te volverá a cobrar.",
   "yourPaymentWasSuccessfulWeRe2": "Tu pago se realizó correctamente. Estamos terminando tu promoción — toca Reintentar para terminar.",
   "yourPaymentWentThroughButThe": "Tu pago se procesó, pero la promoción aún no está activa. Reintenta ahora — no se te cobrará de nuevo.",
   "yourPaymentWentThroughButThe2": "Tu pago se procesó, pero la promoción aún no ha llegado a revisión. Reintenta ahora — no se te cobrará de nuevo.",

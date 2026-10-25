@@ -2170,3 +2170,54 @@ export type StartIdentityVerificationBody = {
   consent: true;
   locale?: string;
 };
+
+// ── Pay small small (/api/mobile/ticket-plans/**) ─────────────────────
+
+export type TicketPlanOfferResult = ApiEnvelope<
+  import("@abonten/types/ticketPlanType").TicketPlanOffer
+>;
+export type TicketPlanResult = ApiEnvelope<
+  import("@abonten/types/ticketPlanType").TicketPlanDetail
+>;
+export type TicketPlansResult = ApiEnvelope<
+  import("@abonten/types/ticketPlanType").TicketPlanSummary[]
+>;
+export type BalanceOverviewResult = ApiEnvelope<
+  import("@abonten/types/ticketPlanType").BalanceOverview
+>;
+export type EventTicketPlanSettingResult = ApiEnvelope<
+  import("@abonten/types/ticketPlanType").EventTicketPlanSetting
+>;
+
+export type StartTicketPlanBody = {
+  eventId: string;
+  occurrenceId?: string | null;
+  quantities: Record<string, number>;
+  referral?: {
+    code: string;
+    touchedAt: string;
+    source?: "link" | "qr" | "install_referrer";
+  } | null;
+};
+
+/** 409 with planId: the person is already paying for this event. */
+export type StartTicketPlanResult =
+  | { status: 200; data: { planId: string } }
+  | { status: 409; message: string; planId?: string }
+  | { status: 400 | 401 | 403 | 404 | 429 | 500 | 503; message: string };
+
+export type PayTicketPlanPartBody = {
+  amountMinor: number;
+  paymentMethodId?: string | null;
+  method?: string | null;
+};
+
+export type PayTicketPlanPartResult =
+  | {
+      status: 200;
+      data: { attemptId: string; planId: string; payment: PaymentInit };
+    }
+  | {
+      status: 400 | 401 | 403 | 404 | 409 | 500 | 503;
+      message: string;
+    };

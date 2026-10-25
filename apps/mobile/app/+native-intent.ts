@@ -126,6 +126,16 @@ export async function redirectSystemPath({
       const id = decodeURIComponent(parts[1]);
       return uuid.test(id) ? `/(app)/story/${id}` : "/(app)/(tabs)/messages";
     }
+    // Pay small small: a plan (the payment return and the plan notices) and
+    // the Balance screen. The id is checked by shape; the screen asks the
+    // API, which only answers the plan's owner.
+    if (parts[0] === "ticket-plans") {
+      const id = parts[1] ? decodeURIComponent(parts[1]) : null;
+      return id && uuid.test(id)
+        ? `/(app)/ticket-plans/${id}`
+        : "/(app)/balance";
+    }
+    if (parts[0] === "balance") return "/(app)/balance";
     // Conversation deep links (notification tap / cross-device). The segment
     // is already a conversation id — no lookup needed; RLS gates the screen.
     if (parts[0] === "messages") {

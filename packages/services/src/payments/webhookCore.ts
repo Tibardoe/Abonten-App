@@ -21,6 +21,7 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { getMarket } from "../markets/marketConfig";
 import { createNotificationCore } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { handlePlanPartRefundOutcome } from "../ticketPlans/ticketPlanRefunds";
 import { type FinalizeResult, finalizePayment } from "./finalizePayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import { markOrphanCaptureRefund } from "./orphanCapture";
@@ -152,8 +153,31 @@ async function handleRefundOutcome(
     "id, status, refund_claimed_at",
   );
   if (!match) {
-    // Not an order: possibly the refund of a charge that arrived after its
-    // order had closed (orphanCapture.ts).
+    // Not an order: one share of a Pay small small plan's refund (each part
+    // was its own charge and is refunded on its own)…
+    const planPart = await handlePlanPartRefundOutcome({
+      provider,
+      reference: event.reference,
+      providerTransactionId: event.providerTransactionId,
+      outcome: event.type === "refund.processed" ? "processed" : "failed",
+      detail: event.type === "refund.failed" ? event.detail : null,
+    });
+    if (planPart === "error") {
+      return {
+        status: WEBHOOK_ACK_RETRY,
+        body: { error: "Server error" },
+        settled: false,
+      };
+    }
+    if (planPart === "matched") {
+      return {
+        status: WEBHOOK_ACK_OK,
+        body: { received: true },
+        settled: true,
+      };
+    }
+    // …or the refund of a charge that arrived after its order had closed
+    // (orphanCapture.ts).
     const orphan = await markOrphanCaptureRefund({
       provider,
       reference: event.reference,

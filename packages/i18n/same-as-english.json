@@ -272,6 +272,7 @@
     "spotlight:spotlights",
     "spotlight:stories",
     "spotlight:story",
+    "ticketPlans:total",
     "transactions:plan",
     "wallet:mtnTelecelAtMoneyGMoney",
     "wallet:n024xxxxxxx"
@@ -435,6 +436,7 @@
     "spotlight:spotlights",
     "spotlight:stories",
     "spotlight:story",
+    "ticketPlans:total",
     "transactions:date",
     "transactions:transaction",
     "transactions:transactions",
@@ -540,6 +542,7 @@
     "spotlight:spotlights",
     "spotlight:stories",
     "spotlight:story",
+    "ticketPlans:total",
     "validation:useHhMm",
     "wallet:mobileMoney",
     "wallet:mtnTelecelAtMoneyGMoney",

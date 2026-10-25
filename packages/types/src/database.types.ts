@@ -4046,6 +4046,49 @@ export type Database = {
         }
         Relationships: []
       }
+      event_ticket_plan_setting: {
+        Row: {
+          enabled: boolean
+          event_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          event_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          event_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_ticket_plan_setting_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_plan_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_plan_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       exchange_rate: {
         Row: {
           base: string
@@ -7624,6 +7667,7 @@ export type Database = {
           provider_reference: string | null
           status: string
           subscription_checkout_id: string | null
+          ticket_plan_id: string | null
           transaction_id: string | null
           updated_at: string
           user_id: string
@@ -7650,6 +7694,7 @@ export type Database = {
           provider_reference?: string | null
           status?: string
           subscription_checkout_id?: string | null
+          ticket_plan_id?: string | null
           transaction_id?: string | null
           updated_at?: string
           user_id: string
@@ -7676,6 +7721,7 @@ export type Database = {
           provider_reference?: string | null
           status?: string
           subscription_checkout_id?: string | null
+          ticket_plan_id?: string | null
           transaction_id?: string | null
           updated_at?: string
           user_id?: string
@@ -7722,6 +7768,13 @@ export type Database = {
             columns: ["subscription_checkout_id"]
             isOneToOne: false
             referencedRelation: "subscription_checkout"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_attempt_ticket_plan_id_fkey"
+            columns: ["ticket_plan_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_plan"
             referencedColumns: ["id"]
           },
           {
@@ -12845,6 +12898,332 @@ export type Database = {
           },
         ]
       }
+      ticket_plan: {
+        Row: {
+          checkout_session_id: string
+          completed_at: string | null
+          country_code: string
+          created_at: string
+          currency: string
+          deadline_at: string
+          ended_at: string | null
+          ended_reason: string | null
+          event_id: string
+          event_starts_at: string
+          fee_bps: number
+          fee_minor: number
+          first_part_min_minor: number
+          hold_expires_at: string
+          id: string
+          keep_fee_on_refund: boolean
+          kept_minor: number
+          occurrence_id: string | null
+          paid_minor: number
+          part_min_minor: number
+          refund_minor: number
+          refund_status: string
+          reminders_sent: number[]
+          settlement_attempt_id: string | null
+          status: string
+          tax_minor: number
+          ticket_minor: number
+          total_minor: number
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkout_session_id: string
+          completed_at?: string | null
+          country_code: string
+          created_at?: string
+          currency: string
+          deadline_at: string
+          ended_at?: string | null
+          ended_reason?: string | null
+          event_id: string
+          event_starts_at: string
+          fee_bps: number
+          fee_minor: number
+          first_part_min_minor: number
+          hold_expires_at: string
+          id?: string
+          keep_fee_on_refund: boolean
+          kept_minor?: number
+          occurrence_id?: string | null
+          paid_minor?: number
+          part_min_minor: number
+          refund_minor?: number
+          refund_status?: string
+          reminders_sent?: number[]
+          settlement_attempt_id?: string | null
+          status?: string
+          tax_minor?: number
+          ticket_minor: number
+          total_minor: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkout_session_id?: string
+          completed_at?: string | null
+          country_code?: string
+          created_at?: string
+          currency?: string
+          deadline_at?: string
+          ended_at?: string | null
+          ended_reason?: string | null
+          event_id?: string
+          event_starts_at?: string
+          fee_bps?: number
+          fee_minor?: number
+          first_part_min_minor?: number
+          hold_expires_at?: string
+          id?: string
+          keep_fee_on_refund?: boolean
+          kept_minor?: number
+          occurrence_id?: string | null
+          paid_minor?: number
+          part_min_minor?: number
+          refund_minor?: number
+          refund_status?: string
+          reminders_sent?: number[]
+          settlement_attempt_id?: string | null
+          status?: string
+          tax_minor?: number
+          ticket_minor?: number
+          total_minor?: number
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_plan_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currency"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "ticket_plan_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_settlement_attempt_id_fkey"
+            columns: ["settlement_attempt_id"]
+            isOneToOne: false
+            referencedRelation: "payment_attempt"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transaction"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ticket_plan_payment: {
+        Row: {
+          amount_minor: number
+          created_at: string
+          currency: string
+          id: string
+          method: string | null
+          paid_at: string
+          payment_attempt_id: string
+          plan_id: string
+          provider: string
+          provider_fee_minor: number | null
+          provider_reference: string
+          provider_transaction_id: string | null
+          refund_attempts: number
+          refund_claimed_at: string | null
+          refund_failure: string | null
+          refund_minor: number
+          refund_processed_at: string | null
+          refund_requested_at: string | null
+          refund_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_minor: number
+          created_at?: string
+          currency: string
+          id?: string
+          method?: string | null
+          paid_at?: string
+          payment_attempt_id: string
+          plan_id: string
+          provider: string
+          provider_fee_minor?: number | null
+          provider_reference: string
+          provider_transaction_id?: string | null
+          refund_attempts?: number
+          refund_claimed_at?: string | null
+          refund_failure?: string | null
+          refund_minor?: number
+          refund_processed_at?: string | null
+          refund_requested_at?: string | null
+          refund_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_minor?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          paid_at?: string
+          payment_attempt_id?: string
+          plan_id?: string
+          provider?: string
+          provider_fee_minor?: number | null
+          provider_reference?: string
+          provider_transaction_id?: string | null
+          refund_attempts?: number
+          refund_claimed_at?: string | null
+          refund_failure?: string | null
+          refund_minor?: number
+          refund_processed_at?: string | null
+          refund_requested_at?: string | null
+          refund_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_plan_payment_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currency"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "ticket_plan_payment_payment_attempt_id_fkey"
+            columns: ["payment_attempt_id"]
+            isOneToOne: true
+            referencedRelation: "payment_attempt"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_payment_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_plan"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_payment_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_payment_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ticket_plan_program_setting: {
+        Row: {
+          audience: string
+          beta_user_ids: string[]
+          deadline_hours_before_start: number
+          enabled: boolean
+          first_part_min_bps: number
+          hold_minutes: number
+          id: number
+          keep_fee_on_refund: boolean
+          max_tickets_per_plan: number
+          min_days_to_deadline: number
+          part_min_bps: number
+          reminder_days: number[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          audience?: string
+          beta_user_ids?: string[]
+          deadline_hours_before_start?: number
+          enabled?: boolean
+          first_part_min_bps?: number
+          hold_minutes?: number
+          id?: number
+          keep_fee_on_refund?: boolean
+          max_tickets_per_plan?: number
+          min_days_to_deadline?: number
+          part_min_bps?: number
+          reminder_days?: number[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          audience?: string
+          beta_user_ids?: string[]
+          deadline_hours_before_start?: number
+          enabled?: boolean
+          first_part_min_bps?: number
+          hold_minutes?: number
+          id?: number
+          keep_fee_on_refund?: boolean
+          max_tickets_per_plan?: number
+          min_days_to_deadline?: number
+          part_min_bps?: number
+          reminder_days?: number[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_plan_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_plan_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       ticket_type: {
         Row: {
           available_from: string | null
@@ -14552,6 +14931,14 @@ export type Database = {
       }
       _search_trgm_thresholds: { Args: never; Returns: undefined }
       _search_web_tsquery: { Args: { p_norm: string }; Returns: unknown }
+      _ticket_plan_allocate_refund: {
+        Args: { p_plan_id: string; p_total: number }
+        Returns: undefined
+      }
+      _ticket_plan_refund_rollup: {
+        Args: { p_plan_id: string }
+        Returns: string
+      }
       _user_timezone: { Args: { p_user_id: string }; Returns: string }
       _weekly_document_has_content: { Args: { p_doc: Json }; Returns: boolean }
       account_deletion_blockers: { Args: { p_user_id: string }; Returns: Json }
@@ -17223,6 +17610,7 @@ export type Database = {
       run_safety_dispatch: { Args: never; Returns: undefined }
       run_scheduled_health_check: { Args: never; Returns: undefined }
       run_storage_purge_dispatch: { Args: never; Returns: undefined }
+      run_ticket_plan_dispatch: { Args: never; Returns: undefined }
       safety_claim_check_in_reminders: { Args: never; Returns: string[] }
       safety_claim_messages: {
         Args: { p_ids?: number[]; p_limit?: number }
@@ -17469,6 +17857,63 @@ export type Database = {
         Args: { p_detail?: string; p_ids: number[]; p_status: string }
         Returns: number
       }
+      ticket_plan_admin_part_refund: {
+        Args: { p_action: string; p_note: string; p_payment_id: string }
+        Returns: Json
+      }
+      ticket_plan_create: {
+        Args: {
+          p_country_code: string
+          p_currency: string
+          p_deadline_at: string
+          p_event_id: string
+          p_event_starts_at: string
+          p_fee_bps: number
+          p_fee_minor: number
+          p_first_part_min_minor: number
+          p_hold_expires_at: string
+          p_keep_fee_on_refund: boolean
+          p_lines: Json
+          p_occurrence_id: string
+          p_part_min_minor: number
+          p_tax_minor: number
+          p_ticket_minor: number
+          p_user_id: string
+        }
+        Returns: string
+      }
+      ticket_plan_mark_completed: {
+        Args: { p_plan_id: string; p_transaction_id: string }
+        Returns: boolean
+      }
+      ticket_plan_part_refund_outcome: {
+        Args: {
+          p_detail: string
+          p_outcome: string
+          p_provider: string
+          p_provider_transaction_id: string
+          p_reference: string
+        }
+        Returns: Json
+      }
+      ticket_plan_plan_purchase_refund: {
+        Args: { p_refund_minor: number; p_transaction_id: string }
+        Returns: Json
+      }
+      ticket_plan_record_payment: {
+        Args: {
+          p_amount_minor: number
+          p_attempt_id: string
+          p_provider_fee_minor: number
+          p_provider_transaction_id: string
+        }
+        Returns: Json
+      }
+      ticket_plan_release: {
+        Args: { p_plan_id: string; p_reason: string; p_status: string }
+        Returns: Json
+      }
+      ticket_plan_work_due: { Args: never; Returns: boolean }
       toggle_message_reaction: {
         Args: { p_emoji: string; p_message_id: string }
         Returns: {

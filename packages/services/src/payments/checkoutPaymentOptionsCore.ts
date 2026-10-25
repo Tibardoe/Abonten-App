@@ -26,6 +26,7 @@ import {
   type PromotionKind,
   loadPromotionOrder,
 } from "../rewards/creditRedemptionCore";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import {
   type SavedRow,
   judgeSavedInstrument,
@@ -34,7 +35,9 @@ import {
 
 export type CheckoutPaymentTarget =
   | { kind: "ticket"; checkoutSessionIds: string[] }
-  | { kind: PromotionKind; checkoutId: string };
+  | { kind: PromotionKind; checkoutId: string }
+  /** A part of a Pay small small plan: the plan's event market decides. */
+  | { kind: "plan"; planId: string };
 
 export type {
   CheckoutPaymentOptions,
@@ -94,6 +97,28 @@ async function orderMarket(
         message: tr("somethingWentWrong"),
       };
     }
+  }
+  if (target.kind === "plan") {
+    // Plans have no client access: read with the service role, scoped to
+    // the caller.
+    const { data: plan, error } = await getSupabaseServiceClient()
+      .from("ticket_plan")
+      .select("country_code, currency")
+      .eq("id", target.planId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) {
+      logger.error(`checkoutPaymentOptions: plan (${error.message})`);
+      return { ok: false, status: 500, message: tr("somethingWentWrong") };
+    }
+    if (!plan) {
+      return { ok: false, status: 404, message: tr("thisPlanWasNotFound") };
+    }
+    return {
+      ok: true,
+      countryCode: plan.country_code,
+      currency: plan.currency,
+    };
   }
   try {
     const order = await loadPromotionOrder(

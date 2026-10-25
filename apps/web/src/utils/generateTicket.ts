@@ -5,7 +5,6 @@ import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
-import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import {
@@ -130,12 +129,14 @@ export default async function generateTicket(
   // DATA-001.)
   await supabase.rpc("expire_stale_ticket_checkouts");
 
+  // 'on_plan' rows are the seats a Pay small small plan holds; the RPC
+  // issues them only on the authority of the plan's own settlement.
   const { data: checkoutData, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(checkoutSelect)
     .eq("checkout_session_id", checkoutSessionId)
     .eq("user_id", userId)
-    .eq("status", "pending");
+    .in("status", ["pending", "on_plan"]);
 
   if (checkoutError) {
     logger.error(`Failed fetching checkout: ${checkoutError.message}`);
@@ -190,14 +191,12 @@ export default async function generateTicket(
     })),
   );
 
-  const releaseAllReservations = async () => {
-    await Promise.all(
-      rows.map((row) =>
-        releaseTicketQuantity(row.ticket_type_id, row.quantity),
-      ),
-    );
-  };
-
+  // A failure below never hands the reserved units back. The rows stay
+  // 'pending' (or 'on_plan'), so they still hold their seats: a retry of
+  // the same path issues them, or the expiry sweep turns them 'expired' and
+  // restocks them exactly once. Restocking here as well counted the seats
+  // twice once the sweep ran, and oversold them when a paid checkout's
+  // retry then succeeded.
   let uploadedTickets: {
     checkout_id: string;
     ticket_type_id: string;
@@ -232,9 +231,6 @@ export default async function generateTicket(
     );
   } catch (error) {
     logger.error(`Error saving QR code to cloudinary: ${error}`);
-    // Nothing was written to the DB yet — give the reserved units back so
-    // the checkout's expiry sweep isn't the only thing that reclaims them.
-    await releaseAllReservations();
     return { status: 500, message: tr("somethingWentWrong") };
   }
 
@@ -287,12 +283,11 @@ export default async function generateTicket(
     logger.error(
       `issue_tickets_for_checkout failed for session ${checkoutSessionId}: ${issueError?.message}`,
     );
-    // The RPC is one transaction — on error nothing was committed, so the
-    // reservation must be handed back. Retryable via the same path. The
-    // RPC's own exception messages (e.g. "checkout has expired") are
+    // The RPC is one transaction — on error nothing was committed and the
+    // reservation is still held, so this is retryable via the same path.
+    // The RPC's own exception messages (e.g. "checkout has expired") are
     // user-safe — it never raises with internal detail — so surface them
     // instead of a generic message when present.
-    await releaseAllReservations();
     return {
       status: 500,
       message: issueError?.message || tr("somethingWentWrong"),

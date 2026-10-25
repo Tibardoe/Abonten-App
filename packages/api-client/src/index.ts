@@ -205,3 +205,14 @@ export type {
   StartIdentityVerificationBody,
   StartIdentityVerificationResponse,
 } from "./types";
+export type {
+  BalanceOverviewResult,
+  EventTicketPlanSettingResult,
+  PayTicketPlanPartBody,
+  PayTicketPlanPartResult,
+  StartTicketPlanBody,
+  StartTicketPlanResult,
+  TicketPlanOfferResult,
+  TicketPlanResult,
+  TicketPlansResult,
+} from "./types";

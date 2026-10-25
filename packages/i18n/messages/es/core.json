@@ -892,6 +892,38 @@
     "identity_revoked": {
       "title": "Se ha retirado tu verificación de identidad",
       "body": "Ponte en contacto con el soporte de Abonten para saber por qué."
+    },
+    "ticket_plan_part_received": {
+      "title": "Pago recibido para {title}",
+      "body": "{paid} pagados de {total}. Quedan {left} por pagar antes del {deadline}."
+    },
+    "ticket_plan_reminder": {
+      "title": "Quedan {left} por pagar para {title}",
+      "body": "{days, plural, one {Termina antes del {deadline} (queda # día) para conservar tus entradas.} other {Termina antes del {deadline} (quedan # días) para conservar tus entradas.}}"
+    },
+    "ticket_plan_lapsed": {
+      "title": "Tu plan para {title} ha terminado",
+      "body": "{refunds, select, yes {No se completó antes de la fecha límite, así que las entradas volvieron a la venta. {refund} ya está de camino a ti.} other {No se completó antes de la fecha límite, así que las entradas volvieron a la venta.}}"
+    },
+    "ticket_plan_cancelled": {
+      "title": "Plan cancelado: {title}",
+      "body": "{refunds, select, yes {Tus entradas reservadas volvieron a la venta. {refund} ya está de camino a ti.} other {Tus entradas reservadas volvieron a la venta.}}"
+    },
+    "ticket_plan_event_cancelled": {
+      "title": "{title} se ha cancelado",
+      "body": "{refunds, select, yes {Tu plan ha terminado. {refund} ya está de camino a ti.} other {Tu plan ha terminado.}}"
+    },
+    "ticket_plan_ended_by_staff": {
+      "title": "Tu plan para {title} ha terminado",
+      "body": "{refunds, select, yes {Abonten ha terminado este plan. {refund} ya está de camino a ti.} other {Abonten ha terminado este plan.}}"
+    },
+    "ticket_plan_refunded": {
+      "title": "Reembolso completado: {title}",
+      "body": "Ya tienes de vuelta {refund} de tu plan."
+    },
+    "ticket_plan_refund_problem": {
+      "title": "Tu reembolso para {title} se ha retrasado",
+      "body": "No se ha podido enviar una parte. Nuestro equipo lo está revisando y se pondrá en contacto contigo."
     }
   },
   "openStatus": {

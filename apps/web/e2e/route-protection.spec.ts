@@ -8,6 +8,7 @@ import { expect, test } from "@playwright/test";
 
 const PRIVATE = [
   "/admin",
+  "/balance",
   "/checkout",
   "/consent",
   "/field",
@@ -19,6 +20,7 @@ const PRIVATE = [
   "/plans",
   "/rewards",
   "/settings",
+  "/ticket-plans/00000000-0000-4000-8000-000000000000",
   "/transactions",
   "/user-account",
   "/wallet",

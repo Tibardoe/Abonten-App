@@ -19,6 +19,7 @@ import {
   MapPinned,
   Menu,
   Newspaper,
+  PiggyBank,
   ScrollText,
   Settings,
   ShieldAlert,
@@ -110,6 +111,12 @@ const ITEMS: Item[] = [
     label: "Finance",
     icon: Wallet,
     permission: "finance.view",
+  },
+  {
+    href: "/ticket-plans",
+    label: "Pay small small",
+    icon: PiggyBank,
+    permission: "plans.view",
   },
   {
     href: "/rewards",

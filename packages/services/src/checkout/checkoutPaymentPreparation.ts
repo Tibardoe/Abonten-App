@@ -76,8 +76,9 @@ export class MixedMarketCheckoutError extends Error {
  * Re-reads the given checkout sessions fresh (after self-healing expiry),
  * scoped to the given user, and computes what's actually owed right now.
  * Any requested session id that no longer has pending rows (expired,
- * already paid elsewhere, or never belonged to this user) is reported back
- * in invalidSessionIds instead of silently dropped.
+ * already paid elsewhere, or never belonged to this user), or whose payment
+ * already went through, is reported back in invalidSessionIds instead of
+ * silently dropped.
  */
 export async function prepareCheckoutPayment(
   userId: string,
@@ -102,7 +103,25 @@ export async function prepareCheckoutPayment(
     throw new Error(`Failed fetching checkout sessions: ${error.message}`);
   }
 
-  const rows = (data ?? []) as unknown as CheckoutRow[];
+  // A session whose payment already went through is never payable again,
+  // even while its rows read 'pending': a charge whose ticket step failed
+  // keeps its seats (and stays pending) until the retry issues them.
+  const { data: paidAttempts, error: paidError } = await supabase
+    .from("payment_attempt")
+    .select("checkout_session_id")
+    .in("checkout_session_id", uniqueIds)
+    .in("status", ["succeeded", "fulfillment_failed"]);
+
+  if (paidError) {
+    throw new Error(`Failed checking earlier payments: ${paidError.message}`);
+  }
+
+  const alreadyPaid = new Set(
+    (paidAttempts ?? []).map((a) => a.checkout_session_id),
+  );
+  const rows = ((data ?? []) as unknown as CheckoutRow[]).filter(
+    (row) => !alreadyPaid.has(row.checkout_session_id),
+  );
 
   // The order's market and currency come from its events. A basket that
   // mixes them is refused before any money maths.

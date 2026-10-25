@@ -19,6 +19,7 @@ import CreateMenu from "@/places/molecules/CreateMenu";
 import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
 import SpotlightNavLink from "@/spotlight/atoms/SpotlightNavLink";
+import BalanceNavLink from "@/ticketPlans/molecules/BalanceNavLink";
 import WeeklyNavLink from "@/weekly/atoms/WeeklyNavLink";
 import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
 import { logger } from "@abonten/core/logger";
@@ -172,6 +173,8 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
             <WeeklyNavLink onNavigate={onNavigate} className={ROW} />
 
             <SpotlightNavLink onNavigate={onNavigate} className={ROW} />
+
+            <BalanceNavLink onNavigate={onNavigate} className={ROW} />
 
             <RewardsNavLink onNavigate={onNavigate} className={ROW} />
 

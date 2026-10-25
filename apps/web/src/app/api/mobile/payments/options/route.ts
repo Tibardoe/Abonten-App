@@ -14,6 +14,7 @@ const PROMOTION_KINDS = new Set(["event", "place", "spotlight"]);
 
 // GET /api/mobile/payments/options?kind=ticket&ids=<session>,<session>
 // GET /api/mobile/payments/options?kind=event|place|spotlight&id=<checkoutId>
+// GET /api/mobile/payments/options?kind=plan&id=<planId>   (Pay small small)
 //
 // The ways this buyer can pay for one order: the order's market decides the
 // methods (card, bank transfer, USSD, Apple Pay…), and each saved wallet
@@ -38,6 +39,10 @@ export async function GET(req: Request) {
         return apiJson({ status: 400, message: tr("idsIsRequired") });
       }
       target = { kind: "ticket", checkoutSessionIds: ids };
+    } else if (kind === "plan") {
+      const id = url.searchParams.get("id");
+      if (!id) return apiJson({ status: 400, message: tr("idIsRequired") });
+      target = { kind: "plan", planId: id };
     } else if (PROMOTION_KINDS.has(kind)) {
       const id = url.searchParams.get("id");
       if (!id) return apiJson({ status: 400, message: tr("idIsRequired") });

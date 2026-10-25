@@ -29,6 +29,8 @@ type Params = {
   successCtaLabel?: string;
   /** Set for ticket purchases: lets the success state offer alerts. */
   eventId?: string;
+  /** "1": success goes back to the screen that started the payment. */
+  successBack?: string;
 };
 
 export default function PaymentVerificationScreen() {
@@ -50,6 +52,11 @@ export default function PaymentVerificationScreen() {
     });
 
   const goSuccess = () => {
+    // A plan's part returns to the plan, which shows what is left.
+    if (p.successBack === "1" && router.canGoBack()) {
+      router.back();
+      return;
+    }
     const href = p.successHref || "/(app)/tickets";
     // Tickets is a pushed screen now (Spotlight took its tab), so land on it
     // straight above the tabs: Back from "My tickets" should not reopen the
@@ -73,7 +80,9 @@ export default function PaymentVerificationScreen() {
         {p.contextTitle ? (
           <View className="items-center gap-1">
             <AppText variant="caption">
-              {p.kind === "ticket" ? t("order") : t("promotion")}
+              {p.kind === "ticket" || p.kind === "ticket_plan"
+                ? t("order")
+                : t("promotion")}
             </AppText>
             <AppText variant="sectionHeading" className="text-center">
               {p.contextTitle}
@@ -137,9 +146,11 @@ export default function PaymentVerificationScreen() {
             <AppText variant="muted" className="text-center">
               {p.kind === "ticket"
                 ? t("yourTicketIsConfirmedAndReady")
-                : p.kind === "spotlight_promotion"
-                  ? t("yourPromotionIsWaitingForReview")
-                  : t("yourListingIsNowFeatured")}
+                : p.kind === "ticket_plan"
+                  ? t("yourPaymentWasAddedToYourPlan")
+                  : p.kind === "spotlight_promotion"
+                    ? t("yourPromotionIsWaitingForReview")
+                    : t("yourListingIsNowFeatured")}
             </AppText>
             <Button
               title={p.successCtaLabel ?? t("viewMyTickets")}

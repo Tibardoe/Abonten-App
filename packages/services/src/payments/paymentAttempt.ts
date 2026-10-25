@@ -45,8 +45,8 @@ type UpsertPaymentAttemptResult =
 
 /**
  * Records that the user has chosen a saved payment method to pay for one
- * still-pending checkout (ticket, place promotion, or event promotion) — it
- * does NOT complete the purchase. Retrying with the same method reuses the
+ * still-pending checkout (ticket, place promotion, or event promotion) or
+ * one part of a Pay small small plan — it does NOT complete the purchase. Retrying with the same method reuses the
  * still-open attempt
  * instead of spawning duplicates; switching methods cancels the old attempt
  * and opens a new one. When paymentGroupId is given, it tags the row (new or
@@ -59,7 +59,8 @@ export async function upsertPaymentAttemptForSession(
     | "checkout_session_id"
     | "place_promotion_checkout_id"
     | "event_promotion_checkout_id"
-    | "content_campaign_checkout_id",
+    | "content_campaign_checkout_id"
+    | "ticket_plan_id",
   matchValue: string,
   amount: number,
   currency: string,
@@ -196,7 +197,8 @@ type CheckoutMatchColumn =
   | "checkout_session_id"
   | "place_promotion_checkout_id"
   | "event_promotion_checkout_id"
-  | "content_campaign_checkout_id";
+  | "content_campaign_checkout_id"
+  | "ticket_plan_id";
 
 /**
  * The Phase 12 payment-race guard: is a payment currently in flight for this

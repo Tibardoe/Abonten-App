@@ -892,6 +892,38 @@
     "identity_revoked": {
       "title": "A sua verificação de identidade foi retirada",
       "body": "Contacte o apoio do Abonten para saber porquê."
+    },
+    "ticket_plan_part_received": {
+      "title": "Pagamento recebido para {title}",
+      "body": "{paid} pagos de {total}. Faltam {left} para pagar até {deadline}."
+    },
+    "ticket_plan_reminder": {
+      "title": "Faltam {left} para pagar {title}",
+      "body": "{days, plural, one {Conclua até {deadline} (falta # dia) para manter os seus bilhetes.} other {Conclua até {deadline} (faltam # dias) para manter os seus bilhetes.}}"
+    },
+    "ticket_plan_lapsed": {
+      "title": "O seu plano para {title} terminou",
+      "body": "{refunds, select, yes {Não foi concluído até ao prazo, por isso os bilhetes voltaram à venda. {refund} está a caminho de si.} other {Não foi concluído até ao prazo, por isso os bilhetes voltaram à venda.}}"
+    },
+    "ticket_plan_cancelled": {
+      "title": "Plano cancelado: {title}",
+      "body": "{refunds, select, yes {Os seus bilhetes reservados voltaram à venda. {refund} está a caminho de si.} other {Os seus bilhetes reservados voltaram à venda.}}"
+    },
+    "ticket_plan_event_cancelled": {
+      "title": "{title} foi cancelado",
+      "body": "{refunds, select, yes {O seu plano terminou. {refund} está a caminho de si.} other {O seu plano terminou.}}"
+    },
+    "ticket_plan_ended_by_staff": {
+      "title": "O seu plano para {title} terminou",
+      "body": "{refunds, select, yes {O Abonten terminou este plano. {refund} está a caminho de si.} other {O Abonten terminou este plano.}}"
+    },
+    "ticket_plan_refunded": {
+      "title": "Reembolso concluído: {title}",
+      "body": "{refund} do seu plano já voltaram para si."
+    },
+    "ticket_plan_refund_problem": {
+      "title": "O seu reembolso para {title} está atrasado",
+      "body": "Não foi possível enviar uma parte. A nossa equipa está a tratar do assunto e vai contactá-lo."
     }
   },
   "openStatus": {

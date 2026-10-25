@@ -4,8 +4,8 @@ purpose: Every scheduled job in production — what it does, when it runs, how t
 audience: Engineering, operations
 scope: pg_cron jobs in supabase/migrations
 status: Approved
-version: 1.5
-lastReviewed: 2026-10-24
+version: 1.7
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -21,7 +21,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | Job | Schedule | Function | Purpose | If it stops |
 |---|---|---|---|---|
 | `abonten-health-check` | */2 min | `run_scheduled_health_check()` → `GET /api/observability/health` | Provider probes + synthetic `self` row | Health panel stale; `self` shows down |
-| `expire-stale-ticket-checkouts` (+ promotion / subscription variants) | */5 min | `expire_stale_ticket_checkouts()` etc. | Release seats and promo usage from expired checkouts (skips checkouts with a live payment attempt) | Sold-out shows wrongly; seats stuck |
+| `expire-stale-ticket-checkouts` (+ promotion / subscription variants) | */5 min | `expire_stale_ticket_checkouts()` etc. | Release seats and promo usage from expired checkouts (skips checkouts with a live payment attempt, or a paid but unissued one under seven days old) | Sold-out shows wrongly; seats stuck |
 | `recover-stale-payment-attempts` | */5 min | `recover_stale_payment_attempts()` | `processing` > 15 min → `fulfillment_failed` / `pending` | Stuck attempts; reconciliation incident after 1 h |
 | `financial-reconciliation` | */30 min | `run_financial_reconciliation()` | Ledger/ticket/inventory/credit/field-ops invariants → incidents | Silent divergence |
 | `cleanup-expired-drafts` | hourly (`0 * * * *` style) | `cleanup_expired_drafts()` | Purge expired drafts; queue Cloudinary cleanup | Draft tables grow |
@@ -50,6 +50,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `safety-dispatch` | every minute | `run_safety_dispatch()` → `POST /api/safety/dispatch` (notification-delivery token; URL derived from `notification_delivery_config.dispatch_url`) | Abonten Safety: end shares and old alerts; when something is due, turn missed check-ins into alerts, push "time to check in", and send or retry texts, emails and pushes in the Safety outbox | **A missed check-in alerts nobody** and failed texts are not retried. The SOS button itself still texts at once (the request sends its own outbox rows). Check Admin › Monitoring › cron and Admin › Safety (messages waiting) |
 | `safety-housekeeping` | 03:50 | `safety_housekeeping()` | Delete positions `location_retention_days` (7) after a session closes; sessions with their recipients, outbox and timeline after `session_retention_days` (180) | Positions and old sessions are kept longer than promised (privacy) |
 | `identity-housekeeping` | 04:10 | `identity_housekeeping()` | Expire identity links nobody finished (a day after the link's expiry) and checks never answered (14 days), and approvals past `valid_until`; delete unsuccessful checks after `retention_days_unsuccessful` (365), a deleted account's checks after `retention_days_after_deletion` (730), checks tied to fraud after `retention_days_fraud` (1825) | Lapsed checks still show as verified (requirements then let a person through on an expired check); identity records kept longer than the policy says |
+| `ticket-plans-dispatch` | every 5 min | `run_ticket_plan_dispatch()` → `POST /api/maintenance/ticket-plans` (token from `payment_reconcile_config`), only while `ticket_plan_work_due()` finds work | Pay small small: end plans whose first-part hold ran out, whose deadline passed, whose event was cancelled or whose owner closed their account (seats released, refund planned); ask the provider for planned refund shares and hand stuck ones to staff; finish settlements left behind; move deadlines when a date moved earlier; send the 7- and 2-day reminders | Seats held by lapsed plans never go back on sale; buyers' refunds never requested; a fully paid plan's tickets not issued until the reconcile sweep catches the settlement |
 | `content-stats-rollup` | :20 hourly | `content_rollup_stats(20000)` | Fold valid Spotlight/Story views and clicks into `content_post_daily_stat` | Creator insights and the admin overview stop moving (raw events are kept) |
 | `content-trending-refresh` | :25 hourly | `content_trending_refresh()` | Recompute `trending_score` over the trending window | Trending tab goes stale |
 | `content-housekeeping` | 03:50 | `content_housekeeping()` | Archive ended Stories, apply retention to deleted posts and raw views, queue unused uploads for Cloudinary deletion | Tables and Cloudinary storage grow; retention promise broken |

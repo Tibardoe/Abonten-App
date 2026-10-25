@@ -103,7 +103,10 @@ export type AdminPermissionKey =
   | "identity.view_pii"
   | "identity.review"
   | "identity.revoke"
-  | "identity.configure";
+  | "identity.configure"
+  | "plans.view"
+  | "plans.manage"
+  | "plans.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 
