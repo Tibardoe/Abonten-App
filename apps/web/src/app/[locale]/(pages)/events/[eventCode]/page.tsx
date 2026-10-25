@@ -48,9 +48,14 @@ import { PiTicketBold } from "react-icons/pi";
 
 import JsonLd from "@/components/atoms/JsonLd";
 import IdentityCheckedBadge from "@/identity/molecules/IdentityCheckedBadge";
-import { eventJsonLd } from "@/utils/structuredData";
+import { cityAt, isIndexedAccount } from "@/utils/searchIndexing";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
+import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
+import { eventJsonLd } from "@abonten/core/seo/listingJsonLd";
+import { cityPath, eventPath } from "@abonten/core/seo/paths";
+import { snippetText } from "@abonten/core/seo/snippet";
 import { getLocale, getTranslations } from "next-intl/server";
+import { cache } from "react";
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
@@ -67,78 +72,12 @@ import { getLocale, getTranslations } from "next-intl/server";
 // next request. Revisit only together with revalidation on every write.
 export const dynamic = "force-dynamic";
 
-// Rich link previews when an event is shared (from web or the mobile share
-// sheet). The flyer is served straight from Cloudinary at OG dimensions —
-// no ImageResponse route needed.
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ eventCode: string }>;
-}): Promise<Metadata> {
-  const t = await getTranslations("events");
-
-  const { eventCode } = await params;
-  const event = rowOrFailure(
+// The metadata and the page read the same row: one database read per
+// request (React cache), not two. A lookup that failed is a 500, never a
+// 404 (utils/rowOrFailure.ts).
+const loadEvent = cache(async (eventCode: string) =>
+  rowOrFailure(
     await publicSupabase
-      .from("event")
-      .select("title, description, flyer_public_id, flyer_version, event_code")
-      .eq("event_code", eventCode.toUpperCase())
-      .single(),
-    "event",
-  );
-
-  // The segment layout has already answered with a 404 for a missing code.
-  if (!event) return { title: t("eventNotFound") };
-
-  const title = event.title;
-  const description = event.description
-    ? String(event.description).slice(0, 155)
-    : undefined;
-  const image =
-    event.flyer_public_id && event.flyer_version
-      ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
-          width: 1200,
-          height: 630,
-        })
-      : undefined;
-
-  const locale = await getLocale();
-  return {
-    alternates: languageAlternates(`/events/${event.event_code}`, locale),
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      images: image ? [{ url: image, width: 1200, height: 630 }] : undefined,
-    },
-    twitter: {
-      card: image ? "summary_large_image" : "summary",
-      title,
-      description,
-      images: image ? [image] : undefined,
-    },
-  };
-}
-
-export default async function page({
-  params,
-}: {
-  params: Promise<{ eventCode: string }>;
-}) {
-  const locale = await getLocale();
-
-  const t = await getTranslations("events");
-  const tc = await getTranslations("core");
-
-  const supabase = publicSupabase;
-
-  const { eventCode } = await params;
-
-  // A lookup that failed is a 500, never a 404 (utils/rowOrFailure.ts).
-  const event = rowOrFailure(
-    await supabase
       .from("event")
       .select(
         `
@@ -147,6 +86,7 @@ export default async function page({
       avatar_public_id,
       avatar_version,
       username,
+      full_name,
       organizer_verified,
       identity_verified,
       identity_valid_until,
@@ -175,7 +115,100 @@ export default async function page({
       .eq("event_code", eventCode.toUpperCase())
       .single(),
     "event",
+  ),
+);
+
+// The search result and the link preview when an event is shared (from web
+// or the mobile share sheet): the title with its date ("… tickets" when
+// tickets are sold), and the date and venue ahead of the description. The
+// flyer is served straight from Cloudinary at OG dimensions — no
+// ImageResponse route needed.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ eventCode: string }>;
+}): Promise<Metadata> {
+  const t = await getTranslations("events");
+
+  const { eventCode } = await params;
+  const event = await loadEvent(eventCode);
+
+  // The segment layout has already answered with a 404 for a missing code.
+  if (!event) return { title: t("eventNotFound") };
+
+  const locale = await getLocale();
+  const { date } = getFormattedEventDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+    event.timezone,
+    locale,
   );
+  const sellsTickets = (event.ticket_type ?? []).some(
+    (tier: { price: number | null }) => Number(tier.price ?? 0) > 0,
+  );
+  const title = t(sellsTickets ? "metaTitleTickets" : "metaTitle", {
+    title: event.title,
+    date,
+  });
+  const venue =
+    event.place?.name || readEventAddress(event.address).full_address;
+  const about = snippetText(event.description);
+  const description = venue
+    ? snippetText(
+        about
+          ? t("metaDescription", { date, venue, about })
+          : t("metaDescriptionNoAbout", { date, venue }),
+      )
+    : about || date;
+  const image =
+    event.flyer_public_id && event.flyer_version
+      ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
+          width: 1200,
+          height: 630,
+        })
+      : undefined;
+
+  const path = eventPath(event.event_code);
+  return {
+    alternates: languageAlternates(path, locale),
+    title,
+    description,
+    // Sample listings are not real events (utils/searchIndexing.ts).
+    ...(isIndexedAccount(event.organizer_id)
+      ? {}
+      : { robots: { index: false, follow: true } }),
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: path,
+      images: image ? [{ url: image, width: 1200, height: 630 }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
+export default async function page({
+  params,
+}: {
+  params: Promise<{ eventCode: string }>;
+}) {
+  const locale = await getLocale();
+
+  const t = await getTranslations("events");
+  const tc = await getTranslations("core");
+
+  const supabase = publicSupabase;
+
+  const { eventCode } = await params;
+
+  const event = await loadEvent(eventCode);
 
   if (!event) notFound();
 
@@ -208,6 +241,7 @@ export default async function page({
     averageRating,
     reviewPreview,
     similarEventsResponse,
+    city,
   ] = await Promise.all([
     // `attendance` has RLS restricting SELECT to the row's owner or the
     // event's organizer — this cookie-free publicSupabase client always has
@@ -229,6 +263,9 @@ export default async function page({
       : getSimilarEvents(event.event_category, lng, lat, {
           excludeEventId: event.id,
         }),
+    // The market city the pin is in: the address's locality and the
+    // breadcrumb's middle step for search engines.
+    cityAt(lat, lng),
   ]);
 
   const attendanceCount = Number(attendanceCountResult ?? 0);
@@ -293,9 +330,30 @@ export default async function page({
 
   const hasOrganizerRating = averageRating.totalRatings > 0;
 
+  // What search engines read: the event (one entry per date still to come)
+  // and Home › city › event. Sample listings carry none.
+  const tn = await getTranslations("navigation");
+  const structuredData = isIndexedAccount(event.organizer_id)
+    ? jsonLdGraph([
+        ...eventJsonLd(event, {
+          city: city?.name,
+          lat,
+          lng,
+          soldOut,
+        }),
+        breadcrumbJsonLd([
+          { name: tn("home"), path: "/" },
+          ...(city?.launched
+            ? [{ name: city.name, path: cityPath(city.slug) }]
+            : []),
+          { name: event.title, path: eventPath(event.event_code) },
+        ]),
+      ])
+    : null;
+
   return (
     <div className="bg-background">
-      <JsonLd data={eventJsonLd(event)} />
+      {structuredData ? <JsonLd data={structuredData} /> : null}
       <EventViewLogger eventId={event.id} />
       {/* Hero Section */}
       <div className="relative h-72 md:h-[500px] bg-muted overflow-hidden md:rounded-2xl">

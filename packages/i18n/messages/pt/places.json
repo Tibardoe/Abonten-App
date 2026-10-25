@@ -495,5 +495,7 @@
   "placeDidntRespond": "{name} não respondeu antes desta data. Nada foi reservado.",
   "ownerDidntRespond": "O proprietário não respondeu antes desta data. Nada foi reservado.",
   "stepOf": "Passo {step} de {total}",
-  "claimReviewNote": "{documents, select, yes {Um administrador irá rever o seu pedido e os seus documentos. Será notificado quando tiver sido analisado — a propriedade só muda após uma aprovação.} other {Um administrador irá rever o seu pedido. Será notificado quando tiver sido analisado — a propriedade só muda após uma aprovação.}}"
+  "claimReviewNote": "{documents, select, yes {Um administrador irá rever o seu pedido e os seus documentos. Será notificado quando tiver sido analisado — a propriedade só muda após uma aprovação.} other {Um administrador irá rever o seu pedido. Será notificado quando tiver sido analisado — a propriedade só muda após uma aprovação.}}",
+  "metaTitle": "{name} · {category}",
+  "metaTitleInCity": "{name} · {category} em {city}"
 }

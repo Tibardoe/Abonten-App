@@ -6,5 +6,17 @@
   "explore": "Explorer",
   "exploreEventsAndPlacesHere": "Explorer les événements et les lieux ici",
   "findEventsAndPlacesNearYou": "Trouvez des événements et des lieux près de chez vous, obtenez vos billets et voyez ce qui se passe cette semaine.",
-  "useMyCurrentLocation": "Utiliser ma position actuelle"
+  "useMyCurrentLocation": "Utiliser ma position actuelle",
+  "exploreACity": "Explorer une ville",
+  "exploreACityIntro": "Ce qui se passe ce soir, ce week-end et ce mois-ci, et les lieux qui valent le détour.",
+  "eventsAndPlaces": "Événements et lieux",
+  "whatYouCanDoOnAbonten": "Ce que vous pouvez faire sur Abonten",
+  "findWhatsOn": "Trouvez ce qui se passe",
+  "findWhatsOnBody": "Concerts, soirées, festivals, humour, gastronomie et plus encore, près de chez vous ou dans n'importe quelle ville.",
+  "exploreEvents": "Explorer les événements",
+  "weeklyBody": "Notre sélection des événements et des lieux à ne pas manquer cette semaine.",
+  "seeThePicks": "Voir la sélection",
+  "hostOnAbonten": "Organisez sur Abonten",
+  "hostBody": "Créez un événement, vendez des billets et accueillez vos invités depuis votre téléphone, ou ajoutez votre lieu pour qu'on le trouve.",
+  "startHosting": "Commencer à organiser"
 }

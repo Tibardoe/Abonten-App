@@ -109,6 +109,7 @@
     "navigation:spotlightStories",
     "places:event",
     "places:events",
+    "places:metaTitleInCity",
     "places:name",
     "places:optional",
     "places:spotlight",

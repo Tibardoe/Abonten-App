@@ -1,5 +1,7 @@
 import { getUserPosts } from "@/actions/getUserPosts";
 import PostButton from "@/components/atoms/PostButton";
+import { profileTabMetadata } from "@/userAccount/profileTabMetadata";
+import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import UserPostsList from "./UserPostsList";
@@ -21,6 +23,14 @@ function EmptyState() {
       <PostButton />
     </div>
   );
+}
+
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  return profileTabMetadata(params, "posts");
 }
 
 export default async function page({

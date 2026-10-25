@@ -4,7 +4,7 @@ purpose: The single entry point to every document — the master index by catego
 audience: Everyone
 scope: docs/** and the public content in apps/web/src/content
 status: Approved
-version: 1.7
+version: 1.8
 lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -70,6 +70,7 @@ Legal register, versioning and effective dates: [legal/README.md](legal/README.m
 | Disaster recovery | [deployment/disaster-recovery.md](deployment/disaster-recovery.md) | [deployment/rollback-and-recovery.md](deployment/rollback-and-recovery.md) · [security/database-security.md](security/database-security.md) §Backups |
 | Mobile and web product docs | [mobile/README.md](mobile/README.md) · [web/README.md](web/README.md) | [mobile/guide/navigation-and-screens.md](mobile/guide/navigation-and-screens.md) · [mobile/guide/permissions-notifications-and-device.md](mobile/guide/permissions-notifications-and-device.md) · [mobile/guide/ios-vs-android.md](mobile/guide/ios-vs-android.md) · [mobile/release-verification.md](mobile/release-verification.md) (SOURCE / BUILD / DEVICE / PRODUCTION verified) |
 | Development setup | [development/setup.md](development/setup.md) | [development/README.md](development/README.md) |
+| Search engines (SEO) | [architecture/search-engines.md](architecture/search-engines.md) | titles, canonical addresses, structured data, sitemap, robots.txt, IndexNow, the owner's Search Console steps |
 
 ## I have a problem — where do I look?
 
@@ -110,6 +111,7 @@ Legal register, versioning and effective dates: [legal/README.md](legal/README.m
 | Error spike / Sentry alert | [incident-response/sentry-and-error-rate.md](incident-response/sentry-and-error-rate.md) · [architecture/observability.md](architecture/observability.md) |
 | Need to switch a programme off | [deployment/rollback-and-recovery.md](deployment/rollback-and-recovery.md) |
 | Someone asks "is Abonten compliant / registered / certified?" | [LEGAL_REVIEW_REQUIRED.md](LEGAL_REVIEW_REQUIRED.md) — nothing may be claimed until verified there |
+| Abonten does not show up in Google or Bing / a page has the wrong title or picture in search results or link previews / a listing should not be in search results | [architecture/search-engines.md](architecture/search-engines.md) |
 | Everything else | [operations/what-do-i-do-when.md](operations/what-do-i-do-when.md) |
 
 ## By audience

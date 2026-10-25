@@ -405,5 +405,9 @@
   "stepOf": "Passo {step} de {total}",
   "ticketTypeNumber": "Tipo de bilhete {number}",
   "exploreHeading": "{filter, select, happening_today {Hoje} happening_this_week {Esta semana} happening_this_month {Este mês} top_rated_organizers {Organizadores mais bem avaliados} around_you {Perto de si} other {Por categoria}}",
-  "weCouldnTFindAnyEventsFiltered": "Não encontrámos eventos de {eventCategory} em {location} que correspondam aos seus filtros. Experimente ajustá-los ou limpá-los."
+  "weCouldnTFindAnyEventsFiltered": "Não encontrámos eventos de {eventCategory} em {location} que correspondam aos seus filtros. Experimente ajustá-los ou limpá-los.",
+  "metaTitle": "{title} · {date}",
+  "metaTitleTickets": "Bilhetes {title} · {date}",
+  "metaDescription": "{date} · {venue}. {about}",
+  "metaDescriptionNoAbout": "{date} · {venue}. Detalhes e direções no Abonten Hub."
 }

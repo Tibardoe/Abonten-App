@@ -20,6 +20,11 @@ test("event and place pages carry Open Graph tags, a canonical URL and JSON-LD",
     const title = await page.title();
     expect(title, path).toMatch(/ \| Abonten Hub$/);
     expect(title, path).not.toMatch(/Abonten Hub \| Abonten Hub/);
+    // The canonical is the address every link uses (lower-case event code).
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      new RegExp(`${path.replace(/[/-]/g, "$&")}$`),
+    );
     const jsonLd = await page
       .locator('script[type="application/ld+json"]')
       .first()
@@ -27,8 +32,68 @@ test("event and place pages carry Open Graph tags, a canonical URL and JSON-LD",
     expect(jsonLd, path).toBeTruthy();
     const data = JSON.parse(jsonLd ?? "{}");
     expect(data["@context"]).toBe("https://schema.org");
-    expect(["Event", "LocalBusiness"]).toContain(data["@type"]);
+    const nodes: { "@type": string; "@id"?: string }[] = data["@graph"];
+    const types = nodes.map((n) => n["@type"]);
+    expect(types, path).toContain("BreadcrumbList");
+    if (path.startsWith("/events/")) {
+      expect(types, path).toContain("Event");
+    } else {
+      // A LocalBusiness, or the closer kind its category names (Restaurant…).
+      expect(
+        nodes.some((n) => n["@id"]?.endsWith("#place")),
+        path,
+      ).toBe(true);
+    }
   }
+});
+
+// The homepage names the site and its organization for search results,
+// carries its own canonical, and links to the launched cities' pages, which
+// are indexable; a location that is not a city is a working page that stays
+// out of the index.
+test("the homepage and the city pages are what search engines are shown", async ({
+  page,
+  request,
+}) => {
+  const home = await page.goto("/");
+  expect(home?.status()).toBe(200);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /^https:\/\/abontenhub\.com\/?$/,
+  );
+  const jsonLd = JSON.parse(
+    (await page
+      .locator('script[type="application/ld+json"]')
+      .first()
+      .textContent()) ?? "{}",
+  );
+  const types = (jsonLd["@graph"] as { "@type": string }[]).map(
+    (n) => n["@type"],
+  );
+  expect(types).toEqual(expect.arrayContaining(["Organization", "WebSite"]));
+  await expect(page.locator('a[href="/explore/accra"]')).toHaveCount(1);
+
+  await page.goto("/explore/accra?lat=5.6037&lng=-0.187");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/explore\/accra$/,
+  );
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Accra");
+
+  await page.goto("/explore/current-location?lat=5.6037&lng=-0.187");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
+
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  expect(sitemap).toContain("/explore/accra</loc>");
+  expect(sitemap).not.toMatch(/\/events\/[A-Z0-9]*[A-Z][A-Z0-9]*<\/loc>/);
+
+  const manifest = await request.get("/manifest.webmanifest");
+  expect(manifest.status()).toBe(200);
+  expect((await manifest.json()).name).toBe("Abonten Hub");
 });
 
 // The full reviews page of an event and a place: public, server-rendered

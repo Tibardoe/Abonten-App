@@ -2,6 +2,7 @@ import { getUserFavoritePlaces } from "@/actions/getUserFavoritePlaces";
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
+import { PRIVATE_PROFILE_TAB_METADATA } from "@/userAccount/profileTabMetadata";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -64,6 +65,8 @@ function PlacesEmptyState() {
 // ExploreTabs/exploreTab.ts "events"|"places" switcher the Explore page
 // already uses instead of a bespoke tab UI, and the same "fully fetched
 // server-side, handed in as children" shape.
+export const metadata = PRIVATE_PROFILE_TAB_METADATA;
+
 export default async function page({
   params,
   searchParams,

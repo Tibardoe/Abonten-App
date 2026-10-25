@@ -23,7 +23,7 @@ import { loadReviewPreview } from "@/reviews/loadReviews";
 import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
 import FollowButton from "@/spotlight/molecules/FollowButton";
 import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid";
-import { placeJsonLd } from "@/utils/structuredData";
+import { cityAt, isIndexedAccount } from "@/utils/searchIndexing";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -34,6 +34,10 @@ import {
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatRating } from "@abonten/core/i18n/format";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
+import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
+import { placeJsonLd } from "@abonten/core/seo/listingJsonLd";
+import { cityPath, placePath } from "@abonten/core/seo/paths";
+import { snippetText } from "@abonten/core/seo/snippet";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -88,11 +92,20 @@ export async function generateMetadata({
   const categoryName =
     placeCategoryLabel(tc, place.place_category ?? {}) || undefined;
   const addressText = (place.address as PlaceAddress)?.full_address;
+  const { eventLat, eventLng } = parseWKBHex(asWkbHex(place.location));
+  const city = await cityAt(eventLat, eventLng);
+  // "Republic Bar · Pub in Accra": what it is and where, as people search.
+  const title = categoryName
+    ? city
+      ? t("metaTitleInCity", {
+          name: place.name,
+          category: categoryName,
+          city: city.name,
+        })
+      : t("metaTitle", { name: place.name, category: categoryName })
+    : place.name;
   const location = [categoryName, addressText].filter(Boolean).join(" · ");
-  const title = categoryName ? `${place.name} - ${categoryName}` : place.name;
-  const description = place.description
-    ? place.description.slice(0, 155)
-    : location || undefined;
+  const description = snippetText(place.description) || location || undefined;
   const image =
     place.cover_public_id && place.cover_version
       ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
@@ -102,14 +115,19 @@ export async function generateMetadata({
       : undefined;
 
   const locale = await getLocale();
+  const path = placePath(place.slug);
   return {
     title,
     description,
-    alternates: languageAlternates(`/places/${slug}`, locale),
+    alternates: languageAlternates(path, locale),
+    ...(isIndexedAccount(place.owner_id)
+      ? {}
+      : { robots: { index: false, follow: true } }),
     openGraph: {
       title,
       description,
       type: "website",
+      url: path,
       images: image ? [{ url: image, width: 1200, height: 630 }] : undefined,
     },
     twitter: {
@@ -147,28 +165,37 @@ export default async function page({
 
   // Everything below depends on the place only, not on each other, so it is
   // asked for at once: one round trip after the place instead of three.
-  const [market, upcomingEventsResponse, reviewPreview, similarPlacesResponse] =
-    await Promise.all([
-      // Service prices are in the place's market currency.
-      getMarketOrDefault(
-        (place as { country_code?: string | null }).country_code ?? null,
-      ),
-      getPlaceUpcomingEvents(place.id),
-      // The reviews block: summary + the three most helpful ("See all"
-      // opens /places/<slug>/reviews).
-      loadReviewPreview("place", place.id),
-      // The nearest places of the same category, asked for as that. (It
-      // used to be "the 20 nearest places of any kind, then keep this
-      // category", which in a busy street found none.) One more than shown:
-      // this place is its own nearest.
-      getQueriedPlaces({
-        categoryId: place.category_id,
-        lat: placeLat,
-        lng: placeLng,
-        maxDistanceKm: SIMILAR_PLACES_RADIUS_KM,
-        pageSize: SIMILAR_PLACES_LIMIT + 1,
-      }),
-    ]);
+  const [
+    market,
+    upcomingEventsResponse,
+    reviewPreview,
+    similarPlacesResponse,
+    city,
+    tn,
+  ] = await Promise.all([
+    // Service prices are in the place's market currency.
+    getMarketOrDefault(
+      (place as { country_code?: string | null }).country_code ?? null,
+    ),
+    getPlaceUpcomingEvents(place.id),
+    // The reviews block: summary + the three most helpful ("See all"
+    // opens /places/<slug>/reviews).
+    loadReviewPreview("place", place.id),
+    // The nearest places of the same category, asked for as that. (It
+    // used to be "the 20 nearest places of any kind, then keep this
+    // category", which in a busy street found none.) One more than shown:
+    // this place is its own nearest.
+    getQueriedPlaces({
+      categoryId: place.category_id,
+      lat: placeLat,
+      lng: placeLng,
+      maxDistanceKm: SIMILAR_PLACES_RADIUS_KM,
+      pageSize: SIMILAR_PLACES_LIMIT + 1,
+    }),
+    // The market city the pin is in, for the address and the breadcrumb.
+    cityAt(placeLat, placeLng),
+    getTranslations("navigation"),
+  ]);
   const placeCurrency = market.defaultCurrency;
   const similarPlaces = (
     similarPlacesResponse.status === 200 ? similarPlacesResponse.data : []
@@ -192,9 +219,26 @@ export default async function page({
   const upcomingEvents =
     upcomingEventsResponse.status === 200 ? upcomingEventsResponse.data : [];
 
+  // What search engines read: the business and Home › city › place.
+  const structuredData = isIndexedAccount(place.owner_id)
+    ? jsonLdGraph([
+        placeJsonLd(
+          { ...place, lat: placeLat, lng: placeLng },
+          { city: city?.name },
+        ),
+        breadcrumbJsonLd([
+          { name: tn("home"), path: "/" },
+          ...(city?.launched
+            ? [{ name: city.name, path: cityPath(city.slug) }]
+            : []),
+          { name: place.name, path: placePath(place.slug) },
+        ]),
+      ])
+    : null;
+
   return (
     <div className="bg-background">
-      <JsonLd data={placeJsonLd({ ...place, lat: placeLat, lng: placeLng })} />
+      {structuredData ? <JsonLd data={structuredData} /> : null}
       <PlaceViewLogger placeId={place.id} />
       <PlacePromptHost placeId={place.id} />
 

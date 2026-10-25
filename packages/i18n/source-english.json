@@ -2656,7 +2656,11 @@
     "stepOf": "b0d2ef96",
     "ticketTypeNumber": "d7659d8a",
     "exploreHeading": "9a038346",
-    "weCouldnTFindAnyEventsFiltered": "ad193e36"
+    "weCouldnTFindAnyEventsFiltered": "ad193e36",
+    "metaTitle": "55b556fd",
+    "metaTitleTickets": "e448fda5",
+    "metaDescription": "4a3630fd",
+    "metaDescriptionNoAbout": "7fa0f943"
   },
   "explore": {
     "abontenHasnTLaunchedHereYet": "b1e552b7",
@@ -2826,7 +2830,8 @@
     "pasteItIntoYourRideApp": "cc782df5",
     "addressCopied": "b8793196",
     "couldnTOpenMaps": "11da2750",
-    "noMapsAppIsAvailableOn": "721bb5c2"
+    "noMapsAppIsAvailableOn": "721bb5c2",
+    "cityIntro": "acb8ccff"
   },
   "fatal": {
     "title": "8d886c0b",
@@ -3580,7 +3585,19 @@
     "explore": "b965ae66",
     "exploreEventsAndPlacesHere": "fdbb091f",
     "findEventsAndPlacesNearYou": "73edf67f",
-    "useMyCurrentLocation": "9aee0641"
+    "useMyCurrentLocation": "9aee0641",
+    "exploreACity": "3c5623a3",
+    "exploreACityIntro": "c25577db",
+    "eventsAndPlaces": "787e4e69",
+    "whatYouCanDoOnAbonten": "62b42cce",
+    "findWhatsOn": "e4aecf10",
+    "findWhatsOnBody": "17a368d1",
+    "exploreEvents": "926da0da",
+    "weeklyBody": "73980580",
+    "seeThePicks": "d187e80b",
+    "hostOnAbonten": "7716c437",
+    "hostBody": "9105883c",
+    "startHosting": "e52b629f"
   },
   "legal": {
     "abontenHubSTermsAndConditions": "579a3545",
@@ -4430,7 +4447,11 @@
   },
   "metadata": {
     "siteTitle": "95ad407c",
-    "siteDescription": "e4d81897"
+    "siteDescription": "e4d81897",
+    "homeTitle": "ce1074c8",
+    "homeTitleIn": "b961dcc7",
+    "homeDescription": "fd3ea642",
+    "homeDescriptionIn": "5848f0ac"
   },
   "navigation": {
     "abonten": "acfdb324",
@@ -5011,7 +5032,9 @@
     "placeDidntRespond": "5cf5f31f",
     "ownerDidntRespond": "9aea70b6",
     "stepOf": "b0d2ef96",
-    "claimReviewNote": "8076aea7"
+    "claimReviewNote": "8076aea7",
+    "metaTitle": "96c100a6",
+    "metaTitleInCity": "18d2493f"
   },
   "plans": {
     "plans": "cf2e5f26"

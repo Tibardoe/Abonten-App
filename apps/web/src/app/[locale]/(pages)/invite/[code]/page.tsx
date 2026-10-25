@@ -53,7 +53,10 @@ export async function generateMetadata({
 
   const { code } = await params;
   const { data } = await resolve(code);
-  if (!data?.valid) return { title: t("joinAbonten") };
+  // A personal invite names the friend who sent it: a link to share, never
+  // a search result.
+  const robots = { index: false, follow: true };
+  if (!data?.valid) return { title: t("joinAbonten"), robots };
 
   const title = t("invitedYouToAbonten2", {
     value: data.referrerName ?? "A friend",
@@ -71,6 +74,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    robots,
     openGraph: { title, description, type: "website" },
     twitter: { card: "summary", title, description },
   };

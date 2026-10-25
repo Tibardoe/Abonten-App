@@ -1,3 +1,4 @@
+import JsonLd from "@/components/atoms/JsonLd";
 import ContactSupportCard from "@/components/molecules/ContactSupportCard";
 import MarkdownDocument from "@/components/organisms/MarkdownDocument";
 import { languageAlternates } from "@/i18n/alternates";
@@ -9,6 +10,7 @@ import {
   listHelpPages,
   loadHelpPage,
 } from "@/utils/publicContent";
+import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -118,6 +120,17 @@ export default async function HelpArticlePage({
       </aside>
 
       <article className="min-w-0 flex-1">
+        {/* Help centre › this page, above the page's search result. */}
+        {doc.listed ? (
+          <JsonLd
+            data={jsonLdGraph([
+              breadcrumbJsonLd([
+                { name: t("helpCentre"), path: "/help" },
+                { name: doc.title, path: `/help/${section}/${slug}` },
+              ]),
+            ])}
+          />
+        ) : null}
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {sectionLabel}
         </p>

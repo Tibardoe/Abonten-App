@@ -1,4 +1,8 @@
 {
   "siteDescription": "Descubra eventos e lugares perto de si, compre bilhetes e encontre a sua próxima experiência no Abonten Hub.",
-  "siteTitle": "Abonten Hub | Ligamos pessoas a experiências"
+  "siteTitle": "Abonten Hub | Ligamos pessoas a experiências",
+  "homeTitle": "Abonten Hub: eventos, bilhetes e locais para sair",
+  "homeTitleIn": "Abonten Hub · {country}: eventos, bilhetes e locais para sair",
+  "homeDescription": "Concertos, festas, festivais, comédia, comida e vida noturna perto de si. Veja o que há esta semana, obtenha os seus bilhetes e descubra onde sair.",
+  "homeDescriptionIn": "{country}: concertos, festas, festivais, comédia, comida e vida noturna. Veja o que há esta semana, obtenha os seus bilhetes e descubra onde sair."
 }

@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-25 — Search engines (SEO)
+
+- New: `architecture/search-engines.md` (1.0) — which public pages are offered to search engines and which are kept out, titles and descriptions, lower-case canonical event addresses, structured data (`@abonten/core/seo`), the sitemap (cities, host profiles, images), robots.txt (token links), `/manifest.webmanifest`, IndexNow (`apps/web/scripts/indexnow-submit.mjs`), owner steps.
+- Open item SEO1 (Search Console and Bing Webmaster Tools, founder) in `operations/open-items.md` (1.2); `finance/paystack-live-cutover.md` (1.4): remove the demo account from `utils/searchIndexing.ts` with the samples.
+- Updated `INDEX.md` (1.8), `architecture/README.md` (1.6), `web/README.md` (1.1); PROJECT.md §68; CLAUDE.md quick facts.
+
 ## 2026-10-25 — Pay small small (paying for tickets in parts)
 
 - `finance/payments-and-ticketing-runbook.md` (1.4): a failed ticket issuance no longer restocks the reservation itself; the expiry sweep restocks it once (fixes seats counted twice, and oversold after a successful retry). Migration `20261025110000_checkout_sweep_holds_unissued_payments`: the expiry sweep keeps a paid but unissued checkout (`fulfillment_failed`) for seven days, so the retry can still issue it (`operations/scheduled-jobs.md` 1.7, `finance/state-machines.md` 1.1).

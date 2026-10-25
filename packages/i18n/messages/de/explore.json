@@ -166,5 +166,6 @@
   "pasteItIntoYourRideApp": "Füge sie in deine Fahrdienst-App ein",
   "addressCopied": "Adresse kopiert",
   "couldnTOpenMaps": "Karten-App konnte nicht geöffnet werden",
-  "noMapsAppIsAvailableOn": "Auf diesem Gerät ist keine Karten-App verfügbar."
+  "noMapsAppIsAvailableOn": "Auf diesem Gerät ist keine Karten-App verfügbar.",
+  "cityIntro": "Konzerte, Partys, Festivals, Essen und Nachtleben in {city}: Sieh, was los ist, hol dir Tickets und finde Orte zum Ausgehen."
 }

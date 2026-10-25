@@ -53,12 +53,21 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   },
 ];
 
-export default function DesktopFooter() {
+export default function DesktopFooter({
+  everywhere = false,
+}: {
+  /** Shown on every screen size (the homepage, which has no menu bar). */
+  everywhere?: boolean;
+}) {
   const t = useTranslations("common");
 
   return (
-    <footer className="hidden lg:block mt-16 border-t border-border bg-sidebar text-sidebar-foreground">
-      <div className="mx-auto grid w-[95%] grid-cols-[1.4fr_1fr_1fr_1fr] gap-10 py-12">
+    <footer
+      className={`${everywhere ? "block" : "hidden lg:block mt-16"} border-t border-border bg-sidebar text-sidebar-foreground`}
+    >
+      <div
+        className={`mx-auto grid w-[95%] gap-10 py-12 ${everywhere ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]" : "grid-cols-[1.4fr_1fr_1fr_1fr]"}`}
+      >
         <div className="flex flex-col gap-4">
           <Image
             src="/assets/images/brand/abonten-logotype-light.svg"
@@ -104,7 +113,7 @@ export default function DesktopFooter() {
       </div>
 
       <div className="border-t border-border">
-        <div className="mx-auto flex w-[95%] items-center justify-between gap-4 py-5 text-sm text-muted-foreground">
+        <div className="mx-auto flex w-[95%] flex-wrap items-center justify-between gap-4 py-5 text-sm text-muted-foreground">
           <p>
             © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
           </p>

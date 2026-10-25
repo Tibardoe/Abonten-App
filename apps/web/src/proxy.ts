@@ -195,8 +195,10 @@ export const config = {
      *   /api/safety/dispatch with the delivery token -- same as above)
      * - api/identity (the identity provider posting its verdict to
      *   /api/identity/callback/<provider>, signed, no cookie)
-     * - robots.txt / sitemap.xml (crawlers carry no cookie; both are
-     *   public metadata routes)
+     * - robots.txt / sitemap.xml / manifest.webmanifest (crawlers and
+     *   browsers fetch them without a cookie; all three are public
+     *   metadata routes, outside app/[locale], so a language rewrite would
+     *   turn them into a 404)
      * - push-sw.js (the web push service worker: browsers refuse a
      *   redirected worker script, and re-check it signed out too -- a
      *   redirect to /auth/signin broke registration and updates)
@@ -206,7 +208,7 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/safety|api/identity|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/safety|api/identity|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

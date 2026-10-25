@@ -7,9 +7,11 @@ import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSe
 import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
 import { languageAlternates } from "@/i18n/alternates";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { indexedCityForSlug } from "@/utils/searchIndexing";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import { EMPTY_EVENT_FILTERS } from "@abonten/core/exploreFilters";
 import { undoSlug } from "@abonten/core/geerateSlug";
+import { cityPath } from "@abonten/core/seo/paths";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -23,14 +25,18 @@ export async function generateMetadata({
   const t = await getTranslations("events");
 
   const { location } = await params;
-  const label = undoSlug(decodeURIComponent(location));
+  const city = await indexedCityForSlug(decodeURIComponent(location));
+  const label = city?.name ?? undoSlug(decodeURIComponent(location));
+  // A city's events are its Explore page (/explore/<city>, events first),
+  // which search engines are shown instead of this older address; any other
+  // location is a working page but not a search result.
   return {
     title: t("eventsIn", { label: label }),
     description: t("upcomingEventsInWhatIsHappening", { label: label }),
-    alternates: languageAlternates(
-      `/events/location/${location}`,
-      await getLocale(),
-    ),
+    alternates: city
+      ? languageAlternates(cityPath(city.slug), await getLocale())
+      : languageAlternates(`/events/location/${location}`, await getLocale()),
+    ...(city ? {} : { robots: { index: false, follow: true } }),
   };
 }
 

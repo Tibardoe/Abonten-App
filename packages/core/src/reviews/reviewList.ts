@@ -314,15 +314,17 @@ export function ratingShares(
 
 /**
  * The site path of a subject's reviews page, optionally opened on one
- * review. `slug` is the event's code slug or the place's slug — the same
- * segment its details page uses.
+ * review. `slug` is the event's code or the place's slug — the same
+ * segment its details page uses. An event code is written in lower case,
+ * as every event link is (seo/paths.ts).
  */
 export function reviewsPath(
   kind: ReviewSubjectKind,
   slug: string,
   reviewId?: string | null,
 ): string {
-  const base = `/${kind === "event" ? "events" : "places"}/${encodeURIComponent(slug)}/reviews`;
+  const segment = kind === "event" ? slug.toLowerCase() : slug;
+  const base = `/${kind === "event" ? "events" : "places"}/${encodeURIComponent(segment)}/reviews`;
   return reviewId ? `${base}?review=${encodeURIComponent(reviewId)}` : base;
 }
 

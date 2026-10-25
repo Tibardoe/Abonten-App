@@ -1,3 +1,4 @@
+import DesktopFooter from "@/components/organisms/DesktopFooter";
 import SegmentMessages from "@/i18n/SegmentMessages";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -12,6 +13,8 @@ export default function layout({
   return (
     <SegmentMessages segment="(landing)">
       <main>{children}</main>
+      {/* The homepage has no menu bar, so its footer shows on phones too. */}
+      <DesktopFooter everywhere />
     </SegmentMessages>
   );
 }

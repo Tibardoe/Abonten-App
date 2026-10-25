@@ -164,6 +164,7 @@ describe("copy and links", () => {
 
   it("builds review links and only accepts ids from ?review=", () => {
     expect(reviewsPath("event", "abc123")).toBe("/events/abc123/reviews");
+    expect(reviewsPath("event", "LO6288")).toBe("/events/lo6288/reviews");
     const id = "11111111-1111-4111-8111-111111111111";
     expect(reviewsPath("place", "osu-lounge", id)).toBe(
       `/places/osu-lounge/reviews?review=${id}`,

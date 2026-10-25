@@ -166,5 +166,6 @@
   "pasteItIntoYourRideApp": "Cole-a na sua aplicação de transporte",
   "addressCopied": "Morada copiada",
   "couldnTOpenMaps": "Não foi possível abrir os mapas",
-  "noMapsAppIsAvailableOn": "Não há nenhuma aplicação de mapas disponível neste dispositivo."
+  "noMapsAppIsAvailableOn": "Não há nenhuma aplicação de mapas disponível neste dispositivo.",
+  "cityIntro": "Concertos, festas, festivais, comida e vida noturna em {city}: veja o que há, obtenha bilhetes e descubra onde sair."
 }

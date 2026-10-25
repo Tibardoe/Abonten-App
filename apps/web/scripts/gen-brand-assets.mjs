@@ -7,6 +7,9 @@
 //   brand/abonten-pdf-logo.png     stacked lockup, transparent (ticket PDF, printed on white)
 //   brand/abonten-push-icon.png    192 px Small mark on a Night tile (web push icon)
 //   brand/abonten-push-badge.png    96 px Micro mark, white on transparent (web push badge)
+//   brand/abonten-app-icon-{192,512}.png  the app icon's drawing (Small mark at 58% on a
+//                                    Night square): the web manifest's icons and the
+//                                    logo search engines show (Organization JSON-LD)
 //   brand/abonten-image-fallback.png 1600 px Night square, Small mark at 22% (the placeholder
 //                                    Cloudinary serves for a missing image: upload it as
 //                                    branding/image-fallback with scripts/upload-image-fallback.mjs)
@@ -76,6 +79,13 @@ await markOnCanvas("abonten-mark-small-night", 192, 0.62, NIGHT).toFile(
 await markOnCanvas("abonten-mark-micro-mono-white", 96, 0.8).toFile(
   out("abonten-push-badge.png"),
 );
+// Square and full-bleed like apps/mobile's icon.png, so the platform rounds
+// it; the mark stays inside a maskable icon's safe zone.
+for (const size of [192, 512]) {
+  await markOnCanvas("abonten-mark-small-night", size, 0.58, NIGHT, 0).toFile(
+    out(`abonten-app-icon-${size}.png`),
+  );
+}
 // Square, with the mark small and centred, so it survives every crop the
 // app asks Cloudinary for (wide event heroes, square cards, avatars).
 await markOnCanvas("abonten-mark-small-night", 1600, 0.22, NIGHT, 0).toFile(
@@ -112,5 +122,5 @@ async function ogDefault() {
 
 await ogDefault();
 console.log(
-  "wrote brand/abonten-{email-tile,pdf-logo,push-icon,push-badge,image-fallback}.png, brand/og-default.jpg",
+  "wrote brand/abonten-{email-tile,pdf-logo,push-icon,push-badge,app-icon-192,app-icon-512,image-fallback}.png, brand/og-default.jpg",
 );

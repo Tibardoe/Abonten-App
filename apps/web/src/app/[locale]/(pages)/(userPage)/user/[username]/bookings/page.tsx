@@ -1,5 +1,6 @@
 import { getUserBookings } from "@/actions/getUserBookings";
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
+import { PRIVATE_PROFILE_TAB_METADATA } from "@/userAccount/profileTabMetadata";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -29,6 +30,8 @@ function EmptyState() {
  * /user/<them>/bookings URL directly we 404 rather than silently render the
  * viewer's own bookings under the wrong name. Same guard on favorites/page.tsx.
  */
+export const metadata = PRIVATE_PROFILE_TAB_METADATA;
+
 export default async function page({
   params,
 }: {

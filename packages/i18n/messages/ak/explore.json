@@ -166,5 +166,6 @@
   "pasteItIntoYourRideApp": "Paste it into your ride app",
   "addressCopied": "Address copied",
   "couldnTOpenMaps": "Couldn't open maps",
-  "noMapsAppIsAvailableOn": "No maps app is available on this device."
+  "noMapsAppIsAvailableOn": "No maps app is available on this device.",
+  "cityIntro": "Concerts, parties, festivals, food and nightlife in {city}: see what's on, get tickets and find places to go."
 }
