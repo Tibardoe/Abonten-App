@@ -4,8 +4,8 @@ purpose: The complete role model as enforced — how end-user roles are derived,
 audience: Engineering, security/compliance reviewers
 scope: user_info, admin_* tables, fieldops_team_member, RLS policies in supabase/migrations
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-24
+version: 1.3
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -69,6 +69,9 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `identity.review` | Approve or reject a check in review | operations, moderator |
 | `identity.revoke` | Take a live check away — in `STEP_UP_PERMISSIONS` | operations |
 | `identity.configure` | Identity programme switches, requirements, limits and retention — in `STEP_UP_PERMISSIONS` | operations |
+| `plans.view` | Admin › Pay small small: plans, parts, refunds, money held and kept | finance_admin, operations, support_admin |
+| `plans.manage` | End a plan with its refund; retry a refused refund share or record it as refunded by hand — in `STEP_UP_PERMISSIONS` | finance_admin |
+| `plans.configure` | Pay small small switches, audience and rules — in `STEP_UP_PERMISSIONS` | finance_admin, operations |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

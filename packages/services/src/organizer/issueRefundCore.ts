@@ -19,7 +19,12 @@ import { createNotificationCore } from "@abonten/services/notifications/createNo
 import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { PLAN_PROVIDER } from "../payments/finalizePayment";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import {
+  planPurchaseRefund,
+  requestPlannedPlanRefunds,
+} from "../ticketPlans/ticketPlanRefunds";
 
 export type IssueRefundResult = {
   status: 200 | 400 | 404 | 409 | 500;
@@ -246,11 +251,32 @@ export async function issueRefundCore(
 
   const split = tenderSplit(transaction, refundableMinor);
 
+  // A purchase paid small small was paid by several charges, one per part:
+  // its cash goes back through those charges, each its proportional share
+  // (ticketPlanRefunds), not through one refund of the internal settlement.
+  // Once planned the shares are asked of the provider below, after the
+  // hold, and the job asks again for any that could not be sent now.
+  const paidInParts = transaction.provider === PLAN_PROVIDER;
+  let planId: string | null = null;
+  if (paidInParts && split.cashBackMinor > 0) {
+    const planned = await planPurchaseRefund(
+      transaction.id,
+      split.cashBackMinor,
+    );
+    if (!planned.ok) {
+      await getSupabaseServiceClient().rpc("release_transaction_refund_claim", {
+        p_transaction_id: transaction.id,
+      });
+      return { status: 500, message: tr("refundCouldNotBeProcessedPlease") };
+    }
+    planId = planned.planId;
+  }
+
   // Cash goes back through Paystack -- only the cash share of an order paid
   // partly with credit, and nothing at all for one paid entirely with
   // credit. A cash-only order with no computable refundable amount keeps the
   // old full-refund fallback (amount omitted).
-  if (split.cashBackMinor > 0) {
+  if (split.cashBackMinor > 0 && !paidInParts) {
     try {
       const { provider, account } = await resolveProviderAccount({
         countryCode: transaction.country_code,
@@ -341,6 +367,14 @@ export async function issueRefundCore(
       .update({ status: "refunded", updated_at: new Date().toISOString() })
       .eq("transaction_id", transaction.id)
       .eq("status", "succeeded");
+  }
+
+  if (planId) {
+    await requestPlannedPlanRefunds({ planId }).catch((error) =>
+      logger.error(
+        `Plan refund shares for transaction ${transaction.id} not requested yet: ${error}`,
+      ),
+    );
   }
 
   // Audit-only row: records that the ticket revenue was returned and the

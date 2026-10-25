@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { endTicketPlansForEvent } from "../ticketPlans/ticketPlanLifecycle";
 
 // Post-auth bodies of getEventCancellationImpact + cancelEvent, shared by
 // the Server Actions (cookie session) and the mobile HTTP routes (Bearer
@@ -150,6 +151,16 @@ export async function cancelEventCore(
       refundsFailedToStart += 1;
     }
   }
+
+  // Pay small small plans still running on the event end too: their seats
+  // are released and what was paid goes back through each part's charge.
+  // One the database reports busy (a part being confirmed right now) is
+  // ended by the ticket-plans job, which looks for plans on cancelled events.
+  await endTicketPlansForEvent(eventId).catch((error) =>
+    logger.error(
+      `cancelEvent: plans of event ${eventId} not ended yet: ${error}`,
+    ),
+  );
 
   if (transactions.length > 0 && onRefundsInitiated) {
     const eventTitle = transactions[0].event_title;

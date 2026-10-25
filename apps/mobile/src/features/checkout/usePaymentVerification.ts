@@ -20,7 +20,9 @@ export type PaymentKind =
   | "ticket"
   | "event_promotion"
   | "place_promotion"
-  | "spotlight_promotion";
+  | "spotlight_promotion"
+  /** One part of a Pay small small plan. */
+  | "ticket_plan";
 
 export type PaymentVerifyState =
   | { status: "verifying"; note?: string }
@@ -52,6 +54,7 @@ const PENDING_NOTE: Record<PaymentKind, string> = {
   event_promotion: "yourPaymentIsStillBeingConfirmed",
   place_promotion: "yourPaymentIsStillBeingConfirmed",
   spotlight_promotion: "yourPaymentIsStillBeingConfirmed",
+  ticket_plan: "yourPaymentIsStillBeingConfirmed",
 };
 
 const FULFILMENT_NOTE: Record<PaymentKind, string> = {
@@ -59,6 +62,7 @@ const FULFILMENT_NOTE: Record<PaymentKind, string> = {
   event_promotion: "yourPaymentWentThroughButThe",
   place_promotion: "yourPaymentWentThroughButThe",
   spotlight_promotion: "yourPaymentWentThroughButThe2",
+  ticket_plan: "yourPaymentWentThroughButWe",
 };
 
 export function usePaymentVerification(params: PaymentVerificationParams) {
@@ -98,7 +102,11 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     // the "You're going" badge, event/place detail, organizer views,
     // review eligibility. See lib/ticketMutationInvalidation.ts.
     invalidateAfterTicketMutation(qc);
-  }, [qc, clearTimer]);
+    // A plan's part: its plan and the Balance screen read it next.
+    if (kind === "ticket_plan") {
+      void qc.invalidateQueries({ queryKey: ["mobile", "ticket-plans"] });
+    }
+  }, [qc, clearTimer, kind]);
 
   const applyVerifyResult = useCallback(
     (

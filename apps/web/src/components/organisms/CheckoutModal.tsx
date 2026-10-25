@@ -1,5 +1,7 @@
 import getPromoCode from "@/actions/getPromoCode";
 import { getTickets } from "@/actions/getTickets";
+import { getTicketPlanOffer } from "@/actions/ticketPlans/getTicketPlanOffer";
+import { startTicketPlan } from "@/actions/ticketPlans/startTicketPlan";
 import validateCheckout from "@/actions/validateCheckout";
 import ModalShell from "@/components/atoms/ModalShell";
 import CheckoutOrderTotals from "@/components/molecules/CheckoutOrderTotals";
@@ -7,12 +9,16 @@ import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
+import PaySmallSmallChoice, {
+  type PayMode,
+} from "@/ticketPlans/molecules/PaySmallSmallChoice";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   allocatePromoEligibility,
   computeCheckoutFee,
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
+import { tryFromMajor } from "@abonten/core/money/money";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -45,8 +51,25 @@ export default function CheckoutModal({
   date,
 }: CheckoutProp) {
   const t = useTranslations("common");
+  const tp = useTranslations("ticketPlans");
 
   const [promoCodeInput, setPromoCodeInput] = useState("");
+
+  // Pay small small: offered only when the organizer allows it, the
+  // programme is open to this buyer and the deadline is far enough away.
+  const [payMode, setPayMode] = useState<PayMode>("full");
+  const { data: offerResponse } = useQuery({
+    queryKey: ["ticket-plan-offer", eventId, occurrenceId],
+    queryFn: () => getTicketPlanOffer({ eventId, occurrenceId }),
+    staleTime: 60_000,
+    retry: 0,
+  });
+  const offer =
+    offerResponse?.status === 200 && "data" in offerResponse
+      ? offerResponse.data
+      : undefined;
+  const planOffer = offer?.available ? offer : null;
+  const paySmallSmall = payMode === "plan" && !!planOffer;
 
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
 
@@ -211,8 +234,39 @@ export default function CheckoutModal({
   );
 
   const total = subTotal + fee;
+  const ticketCount = Object.values(quantities).reduce((a, b) => a + b, 0);
+  const totalMinor = ticketList[0]?.currency
+    ? (tryFromMajor(total, ticketList[0].currency)?.amountMinor ?? 0)
+    : 0;
+
+  const handleStartPlan = async () => {
+    setIsProceeding(true);
+    const response = await startTicketPlan({
+      eventId,
+      occurrenceId,
+      quantities,
+    }).catch(actionUnreachable);
+    if (response.status === 200 && "data" in response && response.data) {
+      router.push(`/ticket-plans/${response.data.planId}`);
+      return;
+    }
+    if (response.status === 409 && "planId" in response && response.planId) {
+      toast.info(response.message ?? tp("youReAlreadyPayingForThisEvent"));
+      router.push(`/ticket-plans/${response.planId}`);
+      setIsProceeding(false);
+      return;
+    }
+    toast.error(
+      ("message" in response && response.message) || tp("couldNotStartPlan"),
+    );
+    setIsProceeding(false);
+  };
 
   const handleProceed = async () => {
+    if (paySmallSmall) {
+      await handleStartPlan();
+      return;
+    }
     setIsProceeding(true);
 
     const response = await validateCheckout({
@@ -344,17 +398,33 @@ export default function CheckoutModal({
             </>
           )}
 
+          {planOffer ? (
+            <PaySmallSmallChoice
+              offer={planOffer}
+              mode={payMode}
+              onModeChange={(mode) => {
+                setPayMode(mode);
+                // A plan's price is the ticket price: no promo codes (v1).
+                if (mode === "plan") removePromoCode();
+              }}
+              totalMinor={totalMinor}
+              ticketCount={ticketCount}
+            />
+          ) : null}
+
           {/* After the tickets, beside the totals it changes: people pick
               what they want first, then apply a code. */}
-          <CheckoutPromoCodeBox
-            promoCodeInput={promoCodeInput}
-            onPromoCodeInputChange={setPromoCodeInput}
-            appliedPromo={appliedPromo}
-            isApplying={promoMutation.isPending}
-            onApply={() => promoMutation.mutate(promoCodeInput)}
-            onRemove={removePromoCode}
-            promoEligibility={promoEligibility}
-          />
+          {paySmallSmall ? null : (
+            <CheckoutPromoCodeBox
+              promoCodeInput={promoCodeInput}
+              onPromoCodeInputChange={setPromoCodeInput}
+              appliedPromo={appliedPromo}
+              isApplying={promoMutation.isPending}
+              onApply={() => promoMutation.mutate(promoCodeInput)}
+              onRemove={removePromoCode}
+              promoEligibility={promoEligibility}
+            />
+          )}
 
           <CheckoutOrderTotals
             currency={ticketList[0]?.currency ?? undefined}
@@ -372,11 +442,16 @@ export default function CheckoutModal({
               isTicketsLoading ||
               isTicketsError ||
               !hasSelectedTickets ||
-              hasUnavailableSelection
+              hasUnavailableSelection ||
+              (paySmallSmall && ticketCount > (planOffer?.maxTickets ?? 0))
             }
             className="h-12 rounded-lg font-semibold text-primary-foreground bg-primary text-center mt-2 transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProceeding ? t("oneMoment") : t("continueToPayment")}
+            {isProceeding
+              ? t("oneMoment")
+              : paySmallSmall
+                ? tp("startPayingSmallSmall")
+                : t("continueToPayment")}
           </button>
         </div>
       </div>

@@ -142,6 +142,11 @@ import {
   listSupportConversationsCore,
 } from "@abonten/services/admin/support/supportAdminCore";
 import {
+  getTicketPlanAdminCore,
+  getTicketPlanSettingsCore,
+  listTicketPlansAdminCore,
+} from "@abonten/services/admin/ticketPlans/ticketPlansAdminCore";
+import {
   type ListUsersFilters,
   getUserDetailCore,
   listUsersCore,
@@ -956,4 +961,57 @@ export async function loadIdentitySummaries(userIds: string[]) {
   return identitySummariesCore(getServiceClient(), ctx, userIds).catch(
     () => new Map(),
   );
+}
+
+// ── Pay small small ─────────────────────────────────────────
+
+const PLAN_STATUSES = new Set([
+  "awaiting_payment",
+  "active",
+  "settling",
+  "completed",
+  "expired",
+  "lapsed",
+  "cancelled",
+]);
+
+export async function loadTicketPlanList(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  const ctx = await requireAdmin();
+  const one = (k: string) => {
+    const v = searchParams[k];
+    return typeof v === "string" && v ? v : undefined;
+  };
+  const status = one("status");
+  const refund = one("refund");
+  const userId = one("user");
+  const eventId = one("event");
+  const before = one("before");
+  const isId = (v: string | undefined) =>
+    v && /^[0-9a-f-]{36}$/i.test(v) ? v : undefined;
+  const list = await listTicketPlansAdminCore(getServiceClient(), ctx, {
+    status:
+      status && PLAN_STATUSES.has(status)
+        ? (status as Parameters<typeof listTicketPlansAdminCore>[2]["status"])
+        : undefined,
+    refund: refund === "pending" || refund === "failed" ? refund : undefined,
+    userId: isId(userId),
+    eventId: isId(eventId),
+    before: before && !Number.isNaN(Date.parse(before)) ? before : undefined,
+    limit: 50,
+  });
+  return { ctx, list };
+}
+
+export async function loadTicketPlanDetail(id: string) {
+  const ctx = await requireAdmin();
+  const detail = await getTicketPlanAdminCore(getServiceClient(), ctx, id);
+  return { ctx, detail };
+}
+
+export async function loadTicketPlanSettings() {
+  const ctx = await requireAdmin();
+  const settings = await getTicketPlanSettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
 }

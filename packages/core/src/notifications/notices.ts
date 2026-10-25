@@ -176,6 +176,15 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   digest_event: n("digest_event"),
   digest_place_pick: n("digest_place_pick"),
   digest_many: n("digest_many"),
+  // Pay small small (services)
+  ticket_plan_part_received: n("ticket_plan_part_received"),
+  ticket_plan_reminder: n("ticket_plan_reminder"),
+  ticket_plan_lapsed: n("ticket_plan_lapsed"),
+  ticket_plan_cancelled: n("ticket_plan_cancelled"),
+  ticket_plan_event_cancelled: n("ticket_plan_event_cancelled"),
+  ticket_plan_ended_by_staff: n("ticket_plan_ended_by_staff"),
+  ticket_plan_refunded: n("ticket_plan_refunded"),
+  ticket_plan_refund_problem: n("ticket_plan_refund_problem"),
   // SQL: rewards
   welcome_credit: n("welcome_credit"),
   referral_qualified: n("referral_qualified"),
@@ -280,8 +289,9 @@ const isEmpty = (value: unknown) =>
  *    the missing-name case itself instead of the writer storing an English
  *    stand-in like "the place";
  *  - an empty `actor` reads "Someone";
- *  - `startsAt` (+ `timezone`) becomes `when` and `dayTime`, `period`
- *    becomes `month` and `monthYear`, `fromDate` becomes `from`;
+ *  - `startsAt` (+ `timezone`) becomes `when` and `dayTime`, `deadlineAt`
+ *    becomes `deadline` (same clock), `period` becomes `month` and
+ *    `monthYear`, `fromDate` becomes `from`;
  *  - `durationLabel` (a tier's English "3 days") becomes `duration`.
  */
 function valuesFor(
@@ -314,6 +324,10 @@ function valuesFor(
     const tz = typeof params.timezone === "string" ? params.timezone : null;
     values.when = whenText(params.startsAt, tz, locale);
     values.dayTime = dayTimeText(params.startsAt, tz, locale);
+  }
+  if (typeof params.deadlineAt === "string") {
+    const tz = typeof params.timezone === "string" ? params.timezone : null;
+    values.deadline = whenText(params.deadlineAt, tz, locale);
   }
   if (typeof params.period === "string") {
     values.month = monthText(params.period, locale);

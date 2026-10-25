@@ -103,6 +103,9 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "identity.review",
   "identity.revoke",
   "identity.configure",
+  "plans.view",
+  "plans.manage",
+  "plans.configure",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -164,6 +167,9 @@ const FINANCE_ADMIN: AdminPermissionKey[] = [
   "spotlight.view",
   "spotlight.campaigns.review",
   "identity.view",
+  "plans.view",
+  "plans.manage",
+  "plans.configure",
 ];
 
 const SUPPORT_ADMIN: AdminPermissionKey[] = [
@@ -189,6 +195,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "spotlight.view",
   "safety.view",
   "identity.view",
+  "plans.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -247,6 +254,7 @@ const OPERATIONS_EXCLUDED = new Set<AdminPermissionKey>([
   "rewards.configure",
   "rewards.withdrawals",
   "markets.activate",
+  "plans.manage",
   "fieldops.rules",
   "fieldops.commissions.approve",
   "fieldops.commissions.pay",
@@ -342,6 +350,8 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "identity.view_pii",
   "identity.revoke",
   "identity.configure",
+  "plans.manage",
+  "plans.configure",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

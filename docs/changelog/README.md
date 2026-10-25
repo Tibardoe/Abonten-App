@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-10-24
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,14 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-25 — Pay small small (paying for tickets in parts)
+
+- New: `architecture/ticket-plans.md` (1.0), `admin/ticket-plans.md` (1.0); help page `customers/paying-small-small` in five languages, built but not listed.
+- Registers: legal M1–M5 (`LEGAL_REVIEW_REQUIRED.md` 1.7) — part payments ahead of a sale, the plan terms (draft Terms of Sale wording in M2), holding buyers' money, refunds when a plan ends, and why a general top-up balance was not built (e-money, Act 987); decisions T1–T8 (`OPERATIONAL_DECISIONS_REQUIRED.md` 1.14), all open.
+- Migration `20261025100000_ticket_plans`: `ticket_plan_program_setting` (off, staff), `event_ticket_plan_setting`, `ticket_plan`, `ticket_plan_payment`; `ticket_checkout` status `on_plan` counted by the capacity rule; `payment_attempt.ticket_plan_id`; transaction provider `abonten_plan`; `issue_tickets_for_checkout` issues `on_plan` seats only for the plan's own settlement.
+- Permissions `plans.view` / `plans.manage` / `plans.configure` (`architecture/roles-and-permissions.md` 1.3, `admin/settings-and-rbac.md` 1.3); job `ticket-plans-dispatch` (`operations/scheduled-jobs.md` 1.6); env var `TICKET_PLANS_KILL_SWITCH` (`security/secrets-and-environment.md` 1.15, `deployment/rollback-and-recovery.md` 1.3).
+- Updated `INDEX.md` (1.7), `documentation-coverage-matrix.md` (1.4), `admin/README.md` (1.4), `architecture/README.md` (1.5), `architecture/feature-inventory.md` (1.7), `finance/refunds-and-cancellations.md` (1.1), `finance/credit-tender-and-rewards-finance.md` (1.1).
 
 ## 2026-10-24 — Identity verification (government ID and live selfie)
 

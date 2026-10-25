@@ -33,6 +33,7 @@ const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   area: "map-outline",
   safety: "shield-checkmark-outline",
   identity: "id-card-outline",
+  ticket_plan: "wallet-outline",
 };
 
 function fallbackIcon(kind?: NotificationEntityKind): IoniconName {

@@ -21,6 +21,7 @@ import { getRewardsProgramCore } from "@abonten/services/rewards/rewardsProgramQ
 import { getSafetyProgramCore } from "@abonten/services/safety/safetyProgram";
 import { getDiscoveryProgramCore } from "@abonten/services/search/discoveryProgram";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { getTicketPlanNavCore } from "@abonten/services/ticketPlans/ticketPlanProgram";
 import { getWeeklyProgramCore } from "@abonten/services/weekly/weeklyProgram";
 import {
   type ContentProgram,
@@ -37,6 +38,10 @@ import {
   DISABLED_SAFETY_PROGRAM,
   type SafetyProgram,
 } from "@abonten/types/safetyType";
+import {
+  DISABLED_TICKET_PLAN_NAV,
+  type TicketPlanNav,
+} from "@abonten/types/ticketPlanType";
 import {
   DISABLED_WEEKLY_PROGRAM,
   type WeeklyProgram,
@@ -60,6 +65,8 @@ export type ShellBootstrap = {
   discoveryProgram: DiscoveryProgram;
   rewardsProgram: RewardsProgram | undefined;
   safetyProgram: SafetyProgram;
+  /** Pay small small: may start plans, and how many are running. */
+  ticketPlanNav: TicketPlanNav;
   /** Undefined when it could not be worked out: the hook asks again itself. */
   marketContext: MarketContextResult | undefined;
   fieldOps: FieldOpsMe | null;
@@ -154,6 +161,7 @@ export default withActionLocale(async function getShellBootstrap(
     discoveryProgram,
     rewardsProgram,
     safetyProgram,
+    ticketPlanNav,
     marketContext,
     fieldOps,
     unreadMessages,
@@ -194,6 +202,14 @@ export default withActionLocale(async function getShellBootstrap(
           DISABLED_SAFETY_PROGRAM,
         )
       : DISABLED_SAFETY_PROGRAM,
+    userId
+      ? part(
+          "ticketPlanNav",
+          degraded,
+          async () => (await getTicketPlanNavCore(svc, userId)).data,
+          DISABLED_TICKET_PLAN_NAV,
+        )
+      : DISABLED_TICKET_PLAN_NAV,
     part<MarketContextResult | undefined>(
       "marketContext",
       degraded,
@@ -284,6 +300,7 @@ export default withActionLocale(async function getShellBootstrap(
       discoveryProgram,
       rewardsProgram,
       safetyProgram,
+      ticketPlanNav,
       marketContext,
       fieldOps,
       unreadMessages,

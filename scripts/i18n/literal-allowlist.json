@@ -446,6 +446,21 @@
       "file": "packages/services/src/identity/identityCore.ts",
       "text": "Test Person {}",
       "reason": "The stand-in provider's made-up legal name on local and Preview test checks only; refused on production."
+    },
+    {
+      "file": "packages/services/src/ticketPlans/ticketPlanRefunds.ts",
+      "text": "The refund of {} minor units on {} reference {} (plan {}) failed: {}. Check the provider's dashboard before retrying in Admin › Finance › Pay small small.",
+      "reason": "The body of a reconciliation incident, read by staff."
+    },
+    {
+      "file": "packages/services/src/ticketPlans/ticketPlanRefunds.ts",
+      "text": "A refund request for {} reference {} (plan {}) never finished. Check the provider's dashboard, then mark it done or retry in Admin › Finance › Pay small small.",
+      "reason": "The body of a reconciliation incident, read by staff."
+    },
+    {
+      "file": "packages/services/src/ticketPlans/ticketPlanRefunds.ts",
+      "text": "no detail",
+      "reason": "The body of a reconciliation incident, read by staff."
     }
   ]
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
@@ -74,7 +75,9 @@ export const deleteEvent = withActionLocale(async function deleteEvent(
 // has interacted with yet, destructive for one that has. Cancel (status ->
 // 'canceled', see cancelEvent.ts) is the non-destructive alternative for
 // removing an event with real history from discovery, and is already
-// exposed in the same menu as Delete (EventCardMenuModal.tsx).
+// exposed in the same menu as Delete (EventCardMenuModal.tsx). A Pay small
+// small plan, open or ended, is money history too (and its row keeps the
+// event); plans are service-only, read after the ownership check above.
 async function eventHasRealHistory(
   supabase: Awaited<ReturnType<typeof createClient>>,
   eventId: string,
@@ -83,6 +86,7 @@ async function eventHasRealHistory(
     { count: attendanceCount },
     { count: paidCheckoutCount },
     { count: reviewCount },
+    { count: planCount },
   ] = await Promise.all([
     supabase
       .from("attendance")
@@ -97,11 +101,16 @@ async function eventHasRealHistory(
       .from("event_review")
       .select("id", { count: "exact", head: true })
       .eq("event_id", eventId),
+    getSupabaseServiceClient()
+      .from("ticket_plan")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", eventId),
   ]);
 
   return (
     (attendanceCount ?? 0) > 0 ||
     (paidCheckoutCount ?? 0) > 0 ||
-    (reviewCount ?? 0) > 0
+    (reviewCount ?? 0) > 0 ||
+    (planCount ?? 0) > 0
   );
 }

@@ -33,6 +33,7 @@ const tokenKey = (accessToken: string) =>
 // here when a new private area is created (and give it a noindex layout).
 const PROTECTED_PREFIXES = [
   "/admin",
+  "/balance",
   "/checkout",
   "/consent",
   "/field",
@@ -45,6 +46,7 @@ const PROTECTED_PREFIXES = [
   "/rewards",
   "/safety",
   "/settings",
+  "/ticket-plans",
   "/transactions",
   "/user-account",
   "/wallet",

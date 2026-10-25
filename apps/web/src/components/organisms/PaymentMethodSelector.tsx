@@ -8,6 +8,7 @@ import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import retryPaymentFulfillment from "@/actions/retryPaymentFulfillment";
 import submitPaystackChargeOtp from "@/actions/submitPaystackChargeOtp";
+import { payTicketPlanPart } from "@/actions/ticketPlans/payTicketPlanPart";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
 import EmailRequiredToPay, {
   useNeedsEmailToPay,
@@ -69,6 +70,15 @@ type PaymentMethodSelectorProps = (
       kind: "spotlight-promotion";
       contentCampaignCheckoutId: string;
       amount: number;
+      currency: string;
+    }
+  | {
+      // One part of a Pay small small plan: the amount the buyer chose
+      // (checked again by the server against the plan). Cash only.
+      kind: "ticket-plan";
+      planId: string;
+      amount: number;
+      amountMinor: number;
       currency: string;
     }
 ) & {
@@ -264,19 +274,26 @@ export default function PaymentMethodSelector(
         ? { kind: "ticket" as const, checkoutSessionIds: sortedSessionIds }
         : null
       : promotionTarget;
+  const planTarget =
+    props.kind === "ticket-plan"
+      ? { kind: "plan" as const, planId: props.planId }
+      : null;
+  const optionsQueryTarget = planTarget ?? optionsTarget;
   const { data: optionsResponse } = useQuery({
     queryKey: [
       "checkout-payment-options",
-      optionsTarget?.kind,
-      optionsTarget && "checkoutId" in optionsTarget
-        ? optionsTarget.checkoutId
-        : sortedSessionIds,
+      optionsQueryTarget?.kind,
+      planTarget
+        ? planTarget.planId
+        : optionsTarget && "checkoutId" in optionsTarget
+          ? optionsTarget.checkoutId
+          : sortedSessionIds,
     ],
     queryFn: () =>
-      optionsTarget
-        ? getCheckoutPaymentOptions(optionsTarget)
+      optionsQueryTarget
+        ? getCheckoutPaymentOptions(optionsQueryTarget)
         : Promise.resolve(null),
-    enabled: !!optionsTarget,
+    enabled: !!optionsQueryTarget,
   });
   const paymentOptions =
     optionsResponse?.status === 200 ? optionsResponse.data : null;
@@ -437,8 +454,36 @@ export default function PaymentMethodSelector(
     onError: () => toast.error(t("failedToStartPaymentPleaseTry")),
   });
 
+  // A part of a plan: the server checks the amount against the plan and
+  // answers with the attempt and the provider's payment, like a checkout.
+  const planPayMutation = useMutation({
+    mutationFn: (choice: PayChoice) =>
+      payTicketPlanPart({
+        planId: props.kind === "ticket-plan" ? props.planId : "",
+        amountMinor: props.kind === "ticket-plan" ? props.amountMinor : 0,
+        paymentMethodId: choice.paymentMethodId,
+        method: choice.method,
+      }),
+    onSuccess: (response) => {
+      if (response.status !== 200 || !("data" in response) || !response.data) {
+        toast.error(
+          "message" in response && response.message
+            ? response.message
+            : t("failedToStartPaymentPleaseTry"),
+        );
+        return;
+      }
+      handlePaymentInit(response.data.attemptId, response.data.payment);
+    },
+    onError: () => toast.error(t("failedToStartPaymentPleaseTry")),
+  });
+
   const payMutation =
-    props.kind === "ticket" ? ticketPayMutation : promotionPayMutation;
+    props.kind === "ticket"
+      ? ticketPayMutation
+      : props.kind === "ticket-plan"
+        ? planPayMutation
+        : promotionPayMutation;
 
   // Invalidates the cache families a successful purchase can affect, scoped
   // to what this payment actually was — kept in one place so both the
@@ -467,6 +512,12 @@ export default function PaymentMethodSelector(
       invalidatePlaceListQueries(queryClient);
     } else if (props.kind === "spotlight-promotion") {
       queryClient.invalidateQueries({ queryKey: ["content", "campaigns"] });
+    } else if (props.kind === "ticket-plan") {
+      queryClient.invalidateQueries({
+        queryKey: ["ticket-plan", props.planId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["balance-overview"] });
+      invalidateTicketStatusQueries(queryClient);
     }
     if (promotionTarget) {
       queryClient.invalidateQueries({ queryKey: ["promotion-credit-quote"] });
@@ -613,7 +664,11 @@ export default function PaymentMethodSelector(
   if (needsEmail) {
     return (
       <EmailRequiredToPay
-        purpose={props.kind === "ticket" ? "tickets" : "promotion"}
+        purpose={
+          props.kind === "ticket" || props.kind === "ticket-plan"
+            ? "tickets"
+            : "promotion"
+        }
       />
     );
   }
@@ -659,7 +714,9 @@ export default function PaymentMethodSelector(
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-center">
           <p className="font-semibold">
-            {getFulfillmentMessage(tc, props.kind)}
+            {props.kind === "ticket-plan"
+              ? t("paymentReceivedForYourPlan")
+              : getFulfillmentMessage(tc, props.kind)}
           </p>
         </div>
       </>

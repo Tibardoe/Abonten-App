@@ -117,6 +117,10 @@ function targetFromData(
       return "/(app)/for-you";
     case "identity":
       return "/(app)/settings/identity";
+    case "ticket_plan":
+      return data.planId
+        ? `/(app)/ticket-plans/${data.planId}`
+        : "/(app)/balance";
     case "safety":
       // A trusted contact opens the alert they were told about (their own
       // link); the person opens their Safety screen.

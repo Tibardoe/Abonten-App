@@ -4,8 +4,8 @@ purpose: Manage staff accounts and roles, edit the role → permission matrix sa
 audience: super_admin; anyone who needs to understand what a role allows
 scope: /settings; admin_user, admin_user_role, admin_role_permission, @abonten/core/adminPermissions
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-24
+version: 1.3
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -30,11 +30,11 @@ Admin Settings shows a grid of roles × permission keys read from `admin_role_pe
 
 ## Permission keys (65)
 
-`dashboard.view` · `reports.view` `reports.assign` `reports.update_status` `reports.request_info` `reports.escalate` `reports.note` `reports.mark_false` `reports.resolve` · `moderation.hide` `moderation.remove` `moderation.restore` `moderation.restrict` · `users.view` `users.view_pii` `users.suspend` `users.ban` `users.restore` · `organizers.view` `events.view` `places.view` `tickets.view` `transactions.view` · `finance.view` `finance.refund` `finance.payout` `finance.adjust` · `claims.view` `claims.review` · `verification.view` `verification.evidence` `verification.review` `verification.revoke` · `reviews.view` · `notifications.view` `notifications.send` `notifications.broadcast` · `monitoring.view` `monitoring.manage` `incidents.manage` · `analytics.view` · `audit.view` · `settings.view` `settings.manage` `admins.manage` · `support.view` `support.respond` · `rewards.view` `rewards.review` `rewards.freeze` `rewards.goodwill` `rewards.configure` `rewards.withdrawals` · `fieldops.view` `fieldops.manage` `fieldops.rules` `fieldops.verify` `fieldops.commissions.approve` `fieldops.commissions.pay` · `discovery.view` `discovery.configure` · `weekly.view` `weekly.edit` `weekly.publish` `weekly.configure` · `safety.view` `safety.configure` · `identity.view` `identity.view_pii` `identity.review` `identity.revoke` `identity.configure`
+`dashboard.view` · `reports.view` `reports.assign` `reports.update_status` `reports.request_info` `reports.escalate` `reports.note` `reports.mark_false` `reports.resolve` · `moderation.hide` `moderation.remove` `moderation.restore` `moderation.restrict` · `users.view` `users.view_pii` `users.suspend` `users.ban` `users.restore` · `organizers.view` `events.view` `places.view` `tickets.view` `transactions.view` · `finance.view` `finance.refund` `finance.payout` `finance.adjust` · `claims.view` `claims.review` · `verification.view` `verification.evidence` `verification.review` `verification.revoke` · `reviews.view` · `notifications.view` `notifications.send` `notifications.broadcast` · `monitoring.view` `monitoring.manage` `incidents.manage` · `analytics.view` · `audit.view` · `settings.view` `settings.manage` `admins.manage` · `support.view` `support.respond` · `rewards.view` `rewards.review` `rewards.freeze` `rewards.goodwill` `rewards.configure` `rewards.withdrawals` · `fieldops.view` `fieldops.manage` `fieldops.rules` `fieldops.verify` `fieldops.commissions.approve` `fieldops.commissions.pay` · `discovery.view` `discovery.configure` · `weekly.view` `weekly.edit` `weekly.publish` `weekly.configure` · `safety.view` `safety.configure` · `identity.view` `identity.view_pii` `identity.review` `identity.revoke` `identity.configure` · `plans.view` `plans.manage` `plans.configure`
 
 ## Step-up permissions (17)
 
-`users.ban`, `verification.revoke`, `finance.refund`, `finance.payout`, `finance.adjust`, `notifications.broadcast`, `admins.manage`, `settings.manage`, `rewards.configure`, `rewards.withdrawals`, `fieldops.manage`, `fieldops.rules`, `fieldops.commissions.approve`, `fieldops.commissions.pay`, `discovery.configure`, `weekly.publish`, `weekly.configure`, `safety.configure`, `identity.view_pii`, `identity.revoke`, `identity.configure`. Step-up = a Google re-authentication within the last 10 minutes, proven by the signed `admin_stepup_at` cookie bound to the admin's id (`stepUpToken.ts`). `users.suspend` deliberately does **not** need step-up; `users.ban` does.
+`users.ban`, `verification.revoke`, `finance.refund`, `finance.payout`, `finance.adjust`, `notifications.broadcast`, `admins.manage`, `settings.manage`, `rewards.configure`, `rewards.withdrawals`, `fieldops.manage`, `fieldops.rules`, `fieldops.commissions.approve`, `fieldops.commissions.pay`, `discovery.configure`, `weekly.publish`, `weekly.configure`, `safety.configure`, `identity.view_pii`, `identity.revoke`, `identity.configure`, `plans.manage`, `plans.configure`. Step-up = a Google re-authentication within the last 10 minutes, proven by the signed `admin_stepup_at` cookie bound to the admin's id (`stepUpToken.ts`). `users.suspend` deliberately does **not** need step-up; `users.ban` does.
 
 ## Separation-of-duty rules enforced in the database
 

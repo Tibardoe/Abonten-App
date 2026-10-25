@@ -23,7 +23,9 @@ import { Pressable, View } from "react-native";
 
 export type PaymentTarget =
   | { kind: "ticket"; checkoutSessionIds: string[] }
-  | { kind: "event" | "place" | "spotlight"; checkoutId: string };
+  | { kind: "event" | "place" | "spotlight"; checkoutId: string }
+  /** A part of a Pay small small plan. */
+  | { kind: "plan"; planId: string };
 
 export type PaymentChoice =
   | { paymentMethodId: string; method: null }
@@ -47,7 +49,9 @@ export function usePaymentChoice(target: PaymentTarget | null) {
   const key =
     target?.kind === "ticket"
       ? [...target.checkoutSessionIds].sort().join(",")
-      : (target?.checkoutId ?? "");
+      : target?.kind === "plan"
+        ? target.planId
+        : (target?.checkoutId ?? "");
   const options = useQuery({
     queryKey: ["payment-options", target?.kind ?? null, key],
     queryFn: () =>

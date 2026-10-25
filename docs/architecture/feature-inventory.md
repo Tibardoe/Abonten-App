@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.6
-lastReviewed: 2026-10-21
+version: 1.7
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -52,6 +52,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Free RSVP | W A | Cu | Register | one per event; window checks | `ticket`, `attendance`; `issue_free_ticket` | `checkout/registerForFreeEventCore`; action `registerForFreeEvent`; API `checkout/free-rsvp` | notification + email | 300 already; 409 window | — | help tickets |
 | Paid checkout | W A | Cu | Buy tickets | validate → `create_ticket_checkout` (30-min hold, limits 50/100, promo, event capacity shared by types without a quantity) | `ticket_checkout`, `ticket_type`, `promo_code_usage` | `checkout/validateCheckoutCore`, `promoUsage`, `ticketInventory`; action `validateCheckout`; API `checkout/validate` | — | sold out, existing checkout, rate limit 30/min | Finance › Transactions | finance runbook |
 | Payment (card/MoMo/saved) | W A | Cu | Pay | attempt → Paystack → finalize (client + webhook) → `issue_tickets_for_checkout` → fee | `payment_attempt`, `transaction`, `ticket`, `organizer_ledger_entry`, `platform_fee_entry` | `payments/*`, `apps/web/src/utils/generateTicket.ts`; actions `createMultiCheckoutPaymentAttempt`, `verifyPaystackPayment`, `submitPaystackChargeOtp`, `retryPaymentFulfillment`; API `checkout/attempt`, `payments/*` | Paystack; email w/ PDF; notification + push | declined; stuck → reaper/retry | refund (step-up) | finance runbook |
+| Pay small small (off) | W A | Cu, Or | checkout choice; plan page; Balance; organizer's switch per event | start (seats `on_plan`) → parts → settlement purchase; lapse / cancel / event cancelled → seats released, refund per part | `ticket_plan`, `ticket_plan_payment`, `event_ticket_plan_setting`, `ticket_checkout` (`on_plan`), `payment_attempt.ticket_plan_id` | `ticketPlans/*`; actions `ticketPlans/*`; API `ticket-plans/*`, `organizer/events/[id]/ticket-plans` | Paystack per part; notices `ticket_plan_*` | part refused, refund needs staff | Admin › Pay small small | architecture/ticket-plans |
 | Credit tender | W A | Cu | checkout (when live) | reserve → capture / release | `credit_reservation` | `rewards/ticketCreditCore`, `promotionCreditCore`; API `checkout/promotion-credit-quote` | — | stale reservations | Rewards module | finance credit-tender |
 | Wallet (saved methods) | W A | Cu | Wallet | card: GHS 1 verification → authorization code; MoMo: the number is confirmed by a texted code (purpose `wallet`) unless it is the account's verified phone | `payment_method`, `phone_otp_state` | `payments/paymentMethodCore`, `cardVerificationCore`, `mobileMoneyNumberCheck`; action `requestMobileMoneyNumberCode`; API `payment-methods/*` (`momo-code`) | Paystack; SMS | SMS limits (60 s, 5 an hour, 10 a day per number) | — | help payments |
 | Tickets, QR, PDF | W A | Cu | My Tickets | — | `ticket` | actions `getTickets`, `getTicketsByIds`; `TicketModal`, `ticketReceiptHtml` | email | — | tickets.view | help your-tickets |

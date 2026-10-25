@@ -130,12 +130,14 @@ export default async function generateTicket(
   // DATA-001.)
   await supabase.rpc("expire_stale_ticket_checkouts");
 
+  // 'on_plan' rows are the seats a Pay small small plan holds; the RPC
+  // issues them only on the authority of the plan's own settlement.
   const { data: checkoutData, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(checkoutSelect)
     .eq("checkout_session_id", checkoutSessionId)
     .eq("user_id", userId)
-    .eq("status", "pending");
+    .in("status", ["pending", "on_plan"]);
 
   if (checkoutError) {
     logger.error(`Failed fetching checkout: ${checkoutError.message}`);
@@ -190,7 +192,12 @@ export default async function generateTicket(
     })),
   );
 
+  // A plan's seats stay held while its settlement is retried (the plan
+  // still owns them and ends them itself), so they are never handed back
+  // from here.
+  const heldByPlan = rows.some((row) => row.status === "on_plan");
   const releaseAllReservations = async () => {
+    if (heldByPlan) return;
     await Promise.all(
       rows.map((row) =>
         releaseTicketQuantity(row.ticket_type_id, row.quantity),

@@ -4,8 +4,8 @@ purpose: How to undo a bad release on each layer, use the kill switches, and rec
 audience: Engineers, founder
 scope: Vercel, EAS, Supabase, feature flags/kill switches, backups
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-24
+version: 1.3
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -35,6 +35,7 @@ Forward-only: write and apply a new migration that reverts. If data was destroye
 | Spotlight & Stories | Admin › Spotlight & Stories › Programme settings (Spotlight / Stories / promotions switches); or `SPOTLIGHT_KILL_SWITCH=true` / `STORIES_KILL_SWITCH=true` (web + admin env) | Every entry point hidden; posts, follows and promotions kept; pause running promotions separately |
 | Abonten Safety | Admin › Safety › Settings "Abonten Safety switched on"; or `SAFETY_KILL_SWITCH=true` (web env, redeploy; admin env too for its warning) | No new SOS, check-in or share; open sessions finish normally (switching off never strands someone mid-alert) |
 | Identity verification | Admin › Identity › Settings "Identity verification switched on" (or untick one requirement); or `IDENTITY_KILL_SWITCH=true` (web **and** admin env, redeploy) | No new checks; every requirement lifted (payouts, claims, badges, paid events); approved checks keep their badge |
+| Pay small small | Admin › Pay small small › Settings "Pay small small switched on"; or `TICKET_PLANS_KILL_SWITCH=true` (web env, redeploy) | Off: no new plans, organizers cannot switch it on, running plans carry on. Kill switch: no new plans **or parts**; running plans can be cancelled and the job keeps ending and refunding them |
 | Provider transfers (payouts) | Admin › Markets › the market's provider: untick "Automated payouts" (`market_payment_provider.payouts_enabled = false`) | Send-payout action returns 409; manual transfers |
 | Reward notifications | Admin › Rewards › Settings › Notifications switches | Stop reward pushes/emails |
 | Campaign | Pause / wind down in Admin › Field Ops | Stops field work per region |

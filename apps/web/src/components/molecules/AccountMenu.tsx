@@ -12,6 +12,7 @@ import {
 import { useFieldOpsMe } from "@/hooks/useFieldOpsMe";
 import { useRewardsProgram } from "@/hooks/useRewardsProgram";
 import { useSafetyProgram } from "@/hooks/useSafetyProgram";
+import { useTicketPlanNav } from "@/hooks/useTicketPlanNav";
 import { HELP_PATH } from "@abonten/core/brand/socialLinks";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -24,6 +25,7 @@ import {
   IoSettingsOutline,
   IoShieldCheckmarkOutline,
   IoTicketOutline,
+  IoWalletOutline,
 } from "react-icons/io5";
 import { MdOutlineReceipt } from "react-icons/md";
 
@@ -47,6 +49,7 @@ export default function AccountMenu({
   const t = useTranslations("navigation");
   const { data: rewards } = useRewardsProgram();
   const { program: safety } = useSafetyProgram();
+  const { nav: plans } = useTicketPlanNav();
   const { data: fieldOps } = useFieldOpsMe();
   const showFieldWork = !!fieldOps?.programEnabled && !!fieldOps.current;
 
@@ -103,6 +106,15 @@ export default function AccountMenu({
             {t("transactions")}
           </Link>
         </DropdownMenuItem>
+
+        {(plans.enabled || plans.openPlans > 0) && (
+          <DropdownMenuItem asChild className="gap-2">
+            <Link href="/balance">
+              <IoWalletOutline className="text-lg" />
+              {t("balance")}
+            </Link>
+          </DropdownMenuItem>
+        )}
 
         {rewards?.enabled && (
           <DropdownMenuItem asChild className="gap-2">

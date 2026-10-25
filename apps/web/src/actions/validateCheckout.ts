@@ -2,46 +2,15 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { referralHintsFromCookie } from "@/utils/referralHintsFromCookie";
 import { logger } from "@abonten/core/logger";
-import { storedToTouch } from "@abonten/core/rewards/referralAttribution";
 import {
   type CheckoutDetailsProp,
   type ValidateCheckoutResult,
   validateCheckoutCore,
 } from "@abonten/services/checkout/validateCheckoutCore";
 import { tr } from "@abonten/services/i18n/requestLocale";
-import {
-  DEVICE_COOKIE_NAME,
-  REFERRAL_COOKIE_NAME,
-  decodeReferralCookie,
-} from "@abonten/services/rewards/referralCookie";
 import { recordDeviceInstallCore } from "@abonten/services/rewards/referralCore";
-import type { ReferralHint } from "@abonten/types/rewards";
-import { cookies } from "next/headers";
-
-// The event referral links this browser opened (signed abn_ref cookie, set
-// by proxy.ts), as hints for the checkout. Keys are `e:<event slug>`; the
-// core matches them to the event and re-validates everything.
-async function referralHintsFromCookie(): Promise<{
-  hints: ReferralHint[];
-  installId: string | null;
-}> {
-  try {
-    const store = await cookies();
-    const map = decodeReferralCookie(store.get(REFERRAL_COOKIE_NAME)?.value);
-    const hints: ReferralHint[] = [];
-    for (const [key, stored] of Object.entries(map)) {
-      const touch = storedToTouch(stored);
-      if (key.startsWith("e:") && touch) {
-        hints.push({ ...touch, eventSlug: key.slice(2) });
-      }
-    }
-    return { hints, installId: store.get(DEVICE_COOKIE_NAME)?.value ?? null };
-  } catch (error) {
-    logger.error(`Could not read the referral cookie: ${error}`);
-    return { hints: [], installId: null };
-  }
-}
 
 export default withActionLocale(async function validateCheckout(
   details: CheckoutDetailsProp,

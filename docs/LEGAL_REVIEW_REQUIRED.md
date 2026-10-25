@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.6
-lastReviewed: 2026-10-24
+version: 1.7
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -146,6 +146,18 @@ People who run events or places prove who they are with a government ID and a li
 | K5 | Requiring a checked identity | `require_for_payouts`, `require_for_place_claims`, `require_for_verified_badges`, `require_for_paid_events` (all off) | Confirm Abonten may refuse payouts, claims, badges or ticket sales to someone who will not verify, and whether the Terms and the organizer terms must say so before a switch is turned on. | Open |
 | K6 | The contract with Smile ID | Smile ID as processor of the images and checks | A data-processing agreement: Smile ID's retention of the images and selfies, sub-processors (the NIA), security, breach notice, deletion on request, and where the data is held. | Open — no contract yet |
 | K7 | People under 18 | `minimum_age` (18) | Confirm 18 as the minimum for running events or places on Abonten, and that a rejected minor's record may be kept for the unsuccessful-check period. | Open |
+
+## M — Pay small small
+
+Buyers pay for an event's tickets in parts before the event; Abonten collects each part through Paystack, holds the tickets, and issues them (and records the sale for the organizer) when the last part arrives, or refunds the parts when the plan ends unfinished. No credit is extended: nobody holds a ticket they have not paid for in full, and nothing is charged on top. Built 2026-10-25, switched off. A general top-up "Abonten balance" was considered and deliberately not built (M5). Design: [architecture/ticket-plans.md](architecture/ticket-plans.md). Operator handbook: [admin/ticket-plans.md](admin/ticket-plans.md).
+
+| # | Item | Where it appears | What counsel must confirm or decide | Status |
+|---|---|---|---|---|
+| M1 | Taking part payments ahead of a sale | `ticket_plan`, `ticket_plan_payment`; Paystack charges per part | Confirm that collecting part payments for one specific ticket purchase (layaway) is within Abonten's position as a merchant using Paystack (E1), is not electronic money or stored value (unlike M5), and is not consumer credit (no credit is extended, no charge is added). | Open |
+| M2 | The plan terms people agree to | The checkout's Pay small small terms (`ticketPlans.term*`), the plan page, Terms of Sale | Approve the terms and add them to the Terms of Sale. Draft for counsel: "**Paying in parts.** Where an organizer offers it, you may lock the price of up to four tickets and pay for them in parts. Your first payment must be at least 20% of the total and each later payment at least 10%, until everything is paid by the deadline shown before you start (48 hours before the event). Your tickets are held for you and issued when the total is paid. If you have not paid in full by the deadline, or you cancel, or the event is cancelled, the tickets are released and what you paid is refunded to the payment methods you used, less the service-fee share of it, which is not refunded. Refunds can take several days to reach you." | Open — draft wording above |
+| M3 | Holding buyers' money before the event | Plan money sits in Abonten's Paystack balance until the plan is finished (then the organizer's earning, settled 48 hours after the event) or refunded | Whether part payments must be held separately or in trust, what must be disclosed about it, and what happens to them if Abonten stops trading. | Open |
+| M4 | Refunds when a plan ends | `ticket_plan_release`, refunds per part (`requestPlannedPlanRefunds`) | Confirm that refunding through each original payment method, keeping the service-fee share (T2), with no promised timing, meets consumer-protection rules (with E2), including when the event is cancelled. | Open |
+| M5 | A general top-up balance (not built) | Nothing in the product | Recorded so it is not built by accident: a balance people top up and spend with many organizers is electronic money under the Payment Systems and Services Act, 2019 (Act 987), needing a Bank of Ghana licence or a licensed partner, and brings dormant balances and refund-to-another-instrument risks. Counsel to advise only if the business wants to revisit it. | Open — not built (2026-10-25) |
 
 ## Specifications waiting on this register
 

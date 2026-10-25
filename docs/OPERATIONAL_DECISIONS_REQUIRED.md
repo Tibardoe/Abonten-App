@@ -4,8 +4,8 @@ purpose: The authoritative list of every business or policy question the code do
 audience: Founder, operations lead, finance, engineering
 scope: Product, operations, finance, support, security-operations and field-programme policy
 status: Approved
-version: 1.13
-lastReviewed: 2026-10-24
+version: 1.14
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -173,6 +173,21 @@ Built 2026-10-23, switched **off**, not yet connected to a live provider. Design
 | L4 | How long a check lasts | `validity_months` (36), the document's expiry | 36 months or the document's expiry, whichever is first. | Keep 36 months. | **Decided (2026-10-24): 36 months, or the document's expiry.** |
 | L5 | Attempts and cost | `attempts_per_day` (3), `attempts_per_30_days` (6) | Each attempt is a paid provider check. | Keep for the pilot; look at the queue and the provider bill before Everyone. | **Decided (2026-10-24): keep 3 a day and 6 in 30 days for the pilot.** |
 | L6 | What a Safety contact learns about the event's organizer and venue | The Safety contact page (`SafetyView.event`) | While an alert or share is open: the organizer's public profile name and "ID checked" badge, and the venue's own public phone and WhatsApp numbers. The organizer's legal identity is never shared. | As implemented: contacts get what lets them reach the people on site; the legal identity stays with Abonten for staff and the police (K4). | **Decided (2026-10-24): as implemented.** |
+
+## Pay small small
+
+Built 2026-10-25, switched **off**. Buyers lock an event's price, hold the tickets and pay in parts until a deadline; the tickets are issued when the last part arrives. Design: [architecture/ticket-plans.md](architecture/ticket-plans.md). Operator handbook: [admin/ticket-plans.md](admin/ticket-plans.md). Legal items M1–M5.
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| T1 | Who decides that an event offers plans | `event_ticket_plan_setting.enabled` | The organizer switches it on per event; off by default. | Keep it the organizer's choice: a plan holds their seats for weeks and pays them only when it is finished. | Open |
+| T2 | What happens to the service fee when a plan ends unfinished | `keep_fee_on_refund` (copied onto each plan when it starts) | The ticket share of what was paid comes back; the service-fee share is kept, as on every other refund (E2). | Keep the fee share: it is the existing refund rule, it covers the provider's cost of several charges and refunds, and it discourages holding seats for nothing. Say so before the plan starts (built). | Open |
+| T3 | The minimum payments | `first_part_min_bps` (20%), `part_min_bps` (10%) | At least 20% of the total first, then at least 10% each time; the last part may be what is left. | Keep: the first part is a real commitment for held seats, and 10% caps a plan at about nine charges. | Open |
+| T4 | The deadline and when plans are offered | `deadline_hours_before_start` (48), `min_days_to_deadline` (3), `hold_minutes` (30), `max_tickets_per_plan` (4) | Finish 48 hours before the date starts; offered only when that is at least 3 days away; seats held 30 minutes for the first part; at most 4 tickets per plan, one open plan per person and event. | Keep for the pilot: lapsed seats go back on sale with two days left, when most tickets sell. | Open |
+| T5 | Reminders | `reminder_days` (7, 2) | A push and an in-app notice 7 and 2 days before the deadline while something is left to pay. | Keep; add an email reminder only if plans lapse often. | Open |
+| T6 | Rollout | `ticket_plan_program_setting` (off, audience staff) | Off. | Staff with test keys; live Paystack keys and one real plan finished and refunded; beta organizers, one event each; then everyone, after M1–M4. | Open |
+| T7 | Whether Abonten Credit can pay part of a plan | Not built | Plans are cash only (MoMo, card). Credit is shown beside plans on the Balance page, never added to them. | Not in version 1: a refund would have to split each part between credit and cash. Revisit once Rewards are on for everyone. | Open |
+| T8 | A cap on the seats plans may hold on one event | Not built | No cap beyond `max_tickets_per_plan` per plan; the organizer sees how many tickets plans hold and can switch new plans off. | No cap for the pilot; consider a share of capacity (for example half) if an event fills with plans that lapse. | Open |
 
 ## Product
 

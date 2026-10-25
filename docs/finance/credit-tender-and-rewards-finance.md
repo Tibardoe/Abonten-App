@@ -4,8 +4,8 @@ purpose: Explain how Abonten Credit is used as a tender at checkout, how it is r
 audience: Finance admins, engineering
 scope: credit_reservation, credit_journal/entry, ticket and promotion credit redemption, rebates, promoter commissions, goodwill and adjustments
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -30,6 +30,8 @@ complianceReviewRequired: yes
 3. Capture: on confirmed payment `credit_capture_reservation(reservation, transaction)` debits the lots.
 4. Release: on failure, cancellation or expiry `credit_release_reservation` / `credit_release_stale_reservations` return the credit.
 5. Refund: `refundTenderSplit` returns cash via Paystack and credit via `credit_refund_redemption` pro rata (`transaction.credit_refunded_amount`).
+
+Credit cannot pay a part of a Pay small small plan (decision T7): plans are cash only, and the Balance page shows credit beside plan money, never added to it ([architecture/ticket-plans.md](../architecture/ticket-plans.md) §1).
 
 Stuck reservations (`reserved` past expiry + 2 h) raise the "Credit reservations need attention" incident; resolution SQL is in `../architecture/rewards-ledger.md` runbook.
 

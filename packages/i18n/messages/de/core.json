@@ -892,6 +892,38 @@
     "identity_revoked": {
       "title": "Deine Identitätsprüfung wurde zurückgenommen",
       "body": "Wende dich an den Abonten-Support, um den Grund zu erfahren."
+    },
+    "ticket_plan_part_received": {
+      "title": "Zahlung für {title} erhalten",
+      "body": "{paid} von {total} bezahlt. Noch {left} bis {deadline} zu zahlen."
+    },
+    "ticket_plan_reminder": {
+      "title": "Noch {left} für {title} zu zahlen",
+      "body": "{days, plural, one {Schließe bis {deadline} ab (noch # Tag), damit du deine Tickets behältst.} other {Schließe bis {deadline} ab (noch # Tage), damit du deine Tickets behältst.}}"
+    },
+    "ticket_plan_lapsed": {
+      "title": "Dein Plan für {title} wurde beendet",
+      "body": "{refunds, select, yes {Er wurde nicht bis zur Frist abgeschlossen, deshalb gingen die Tickets zurück in den Verkauf. {refund} ist auf dem Weg zurück zu dir.} other {Er wurde nicht bis zur Frist abgeschlossen, deshalb gingen die Tickets zurück in den Verkauf.}}"
+    },
+    "ticket_plan_cancelled": {
+      "title": "Plan abgebrochen: {title}",
+      "body": "{refunds, select, yes {Deine reservierten Tickets gingen zurück in den Verkauf. {refund} ist auf dem Weg zurück zu dir.} other {Deine reservierten Tickets gingen zurück in den Verkauf.}}"
+    },
+    "ticket_plan_event_cancelled": {
+      "title": "{title} wurde abgesagt",
+      "body": "{refunds, select, yes {Dein Plan wurde beendet. {refund} ist auf dem Weg zurück zu dir.} other {Dein Plan wurde beendet.}}"
+    },
+    "ticket_plan_ended_by_staff": {
+      "title": "Dein Plan für {title} wurde beendet",
+      "body": "{refunds, select, yes {Abonten hat diesen Plan beendet. {refund} ist auf dem Weg zurück zu dir.} other {Abonten hat diesen Plan beendet.}}"
+    },
+    "ticket_plan_refunded": {
+      "title": "Erstattung abgeschlossen: {title}",
+      "body": "{refund} aus deinem Plan sind wieder bei dir."
+    },
+    "ticket_plan_refund_problem": {
+      "title": "Deine Erstattung für {title} verzögert sich",
+      "body": "Ein Teil konnte nicht gesendet werden. Unser Team kümmert sich darum und meldet sich bei dir."
     }
   },
   "openStatus": {

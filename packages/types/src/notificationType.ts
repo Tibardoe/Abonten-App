@@ -28,7 +28,8 @@ export type NotificationEntityKind =
   | "content_campaign"
   | "area"
   | "safety"
-  | "identity";
+  | "identity"
+  | "ticket_plan";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -68,6 +69,8 @@ export type NotificationData = {
   safetyRole?: "person" | "watcher";
   safetyToken?: string;
   sessionId?: string;
+  /** With kind "ticket_plan": the Pay small small plan. */
+  planId?: string;
 };
 
 export type NotificationType = {

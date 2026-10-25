@@ -10,6 +10,8 @@ import { useProfile } from "@/features/profile/useProfile";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { useIsOrganizer } from "@/features/roles/useRoles";
 import { useSafetyProgram } from "@/features/safety/useSafety";
+import { useBalance } from "@/features/ticketPlans/useTicketPlans";
+import { isPlanOpen } from "@abonten/core/ticketPlans/rules";
 import {
   AppText,
   Avatar,
@@ -62,6 +64,15 @@ export default function Account() {
   // Fails closed (hidden) until known; restored from the offline cache.
   const content = useContentProgram();
   const { program: safety } = useSafetyProgram();
+  // Balance shows once Pay small small is open to this person, or while a
+  // plan of theirs is running (the programme going off never hides it).
+  const balance = useBalance();
+  const balanceData =
+    balance.data?.status === 200 ? (balance.data.data ?? null) : null;
+  const showBalance =
+    !!balanceData &&
+    (balanceData.plansEnabled ||
+      balanceData.plans.some((p) => isPlanOpen(p.status)));
 
   async function onSignOut() {
     await unregisterPushToken();
@@ -188,6 +199,13 @@ export default function Account() {
             label={t("transactions")}
             onPress={() => router.push("/(app)/transactions")}
           />
+          {showBalance ? (
+            <NavRow
+              icon="wallet-outline"
+              label={t("balance")}
+              onPress={() => router.push("/(app)/balance")}
+            />
+          ) : null}
           {rewards.data?.enabled ? (
             <NavRow
               icon="gift-outline"

@@ -34,7 +34,11 @@ import type {
 import type {
   AcknowledgeSafetyBody,
   AddSafetyContactBody,
+  BalanceOverviewResult,
+  EventTicketPlanSettingResult,
   IdentityOverviewResult,
+  PayTicketPlanPartBody,
+  PayTicketPlanPartResult,
   ResolveSafetySessionBody,
   SafetyContactResult,
   SafetyLocationBody,
@@ -47,6 +51,11 @@ import type {
   StartIdentityVerificationResponse,
   StartSafetySessionBody,
   StartSafetySessionResponse,
+  StartTicketPlanBody,
+  StartTicketPlanResult,
+  TicketPlanOfferResult,
+  TicketPlanResult,
+  TicketPlansResult,
   UpdateSafetyContactBody,
   UpdateSafetySessionBody,
 } from "./types";
@@ -1209,11 +1218,13 @@ export function createApiClient(options: ApiClientOptions) {
       options(
         target:
           | { kind: "ticket"; checkoutSessionIds: string[] }
-          | { kind: "event" | "place" | "spotlight"; checkoutId: string },
+          | { kind: "event" | "place" | "spotlight"; checkoutId: string }
+          | { kind: "plan"; planId: string },
       ) {
         const q = new URLSearchParams({ kind: target.kind });
         if (target.kind === "ticket")
           q.set("ids", target.checkoutSessionIds.join(","));
+        else if (target.kind === "plan") q.set("id", target.planId);
         else q.set("id", target.checkoutId);
         return request<ApiEnvelope<CheckoutPaymentOptions>>(
           `/api/mobile/payments/options?${q.toString()}`,
@@ -1518,6 +1529,28 @@ export function createApiClient(options: ApiClientOptions) {
             eventId,
           )}/promoter-commission`,
           { method: "PUT", body: { rateBps }, auth: true },
+        );
+      },
+      /**
+       * The Pay small small switch for one of the caller's events, and what
+       * plans hold on it (PROJECT.md §67). `available` is false while the
+       * programme is not open to this organizer.
+       */
+      eventTicketPlans(eventId: string) {
+        return request<EventTicketPlanSettingResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/ticket-plans`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** On lets buyers pay small small; off stops new plans only. */
+      setEventTicketPlans(eventId: string, enabled: boolean) {
+        return request<EventTicketPlanSettingResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/ticket-plans`,
+          { method: "PUT", body: { enabled }, auth: true },
         );
       },
       promoteEvent(eventId: string, tierId: number) {
@@ -2633,6 +2666,67 @@ export function createApiClient(options: ApiClientOptions) {
         return request<{ status: number; message?: string }>(
           `/api/mobile/identity/verifications/${encodeURIComponent(verificationId)}/cancel`,
           { method: "POST", auth: true },
+        );
+      },
+    },
+    /**
+     * Pay small small (PROJECT.md §67): paying for an event's tickets in
+     * parts before the event. The price is locked and the seats held; each
+     * part is a normal charge confirmed through `payments.verify`, and the
+     * tickets are issued when the last part arrives. Ships switched off.
+     */
+    ticketPlans: {
+      /** Whether this event can be paid small small; works signed out. */
+      offer(eventId: string, occurrenceId?: string | null) {
+        const qs = new URLSearchParams({ eventId });
+        if (occurrenceId) qs.set("occurrenceId", occurrenceId);
+        return request<TicketPlanOfferResult>(
+          `/api/mobile/ticket-plans/offer?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Locks the price and holds the seats; the first part is paid next. */
+      start(body: StartTicketPlanBody) {
+        return request<StartTicketPlanResult>("/api/mobile/ticket-plans", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      list() {
+        return request<TicketPlansResult>("/api/mobile/ticket-plans", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      get(planId: string) {
+        return request<TicketPlanResult>(
+          `/api/mobile/ticket-plans/${encodeURIComponent(planId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Starts the charge for one part. The answer has the attempt id and
+       * the provider's payment, like `checkout.attempt`.
+       */
+      pay(planId: string, body: PayTicketPlanPartBody) {
+        return request<PayTicketPlanPartResult>(
+          `/api/mobile/ticket-plans/${encodeURIComponent(planId)}/pay`,
+          { method: "POST", body, auth: true, timeoutMs: 25_000 },
+        );
+      },
+      /** Ends the caller's unfinished plan, with its refund. */
+      cancel(planId: string) {
+        return request<TicketPlanResult>(
+          `/api/mobile/ticket-plans/${encodeURIComponent(planId)}/cancel`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** The Balance screen: money put towards tickets, plans and credit. */
+      balance() {
+        return request<BalanceOverviewResult>(
+          "/api/mobile/ticket-plans/balance",
+          { method: "GET", auth: true },
         );
       },
     },

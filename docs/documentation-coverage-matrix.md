@@ -4,8 +4,8 @@ purpose: Show, for every major Abonten feature, exactly which public, internal a
 audience: Documentation maintainers, support, product, engineering
 scope: Every feature in the audit matrix, mapped to files; public pages are linked to their Markdown source in apps/web/src/content
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-24
+version: 1.4
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -88,6 +88,7 @@ Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the lin
 | Notifications (in-app, push, email) | [Notifications](../apps/web/src/content/help/customers/notifications.md) | [Notifications and email operations](operations/notifications-and-email-operations.md) · [Admin › Notifications](admin/notifications.md) | [Scheduled jobs](operations/scheduled-jobs.md) · [Integrations — Expo, Resend](architecture/integrations.md) |
 | Spotlight, Stories, following, promoted Spotlights | [Spotlight, Stories and following](../apps/web/src/content/help/customers/spotlight-stories-and-following.md) | [Admin › Spotlight](admin/spotlight.md) · [Moderation policy](operations/content-moderation-policy.md) | [Spotlight and Stories architecture](architecture/spotlight-and-stories.md) |
 | Abonten Safety: trusted contacts, SOS, check-ins, location sharing (staff only; help page built but not listed until Everyone) | [Abonten Safety](../apps/web/src/content/help/customers/safety.md) · [Terms §12A](../apps/web/src/content/legal/terms.md) · [Privacy Policy §2, §5, §9](../apps/web/src/content/legal/privacy-policy.md) | [Admin › Safety](admin/safety.md) | [Safety architecture](architecture/safety.md) · [Data retention](privacy/data-retention-and-deletion.md) |
+| Pay small small: paying for tickets in parts before the event, the Balance page (off; help page built but not listed until Everyone) | [Paying small small](../apps/web/src/content/help/customers/paying-small-small.md) ([fr](../apps/web/src/content/help/customers/paying-small-small.fr.md) · [es](../apps/web/src/content/help/customers/paying-small-small.es.md) · [de](../apps/web/src/content/help/customers/paying-small-small.de.md) · [pt](../apps/web/src/content/help/customers/paying-small-small.pt.md)) | [Admin › Pay small small](admin/ticket-plans.md) · [Refunds and cancellations](finance/refunds-and-cancellations.md) | [Pay small small architecture](architecture/ticket-plans.md) |
 | Identity verification: government ID and live selfie for organizers and place owners, what a checked identity is required for (off; help page built but not listed until Everyone) | [Verifying your identity](../apps/web/src/content/help/organizers/verifying-your-identity.md) ([fr](../apps/web/src/content/help/organizers/verifying-your-identity.fr.md) · [es](../apps/web/src/content/help/organizers/verifying-your-identity.es.md) · [de](../apps/web/src/content/help/organizers/verifying-your-identity.de.md) · [pt](../apps/web/src/content/help/organizers/verifying-your-identity.pt.md)) · [Privacy Policy §2, §4, §5, §9, §13](../apps/web/src/content/legal/privacy-policy.md) | [Admin › Identity](admin/identity.md) | [Identity verification architecture](architecture/identity-verification.md) · [Data retention](privacy/data-retention-and-deletion.md) |
 
 ## Rewards and referrals (shadow mode — not generally available)

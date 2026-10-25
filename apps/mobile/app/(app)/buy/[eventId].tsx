@@ -8,6 +8,14 @@ import {
 } from "@/features/checkout/useCheckout";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useMarket } from "@/features/markets/MarketProvider";
+import {
+  type PayMode,
+  PaySmallSmallChoice,
+} from "@/features/ticketPlans/PaySmallSmallChoice";
+import {
+  useStartTicketPlan,
+  useTicketPlanOffer,
+} from "@/features/ticketPlans/useTicketPlans";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { useNowTick } from "@/lib/useNowTick";
@@ -21,6 +29,7 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { tryFromMajor } from "@abonten/core/money/money";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -77,6 +86,7 @@ export default function BuyTicketsScreen() {
 
   const t = useTranslations("checkout");
   const tc = useTranslations("core");
+  const tp = useTranslations("ticketPlans");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -91,6 +101,8 @@ export default function BuyTicketsScreen() {
   const validate = useValidateCheckout();
   const cancel = useCancelCheckout();
   const promoPreview = usePromoPreview();
+  const startPlan = useStartTicketPlan();
+  const [payMode, setPayMode] = useState<PayMode>("full");
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [occurrenceId, setOccurrenceId] = useState<string | null>(null);
@@ -125,6 +137,13 @@ export default function BuyTicketsScreen() {
       ? occurrenceId
       : firstFutureOccurrenceId;
   const currency = event?.currency ?? event?.ticket_type[0]?.currency ?? "";
+  // Pay small small: offered only when the organizer allows it, the
+  // programme is open to this buyer and the deadline is far enough away.
+  const offerQuery = useTicketPlanOffer(eventId, activeOccurrenceId);
+  const offerData =
+    offerQuery.data?.status === 200 ? offerQuery.data.data : undefined;
+  const planOffer = offerData?.available ? offerData : null;
+  const paySmallSmall = payMode === "plan" && !!planOffer;
 
   const lines = useMemo(
     () =>
@@ -291,11 +310,35 @@ export default function BuyTicketsScreen() {
     setPromoInput("");
   }
 
+  async function startPlanFlow() {
+    const res = await startPlan.mutateAsync({
+      eventId,
+      occurrenceId: activeOccurrenceId,
+      quantities,
+    });
+    if (res.status === 200) {
+      router.push(`/(app)/ticket-plans/${res.data.planId}`);
+      return;
+    }
+    if (res.status === 409 && "planId" in res && res.planId) {
+      toast.info(res.message ?? tp("youReAlreadyPayingForThisEvent"));
+      router.push(`/(app)/ticket-plans/${res.planId}`);
+      return;
+    }
+    toast.error(tp("couldNotStartPlan"), {
+      description: "message" in res ? res.message : undefined,
+    });
+  }
+
   async function proceed() {
     if (totalCount === 0) return;
     if (!session) {
       if (pathname) setPendingRedirect(pathname);
       router.push("/(auth)/sign-in");
+      return;
+    }
+    if (paySmallSmall) {
+      await startPlanFlow();
       return;
     }
 
@@ -496,8 +539,22 @@ export default function BuyTicketsScreen() {
           })}
         </View>
 
+        {planOffer ? (
+          <PaySmallSmallChoice
+            offer={planOffer}
+            mode={payMode}
+            onModeChange={(mode) => {
+              setPayMode(mode);
+              // A plan's price is the ticket price: no promo codes (v1).
+              if (mode === "plan") removePromo();
+            }}
+            totalMinor={tryFromMajor(totalPreview, currency)?.amountMinor ?? 0}
+            ticketCount={totalCount}
+          />
+        ) : null}
+
         {/* Promo code */}
-        <View className="gap-2">
+        <View className={paySmallSmall ? "hidden" : "gap-2"}>
           {applied ? (
             <View className="gap-1.5 rounded-xl border border-primary/40 bg-primary/5 p-3.5">
               <View className="flex-row items-center justify-between">
@@ -615,17 +672,23 @@ export default function BuyTicketsScreen() {
       <BottomBar className="border-t border-border bg-background px-4 pt-4">
         <Button
           title={
-            validate.isPending || cancel.isPending
+            validate.isPending || cancel.isPending || startPlan.isPending
               ? t("startingCheckout")
-              : t("proceedToCheckout")
+              : paySmallSmall
+                ? tp("startPayingSmallSmall")
+                : t("proceedToCheckout")
           }
           fullWidth
-          loading={validate.isPending || cancel.isPending}
+          loading={
+            validate.isPending || cancel.isPending || startPlan.isPending
+          }
           disabled={
             validate.isPending ||
             cancel.isPending ||
+            startPlan.isPending ||
             totalCount === 0 ||
-            (occurrences.length > 1 && activeOccurrenceId == null)
+            (occurrences.length > 1 && activeOccurrenceId == null) ||
+            (paySmallSmall && totalCount > (planOffer?.maxTickets ?? 0))
           }
           onPress={proceed}
         />

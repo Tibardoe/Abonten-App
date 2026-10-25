@@ -35,6 +35,8 @@ import {
   releaseReservation,
 } from "../rewards/creditRedemptionCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { endTicketPlan } from "../ticketPlans/ticketPlanLifecycle";
+import { noticePlanPartReceived } from "../ticketPlans/ticketPlanNotices";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import { refundOrphanCapture } from "./orphanCapture";
 import { NoProviderError, resolveProviderAccount } from "./providers/registry";
@@ -137,6 +139,15 @@ function paymentLogData(
 // cron behave identically; they skip only the provider verification call.
 export const CREDIT_PROVIDER = "abonten_credit";
 
+// The settlement of a finished Pay small small plan: the parts were each
+// verified with their provider when they arrived (they are its money), so
+// this internal provider is never called either. finalizePlanSettlement
+// checks the parts add up to the price before the purchase is recorded.
+export const PLAN_PROVIDER = "abonten_plan";
+
+/** Attempts no provider is ever asked about. */
+const INTERNAL_PROVIDERS = new Set([CREDIT_PROVIDER, PLAN_PROVIDER]);
+
 type PaymentAttemptFullRow = {
   id: string;
   user_id: string;
@@ -151,6 +162,8 @@ type PaymentAttemptFullRow = {
   place_promotion_checkout_id: string | null;
   event_promotion_checkout_id: string | null;
   content_campaign_checkout_id: string | null;
+  /** Set on a part of a Pay small small plan. */
+  ticket_plan_id: string | null;
   transaction_id: string | null;
   metadata: Record<string, unknown> | null;
   updated_at: string;
@@ -180,7 +193,7 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider, country_code, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, content_campaign_checkout_id, transaction_id, metadata, updated_at";
+  "id, user_id, status, amount, currency, provider, country_code, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, content_campaign_checkout_id, ticket_plan_id, transaction_id, metadata, updated_at";
 
 function reservationTarget(
   attempt: PaymentAttemptFullRow,
@@ -296,7 +309,7 @@ export async function finalizePayment(
     // recorded. Its reference being a different one means this is a second
     // charge (an older provider page paid after the order was paid another
     // way) — money with no order, which must go back, not be acknowledged.
-    if (primary.transaction_id && primary.provider !== CREDIT_PROVIDER) {
+    if (primary.transaction_id && !INTERNAL_PROVIDERS.has(primary.provider)) {
       const { data: txn } = await supabase
         .from("transaction")
         .select("provider_reference")
@@ -349,10 +362,10 @@ export async function finalizePayment(
   // approval, a stale tab. Before, that money was simply kept: the lock
   // below refused the attempt and the webhook retried for days. Now the
   // provider is asked what happened, and a real capture is refunded.
-  if (
-    (primary.status === "failed" || primary.status === "cancelled") &&
-    primary.provider !== CREDIT_PROVIDER
-  ) {
+  if (primary.status === "failed" || primary.status === "cancelled") {
+    if (INTERNAL_PROVIDERS.has(primary.provider)) {
+      return { status: "failed", message: tr("thisPaymentDidnTGoThrough") };
+    }
     return reconcileClosedAttempt(primary);
   }
 
@@ -452,6 +465,16 @@ export async function finalizePayment(
       primary,
       groupMembers,
       reservation,
+      deps,
+      markGroup,
+    );
+  }
+
+  if (primary.provider === PLAN_PROVIDER) {
+    return finalizePlanSettlement(
+      supabase,
+      primary,
+      groupMembers,
       deps,
       markGroup,
     );
@@ -585,6 +608,19 @@ export async function finalizePayment(
     };
   }
 
+  // A part of a Pay small small plan is recorded against its plan, not
+  // fulfilled on its own; the last part opens the plan's settlement.
+  if (primary.ticket_plan_id) {
+    return recordPlanPart({
+      supabase,
+      primary,
+      deps,
+      verification,
+      provider: providerImpl,
+      account,
+    });
+  }
+
   return completeVerifiedPayment({
     supabase,
     primary,
@@ -659,6 +695,245 @@ async function finalizeCreditOnly(
     providerFee: null,
     settlementCurrency: primary.currency,
   });
+}
+
+/**
+ * A verified part of a Pay small small plan. The database records it against
+ * the plan (ticket_plan_record_payment) while this request holds the
+ * attempt; money for a plan that has ended meanwhile, or that would pay more
+ * than is left, is refunded in full as an orphan capture. The part that
+ * finishes the plan opens its settlement, which is finalized right here.
+ */
+async function recordPlanPart({
+  supabase,
+  primary,
+  deps,
+  verification,
+  provider,
+  account,
+}: {
+  supabase: SupabaseClient<Database>;
+  primary: PaymentAttemptFullRow;
+  deps: PaymentFulfillmentDeps;
+  verification: VerificationResult;
+  provider: PaymentProvider;
+  account: ProviderAccount;
+}): Promise<FinalizeResult> {
+  const fee =
+    verification.providerFee &&
+    verification.providerFee.currency === verification.amount.currency
+      ? verification.providerFee.amountMinor
+      : null;
+  const { data, error } = await supabase.rpc("ticket_plan_record_payment", {
+    p_attempt_id: primary.id,
+    p_amount_minor: verification.amount.amountMinor,
+    p_provider_fee_minor: fee,
+    p_provider_transaction_id: verification.providerTransactionId,
+    // The generated types make the two optional values a number and a
+    // string; the SQL takes null for either.
+  } as unknown as Database["public"]["Functions"]["ticket_plan_record_payment"]["Args"]);
+
+  if (error) {
+    logger.error(
+      `finalizePayment: plan part ${primary.id} not recorded (${error.message})`,
+      paymentLogData(primary, "plan_part_not_recorded"),
+    );
+    // The money is confirmed; recording it is retried by the next verify,
+    // webhook redelivery or reconcile sweep.
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "pending", updated_at: new Date().toISOString() })
+      .eq("id", primary.id)
+      .eq("status", "processing");
+    return { status: "pending", message: tr("weReSortingOutThisPayment") };
+  }
+
+  const result = (data ?? {}) as {
+    outcome?: "recorded" | "already" | "closed" | "mismatch";
+    plan_id?: string;
+    plan_status?: string;
+    settlement_attempt_id?: string | null;
+  };
+
+  if (result.outcome === "closed" || result.outcome === "mismatch") {
+    await supabase
+      .from("payment_attempt")
+      .update({
+        status: "failed",
+        failure_reason:
+          result.outcome === "closed"
+            ? "The plan had ended when this payment arrived"
+            : "This payment did not fit what was left on the plan",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", primary.id);
+    const refunded = await refundOrphanCapture({
+      provider,
+      account,
+      verification,
+      attempt: primary,
+      source: "verify",
+      reason: `ticket plan ${result.plan_id}: ${result.outcome}`,
+    });
+    return refunded.status === "refund_requested"
+      ? { status: "failed", message: tr("thisPlanEndedBeforeYourPayment") }
+      : { status: "pending", message: tr("weReSortingOutThisPayment") };
+  }
+
+  if (result.outcome === "recorded" && result.plan_id) {
+    await noticePlanPartReceived(
+      result.plan_id,
+      verification.amount.amountMinor,
+    );
+  }
+
+  if (result.settlement_attempt_id) {
+    const settled = await finalizePayment(result.settlement_attempt_id, deps);
+    if (settled.status !== "succeeded") {
+      logger.warn(
+        `finalizePayment: plan ${result.plan_id} settlement is ${settled.status}; the ticket-plans job will finish it`,
+      );
+    }
+  }
+
+  return { status: "succeeded" };
+}
+
+/**
+ * A finished plan becomes its purchase: one transaction for the whole
+ * price, the tickets issued from the plan's held seats, the organizer's
+ * earning and the platform fee recorded as for any sale. Every part was
+ * verified with its provider when it arrived; here the parts must add up to
+ * the plan's price, or nothing is issued.
+ */
+async function finalizePlanSettlement(
+  supabase: SupabaseClient<Database>,
+  primary: PaymentAttemptFullRow,
+  groupMembers: PaymentAttemptFullRow[],
+  deps: PaymentFulfillmentDeps,
+  markGroup: MarkGroup,
+): Promise<FinalizeResult> {
+  const planId =
+    typeof primary.metadata?.ticket_plan_id === "string"
+      ? primary.metadata.ticket_plan_id
+      : null;
+  const { data: plan } = planId
+    ? await supabase
+        .from("ticket_plan")
+        .select(
+          "id, user_id, status, checkout_session_id, settlement_attempt_id, event_id, currency, total_minor, paid_minor",
+        )
+        .eq("id", planId)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: parts } = plan
+    ? await supabase
+        .from("ticket_plan_payment")
+        .select(
+          "amount_minor, provider_fee_minor, provider, provider_reference, currency",
+        )
+        .eq("plan_id", plan.id)
+    : { data: null };
+  const partsTotal = (parts ?? []).reduce(
+    (acc, p) => acc + Number(p.amount_minor),
+    0,
+  );
+
+  if (
+    !plan ||
+    plan.user_id !== primary.user_id ||
+    plan.checkout_session_id !== primary.checkout_session_id ||
+    plan.settlement_attempt_id !== primary.id ||
+    plan.status !== "settling" ||
+    plan.currency !== primary.currency ||
+    Number(plan.paid_minor) !== Number(plan.total_minor) ||
+    partsTotal !== Number(plan.total_minor) ||
+    attemptMoney(primary).amountMinor !== Number(plan.total_minor)
+  ) {
+    logger.error(
+      `finalizePayment: plan settlement ${primary.id} does not match its plan (${planId})`,
+      paymentLogData(primary, "plan_settlement_mismatch"),
+    );
+    await markGroup("failed", {
+      failure_reason: "The plan's payments could not be confirmed",
+    });
+    return { status: "failed", message: tr("paymentCouldNotBeVerified") };
+  }
+
+  // The event was cancelled while the last part was arriving: no tickets.
+  // The plan ends and is refunded like any plan on a cancelled event.
+  const { data: event } = await supabase
+    .from("event")
+    .select("status")
+    .eq("id", plan.event_id)
+    .maybeSingle();
+  if (event?.status === "canceled") {
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "pending", updated_at: new Date().toISOString() })
+      .eq("id", primary.id)
+      .eq("status", "processing");
+    await endTicketPlan(plan.id, "cancelled", "event_cancelled");
+    return { status: "failed", message: tr("thisEventWasCancelledYourPlan") };
+  }
+
+  const fees = (parts ?? []).map((p) =>
+    p.provider_fee_minor == null ? null : Number(p.provider_fee_minor),
+  );
+  const providerFee = fees.every((f) => f != null)
+    ? money(
+        fees.reduce<number>((acc, f) => acc + (f ?? 0), 0),
+        plan.currency,
+      )
+    : null;
+
+  const { data: authUser } = await supabase.auth.admin.getUserById(
+    primary.user_id,
+  );
+
+  const result = await completeVerifiedPayment({
+    supabase,
+    primary,
+    groupMembers,
+    deps,
+    markGroup,
+    reservation: null,
+    cash: money(Number(plan.total_minor), plan.currency),
+    payerEmail: authUser?.user?.email ?? "",
+    gatewayResponse: {
+      provider: PLAN_PROVIDER,
+      ticket_plan_id: plan.id,
+      parts: (parts ?? []).map((p) => ({
+        provider: p.provider,
+        reference: p.provider_reference,
+        amount_minor: Number(p.amount_minor),
+      })),
+    },
+    providerTransactionId: null,
+    providerFee,
+    settlementCurrency: plan.currency,
+  });
+
+  if (result.status === "succeeded") {
+    const { data: settled } = await supabase
+      .from("payment_attempt")
+      .select("transaction_id")
+      .eq("id", primary.id)
+      .maybeSingle();
+    if (settled?.transaction_id) {
+      const { error } = await supabase.rpc("ticket_plan_mark_completed", {
+        p_plan_id: plan.id,
+        p_transaction_id: settled.transaction_id,
+      });
+      if (error) {
+        logger.error(
+          `finalizePayment: plan ${plan.id} issued but not marked completed (${error.message})`,
+        );
+      }
+    }
+  }
+  return result;
 }
 
 /**

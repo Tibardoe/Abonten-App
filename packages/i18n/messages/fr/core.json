@@ -892,6 +892,38 @@
     "identity_revoked": {
       "title": "Votre vérification d'identité a été retirée",
       "body": "Contactez l'assistance Abonten pour en connaître la raison."
+    },
+    "ticket_plan_part_received": {
+      "title": "Paiement reçu pour {title}",
+      "body": "{paid} payés sur {total}. Il reste {left} à payer avant le {deadline}."
+    },
+    "ticket_plan_reminder": {
+      "title": "Il reste {left} à payer pour {title}",
+      "body": "{days, plural, one {Terminez avant le {deadline} (# jour restant) pour garder vos billets.} other {Terminez avant le {deadline} (# jours restants) pour garder vos billets.}}"
+    },
+    "ticket_plan_lapsed": {
+      "title": "Votre plan pour {title} a pris fin",
+      "body": "{refunds, select, yes {Il n'a pas été terminé avant la date limite, les billets ont donc été remis en vente. {refund} vous est en cours de remboursement.} other {Il n'a pas été terminé avant la date limite, les billets ont donc été remis en vente.}}"
+    },
+    "ticket_plan_cancelled": {
+      "title": "Plan annulé : {title}",
+      "body": "{refunds, select, yes {Vos billets réservés ont été remis en vente. {refund} vous est en cours de remboursement.} other {Vos billets réservés ont été remis en vente.}}"
+    },
+    "ticket_plan_event_cancelled": {
+      "title": "{title} a été annulé",
+      "body": "{refunds, select, yes {Votre plan a pris fin. {refund} vous est en cours de remboursement.} other {Votre plan a pris fin.}}"
+    },
+    "ticket_plan_ended_by_staff": {
+      "title": "Votre plan pour {title} a pris fin",
+      "body": "{refunds, select, yes {Abonten a mis fin à ce plan. {refund} vous est en cours de remboursement.} other {Abonten a mis fin à ce plan.}}"
+    },
+    "ticket_plan_refunded": {
+      "title": "Remboursement effectué : {title}",
+      "body": "{refund} de votre plan vous ont été rendus."
+    },
+    "ticket_plan_refund_problem": {
+      "title": "Votre remboursement pour {title} est retardé",
+      "body": "Une partie n'a pas pu être envoyée. Notre équipe s'en occupe et vous contactera."
     }
   },
   "openStatus": {

@@ -916,6 +916,38 @@
     "identity_revoked": {
       "title": "Your identity verification was withdrawn",
       "body": "Contact Abonten Support to find out why."
+    },
+    "ticket_plan_part_received": {
+      "title": "Payment received for {title}",
+      "body": "{paid} of {total} paid. {left} left to pay by {deadline}."
+    },
+    "ticket_plan_reminder": {
+      "title": "{left} left to pay for {title}",
+      "body": "{days, plural, one {Finish by {deadline} (# day left) to keep your tickets.} other {Finish by {deadline} (# days left) to keep your tickets.}}"
+    },
+    "ticket_plan_lapsed": {
+      "title": "Your plan for {title} has ended",
+      "body": "{refunds, select, yes {It wasn't finished by the deadline, so the tickets went back on sale. {refund} is on its way back to you.} other {It wasn't finished by the deadline, so the tickets went back on sale.}}"
+    },
+    "ticket_plan_cancelled": {
+      "title": "Plan cancelled: {title}",
+      "body": "{refunds, select, yes {Your held tickets went back on sale. {refund} is on its way back to you.} other {Your held tickets went back on sale.}}"
+    },
+    "ticket_plan_event_cancelled": {
+      "title": "{title} was cancelled",
+      "body": "{refunds, select, yes {Your plan has ended. {refund} is on its way back to you.} other {Your plan has ended.}}"
+    },
+    "ticket_plan_ended_by_staff": {
+      "title": "Your plan for {title} has ended",
+      "body": "{refunds, select, yes {Abonten ended this plan. {refund} is on its way back to you.} other {Abonten ended this plan.}}"
+    },
+    "ticket_plan_refunded": {
+      "title": "Refund complete: {title}",
+      "body": "{refund} from your plan is back with you."
+    },
+    "ticket_plan_refund_problem": {
+      "title": "Your refund for {title} is delayed",
+      "body": "Part of it couldn't be sent. Our team is looking into it and will contact you."
     }
   },
   "noticeWords": {
