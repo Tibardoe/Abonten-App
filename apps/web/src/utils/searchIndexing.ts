@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { containingRegion } from "@abonten/core/market/coverage";
 import type { MarketConfig } from "@abonten/core/market/types";
 import { listOpenMarkets } from "@abonten/services/markets/marketConfig";
+import { getRegionActivity } from "@abonten/services/markets/regionActivity";
 
 // What the website offers search engines, beyond what robots.txt keeps out:
 // which accounts' listings are left out, and which city pages are real
@@ -22,16 +23,22 @@ export function isIndexedAccount(userId: string | null | undefined): boolean {
   return !userId || !NOT_INDEXED_ACCOUNTS.has(userId);
 }
 
-export function notIndexedAccountIds(): string[] {
-  return [...NOT_INDEXED_ACCOUNTS];
-}
-
-export type IndexedCity = {
+export type CityRef = {
   slug: string;
   name: string;
   countryCode: string;
   lat: number;
   lng: number;
+};
+
+export type IndexedCity = CityRef & {
+  /**
+   * Something is listed in it (an upcoming event or a place). A city page
+   * with nothing to show is a "soft 404" to Google, which refuses to index
+   * it (Search Console, 2026-10-25), so it says noindex until it has.
+   * True when the count could not be read.
+   */
+  hasListings: boolean;
 };
 
 async function liveMarkets(): Promise<MarketConfig[]> {
@@ -50,7 +57,11 @@ async function liveMarkets(): Promise<MarketConfig[]> {
  * market's order: the Explore pages search engines are told about.
  */
 export async function indexedCities(): Promise<IndexedCity[]> {
-  return (await liveMarkets()).flatMap((market) =>
+  const [markets, activity] = await Promise.all([
+    liveMarkets(),
+    getRegionActivity(),
+  ]);
+  return markets.flatMap((market) =>
     market.regions
       .filter(
         (r) =>
@@ -58,13 +69,19 @@ export async function indexedCities(): Promise<IndexedCity[]> {
           r.status === "active" &&
           r.launchStatus === "launched",
       )
-      .map((r) => ({
-        slug: r.slug,
-        name: r.name,
-        countryCode: market.countryCode,
-        lat: r.lat,
-        lng: r.lng,
-      })),
+      .map((r) => {
+        const counts = activity.get(r.id);
+        return {
+          slug: r.slug,
+          name: r.name,
+          countryCode: market.countryCode,
+          lat: r.lat,
+          lng: r.lng,
+          hasListings: counts
+            ? counts.upcomingEvents + counts.places > 0
+            : true,
+        };
+      }),
   );
 }
 
@@ -83,7 +100,7 @@ export async function indexedCityForSlug(
 export async function cityAt(
   lat: number | null | undefined,
   lng: number | null | undefined,
-): Promise<(IndexedCity & { launched: boolean }) | null> {
+): Promise<(CityRef & { launched: boolean }) | null> {
   if (typeof lat !== "number" || typeof lng !== "number") return null;
   const markets = await liveMarkets();
   const found = containingRegion(markets, { lat, lng });

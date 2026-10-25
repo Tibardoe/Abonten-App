@@ -126,13 +126,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     throw new Error(`sitemap: ${failure.message}`);
   }
 
-  const cityPages: MetadataRoute.Sitemap = cities.map((city) => ({
-    url: `${base}${cityPath(city.slug)}`,
-    alternates: { languages: languageUrls(`${base}${cityPath(city.slug)}`) },
-    lastModified: now,
-    changeFrequency: "daily" as const,
-    priority: 0.8,
-  }));
+  // A city with nothing listed says noindex (utils/searchIndexing.ts).
+  const cityPages: MetadataRoute.Sitemap = cities
+    .filter((city) => city.hasListings)
+    .map((city) => ({
+      url: `${base}${cityPath(city.slug)}`,
+      alternates: { languages: languageUrls(`${base}${cityPath(city.slug)}`) },
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    }));
 
   const eventRows = (events.data ?? []).filter(
     (e) => !!e.event_code && isIndexedAccount(e.organizer_id),

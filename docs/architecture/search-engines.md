@@ -21,7 +21,8 @@ On 2026-10-25 a search for "abontenhub" found nothing of Abonten. The homepage o
 | Page | Offered | Canonical address |
 | --- | --- | --- |
 | Homepage | yes | `/` |
-| A launched city's Explore page (`market_region`, live market, `launch_status = launched`) | yes | `/explore/<city>` |
+| A launched city's Explore page (`market_region`, live market, `launch_status = launched`) with something listed | yes | `/explore/<city>` |
+| A launched city with no upcoming event and no place yet | no (`noindex, follow`) until it has one | `/explore/<city>` |
 | Any other `/explore/<text>` (a street, "current location") | no (`noindex, follow`) | itself |
 | `/events/location/<city>` (older events-only page) | through its city | `/explore/<city>` |
 | Event | yes, unless the organizer's account is left out (below) | `/events/<code in lower case>` |
@@ -39,7 +40,7 @@ On 2026-10-25 a search for "abontenhub" found nothing of Abonten. The homepage o
 
 **Accounts left out.** `utils/searchIndexing.ts` holds the accounts whose listings and profile are kept out: today only the App Review demo account ("Abonten Events"), whose eight sample events are not real. Their pages say `noindex`, carry no structured data and are left out of the sitemap. **Remove the id when the samples are deleted** (step 1.3 of [../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md)).
 
-**Cities.** Only a launched city of a live market is a page to show (`indexedCities()`, `indexedCityForSlug()`): its title, heading and introduction name the city (`explore.eventsAndPlacesIn`, `explore.cityIntro`). A city slug resolves to coordinates from the market's own regions, never a billed Google lookup, so a crawler reading every city page costs nothing.
+**Cities.** Only a launched city of a live market is a page to show (`indexedCities()`, `indexedCityForSlug()`): its title, heading and introduction name the city (`explore.eventsAndPlacesIn`, `explore.cityIntro`). A city with nothing listed (`market_region_activity`, through `getRegionActivity`) says `noindex` and is left out of the sitemap: on 2026-10-25 Google refused `/explore/takoradi` as a "soft 404" because the page only said there were no events. When the count cannot be read the city is treated as listed. A city slug resolves to coordinates from the market's own regions, never a billed Google lookup, so a crawler reading every city page costs nothing.
 
 ## 2. Titles and descriptions
 
@@ -70,7 +71,7 @@ The builders are framework-free and tested: `packages/core/src/seo/{jsonLd,listi
 
 ## 4. The sitemap, robots.txt and the manifest
 
-- **`/sitemap.xml`** (`app/sitemap.ts`, rebuilt at most hourly): the static pages, the help pages, the launched cities, events still running or ended within 30 days, published places, and the profiles of the hosts behind them; each with its language versions and, for listings, the flyer or cover (image sitemap). A read that fails keeps the last good sitemap ([web-resilience.md](web-resilience.md)). One file holds up to 50,000 addresses; split it with `generateSitemaps` before events and places together approach that.
+- **`/sitemap.xml`** (`app/sitemap.ts`, rebuilt at most hourly): the static pages, the help pages, the launched cities with something listed, events still running or ended within 30 days, published places, and the profiles of the hosts behind them; each with its language versions and, for listings, the flyer or cover (image sitemap). A read that fails keeps the last good sitemap ([web-resilience.md](web-resilience.md)). One file holds up to 50,000 addresses; split it with `generateSitemaps` before events and places together approach that.
 - **`/robots.txt`** (`app/robots.ts`): everything personal, signed-in or transactional, and the links that carry a private token (`/sos/`, `/trusted/`, `/weekly/preview/`). Pages shared as links but not search results (invites, Stories) are not listed there, because link-preview robots read robots.txt too; they say `noindex` instead.
 - **`/manifest.webmanifest`** (`app/manifest.ts`): name, icons (`abonten-app-icon-192/512.png`, drawn by `apps/web/scripts/gen-brand-assets.mjs`) and colours, with `display: "browser"` so Chrome does not offer to install the website beside the Abonten app.
 - All three are excluded from the session proxy (`proxy.ts` matcher): outside `app/[locale]`, a language rewrite would make them a 404.
