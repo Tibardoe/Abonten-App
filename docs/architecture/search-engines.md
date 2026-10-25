@@ -78,14 +78,13 @@ The builders are framework-free and tested: `packages/core/src/seo/{jsonLd,listi
 
 ## 5. Telling search engines
 
-- **Google** reads the sitemap named in robots.txt. The domain has `google-site-verification` TXT records in Vercel DNS; whether a Search Console property exists is for the founder to confirm (owner step below).
+- **Google**: the Search Console **domain property** `abontenhub.com` (verified by the `google-site-verification` TXT record in Vercel DNS, owned by tibardoebenjamin@abontenhub.com) has `https://abontenhub.com/sitemap.xml` submitted since 2026-10-25 (read the same day: Success, 42 pages). Search Console › URL inspection › Request indexing pushes a single changed page (about ten a day).
+- **Bing Webmaster Tools**: the same account signs in with Google; the site was imported from Search Console and the sitemap submitted there too (2026-10-25).
 - **IndexNow** (Bing, and through it DuckDuckGo, Yahoo, Ecosia and ChatGPT search; Yandex, Seznam, Naver): `node apps/web/scripts/indexnow-submit.mjs` submits every page in the live sitemap. The key is the file `apps/web/public/<32 hex>.txt` and is not a secret (the engines fetch it to check the submission). Run it after a deploy that adds or changes public pages; `--dry-run` lists what would go.
 
-**Owner steps** (each needs the founder's Google or Microsoft account):
+**Done on 2026-10-25** (open item SEO1): sitemap in Search Console and Bing, indexing requested for `/`, `/help` and the three cities with listings. Search Console refused `/explore/takoradi` as a soft 404 (nothing listed), which is why empty city pages say noindex (§1).
 
-1. Google Search Console: open (or add) the **domain property** `abontenhub.com` (verified by the existing DNS record), submit `https://abontenhub.com/sitemap.xml`, and use URL inspection → Request indexing on `/`.
-2. Bing Webmaster Tools: sign in and **import the site from Google Search Console** (no new DNS record needed).
-3. Google Business Profile for Abonten Hub Ltd (optional): the company name, website and logo, for the panel shown beside brand searches.
+**Still open (optional, founder):** a Google Business Profile for Abonten Hub Ltd (company name, website, logo) for the panel shown beside brand searches.
 
 ## 6. Rules for a new public page
 
