@@ -144,11 +144,15 @@ describe("messaging service layer (Cores + read queries)", () => {
     });
     const firstId = first.data?.message.id as string;
 
-    await sendMessageCore(organizer.client, organizer.id, {
+    const reply = await sendMessageCore(organizer.client, organizer.id, {
       conversationId,
       content: "Replying to that",
       replyToMessageId: firstId,
     });
+    // The send's answer already carries the quote, so the sender's bubble
+    // shows it straight away instead of after the next fetch.
+    expect(reply.data?.message.reply_to?.id).toBe(firstId);
+    expect(reply.data?.message.reply_to?.content).toBe("First question");
 
     const page = await fetchMessagesPage(member.client, conversationId, {
       pageSize: 20,

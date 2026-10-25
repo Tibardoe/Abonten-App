@@ -12,6 +12,7 @@ import {
   createNotificationCore,
 } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { loadReplyPreviews } from "./messagesQuery";
 import { mapMessagingRpcError } from "./messagingError";
 
 // Post-auth body of the "send" action / POST /api/mobile/messages/send.
@@ -128,10 +129,15 @@ async function readMessage(
     return null;
   }
 
-  const { data: atts } = await supabase
-    .from("message_attachment")
-    .select("*")
-    .eq("message_id", messageId);
+  // The quote rides with the sent message, as it does on a page of the
+  // thread, so a reply shows what it answers as soon as it is sent.
+  const [{ data: atts }, replyPreviews] = await Promise.all([
+    supabase.from("message_attachment").select("*").eq("message_id", messageId),
+    loadReplyPreviews(
+      supabase,
+      data.reply_to_message_id ? [data.reply_to_message_id] : [],
+    ),
+  ]);
 
   return {
     id: data.id,
@@ -148,7 +154,9 @@ async function readMessage(
     edited_at: data.edited_at,
     deleted_at: data.deleted_at,
     attachments: (atts ?? []) as MessageRow["attachments"],
-    reply_to: null,
+    reply_to: data.reply_to_message_id
+      ? (replyPreviews.get(data.reply_to_message_id) ?? null)
+      : null,
   };
 }
 
