@@ -20,7 +20,9 @@ import { Suspense, cache } from "react";
 
 // The city a /explore/<slug> address names, when it is a launched city of
 // a live market; anything else typed after /explore/ (a street, "current
-// location") is a working page but not one to show in search results.
+// location") is a working page but not one to show in search results, and
+// neither is a city with nothing listed yet (Google calls that page a soft
+// 404).
 const cityForSlug = cache((location: string) =>
   indexedCityForSlug(decodeURIComponent(location)),
 );
@@ -46,7 +48,7 @@ export async function generateMetadata({
       city ? cityPath(city.slug) : `/explore/${location}`,
       await getLocale(),
     ),
-    ...(city ? {} : { robots: { index: false, follow: true } }),
+    ...(city?.hasListings ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
