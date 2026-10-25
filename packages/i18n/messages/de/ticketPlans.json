@@ -29,7 +29,6 @@
   "finishBy": "Noch {left} zu zahlen. Schließe bis {deadline} ab ({days, plural, one {noch # Tag} other {noch # Tage}}).",
   "finishByShort": "Abschließen bis {deadline}",
   "finishedPlans": "Vollständig bezahlt",
-  "fullyPaid": "Vollständig bezahlt.",
   "holdUntil": "Deine Tickets sind bis {time} reserviert. Leiste deine erste Zahlung, damit sie bis {deadline} für dich reserviert bleiben.",
   "howDoYouWantToPay": "Wie möchtest du bezahlen?",
   "issuingTickets": "Vollständig bezahlt! Wir stellen deine Tickets aus…",

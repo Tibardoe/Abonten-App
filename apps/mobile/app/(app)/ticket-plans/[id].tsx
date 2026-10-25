@@ -259,7 +259,7 @@ export default function TicketPlanScreen() {
           <StatusLine plan={plan} deadline={deadline} say={say} />
         </View>
 
-        {plan.status === "completed" ? (
+        {plan.status === "completed" && plan.refundStatus === "none" ? (
           <View className="gap-3 rounded-2xl border border-success/40 bg-card p-4">
             <AppText variant="bodyStrong">{t("ticketsReady")}</AppText>
             <AppText variant="meta">{t("ticketsReadyBody")}</AppText>
@@ -510,7 +510,17 @@ function StatusLine({
     case "settling":
       return <AppText variant="small">{t("issuingTickets")}</AppText>;
     case "completed":
-      return <AppText variant="small">{t("fullyPaid")}</AppText>;
+      // The badge already says "Fully paid". A purchase refunded later says
+      // how its refund is going.
+      return plan.refundMinor > 0 ? (
+        <AppText variant="meta">
+          {plan.refundStatus === "refunded"
+            ? t("refundDone", { amount: say(plan.refundMinor) })
+            : plan.refundStatus === "failed"
+              ? t("refundProblem")
+              : t("refundOnItsWay", { amount: say(plan.refundMinor) })}
+        </AppText>
+      ) : null;
     default:
       return (
         <View className="gap-1">

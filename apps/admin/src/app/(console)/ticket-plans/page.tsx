@@ -9,6 +9,7 @@ import {
 } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
 import { loadTicketPlanList } from "@/lib/data";
+import { OPS_TIME_ZONE_LABEL, formatOpsDateTime } from "@/lib/format";
 import Link from "next/link";
 import {
   TicketPlanTabs,
@@ -171,7 +172,7 @@ export default async function TicketPlansPage({
                 <Th>Event</Th>
                 <Th>State</Th>
                 <Th>Paid / total</Th>
-                <Th>Deadline</Th>
+                <Th>Deadline ({OPS_TIME_ZONE_LABEL})</Th>
               </tr>
             </thead>
             <tbody>
@@ -211,7 +212,7 @@ export default async function TicketPlansPage({
                     {minor(r.paidMinor, r.currency)} /{" "}
                     {minor(r.totalMinor, r.currency)}
                   </Td>
-                  <Td>{new Date(r.deadlineAt).toUTCString()}</Td>
+                  <Td>{formatOpsDateTime(r.deadlineAt)}</Td>
                 </tr>
               ))}
             </tbody>

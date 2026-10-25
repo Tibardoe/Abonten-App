@@ -9,6 +9,7 @@ import {
 } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
 import { loadTicketPlanDetail } from "@/lib/data";
+import { OPS_TIME_ZONE_LABEL, formatOpsDateTime } from "@/lib/format";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import Link from "next/link";
@@ -111,10 +112,18 @@ export default async function TicketPlanDetailPage({
 
         <Card className="space-y-1 p-4 text-sm">
           <p className="font-semibold">Dates and terms</p>
-          <p>Event starts: {new Date(plan.eventStartsAt).toUTCString()}</p>
-          <p>Deadline: {new Date(plan.deadlineAt).toUTCString()}</p>
+          <p>
+            Event starts: {formatOpsDateTime(plan.eventStartsAt)}{" "}
+            {OPS_TIME_ZONE_LABEL}
+          </p>
+          <p>
+            Deadline: {formatOpsDateTime(plan.deadlineAt)} {OPS_TIME_ZONE_LABEL}
+          </p>
           {plan.status === "awaiting_payment" ? (
-            <p>Hold ends: {new Date(plan.holdExpiresAt).toUTCString()}</p>
+            <p>
+              Hold ends: {formatOpsDateTime(plan.holdExpiresAt)}{" "}
+              {OPS_TIME_ZONE_LABEL}
+            </p>
           ) : null}
           <p>
             If it ends unfinished:{" "}

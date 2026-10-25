@@ -29,7 +29,6 @@
   "finishBy": "Faltam {left} para pagar. Conclua até {deadline} ({days, plural, one {falta # dia} other {faltam # dias}}).",
   "finishByShort": "Concluir até {deadline}",
   "finishedPlans": "Totalmente pagos",
-  "fullyPaid": "Totalmente pago.",
   "holdUntil": "Os seus bilhetes estão reservados até {time}. Faça o primeiro pagamento para os manter até {deadline}.",
   "howDoYouWantToPay": "Como quer pagar?",
   "issuingTickets": "Totalmente pago! Estamos a emitir os seus bilhetes…",

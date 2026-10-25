@@ -1,8 +1,11 @@
+import { isEnglishLike } from "../i18n/coreStrings";
 import { formatDateTime } from "../i18n/format";
 
 // How a plan's moments read: on the EVENT's clock (event.timezone), in the
-// reader's language — "Fri 18 Dec, 18:00". A deadline in the reader's own
-// zone would be wrong by hours for anyone reading from elsewhere.
+// reader's language — "Fri 18 Dec, 6:00 pm" in English (the app's English
+// clock is twelve-hour), "ven. 18 déc., 18:00" elsewhere (two-digit hours,
+// like the app's other clocks). A deadline in the reader's own zone would be
+// wrong by hours for anyone reading from elsewhere.
 
 function validZone(timeZone: string | null | undefined): string | undefined {
   if (!timeZone) return undefined;
@@ -23,8 +26,10 @@ export function planMomentText(
     weekday: "short",
     day: "numeric",
     month: "short",
-    hour: "numeric",
     minute: "2-digit",
+    ...(isEnglishLike(locale)
+      ? { hour: "numeric", hour12: true }
+      : { hour: "2-digit" }),
     timeZone: validZone(timeZone),
   });
 }

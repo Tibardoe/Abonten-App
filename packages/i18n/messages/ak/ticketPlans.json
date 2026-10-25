@@ -29,7 +29,6 @@
   "finishBy": "{left} left to pay. Finish by {deadline} ({days, plural, one {# day left} other {# days left}}).",
   "finishByShort": "Finish by {deadline}",
   "finishedPlans": "Fully paid",
-  "fullyPaid": "Fully paid.",
   "holdUntil": "Your tickets are held until {time}. Make your first payment to keep them until {deadline}.",
   "howDoYouWantToPay": "How do you want to pay?",
   "issuingTickets": "Fully paid! We're issuing your tickets…",

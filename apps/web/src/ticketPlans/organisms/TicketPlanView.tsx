@@ -220,7 +220,7 @@ export default function TicketPlanView({ planId }: { planId: string }) {
         <StatusLine plan={plan} deadline={deadline} say={say} />
       </section>
 
-      {plan.status === "completed" ? (
+      {plan.status === "completed" && plan.refundStatus === "none" ? (
         <section className="rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-5 space-y-3">
           <SectionTitle>{t("ticketsReady")}</SectionTitle>
           <SupportingText>{t("ticketsReadyBody")}</SupportingText>
@@ -444,7 +444,17 @@ function StatusLine({
     case "settling":
       return <p className="text-sm">{t("issuingTickets")}</p>;
     case "completed":
-      return <p className="text-sm">{t("fullyPaid")}</p>;
+      // The badge already says "Fully paid". A purchase refunded later says
+      // how its refund is going.
+      return plan.refundMinor > 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {plan.refundStatus === "refunded"
+            ? t("refundDone", { amount: say(plan.refundMinor) })
+            : plan.refundStatus === "failed"
+              ? t("refundProblem")
+              : t("refundOnItsWay", { amount: say(plan.refundMinor) })}
+        </p>
+      ) : null;
     default: {
       const reason = plan.endedReason ? t(ENDED_KEY[plan.endedReason]) : "";
       return (
