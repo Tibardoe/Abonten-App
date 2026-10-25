@@ -28,6 +28,6 @@
     "@abonten/config": "*",
     "@abonten/i18n": "*",
     "typescript": "^5",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }
