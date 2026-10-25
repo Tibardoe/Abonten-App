@@ -78,7 +78,7 @@ The builders are framework-free and tested: `packages/core/src/seo/{jsonLd,listi
 
 ## 5. Telling search engines
 
-- **Google**: the Search Console **domain property** `abontenhub.com` (verified by the `google-site-verification` TXT record in Vercel DNS, owned by tibardoebenjamin@abontenhub.com) has `https://abontenhub.com/sitemap.xml` submitted since 2026-10-25 (read the same day: Success, 42 pages). Search Console › URL inspection › Request indexing pushes a single changed page (about ten a day).
+- **Google**: the Search Console **domain property** `abontenhub.com` (verified by the `google-site-verification` TXT record in Vercel DNS, owned by the founder's Workspace account) has `https://abontenhub.com/sitemap.xml` submitted since 2026-10-25 (read the same day: Success, 42 pages). Search Console › URL inspection › Request indexing pushes a single changed page (about ten a day).
 - **Bing Webmaster Tools**: the same account signs in with Google; the site was imported from Search Console and the sitemap submitted there too (2026-10-25).
 - **IndexNow** (Bing, and through it DuckDuckGo, Yahoo, Ecosia and ChatGPT search; Yandex, Seznam, Naver): `node apps/web/scripts/indexnow-submit.mjs` submits every page in the live sitemap. The key is the file `apps/web/public/<32 hex>.txt` and is not a secret (the engines fetch it to check the submission). Run it after a deploy that adds or changes public pages; `--dry-run` lists what would go.
 
