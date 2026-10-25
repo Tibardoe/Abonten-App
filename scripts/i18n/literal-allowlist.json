@@ -461,6 +461,51 @@
       "file": "packages/services/src/ticketPlans/ticketPlanRefunds.ts",
       "text": "no detail",
       "reason": "The body of a reconciliation incident, read by staff."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Restaurant",
+      "reason": "A schema.org type name in structured data for search engines, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Hotel",
+      "reason": "A schema.org type name in structured data for search engines, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Sunday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Monday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Tuesday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Wednesday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Thursday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Friday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
+    },
+    {
+      "file": "packages/core/src/seo/jsonLd.ts",
+      "text": "Saturday",
+      "reason": "A schema.org day identifier (https://schema.org/<Day>) in structured data, never shown to a person."
     }
   ]
 }
