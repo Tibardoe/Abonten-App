@@ -127,6 +127,7 @@
   "yourPaymentCouldNotBeCompleted": "Your payment could not be completed.",
   "yourPaymentIsStillBeingConfirmed": "Your payment is still being confirmed. This usually clears within a minute.",
   "yourPaymentWasSuccessfulWeRe": "Your payment was successful. We're completing your promotion now — tap Retry to finish.",
+  "yourPaymentWasSuccessfulTickets": "Your payment was successful, but we couldn't finish issuing everything yet. Tap Retry to finish — you won't be charged again.",
   "yourPaymentWasSuccessfulWeRe2": "Your payment was successful. We're finishing your promotion now — tap Retry to finish.",
   "yourPaymentWentThroughButThe": "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButThe2": "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",

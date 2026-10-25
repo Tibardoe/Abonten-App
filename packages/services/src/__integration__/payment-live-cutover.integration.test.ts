@@ -587,6 +587,80 @@ describe("live Paystack cutover", () => {
     expect(txnsAfter).toHaveLength(1);
   });
 
+  /** A charge Paystack took whose ticket step then failed (QR outage). */
+  async function paidButNotIssued() {
+    const provider = fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    const started = await payOk([session]);
+    const id = started.attempts[0].id;
+    const ref = started.payment?.reference as string;
+    provider.paid.add(ref);
+    failIssuance = 1;
+    await handleProviderWebhook({
+      providerCode: "paystack",
+      countryCode: "GH",
+      ...signed(TEST_KEY, "charge.success", {
+        reference: ref,
+        id: 8,
+        domain: "test",
+      }),
+      deps,
+    });
+    expect((await attempt(id))?.status).toBe("fulfillment_failed");
+    return { provider, fixture, session, id, ref };
+  }
+
+  it("a paid checkout whose issuance failed keeps its seats past the hold, and the retry issues them", async () => {
+    const { fixture, session, id } = await paidButNotIssued();
+    expect(await stockOf(fixture.ticketTypeId)).toBe(4);
+
+    // The 30-minute hold has run out before the retry's backoff: the expiry
+    // job used to release the seats here, and the retry then found an
+    // expired checkout (paid, no ticket).
+    await age(id, session, 40);
+    await service.rpc("expire_stale_ticket_checkouts");
+    expect(await stockOf(fixture.ticketTypeId)).toBe(4);
+    const { data: held } = await service
+      .from("ticket_checkout")
+      .select("status")
+      .eq("checkout_session_id", session);
+    expect(held).toEqual([{ status: "pending" }]);
+
+    // Still 'pending', but already paid: it cannot be paid a second time.
+    const again = await pay([session]);
+    expect(again.status).toBe(409);
+    expect("invalidSessionIds" in again ? again.invalidSessionIds : []).toEqual(
+      [session],
+    );
+
+    const run = await reconcilePaymentAttemptsCore(deps);
+    expect(run.outcomes.succeeded).toBe(1);
+    expect((await attempt(id))?.status).toBe("succeeded");
+    const { data: tickets } = await service
+      .from("ticket")
+      .select("id")
+      .eq("user_id", buyer.id);
+    expect(tickets).toHaveLength(1);
+    await service.rpc("expire_stale_ticket_checkouts");
+    expect(await stockOf(fixture.ticketTypeId)).toBe(4);
+  });
+
+  it("a paid checkout still unissued after a week gives its seats back, once", async () => {
+    const { fixture, session, id } = await paidButNotIssued();
+    // Six days on: still within the week the health check raises it.
+    await age(id, session, 6 * 24 * 60);
+    await service.rpc("expire_stale_ticket_checkouts");
+    expect(await stockOf(fixture.ticketTypeId)).toBe(4);
+
+    await age(id, session, 8 * 24 * 60);
+    await service.rpc("expire_stale_ticket_checkouts");
+    expect(await stockOf(fixture.ticketTypeId)).toBe(5);
+    await service.rpc("expire_stale_ticket_checkouts");
+    expect(await stockOf(fixture.ticketTypeId)).toBe(5);
+    expect((await attempt(id))?.status).toBe("fulfillment_failed");
+  });
+
   it("an admin refund cancels the order's tickets, releases the seat and refunds once", async () => {
     const provider = fakePaystack();
     const fixture = await newEvent();

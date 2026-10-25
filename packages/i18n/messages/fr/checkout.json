@@ -127,6 +127,7 @@
   "yourPaymentCouldNotBeCompleted": "Votre paiement n'a pas pu être finalisé.",
   "yourPaymentIsStillBeingConfirmed": "Votre paiement est encore en cours de confirmation. Cela se règle généralement en moins d'une minute.",
   "yourPaymentWasSuccessfulWeRe": "Votre paiement a réussi. Nous finalisons votre promotion — touchez Réessayer pour terminer.",
+  "yourPaymentWasSuccessfulTickets": "Votre paiement a réussi, mais nous n'avons pas encore pu tout émettre. Touchez Réessayer pour terminer — vous ne serez pas débité une seconde fois.",
   "yourPaymentWasSuccessfulWeRe2": "Votre paiement a réussi. Nous terminons votre promotion — touchez Réessayer pour terminer.",
   "yourPaymentWentThroughButThe": "Votre paiement est passé, mais la promotion n'est pas encore active. Réessayez maintenant — vous ne serez pas débité une seconde fois.",
   "yourPaymentWentThroughButThe2": "Votre paiement est passé, mais la promotion n'est pas encore arrivée en validation. Réessayez maintenant — vous ne serez pas débité une seconde fois.",

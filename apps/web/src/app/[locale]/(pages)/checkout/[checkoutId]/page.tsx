@@ -399,6 +399,19 @@ export default async function page({
     eventCode = allRows[0]?.event?.event_code ?? "";
   }
 
+  // A paid checkout whose tickets could not be issued stays 'pending' (it
+  // keeps its seats so the retry can issue them): on a revisit, offer the
+  // retry instead of letting it read as an unpaid or expired checkout.
+  const latestAttempt =
+    sessionStatus === "pending"
+      ? await getLatestPaymentAttemptStatus(
+          supabase,
+          "checkout_session_id",
+          checkoutId,
+        )
+      : null;
+  const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+
   const basketResponse = await getUserPendingTicketCheckouts();
   const sessions = basketResponse.status === 200 ? basketResponse.sessions : [];
 
@@ -407,6 +420,13 @@ export default async function page({
       <div>
         <PageTitle>{t("orderSummary")}</PageTitle>
       </div>
+
+      {isFulfillmentStuck && latestAttempt && (
+        <FulfillmentRecoveryBanner
+          paymentAttemptId={latestAttempt.id}
+          initialMessage={t("yourPaymentWasSuccessfulTickets")}
+        />
+      )}
 
       {sessionStatus === "expired" && (
         <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">

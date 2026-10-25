@@ -4,8 +4,8 @@ purpose: List every status value of the payment, ticket, payout, credit and fiel
 audience: Engineering, finance admins
 scope: ticket_checkout, payment_attempt, transaction, ticket, attendance, payout, credit_reservation, credit_account, credit_adjustment_request, fieldops_commission, fieldops_payout_*
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -18,7 +18,7 @@ Statuses are `text` columns with CHECK constraints (there are **no Postgres enum
 
 ## `ticket_checkout.status`
 
-`pending → paid` (by `issue_tickets_for_checkout`) · `pending → expired` (by `expire_stale_ticket_checkouts`, unless a live attempt exists) · `pending → cancelled` (buyer cancels the session, `cancelTicketCheckoutSessionCore`) · `pending → failed` (payment terminal failure). `paid` is terminal; a cancelled ticket does not change its checkout row.
+`pending → paid` (by `issue_tickets_for_checkout`) · `pending → expired` (by `expire_stale_ticket_checkouts`, unless a live attempt exists or a paid attempt's issuance failed less than seven days ago) · `pending → cancelled` (buyer cancels the session, `cancelTicketCheckoutSessionCore`) · `pending → failed` (payment terminal failure). `paid` is terminal; a cancelled ticket does not change its checkout row.
 
 ## `payment_attempt.status`
 

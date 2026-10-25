@@ -18,6 +18,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-10-25 — Pay small small (paying for tickets in parts)
 
+- `finance/payments-and-ticketing-runbook.md` (1.4): a failed ticket issuance no longer restocks the reservation itself; the expiry sweep restocks it once (fixes seats counted twice, and oversold after a successful retry). Migration `20261025110000_checkout_sweep_holds_unissued_payments`: the expiry sweep keeps a paid but unissued checkout (`fulfillment_failed`) for seven days, so the retry can still issue it (`operations/scheduled-jobs.md` 1.7, `finance/state-machines.md` 1.1).
 - New: `architecture/ticket-plans.md` (1.0), `admin/ticket-plans.md` (1.0); help page `customers/paying-small-small` in five languages, built but not listed.
 - Registers: legal M1–M5 (`LEGAL_REVIEW_REQUIRED.md` 1.7) — part payments ahead of a sale, the plan terms (draft Terms of Sale wording in M2), holding buyers' money, refunds when a plan ends, and why a general top-up balance was not built (e-money, Act 987); decisions T1–T8 (`OPERATIONAL_DECISIONS_REQUIRED.md` 1.14), all open.
 - Migration `20261025100000_ticket_plans`: `ticket_plan_program_setting` (off, staff), `event_ticket_plan_setting`, `ticket_plan`, `ticket_plan_payment`; `ticket_checkout` status `on_plan` counted by the capacity rule; `payment_attempt.ticket_plan_id`; transaction provider `abonten_plan`; `issue_tickets_for_checkout` issues `on_plan` seats only for the plan's own settlement.
