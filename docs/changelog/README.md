@@ -21,6 +21,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - New: `architecture/search-engines.md` (1.0) — which public pages are offered to search engines and which are kept out, titles and descriptions, lower-case canonical event addresses, structured data (`@abonten/core/seo`), the sitemap (cities, host profiles, images), robots.txt (token links), `/manifest.webmanifest`, IndexNow (`apps/web/scripts/indexnow-submit.mjs`), owner steps.
 - Open item SEO1 (Search Console and Bing Webmaster Tools, founder) in `operations/open-items.md` (1.2); `finance/paystack-live-cutover.md` (1.4): remove the demo account from `utils/searchIndexing.ts` with the samples.
 - Updated `INDEX.md` (1.8), `architecture/README.md` (1.6), `web/README.md` (1.1); PROJECT.md §68; CLAUDE.md quick facts.
+- Same day: SEO1 closed — sitemap submitted in Google Search Console (Success, 42 pages) and Bing Webmaster Tools (imported from Search Console); empty city pages say noindex after Search Console refused one as a soft 404 (`architecture/search-engines.md` 1.0, `operations/open-items.md` 1.2).
 
 ## 2026-10-25 — Pay small small (paying for tickets in parts)
 
