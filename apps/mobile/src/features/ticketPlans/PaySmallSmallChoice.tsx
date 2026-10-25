@@ -85,7 +85,7 @@ export function PaySmallSmallChoice({
       {mode === "plan" ? (
         <View className="gap-1.5 rounded-xl bg-muted p-3.5">
           {terms.map((line) => (
-            <View key={line} className="flex-row gap-2">
+            <View key={line} className="flex-row items-start gap-2">
               <AppText variant="caption">•</AppText>
               <AppText variant="caption" className="flex-1">
                 {line}
