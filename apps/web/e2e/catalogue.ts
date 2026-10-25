@@ -16,7 +16,7 @@ export async function publicCatalogue(
 ): Promise<Catalogue> {
   const xml = await (await request.get("/sitemap.xml")).text();
   const catalogue: Catalogue = {
-    event: xml.match(/<loc>[^<]*(\/events\/[A-Z0-9]+)<\/loc>/)?.[1],
+    event: xml.match(/<loc>[^<]*(\/events\/[a-z0-9]+)<\/loc>/)?.[1],
     place: xml.match(/<loc>[^<]*(\/places\/[a-z0-9-]+)<\/loc>/)?.[1],
   };
   if (process.env.E2E_REQUIRE_CATALOGUE) {

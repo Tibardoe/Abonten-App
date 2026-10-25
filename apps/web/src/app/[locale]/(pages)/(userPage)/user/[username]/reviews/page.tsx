@@ -1,12 +1,22 @@
 import { getOwnedPlaceReviews } from "@/actions/getOwnedPlaceReviews";
 import { getUserReviews } from "@/actions/getUserReviews";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
+import { profileTabMetadata } from "@/userAccount/profileTabMetadata";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import UserReviewsTabs from "./UserReviewsTabs";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
+
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  return profileTabMetadata(params, "reviews");
+}
 
 export default async function page({
   params,

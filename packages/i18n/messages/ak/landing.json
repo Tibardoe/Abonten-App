@@ -6,5 +6,17 @@
   "explore": "Explore",
   "exploreEventsAndPlacesHere": "Explore events and places here",
   "findEventsAndPlacesNearYou": "Find events and places near you, get your tickets, and see what's on this week.",
-  "useMyCurrentLocation": "Use my current location"
+  "useMyCurrentLocation": "Use my current location",
+  "exploreACity": "Explore a city",
+  "exploreACityIntro": "What's on tonight, this weekend and this month, and the places worth going to.",
+  "eventsAndPlaces": "Events and places",
+  "whatYouCanDoOnAbonten": "What you can do on Abonten",
+  "findWhatsOn": "Find what's on",
+  "findWhatsOnBody": "Concerts, parties, festivals, comedy, food and more, near you or in any city.",
+  "exploreEvents": "Explore events",
+  "weeklyBody": "Our picks of the events and places worth your week.",
+  "seeThePicks": "See the picks",
+  "hostOnAbonten": "Host on Abonten",
+  "hostBody": "Create an event, sell tickets and check guests in from your phone, or list your place so people can find it.",
+  "startHosting": "Start hosting"
 }

@@ -4,8 +4,8 @@ purpose: One table of every known open item across the programme — what kind o
 audience: Founder, operations, engineering, legal counsel, compliance reviewer
 scope: Items surfaced by the documentation programme (2026-09-12) plus pre-existing register items that remain open; detail lives in the linked registers and specifications
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-04
+version: 1.2
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -54,6 +54,7 @@ Detail for each ID: legal items A–G in [../LEGAL_REVIEW_REQUIRED.md](../LEGAL_
 | SEC-003 | Postgres minor-version patch; Supabase Auth hardening toggles | Security | Pending (owner's dashboard action) | Founder | Dashboard confirmation | No | `../security/README.md` |
 | SEC-004 | Cron service-role JWT to Supabase Vault | Security | **Closed** — fixed 2026-09-04; on 2026-10-04 the job moved into the database and the edge function and its secrets were removed (S8) | Engineering | Migration `20261004100000` live | No | `../security/README.md` |
 | F1 / F3 | Payout cadence and minimum payout | Finance | Decision required | Finance | Recorded policy | No (help centre says no fixed turnaround) | `../finance/settlement-ledger-and-payouts.md` |
+| SEO1 | Google Search Console domain property, sitemap submitted, homepage indexing requested; Bing Webmaster Tools imported from Search Console | Release / Marketing | Pending (owner's accounts); the site side is live (sitemap, robots.txt, structured data, IndexNow key) | Business (founder) | Search Console shows the sitemap read and pages indexed | No — but until then search engines find the site only by chance | [../architecture/search-engines.md](../architecture/search-engines.md) §5 |
 | F2 | Paystack Transfers switch-on | Finance / Engineering | Decision required; live test pending | Founder / Finance | Documented low-value live transfer | No (manual payouts work) | `../security/payment-security.md` |
 | F6 / F7 | Reconciliation cadence; chargeback procedure | Finance | Decision required | Finance | Recorded routine | No | `../finance/README.md` |
 | W1 / W2 | Rewards launch audience and rule order | Product | Decision required | Founder | Decision; programme switched on | No (shadow mode) | `rewards-operations.md` |

@@ -1,5 +1,6 @@
 import AppShell from "@/app/AppShell";
 import { isLocale, locales } from "@/i18n/config";
+import { DEFAULT_SHARE_IMAGE } from "@/utils/defaultShareImage";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -46,23 +47,17 @@ export async function generateMetadata({
     description,
     // The link preview for any page that doesn't bring its own (events,
     // places and Weekly editions do): the brand over the homepage photo.
+    applicationName: "Abonten Hub",
     openGraph: {
       siteName: "Abonten Hub",
       type: "website",
       title,
       description,
-      images: [
-        {
-          url: "/assets/images/brand/og-default.jpg",
-          width: 1200,
-          height: 630,
-          alt: "Abonten",
-        },
-      ],
+      images: [DEFAULT_SHARE_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
-      images: ["/assets/images/brand/og-default.jpg"],
+      images: [DEFAULT_SHARE_IMAGE.url],
     },
     // favicon.ico holds hand-tuned 16/24/32 px drawings of the mark (plus
     // 48 px); browsers that take SVG use the vector Micro mark instead.

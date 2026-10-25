@@ -405,5 +405,9 @@
   "stepOf": "Step {step} of {total}",
   "ticketTypeNumber": "Ticket type {number}",
   "exploreHeading": "{filter, select, happening_today {Happening today} happening_this_week {Happening this week} happening_this_month {Happening this month} top_rated_organizers {Top-rated organizers} around_you {Around you} other {By category}}",
-  "weCouldnTFindAnyEventsFiltered": "We couldn't find any {eventCategory} events in {location} matching your filters. Try adjusting or clearing them."
+  "weCouldnTFindAnyEventsFiltered": "We couldn't find any {eventCategory} events in {location} matching your filters. Try adjusting or clearing them.",
+  "metaTitle": "{title} · {date}",
+  "metaTitleTickets": "{title} tickets · {date}",
+  "metaDescription": "{date} · {venue}. {about}",
+  "metaDescriptionNoAbout": "{date} · {venue}. Details and directions on Abonten Hub."
 }

@@ -4,8 +4,8 @@ purpose: Product-level documentation of the abontenhub.com web app — navigatio
 audience: Product, support, QA, engineering
 scope: apps/web (end-user site; the API it hosts is covered in architecture/)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -19,7 +19,7 @@ Public help for end users lives at `/help` (source `apps/web/src/content/help/`)
 ## Navigation
 
 - **Header** (`Header.tsx`): logo, location chip (`/explore/<location>`), search, profile menu, hamburger → **SideBar** (Create, Messages, Rewards, Finances, Field work when applicable, Settings, sign in/out, legal + help links via `MobileFooter`).
-- **Desktop footer** (`DesktopFooter.tsx`): official social links (X, Instagram, TikTok) and Terms / Privacy / Cookies / Security / Help.
+- **Desktop footer** (`DesktopFooter.tsx`): official social links (X, Instagram, TikTok) and Terms / Privacy / Cookies / Security / Help. The homepage shows it on every screen size (`everywhere`), under its list of launched cities.
 - **Mobile nav bar** (`MobileNavBar.tsx`) on small screens; footer moves into the side menu.
 - Layout: `(pages)/layout.tsx` wraps every page except the landing group, `/account-restricted`, and `/api/*`.
 
@@ -39,6 +39,10 @@ Public (allow-listed in `config/supabase/middleware.ts`): `/`, `/events/**`, `/p
 | Field team | `/field/**`, `/consent/field/[token]` (public owner consent) |
 | Legal / help | `/legal`, `/legal/{terms,privacy,cookies,security}`, `/help`, `/help/[section]/[slug]`; redirects `/terms`, `/privacy`, `/cookies` |
 | Legacy | `/plans`, `/settings/membership` → redirect to settings; `/admin/place-claims` (superseded by the console) |
+
+## Search engines
+
+What each public page tells search engines (titles, canonical addresses, structured data, sitemap, robots.txt) and which pages stay out: [../architecture/search-engines.md](../architecture/search-engines.md).
 
 ## Responsive behaviour
 

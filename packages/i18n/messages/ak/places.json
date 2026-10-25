@@ -495,5 +495,7 @@
   "placeDidntRespond": "{name} didn't respond before this date. Nothing was reserved.",
   "ownerDidntRespond": "The owner didn't respond before this date. Nothing was reserved.",
   "stepOf": "Step {step} of {total}",
-  "claimReviewNote": "{documents, select, yes {An admin will review your request and your documents. You'll be notified once it's been looked at — ownership only changes after an approval.} other {An admin will review your request. You'll be notified once it's been looked at — ownership only changes after an approval.}}"
+  "claimReviewNote": "{documents, select, yes {An admin will review your request and your documents. You'll be notified once it's been looked at — ownership only changes after an approval.} other {An admin will review your request. You'll be notified once it's been looked at — ownership only changes after an approval.}}",
+  "metaTitle": "{name} · {category}",
+  "metaTitleInCity": "{name} · {category} in {city}"
 }

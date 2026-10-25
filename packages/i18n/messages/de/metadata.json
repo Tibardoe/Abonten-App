@@ -1,4 +1,8 @@
 {
   "siteDescription": "Entdecke Veranstaltungen und Orte in deiner Nähe, kaufe Tickets und finde dein nächstes Erlebnis auf Abonten Hub.",
-  "siteTitle": "Abonten Hub | Menschen mit Erlebnissen verbinden"
+  "siteTitle": "Abonten Hub | Menschen mit Erlebnissen verbinden",
+  "homeTitle": "Abonten Hub: Events, Tickets und Ausgehtipps",
+  "homeTitleIn": "Abonten Hub · {country}: Events, Tickets und Ausgehtipps",
+  "homeDescription": "Konzerte, Partys, Festivals, Comedy, Essen und Nachtleben in deiner Nähe. Sieh, was diese Woche los ist, hol dir deine Tickets und entdecke Orte zum Ausgehen.",
+  "homeDescriptionIn": "{country}: Konzerte, Partys, Festivals, Comedy, Essen und Nachtleben. Sieh, was diese Woche los ist, hol dir deine Tickets und entdecke Orte zum Ausgehen."
 }

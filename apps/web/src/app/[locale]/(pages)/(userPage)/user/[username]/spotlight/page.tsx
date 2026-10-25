@@ -1,5 +1,7 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid";
+import { profileTabMetadata } from "@/userAccount/profileTabMetadata";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -8,6 +10,14 @@ import { getTranslations } from "next-intl/server";
 
 // An organizer's Spotlights. The grid hides itself while Spotlight is off
 // for the visitor, so this tab is harmless before rollout.
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  return profileTabMetadata(params, "spotlight");
+}
+
 export default async function page({
   params,
 }: {

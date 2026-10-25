@@ -1,4 +1,8 @@
 {
   "siteTitle": "Abonten Hub | Connecting people to experiences",
-  "siteDescription": "Discover events and places around you, buy tickets and find your next experience on Abonten Hub."
+  "siteDescription": "Discover events and places around you, buy tickets and find your next experience on Abonten Hub.",
+  "homeTitle": "Abonten Hub: events, tickets and places to go",
+  "homeTitleIn": "Abonten Hub: events, tickets and places to go in {country}",
+  "homeDescription": "Find concerts, parties, festivals, comedy, food and nightlife near you. See what's on this week, get your tickets and discover places to go.",
+  "homeDescriptionIn": "Find concerts, parties, festivals, comedy, food and nightlife in {country}. See what's on this week, get your tickets and discover places to go."
 }

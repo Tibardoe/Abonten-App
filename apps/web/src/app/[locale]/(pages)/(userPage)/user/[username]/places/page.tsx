@@ -1,6 +1,8 @@
 import getOrganizerPlaces from "@/actions/getOrganizerPlaces";
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import CreatePlaceButton from "@/places/atoms/CreatePlaceButton";
+import { profileTabMetadata } from "@/userAccount/profileTabMetadata";
+import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import UserPlacesList from "./UserPlacesList";
@@ -36,6 +38,14 @@ function OtherEmptyState() {
 // getOrganizerPlaces now accepts an optional username (mirrors
 // getUserPosts) so this page can show any profile's public places, not
 // just the signed-in viewer's own -- see getOrganizerPlaces.ts.
+export function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  return profileTabMetadata(params, "places");
+}
+
 export default async function page({
   params,
 }: {

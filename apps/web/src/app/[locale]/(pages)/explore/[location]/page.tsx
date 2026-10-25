@@ -1,3 +1,4 @@
+import JsonLd from "@/components/atoms/JsonLd";
 import RememberExploreArea from "@/components/atoms/RememberExploreArea";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
@@ -8,11 +9,21 @@ import ExploreTabs from "@/places/organisms/ExploreTabs";
 import PlacesTabContent from "@/places/organisms/PlacesTabContent";
 import AccountSetupReminder from "@/settings/organisms/AccountSetupReminder";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { indexedCityForSlug } from "@/utils/searchIndexing";
 import WeeklyTeaser from "@/weekly/organisms/WeeklyTeaser";
 import { undoSlug } from "@abonten/core/geerateSlug";
+import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
+import { cityPath } from "@abonten/core/seo/paths";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
+
+// The city a /explore/<slug> address names, when it is a launched city of
+// a live market; anything else typed after /explore/ (a street, "current
+// location") is a working page but not one to show in search results.
+const cityForSlug = cache((location: string) =>
+  indexedCityForSlug(decodeURIComponent(location)),
+);
 
 // One canonical URL per location: the filter, tab and coordinate query
 // parameters change what is shown but not what the page is about.
@@ -24,13 +35,18 @@ export async function generateMetadata({
   const t = await getTranslations("explore");
 
   const { location } = await params;
-  const label = undoSlug(decodeURIComponent(location));
+  const city = await cityForSlug(location);
+  const label = city?.name ?? undoSlug(decodeURIComponent(location));
   return {
     title: t("eventsAndPlacesIn", { label: label }),
     description: t("discoverUpcomingEventsRestaurantsNightlifeAnd", {
       label: label,
     }),
-    alternates: languageAlternates(`/explore/${location}`, await getLocale()),
+    alternates: languageAlternates(
+      city ? cityPath(city.slug) : `/explore/${location}`,
+      await getLocale(),
+    ),
+    ...(city ? {} : { robots: { index: false, follow: true } }),
   };
 }
 
@@ -107,10 +123,35 @@ export default async function page({
       : null;
 
   const { lat, lng } = coordsFromQuery ?? (await geocodeAddress(safeLocation));
+  const [city, tn] = await Promise.all([
+    cityForSlug(safeLocation),
+    getTranslations("navigation"),
+  ]);
 
   return (
     <section className="space-y-2">
-      <h1 className="text-xl md:text-2xl font-bold">{t("explore")}</h1>
+      {/* A launched city's page says which city it is and what is in it,
+          for the people and the search engines that arrive here first. */}
+      {city ? (
+        <>
+          <JsonLd
+            data={jsonLdGraph([
+              breadcrumbJsonLd([
+                { name: tn("home"), path: "/" },
+                { name: city.name, path: cityPath(city.slug) },
+              ]),
+            ])}
+          />
+          <h1 className="text-xl md:text-2xl font-bold">
+            {t("eventsAndPlacesIn", { label: city.name })}
+          </h1>
+          <p className="max-w-2xl text-sm text-muted-foreground text-pretty md:text-base">
+            {t("cityIntro", { city: city.name })}
+          </p>
+        </>
+      ) : (
+        <h1 className="text-xl md:text-2xl font-bold">{t("explore")}</h1>
+      )}
 
       <LocationAndFilterSection />
 

@@ -166,5 +166,6 @@
   "pasteItIntoYourRideApp": "Collez-la dans votre application de transport",
   "addressCopied": "Adresse copiée",
   "couldnTOpenMaps": "Impossible d'ouvrir les cartes",
-  "noMapsAppIsAvailableOn": "Aucune application de cartes n'est disponible sur cet appareil."
+  "noMapsAppIsAvailableOn": "Aucune application de cartes n'est disponible sur cet appareil.",
+  "cityIntro": "Concerts, soirées, festivals, gastronomie et vie nocturne à {city} : voyez ce qui se passe, prenez vos billets et trouvez où sortir."
 }

@@ -1,4 +1,8 @@
 {
   "siteDescription": "Hwehwɛ nsɛm ne mmeae a ɛbɛn wo, tɔ tekiti na hu w'osuahu foforo wɔ Abonten Hub so.",
-  "siteTitle": "Abonten Hub | Yɛka nnipa bɔ osuahu ho"
+  "siteTitle": "Abonten Hub | Yɛka nnipa bɔ osuahu ho",
+  "homeTitle": "Abonten Hub: events, tickets and places to go",
+  "homeTitleIn": "Abonten Hub: events, tickets and places to go in {country}",
+  "homeDescription": "Find concerts, parties, festivals, comedy, food and nightlife near you. See what's on this week, get your tickets and discover places to go.",
+  "homeDescriptionIn": "Find concerts, parties, festivals, comedy, food and nightlife in {country}. See what's on this week, get your tickets and discover places to go."
 }

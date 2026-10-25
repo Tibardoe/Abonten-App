@@ -6,5 +6,17 @@
   "explore": "Explorar",
   "exploreEventsAndPlacesHere": "Explora eventos y lugares aquí",
   "findEventsAndPlacesNearYou": "Encuentra eventos y lugares cerca de ti, consigue tus entradas y mira qué hay esta semana.",
-  "useMyCurrentLocation": "Usar mi ubicación actual"
+  "useMyCurrentLocation": "Usar mi ubicación actual",
+  "exploreACity": "Explora una ciudad",
+  "exploreACityIntro": "Qué hay esta noche, este fin de semana y este mes, y los lugares que merecen la pena.",
+  "eventsAndPlaces": "Eventos y lugares",
+  "whatYouCanDoOnAbonten": "Qué puedes hacer en Abonten",
+  "findWhatsOn": "Descubre qué hay",
+  "findWhatsOnBody": "Conciertos, fiestas, festivales, comedia, comida y mucho más, cerca de ti o en cualquier ciudad.",
+  "exploreEvents": "Explorar eventos",
+  "weeklyBody": "Nuestra selección de los eventos y lugares que merecen tu semana.",
+  "seeThePicks": "Ver la selección",
+  "hostOnAbonten": "Organiza en Abonten",
+  "hostBody": "Crea un evento, vende entradas y registra a tus invitados desde el móvil, o publica tu local para que la gente lo encuentre.",
+  "startHosting": "Empieza a organizar"
 }

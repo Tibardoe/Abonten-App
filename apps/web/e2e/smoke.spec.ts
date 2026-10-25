@@ -35,6 +35,9 @@ test("robots.txt and sitemap.xml are public and consistent", async ({
   expect(robots.status()).toBe(200);
   const body = await robots.text();
   expect(body).toContain("Disallow: /checkout/");
+  // Links that carry a private token are never fetched by crawlers.
+  expect(body).toContain("Disallow: /sos/");
+  expect(body).toContain("Disallow: /trusted/");
   expect(body).toContain("Sitemap:");
 
   const sitemap = await request.get("/sitemap.xml");
