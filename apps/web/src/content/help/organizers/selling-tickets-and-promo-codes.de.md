@@ -2,7 +2,7 @@
 title: Tickets verkaufen, Promo-Codes und Promoter-Provision
 summary: Wie Verkäufe und Reservierungen ablaufen, Promo-Codes anlegen, eine Promoter-Provision anbieten und deine Verkaufsstatistiken lesen.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-10-29
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,7 @@ owner: Abonten Hub
 
 1. Ein Käufer wählt Tickets; diese werden während des Bezahlens **30 Minuten lang reserviert**. Reservierte, aber nicht bezahlte Tickets gehen nach Ablauf der Reservierung zurück in den Bestand.
 2. Die Zahlung wird über Paystack eingezogen und von Abonten geprüft.
-3. Die Tickets werden für den Käufer ausgestellt, und **100 % deines Ticketpreises** werden für dich als ausstehende Einnahme verbucht.
+3. Die Tickets werden für den Käufer ausgestellt, und **100 % deines Ticketpreises** werden für dich als ausstehende Einnahme verbucht. Du bekommst für jede Bestellung eine Benachrichtigung.
 4. Der Käufer erhält seine Tickets in der App und per E-Mail.
 
 Käufer können höchstens 50 Tickets einer Art und 100 Tickets pro Bestellung reservieren, und pro Event jeweils nur eine Bestellung.
@@ -35,6 +35,7 @@ Beides ist optional und wirkt zusammen:
 
 - **Kostenlose Events haben keine Promo-Codes.** Ein Code senkt einen Ticketpreis, und ein kostenloses Ticket hat keinen; deshalb gibt es die Option bei kostenlosen Events nicht. Machst du ein kostenpflichtiges Event kostenlos, werden seine Codes entfernt: Nie genutzte Codes werden gelöscht, genutzte deaktiviert (ihr Verlauf bleibt erhalten). Mach das Event wieder kostenpflichtig, um Codes hinzuzufügen.
 
+- Füge Codes beim Erstellen des Events hinzu oder jederzeit später unter **Promo-Codes**: einen Code, einen Rabatt von 1 bis 100 %, wie oft er genutzt werden kann (oder unbegrenzt) und den letzten gültigen Tag.
 - Ein Code gewährt einen **prozentualen Rabatt** auf den Ticketpreis, nur für dein Event.
 - Du kannst festlegen, wie oft er genutzt werden darf, und ihn später bearbeiten oder löschen; das Löschen wirkt sich nicht auf bereits damit gekaufte Tickets aus.
 - Käufer geben den Code an der Kasse ein; der Rabatt wird vor dem Bezahlen angezeigt. Abonten begrenzt, wie schnell ein Konto Codes ausprobieren kann, damit sie nicht erraten werden.

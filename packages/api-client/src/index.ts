@@ -32,6 +32,8 @@ export type {
   HighlightPlaybackBody,
   HighlightPlaybackResult,
   DeleteMessageBody,
+  CreatePromoCodeBody,
+  CreatePromoCodeResult,
   DeletePromoCodeResult,
   DeleteEventDraftResult,
   DeletePlaceDraftResult,

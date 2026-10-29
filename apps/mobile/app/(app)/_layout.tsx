@@ -21,6 +21,11 @@ import { Platform } from "react-native";
 // Each screen draws its own <AppHeader>, so the stack header stays hidden.
 export const unstable_settings = { anchor: "(tabs)" };
 
+// The screen's identity for dangerouslySingular: one screen per listing.
+function idParam(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 function StackHost() {
   // Register this device for push while the user is inside the app.
   usePushRegistration();
@@ -62,17 +67,15 @@ function StackHost() {
           showed on the other event, and Back skipped the first one. */}
       <Stack.Screen
         name="event/[id]"
-        getId={({ params }) => (params as { id?: string } | undefined)?.id}
+        dangerouslySingular={(_, params) => idParam(params.id)}
       />
       <Stack.Screen
         name="place/[id]"
-        getId={({ params }) => (params as { id?: string } | undefined)?.id}
+        dangerouslySingular={(_, params) => idParam(params.id)}
       />
       <Stack.Screen
         name="user/[username]"
-        getId={({ params }) =>
-          (params as { username?: string } | undefined)?.username
-        }
+        dangerouslySingular={(_, params) => idParam(params.username)}
       />
       <Stack.Screen
         name="event/new"

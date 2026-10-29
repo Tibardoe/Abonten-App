@@ -12,6 +12,7 @@ import { Pressable, View } from "react-native";
 
 const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   ticket: "ticket-outline",
+  ticket_sale: "cash-outline",
   event: "calendar-outline",
   event_featured: "sparkles-outline",
   place: "storefront-outline",

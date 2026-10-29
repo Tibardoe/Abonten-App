@@ -804,6 +804,14 @@
       "body": "{hasTitle, select, yes {Your ticket for {title} is confirmed.} other {Your ticket is confirmed.}}",
       "title": "Ticket confirmed"
     },
+    "ticket_sold": {
+      "title": "New ticket sale",
+      "body": "{hasTitle, select, yes {Someone bought {count, plural, one {# ticket} other {# tickets}} for {title}.} other {Someone bought {count, plural, one {# ticket} other {# tickets}} for your event.}}"
+    },
+    "ticket_reserved": {
+      "title": "Free ticket reserved",
+      "body": "{hasTitle, select, yes {Someone reserved {count, plural, one {a free ticket} other {# free tickets}} for {title}.} other {Someone reserved {count, plural, one {a free ticket} other {# free tickets}} for your event.}}"
+    },
     "verification_approved": {
       "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {This place} other {Your organizer profile}}}} is now verified on Abonten.",
       "title": "Verified"
@@ -1276,5 +1284,12 @@
   "identity": {
     "badgeLabel": "ID checked",
     "badgeExplanation": "Abonten checked this person's government ID and a live selfie. It doesn't mean Abonten vouches for them, their events or their places."
+  },
+  "promoDraft": {
+    "code": "Enter a code of up to {max} characters.",
+    "discount": "Enter a discount from 1 to 100%.",
+    "maxUses": "Enter how many times it can be used, or leave it blank for no limit.",
+    "maxUsesRequired": "Enter how many times it can be used.",
+    "expiry": "Choose the last day the code works."
   }
 }

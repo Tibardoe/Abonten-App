@@ -1,5 +1,7 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { DateRangeField } from "@/components/explore/DateRangeField";
 import {
+  useCreatePromoCode,
   useDeletePromoCode,
   useEventPromoCodes,
   useUpdatePromoCode,
@@ -10,6 +12,10 @@ import { settleEnvelope } from "@/lib/envelope";
 import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
 import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
+import {
+  promoCodeDraftGap,
+  promoCodeDraftGapMessage,
+} from "@abonten/core/promoCodeDraft";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -292,6 +298,109 @@ function PromoCodeCard({
   );
 }
 
+// A new code on this event. The expiry is a day (the code works through
+// it, in the event's own calendar), sent as YYYY-MM-DD so the phone's zone
+// never moves it.
+function AddPromoCodeCard({ eventId }: { eventId: string }) {
+  const t = useTranslations("manage");
+  const tc = useTranslations("core");
+
+  const toast = useToast();
+  const create = useCreatePromoCode(eventId);
+  const [code, setCode] = useState("");
+  const [discount, setDiscount] = useState("");
+  const [maxUses, setMaxUses] = useState("");
+  const [expiry, setExpiry] = useState<string | null>(null);
+
+  const gap = promoCodeDraftGap({ code, discount, maxUses, expiry });
+  const touched = code !== "" || discount !== "" || maxUses !== "" || !!expiry;
+
+  const add = () => {
+    if (gap || !expiry) return;
+    create.mutate(
+      {
+        promoCode: code,
+        discountPercentage: Number(discount),
+        maxUses: maxUses.trim() === "" ? null : Number(maxUses),
+        expiresAt: expiry,
+      },
+      {
+        onSuccess: (res) => {
+          if (res.status === 200) {
+            setCode("");
+            setDiscount("");
+            setMaxUses("");
+            setExpiry(null);
+            toast.success(res.message);
+          } else {
+            toast.error(t("couldnTAdd"), { description: res.message });
+          }
+        },
+        onError: () =>
+          toast.error(t("couldnTAdd"), {
+            description: t("pleaseTryAgainInAMoment"),
+          }),
+      },
+    );
+  };
+
+  return (
+    <View className="gap-3 rounded-xl border border-dashed border-border bg-card p-4">
+      <AppText variant="label">{t("addAPromoCode")}</AppText>
+      <Field label={t("promoCode")}>
+        <Input
+          value={code}
+          onChangeText={setCode}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          placeholder={t("eGEarlybird")}
+        />
+      </Field>
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Field label={t("discount2")}>
+            <Input
+              keyboardType="number-pad"
+              value={discount}
+              onChangeText={setDiscount}
+              placeholder="10"
+            />
+          </Field>
+        </View>
+        <View className="flex-1">
+          <Field label={t("maxUses")} hint={t("blankUnlimited")}>
+            <Input
+              keyboardType="number-pad"
+              value={maxUses}
+              onChangeText={setMaxUses}
+              placeholder={t("unlimited")}
+            />
+          </Field>
+        </View>
+      </View>
+      <Field label={t("lastDayItWorks")}>
+        <DateRangeField
+          mode="single"
+          start={expiry}
+          end={null}
+          onChange={(r) => setExpiry(r.start)}
+        />
+      </Field>
+      <Button
+        title={create.isPending ? t("adding") : t("add")}
+        onPress={add}
+        loading={create.isPending}
+        disabled={!!gap || create.isPending}
+      />
+      {touched && gap ? (
+        <AppText variant="caption" accessibilityLiveRegion="polite">
+          {promoCodeDraftGapMessage(tc, gap)}
+        </AppText>
+      ) : null}
+    </View>
+  );
+}
+
 export default function EventPromoCodesScreen() {
   const t = useTranslations("manage");
 
@@ -307,10 +416,11 @@ export default function EventPromoCodesScreen() {
     enabled: !!id,
   });
   const isFree =
-    context.data?.status === 200 &&
-    (context.data.data.event.ticket_type ?? []).some(
-      (t) => t.type === FREE_TICKET_TYPE,
-    );
+    (q.data?.status === 200 && q.data.freeEvent === true) ||
+    (context.data?.status === 200 &&
+      (context.data.data.event.ticket_type ?? []).some(
+        (t) => t.type === FREE_TICKET_TYPE,
+      ));
 
   const result = q.data;
   const codes = result && result.status === 200 ? result.data : [];
@@ -328,6 +438,10 @@ export default function EventPromoCodesScreen() {
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
     >
       <AppText variant="screenTitle">{t("promoCodes")}</AppText>
+
+      {result?.status === 200 && !isFree && context.isSuccess ? (
+        <AddPromoCodeCard eventId={id} />
+      ) : null}
 
       {forbidden ? (
         <AppText className="text-center text-muted-foreground">

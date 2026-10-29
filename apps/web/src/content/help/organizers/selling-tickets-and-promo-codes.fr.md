@@ -2,7 +2,7 @@
 title: Vendre des billets, codes promo et commission des promoteurs
 summary: Comment fonctionnent les ventes et les réservations, créer des codes promo, proposer une commission aux promoteurs et lire les statistiques de vos ventes.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-10-29
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,7 @@ owner: Abonten Hub
 
 1. Un acheteur choisit des billets ; ils sont **réservés pendant 30 minutes** pendant qu'il paie. Les billets réservés mais non payés reviennent dans le stock à l'expiration de la réservation.
 2. Le paiement est encaissé par Paystack et vérifié par Abonten.
-3. Les billets sont émis pour l'acheteur, et **100 % du prix de votre billet** est enregistré comme gain en attente pour vous.
+3. Les billets sont émis pour l'acheteur, et **100 % du prix de votre billet** est enregistré comme gain en attente pour vous. Vous recevez une notification pour chaque commande.
 4. L'acheteur reçoit ses billets dans l'application et par e-mail.
 
 Un acheteur peut réserver au plus 50 billets d'un même type et 100 billets par commande, et une seule commande par événement à la fois.
@@ -35,6 +35,7 @@ Ouvrez votre événement › **Codes promo** (site web : Gérer › Événements
 
 - **Les événements gratuits n'ont pas de codes promo.** Un code réduit le prix d'un billet, et un billet gratuit n'en a pas ; l'option n'est donc pas proposée pour un événement gratuit. Rendre gratuit un événement payant retire ses codes : les codes jamais utilisés sont supprimés et ceux déjà utilisés sont désactivés (leur historique est conservé). Rendez l'événement de nouveau payant pour ajouter des codes.
 
+- Ajoutez des codes en créant l'événement, ou à tout moment ensuite dans **Codes promo** : un code, une réduction de 1 à 100 %, le nombre d'utilisations possibles (ou aucune limite) et le dernier jour de validité.
 - Un code applique une **réduction en pourcentage** sur le prix du billet, pour votre événement uniquement.
 - Vous pouvez fixer combien de fois il peut être utilisé, et le modifier ou le supprimer plus tard ; le supprimer n'a aucun effet sur les billets déjà achetés avec.
 - Les acheteurs saisissent le code au moment du paiement ; la réduction s'affiche avant qu'ils paient. Abonten limite la vitesse à laquelle un compte peut essayer des codes, pour empêcher de les deviner.

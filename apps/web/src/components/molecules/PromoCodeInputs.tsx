@@ -1,4 +1,8 @@
 import { formatPercent } from "@abonten/core/i18n/format";
+import {
+  promoCodeDraftGap,
+  promoCodeDraftGapMessage,
+} from "@abonten/core/promoCodeDraft";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import React from "react";
@@ -16,8 +20,10 @@ function combineDateAndTime(day: Date, time: Date): Date {
 
 // Expiry is a cutoff, not a start -- defaulting to end of day (23:59) reads
 // more naturally than midnight ("expires on Aug 20" implies valid through
-// that day, not expiring the instant it begins). Only seeded once the
-// organizer explicitly opens the time field, same as the event date editor.
+// that day, not expiring the instant it begins). Seeded when the organizer
+// opens the time field, and used when they never do: the code works
+// through its whole last day either way (promoExpiryForStorage keeps the
+// day), so the time is never required.
 function endOfDay(): Date {
   const date = new Date();
   date.setHours(23, 59, 0, 0);
@@ -50,6 +56,7 @@ export default function PromoCodeInputs({
 }: PromoCodeInputProps) {
   const locale = useLocale();
   const t = useTranslations("common");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const [promoCode, setPromoCode] = useState("");
@@ -77,16 +84,25 @@ export default function PromoCodeInputs({
     }[]
   >(initialPromoCodes ?? []);
 
+  const gap = promoCodeDraftGap(
+    {
+      code: promoCode,
+      discount: discount === null ? "" : String(discount),
+      maxUses: maximumUse === null ? "" : String(maximumUse),
+      expiry: expiryDate,
+    },
+    { maxUsesRequired: true },
+  );
+  const touched =
+    promoCode !== "" ||
+    discount !== null ||
+    maximumUse !== null ||
+    !!expiryDate;
+
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
 
-    if (
-      promoCode &&
-      maximumUse !== null &&
-      discount !== null &&
-      expiryDate &&
-      expiryTime
-    ) {
+    if (!gap && maximumUse !== null && discount !== null && expiryDate) {
       // Codes are event-scoped and case-insensitive server-side (normalized
       // upper/trim) -- catch an obvious same-session duplicate immediately
       // instead of waiting for the DB round trip at final submit.
@@ -106,7 +122,7 @@ export default function PromoCodeInputs({
           promoCode: promoCode,
           maximumUse: maximumUse,
           discount: discount,
-          expiryDate: combineDateAndTime(expiryDate, expiryTime),
+          expiryDate: combineDateAndTime(expiryDate, expiryTime ?? endOfDay()),
         },
       ];
 
@@ -165,7 +181,7 @@ export default function PromoCodeInputs({
             type="number"
             min={0}
             max={100}
-            placeholder="discount"
+            placeholder={t("discount4")}
             value={discount ?? ""}
             onChange={(e) => setDiscount(Number(e.target.value))}
           />
@@ -193,16 +209,15 @@ export default function PromoCodeInputs({
           type="button"
           className="w-full"
           onClick={handleClick}
-          disabled={
-            !promoCode ||
-            maximumUse === null ||
-            !expiryDate ||
-            !expiryTime ||
-            discount === null
-          }
+          disabled={!!gap}
         >
           {t("add")}
         </Button>
+        {touched && gap ? (
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {promoCodeDraftGapMessage(tc, gap)}
+          </p>
+        ) : null}
       </div>
 
       {multiplePromoCodes.length > 0 && (

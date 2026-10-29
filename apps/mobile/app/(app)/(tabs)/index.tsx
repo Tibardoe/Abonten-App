@@ -7,6 +7,7 @@ import {
   useTabBarOverlap,
 } from "@/components/app/GlassTabBar";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { PendingCheckoutBanner } from "@/components/checkout/PendingCheckoutBanner";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { AreaCoverageCard } from "@/components/explore/AreaCoverageCard";
 import { AreaSuggestionCard } from "@/components/explore/AreaSuggestionCard";
@@ -403,6 +404,9 @@ export default function Explore() {
         featuredEvents={eventSliders.data.featured}
         featuredPlaces={placeSliders.data.featured}
       />
+
+      {/* Tickets held for a checkout left unfinished. */}
+      <PendingCheckoutBanner className="mx-4 mt-4" />
 
       {/* Signed-in, setup unfinished, not put away recently. */}
       <AccountSetupCard className="mx-4 mt-4" />

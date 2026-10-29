@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-29 — Pilot follow-ups
+
+- Help `organizers/selling-tickets-and-promo-codes` (five languages): promo codes can be added after the event is created; organizers get a notification for each order.
+- PROJECT.md §69: add a promo code to an existing event (web + app + `POST /api/mobile/organizer/events/:eventId/promo-codes`), `ticket_sold` / `ticket_reserved` notices to organizers, booking notices open the Bookings tab, the app's held-checkout banner, header sign-in returns to the page.
+
 ## 2026-10-25 — Search engines (SEO)
 
 - New: `architecture/search-engines.md` (1.0) — which public pages are offered to search engines and which are kept out, titles and descriptions, lower-case canonical event addresses, structured data (`@abonten/core/seo`), the sitemap (cities, host profiles, images), robots.txt (token links), `/manifest.webmanifest`, IndexNow (`apps/web/scripts/indexnow-submit.mjs`), owner steps.

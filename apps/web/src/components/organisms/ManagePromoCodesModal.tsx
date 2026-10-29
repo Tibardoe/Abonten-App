@@ -12,6 +12,7 @@ import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import AddPromoCodeForm from "../molecules/AddPromoCodeForm";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
 type ManagePromoCodesModalProps = {
@@ -51,6 +52,7 @@ export default function ManagePromoCodesModal({
   });
 
   const promoCodes = response?.status === 200 ? response.data : [];
+  const freeEvent = response?.status === 200 && response.freeEvent;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
@@ -142,12 +144,24 @@ export default function ManagePromoCodesModal({
             </button>
           </div>
 
+          {response?.status === 200 ? (
+            freeEvent ? (
+              <p className="text-sm text-muted-foreground">
+                {t("promoCodesArenTAvailableOn")}
+              </p>
+            ) : (
+              <AddPromoCodeForm eventId={eventId} onAdded={invalidate} />
+            )
+          ) : null}
+
           {isLoading ? (
             <p className="text-sm text-muted-foreground">{t("loading")}</p>
           ) : promoCodes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              {t("thisEventHasNoPromoCodes")}
-            </p>
+            freeEvent ? null : (
+              <p className="text-sm text-muted-foreground">
+                {t("thisEventHasNoPromoCodes")}
+              </p>
+            )
           ) : (
             <ul className="space-y-3">
               {promoCodes.map((code) => (

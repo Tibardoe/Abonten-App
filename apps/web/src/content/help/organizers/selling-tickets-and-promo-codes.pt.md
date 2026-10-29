@@ -2,7 +2,7 @@
 title: Vender bilhetes, códigos promocionais e comissão de promotores
 summary: Como funcionam as vendas e as reservas, criar códigos promocionais, oferecer uma comissão a promotores e ler as estatísticas das suas vendas.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-10-29
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,7 @@ owner: Abonten Hub
 
 1. Quem compra escolhe os bilhetes; essas unidades ficam **reservadas durante 30 minutos** enquanto paga. Os bilhetes reservados mas não pagos voltam a ficar disponíveis quando a reserva expira.
 2. O pagamento é cobrado pela Paystack e verificado pelo Abonten.
-3. Os bilhetes são emitidos a quem comprou e **100% do preço do seu bilhete** fica registado como ganho pendente a seu favor.
+3. Os bilhetes são emitidos a quem comprou e **100% do preço do seu bilhete** fica registado como ganho pendente a seu favor. Recebe uma notificação por cada encomenda.
 4. Quem comprou recebe os bilhetes na aplicação e por e-mail.
 
 Cada pessoa pode reservar no máximo 50 bilhetes do mesmo tipo e 100 por encomenda, e uma única encomenda por evento de cada vez.
@@ -35,6 +35,7 @@ Abra o seu evento › **Códigos promocionais** (website: Gerir › Eventos › 
 
 - **Os eventos gratuitos não têm códigos promocionais.** Um código desconta o preço de um bilhete, e um bilhete gratuito não tem preço, por isso a opção não aparece num evento gratuito. Tornar gratuito um evento pago remove os seus códigos: os nunca usados são eliminados e os usados são desativados (o histórico mantém-se). Volte a tornar o evento pago para acrescentar códigos.
 
+- Adicione códigos ao criar o evento, ou a qualquer momento depois em **Códigos promocionais**: um código, um desconto de 1 a 100%, quantas vezes pode ser usado (ou sem limite) e o último dia em que funciona.
 - Um código aplica um **desconto percentual** ao preço do bilhete, só para o seu evento.
 - Pode definir quantas vezes pode ser usado, e editá-lo ou eliminá-lo mais tarde; eliminá-lo não afeta os bilhetes já comprados com ele.
 - Quem compra introduz o código no pagamento; o desconto aparece antes de pagar. O Abonten limita a rapidez com que uma conta pode experimentar códigos, para impedir que sejam adivinhados.

@@ -113,6 +113,8 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   orphan_refund: n("orphan_refund"),
   // Tickets and promotions (web server utilities)
   ticket_confirmed: n("ticket_confirmed"),
+  ticket_sold: n("ticket_sold"),
+  ticket_reserved: n("ticket_reserved"),
   promotion_started_event: n("promotion_started_event"),
   promotion_started_place: n("promotion_started_place"),
   promotion_started_generic: n("promotion_started_generic"),

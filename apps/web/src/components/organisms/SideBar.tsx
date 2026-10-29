@@ -14,6 +14,7 @@ import {
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useSignInHref } from "@/hooks/useSignInHref";
 import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
@@ -48,6 +49,7 @@ const ROW =
 // only owns the nav content itself.
 export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
   const t = useTranslations("navigation");
+  const signInHref = useSignInHref();
   const toast = useToast();
 
   const [showPostModal, setShowPostModal] = useState(false);
@@ -202,7 +204,7 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
           <div className="flex flex-col gap-1">
             <div className="mb-4 flex flex-col gap-2 px-1">
               <Link
-                href="/auth/signin"
+                href={signInHref}
                 onClick={onNavigate}
                 className="flex h-11 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
@@ -210,7 +212,7 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
               </Link>
 
               <Link
-                href="/auth/signin"
+                href={signInHref}
                 onClick={onNavigate}
                 className="flex h-11 items-center justify-center rounded-full border border-sidebar-border font-semibold transition-colors hover:bg-accent"
               >

@@ -15,12 +15,16 @@ type ValidateInput = {
 // the referral link this app opened for the event, if any (a hint -- the
 // server decides whether it counts).
 export function useValidateCheckout() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: ValidateInput) =>
       api.checkout.validate({
         ...input,
         referral: await referralHintForEvent(input.eventId).catch(() => null),
       }),
+    // A new hold shows on Home and the event page if the buyer backs out.
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["mobile", "checkout", "pending"] }),
   });
 }
 
@@ -70,10 +74,11 @@ export function useCancelCheckout() {
 // across all of the user's events. Mirrors the web PendingCheckoutsBasket.
 // Self-heals expiry server-side, so a `refetch()` after a countdown hits
 // zero drops the stale session.
-export function usePendingCheckouts() {
+export function usePendingCheckouts(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["mobile", "checkout", "pending"],
     queryFn: async () => settleEnvelope(await api.checkout.pending()),
     staleTime: 30_000,
+    enabled: options.enabled ?? true,
   });
 }

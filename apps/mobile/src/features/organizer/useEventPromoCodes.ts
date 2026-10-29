@@ -1,11 +1,13 @@
 import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
-import type { UpdatePromoCodeBody } from "@abonten/api-client";
+import type {
+  CreatePromoCodeBody,
+  UpdatePromoCodeBody,
+} from "@abonten/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Per-event promo-code management — mirrors the web ManagePromoCodesModal
-// (list + edit terms + delete/deactivate). New codes are only created in
-// the event wizard's Promos step, so there is no "add" here.
+// (list + add + edit terms + delete/deactivate).
 
 const KEY = ["mobile", "organizer", "promo-codes"] as const;
 
@@ -16,6 +18,17 @@ export function useEventPromoCodes(eventId: string) {
       settleEnvelope(await api.organizer.eventPromoCodes(eventId)),
     enabled: !!eventId,
     staleTime: 20_000,
+  });
+}
+
+export function useCreatePromoCode(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreatePromoCodeBody) =>
+      api.organizer.createPromoCode(eventId, body),
+    onSuccess: (res) => {
+      if (res.status === 200) invalidate(qc, eventId);
+    },
   });
 }
 

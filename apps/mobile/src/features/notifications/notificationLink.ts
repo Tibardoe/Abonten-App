@@ -16,6 +16,11 @@ import type {
 //   /events/:code · /places/:slug · null
 const LINK_RULES: [RegExp, (id: string) => string][] = [
   [/^\/manage\/events\/([^/?#]+)/, (id) => `/(app)/organizer/events/${id}`],
+  // A booking request or cancellation: the owner's bookings, not insights.
+  [
+    /^\/manage\/places\/([^/?#]+)\?tab=bookings/,
+    (id) => `/(app)/organizer/places/${id}/bookings`,
+  ],
   [/^\/manage\/places\/([^/?#]+)/, (id) => `/(app)/organizer/places/${id}`],
   [/^\/messages\/([^/?#]+)/, (id) => `/(app)/messages/${id}`],
   [
@@ -62,6 +67,8 @@ function targetFromData(
       return data.ticketsSection
         ? `/(app)/tickets?section=${data.ticketsSection}`
         : "/(app)/tickets";
+    case "ticket_sale":
+      return data.eventId ? `/(app)/organizer/events/${data.eventId}` : null;
     case "event":
     case "event_featured":
       return data.eventId ? `/(app)/event/${data.eventId}` : null;

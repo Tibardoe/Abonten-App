@@ -2,6 +2,10 @@ import { DateRangeField } from "@/components/explore/DateRangeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
+import {
+  promoCodeDraftGap,
+  promoCodeDraftGapMessage,
+} from "@abonten/core/promoCodeDraft";
 import { AppText, Button, Input } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
@@ -11,18 +15,21 @@ import { Pressable, View } from "react-native";
 // Mirrors the web PromoCodeInputs (code / discount % / max uses / expiry).
 export function EventWizardPromos({ w }: { w: EventWizard }) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
   const [maxUses, setMaxUses] = useState("");
   const [expiry, setExpiry] = useState<string | null>(null);
 
-  const canAdd =
-    code.trim().length > 0 &&
-    Number(discount) > 0 &&
-    Number(discount) <= 100 &&
-    Number(maxUses) > 0 &&
-    !!expiry;
+  // Every field is needed here (a limit on uses too); the first gap is
+  // named under the button instead of leaving it grey with nothing said.
+  const gap = promoCodeDraftGap(
+    { code, discount, maxUses, expiry },
+    { maxUsesRequired: true },
+  );
+  const canAdd = gap === null;
+  const touched = code !== "" || discount !== "" || maxUses !== "" || !!expiry;
 
   function add() {
     if (!canAdd || !expiry) return;
@@ -105,6 +112,7 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
         </View>
         <AppText variant="caption">{t("expiryDate")}</AppText>
         <DateRangeField
+          mode="single"
           start={expiry}
           end={null}
           onChange={(r) => setExpiry(r.start)}
@@ -116,6 +124,11 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
           disabled={!canAdd}
           onPress={add}
         />
+        {touched && gap ? (
+          <AppText variant="caption" accessibilityLiveRegion="polite">
+            {promoCodeDraftGapMessage(tc, gap)}
+          </AppText>
+        ) : null}
       </View>
     </View>
   );

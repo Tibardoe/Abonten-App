@@ -6,6 +6,7 @@ import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
+import { PendingCheckoutBanner } from "@/components/checkout/PendingCheckoutBanner";
 import {
   IdentityCheckedPill,
   showsIdentityBadge,
@@ -686,23 +687,26 @@ export default function EventDetailScreen() {
             ) : isFree ? (
               <FreeRsvpCard event={event} flow={rsvpFlow} showAction={false} />
             ) : (
-              <View className="gap-3 rounded-xl border border-border bg-card p-4">
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <AppText variant="caption">{t("tickets")}</AppText>
-                    <AppText variant="cardTitle">
-                      {priceRange(event.ticket_type)}
-                      {approxPrice ? ` · ${approxPrice}` : ""}
-                    </AppText>
+              <View className="gap-3">
+                <PendingCheckoutBanner eventId={event.id} />
+                <View className="gap-3 rounded-xl border border-border bg-card p-4">
+                  <View className="flex-row items-center justify-between">
+                    <View>
+                      <AppText variant="caption">{t("tickets")}</AppText>
+                      <AppText variant="cardTitle">
+                        {priceRange(event.ticket_type)}
+                        {approxPrice ? ` · ${approxPrice}` : ""}
+                      </AppText>
+                    </View>
+                    <Icon name="ticket-outline" size={22} tone="muted" />
                   </View>
-                  <Icon name="ticket-outline" size={22} tone="muted" />
+                  {/* The Buy button is the sticky bar at the foot of the page. */}
+                  <AppText variant="meta">
+                    {t("ticketTypesChooseYoursAtCheckout", {
+                      length: event.ticket_type.length,
+                    })}
+                  </AppText>
                 </View>
-                {/* The Buy button is the sticky bar at the foot of the page. */}
-                <AppText variant="meta">
-                  {t("ticketTypesChooseYoursAtCheckout", {
-                    length: event.ticket_type.length,
-                  })}
-                </AppText>
               </View>
             )}
           </View>
