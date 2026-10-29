@@ -168,7 +168,7 @@ export function useEventEdit(eventId: string) {
 
     const storedAddress = event.address?.full_address ?? "";
     setAddress(storedAddress);
-    autocomplete.setQuery(storedAddress);
+    autocomplete.fill(storedAddress);
     seededAddress.current = storedAddress;
 
     const occ = event.event_occurrence ?? [];
@@ -282,7 +282,7 @@ export function useEventEdit(eventId: string) {
   function applyLocation(lat: number, lng: number, label: string) {
     setAddress(label);
     setCoords({ lat, lng });
-    autocomplete.setQuery(label);
+    autocomplete.fill(label);
     autocomplete.clear();
   }
 

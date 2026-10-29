@@ -63,6 +63,9 @@ export function useEventCreate() {
         qc.invalidateQueries({ queryKey: ["explore"] });
         qc.invalidateQueries({ queryKey: ["mobile", "organizer"] });
         qc.invalidateQueries({ queryKey: ["profile"] });
+        // A first event makes this person an organizer: the menu's
+        // Dashboard link waits on this, and it stays mounted.
+        qc.invalidateQueries({ queryKey: ["role", "organizer"] });
       }
     },
   });

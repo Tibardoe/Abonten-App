@@ -7,6 +7,7 @@ import type { NotificationData } from "@abonten/types/notificationType";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
@@ -32,6 +33,11 @@ Notifications.setNotificationHandler({
     };
   },
 });
+
+// The token this device last registered. Signing out drops it through our
+// own API alone: asking Expo for it again needs exp.host, and when that
+// failed the signed-out account kept getting this phone's pushes.
+const LAST_TOKEN_KEY = "abn.pushToken";
 
 function resolveProjectId(): string | undefined {
   const id = Constants.expoConfig?.extra?.eas?.projectId;
@@ -83,10 +89,13 @@ export function usePushRegistration() {
         });
         if (cancelled || !token) return;
 
-        await api.devices.register({
+        const res = await api.devices.register({
           token,
           platform: Platform.OS === "ios" ? "ios" : "android",
         });
+        if (res.status === 200) {
+          await SecureStore.setItemAsync(LAST_TOKEN_KEY, token);
+        }
       } catch {
         // Push is a best-effort enhancement; never disrupt the app if the
         // permission prompt, token fetch, or register call fails.
@@ -167,12 +176,16 @@ export function usePushRegistration() {
 export async function unregisterPushToken(): Promise<void> {
   try {
     if (Platform.OS !== "ios" && Platform.OS !== "android") return;
-    const projectId = resolveProjectId();
-    if (!projectId) return;
-    const { data: token } = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
-    if (token) await api.devices.unregister(token);
+    let token = await SecureStore.getItemAsync(LAST_TOKEN_KEY);
+    if (!token) {
+      const projectId = resolveProjectId();
+      if (!projectId) return;
+      token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    }
+    if (token) {
+      const res = await api.devices.unregister(token);
+      if (res.status === 200) await SecureStore.deleteItemAsync(LAST_TOKEN_KEY);
+    }
   } catch {
     // Sign-out must not be blocked by a failed unregister; a stale token is
     // pruned server-side on the next DeviceNotRegistered push receipt.

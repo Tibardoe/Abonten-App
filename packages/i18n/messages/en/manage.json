@@ -305,7 +305,7 @@
   "order": "Order",
   "order2": "{bucketLabel} · {money} · {n, plural, one {# order} other {# orders}}",
   "order3": "{money} · {periodOrders, plural, one {# order} other {# orders}}",
-  "ordersTicketsDiscounted": "{n} orders · {n2} tickets discounted",
+  "ordersTicketsDiscounted": "{n, plural, one {# order} other {# orders}} · {n2, plural, one {# ticket discounted} other {# tickets discounted}}",
   "organizer": "Organizer",
   "organizerDashboard": "Organizer dashboard",
   "organizerEarnings": "Organizer earnings",

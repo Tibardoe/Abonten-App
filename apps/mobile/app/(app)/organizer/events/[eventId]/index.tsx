@@ -15,6 +15,7 @@ import type {
 } from "@abonten/api-client";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Chip, Overline, Refresher } from "@abonten/ui-native";
 import {
   getCurrentLocale,
@@ -264,6 +265,7 @@ function TicketTypesSection({
 }) {
   const { locale } = useLocale();
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   return (
     <View className="gap-3">
@@ -287,11 +289,13 @@ function TicketTypesSection({
               >
                 <View className="flex-row items-center justify-between gap-2">
                   <AppText className="font-semibold text-foreground">
-                    {row.type}
+                    {ticketTypeLabel(tc, row.type)}
                   </AppText>
                   <AppText className="shrink-0 text-sm text-muted-foreground">
                     {t("sold", { n: n(row.sold) })}
-                    {capped ? ` / ${row.quantity_capacity}` : " / Unlimited"}
+                    {capped
+                      ? ` / ${row.quantity_capacity}`
+                      : ` / ${t("unlimited")}`}
                   </AppText>
                 </View>
                 {capped ? (

@@ -46,9 +46,12 @@ export function useFreeRsvpFlow(event: EventDetail | undefined) {
     )
       ? pickedOccurrenceId
       : (occurrenceState.nextPurchasable?.id ?? null);
-  const [done, setDone] = useState(false);
+  // The outcome belongs to the event it was made for. The event screen can
+  // be reused for another event (a link, a notification), and a plain flag
+  // carried over said "You're going" on an event with no ticket.
+  const [doneFor, setDoneFor] = useState<string | null>(null);
   // Only an RSVP made just now (not an existing ticket) offers alerts.
-  const [justRsvped, setJustRsvped] = useState(false);
+  const [justRsvpedFor, setJustRsvpedFor] = useState<string | null>(null);
 
   async function submit() {
     if (!event || rsvp.isPending) return;
@@ -61,12 +64,12 @@ export function useFreeRsvpFlow(event: EventDetail | undefined) {
     const res = await rsvp.mutateAsync({ eventId: event.id, occurrenceId });
 
     if (res.status === 200) {
-      setDone(true);
-      setJustRsvped(true);
+      setDoneFor(event.id);
+      setJustRsvpedFor(event.id);
       return;
     }
     if (res.status === 300) {
-      setDone(true);
+      setDoneFor(event.id);
       toast.success(t("youReIn"), {
         description: t("youAlreadyHaveATicketFor"),
       });
@@ -85,8 +88,8 @@ export function useFreeRsvpFlow(event: EventDetail | undefined) {
     isOccurrenceSelectable,
     submit,
     pending: rsvp.isPending,
-    done,
-    justRsvped,
+    done: event != null && doneFor === event.id,
+    justRsvped: event != null && justRsvpedFor === event.id,
   };
 }
 

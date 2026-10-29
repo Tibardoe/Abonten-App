@@ -293,7 +293,7 @@ export function useEventWizard(
   function applyLocation(lat: number, lng: number, label: string) {
     setAddress(label);
     setCoords({ lat, lng });
-    autocomplete.setQuery(label);
+    autocomplete.fill(label);
     autocomplete.clear();
   }
 
@@ -349,7 +349,7 @@ export function useEventWizard(
     setVenuePlaceState(place);
     if (place) {
       setAddress(place.address);
-      autocomplete.setQuery(place.address);
+      autocomplete.fill(place.address);
       autocomplete.clear();
       setCoords({ lat: place.lat, lng: place.lng });
     }
@@ -471,7 +471,7 @@ export function useEventWizard(
 
     if (p.address) {
       setAddress(p.address);
-      autocomplete.setQuery(p.address);
+      autocomplete.fill(p.address);
     }
     if (p.latitude != null && p.longitude != null)
       setCoords({ lat: p.latitude, lng: p.longitude });

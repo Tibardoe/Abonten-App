@@ -37,7 +37,10 @@ import { placeShareUrl } from "@/lib/share";
 import { useQueryView } from "@/lib/useQueryView";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import {
+  computePlaceOpenStatus,
+  formatClockTime,
+} from "@abonten/core/computePlaceOpenStatus";
 import { dayName, getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatCount, formatRating } from "@abonten/core/i18n/format";
@@ -70,12 +73,6 @@ import {
   ScrollView,
   View,
 } from "react-native";
-
-function timeLabel(t: string | null): string {
-  if (!t) return "";
-  const [h, m] = t.split(":");
-  return `${h}:${m ?? "00"}`;
-}
 
 function ContactRow({
   icon,
@@ -633,7 +630,7 @@ export default function PlaceDetailScreen() {
                       <AppText variant="muted">
                         {h.is_closed || !h.open_time || !h.close_time
                           ? t("closed")
-                          : `${timeLabel(h.open_time)} – ${timeLabel(h.close_time)}`}
+                          : `${formatClockTime(h.open_time, locale)} – ${formatClockTime(h.close_time, locale)}`}
                       </AppText>
                     </View>
                   ))}
