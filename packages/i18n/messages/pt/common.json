@@ -449,7 +449,7 @@
   "orPayAnotherWay": "Ou pague de outra forma",
   "order": "{formatMoney} · {orders, plural, one {# encomenda} other {# encomendas}}",
   "orderCancelled": "Encomenda cancelada.",
-  "ordersTicketsDiscounted": "{orders} encomendas · {units_discounted} bilhetes com desconto",
+  "ordersTicketsDiscounted": "{orders, plural, one {# encomenda} other {# encomendas}} · {units_discounted, plural, one {# bilhete com desconto} other {# bilhetes com desconto}}",
   "organizer": "Organizador",
   "organizerEarnings": "Ganhos do organizador",
   "organizerSReply": "Resposta do organizador",

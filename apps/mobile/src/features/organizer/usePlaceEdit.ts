@@ -146,7 +146,7 @@ export function usePlaceEdit(placeId: string) {
 
     const storedAddress = place.address?.full_address ?? "";
     setAddress(storedAddress);
-    autocomplete.setQuery(storedAddress);
+    autocomplete.fill(storedAddress);
     setPrefilled(true);
 
     // Best-effort forward-geocode so an unchanged location still submits
@@ -195,7 +195,7 @@ export function usePlaceEdit(placeId: string) {
   function applyLocation(lat: number, lng: number, label: string) {
     setAddress(label);
     setCoords({ lat, lng });
-    autocomplete.setQuery(label);
+    autocomplete.fill(label);
     autocomplete.clear();
   }
 

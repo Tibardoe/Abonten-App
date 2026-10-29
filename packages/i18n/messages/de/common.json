@@ -449,7 +449,7 @@
   "orPayAnotherWay": "Oder anders bezahlen",
   "order": "{formatMoney} · {orders, plural, one {# Bestellung} other {# Bestellungen}}",
   "orderCancelled": "Bestellung abgebrochen.",
-  "ordersTicketsDiscounted": "{orders} Bestellungen · {units_discounted} Tickets rabattiert",
+  "ordersTicketsDiscounted": "{orders, plural, one {# Bestellung} other {# Bestellungen}} · {units_discounted, plural, one {# Ticket rabattiert} other {# Tickets rabattiert}}",
   "organizer": "Veranstalter",
   "organizerEarnings": "Einnahmen des Veranstalters",
   "organizerSReply": "Antwort des Veranstalters",

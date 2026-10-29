@@ -56,6 +56,24 @@ function StackHost() {
       }}
     >
       <Stack.Screen name="(tabs)" />
+      {/* One screen per listing. Without an id, opening another event from
+          a link or a notification reused the event screen already in the
+          stack: its state (a free spot just reserved, the map's position)
+          showed on the other event, and Back skipped the first one. */}
+      <Stack.Screen
+        name="event/[id]"
+        getId={({ params }) => (params as { id?: string } | undefined)?.id}
+      />
+      <Stack.Screen
+        name="place/[id]"
+        getId={({ params }) => (params as { id?: string } | undefined)?.id}
+      />
+      <Stack.Screen
+        name="user/[username]"
+        getId={({ params }) =>
+          (params as { username?: string } | undefined)?.username
+        }
+      />
       <Stack.Screen
         name="event/new"
         options={{ animation: "slide_from_bottom" }}

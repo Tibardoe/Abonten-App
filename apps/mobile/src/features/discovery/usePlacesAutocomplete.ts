@@ -40,9 +40,13 @@ export function usePlacesAutocomplete(
   const sessionRef = useRef(newSessionToken());
   const reqIdRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Text the app put in the field (a picked, pinned or saved address), not
+  // typed. Searching it reopened the list under the address just chosen
+  // and paid Google for one more lookup.
+  const filledRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (query.trim().length < MIN_QUERY_LENGTH) {
+    if (query.trim().length < MIN_QUERY_LENGTH || query === filledRef.current) {
       setPredictions([]);
       setLoading(false);
       return;
@@ -99,10 +103,18 @@ export function usePlacesAutocomplete(
     [t],
   );
 
+  // Shows an address in the field without searching it.
+  const fill = useCallback((text: string) => {
+    filledRef.current = text;
+    setPredictions([]);
+    setQuery(text);
+  }, []);
+
   return {
     enabled: true,
     query,
     setQuery,
+    fill,
     predictions,
     loading,
     clear: () => setPredictions([]),

@@ -59,6 +59,10 @@ export function StaticMapPreview({
       >
         <View pointerEvents="none" style={{ flex: 1 }}>
           <MapView
+            // initialRegion applies only when the map mounts: a new place
+            // (the venue edited, the screen showing another listing) needs
+            // a new map, or the camera stays on the old spot.
+            key={`${coords.lat},${coords.lng}`}
             style={{ flex: 1 }}
             provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
             liteMode={Platform.OS === "android"}

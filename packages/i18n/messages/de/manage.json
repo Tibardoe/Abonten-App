@@ -305,7 +305,7 @@
   "order": "Bestellung",
   "order2": "{bucketLabel} · {money} · {n, plural, one {# Bestellung} other {# Bestellungen}}",
   "order3": "{money} · {periodOrders, plural, one {# Bestellung} other {# Bestellungen}}",
-  "ordersTicketsDiscounted": "{n} Bestellungen · {n2} Tickets rabattiert",
+  "ordersTicketsDiscounted": "{n, plural, one {# Bestellung} other {# Bestellungen}} · {n2, plural, one {# Ticket rabattiert} other {# Tickets rabattiert}}",
   "organizer": "Veranstalter",
   "organizerDashboard": "Veranstalter-Dashboard",
   "organizerEarnings": "Einnahmen des Veranstalters",

@@ -62,6 +62,8 @@ export function useCreatePlace() {
         qc.invalidateQueries({ queryKey: ["discovery", "places"] });
         qc.invalidateQueries({ queryKey: ["explore"] });
         qc.invalidateQueries({ queryKey: ["profile"] });
+        // A first place makes this person a place owner (menu links).
+        qc.invalidateQueries({ queryKey: ["role", "place-owner"] });
       }
     },
   });
