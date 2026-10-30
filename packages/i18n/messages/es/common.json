@@ -267,6 +267,7 @@
   "expandPaymentSection": "Expandir la sección de pago",
   "expired": "Caducado",
   "expires": "Caduca",
+  "lastDayItWorks": "Último día en que funciona",
   "expiresIn": "Caduca en {formatCountdown}",
   "expiryDate": "Fecha de caducidad",
   "expiryTime": "Hora de caducidad",

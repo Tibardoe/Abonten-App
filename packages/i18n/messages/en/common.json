@@ -267,6 +267,7 @@
   "expandPaymentSection": "Expand payment section",
   "expired": "Expired",
   "expires": "Expires",
+  "lastDayItWorks": "Last day it works",
   "expiresIn": "Expires in {formatCountdown}",
   "expiryDate": "Expiry date",
   "expiryTime": "Expiry time",
