@@ -804,6 +804,14 @@
       "body": "{hasTitle, select, yes {Dein Ticket für {title} ist bestätigt.} other {Dein Ticket ist bestätigt.}}",
       "title": "Ticket bestätigt"
     },
+    "ticket_sold": {
+      "body": "{hasTitle, select, yes {Jemand hat {count, plural, one {# Ticket} other {# Tickets}} für {title} gekauft.} other {Jemand hat {count, plural, one {# Ticket} other {# Tickets}} für deine Veranstaltung gekauft.}}",
+      "title": "Neuer Ticketverkauf"
+    },
+    "ticket_reserved": {
+      "body": "{hasTitle, select, yes {Jemand hat {count, plural, one {ein kostenloses Ticket} other {# kostenlose Tickets}} für {title} reserviert.} other {Jemand hat {count, plural, one {ein kostenloses Ticket} other {# kostenlose Tickets}} für deine Veranstaltung reserviert.}}",
+      "title": "Kostenloses Ticket reserviert"
+    },
     "verification_approved": {
       "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {Dieser Ort} other {Dein Veranstalterprofil}}}} ist jetzt auf Abonten verifiziert.",
       "title": "Verifiziert"
@@ -1276,5 +1284,12 @@
   "identity": {
     "badgeLabel": "Ausweis geprüft",
     "badgeExplanation": "Abonten hat den amtlichen Ausweis dieser Person und ein live aufgenommenes Selfie geprüft. Das heißt nicht, dass Abonten für diese Person, ihre Events oder ihre Orte bürgt."
+  },
+  "promoDraft": {
+    "code": "Gib einen Code mit höchstens {max} Zeichen ein.",
+    "discount": "Gib einen Rabatt von 1 bis 100 % ein.",
+    "maxUses": "Gib an, wie oft er genutzt werden kann, oder lass das Feld leer für unbegrenzt.",
+    "maxUsesRequired": "Gib an, wie oft er genutzt werden kann.",
+    "expiry": "Wähle den letzten Tag, an dem der Code gilt."
   }
 }

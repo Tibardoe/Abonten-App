@@ -27,7 +27,13 @@ export type EventPromoCode = {
 
 export type EventPromoCodesCoreResult =
   | { status: 403 | 500; message: string; data: EventPromoCode[] }
-  | { status: 200; message: string; data: EventPromoCode[] };
+  | {
+      status: 200;
+      message: string;
+      data: EventPromoCode[];
+      /** A free event takes no new codes (its old ones stay for history). */
+      freeEvent: boolean;
+    };
 
 export async function fetchEventPromoCodes(
   supabase: SupabaseClient<Database>,
@@ -36,7 +42,7 @@ export async function fetchEventPromoCodes(
 ): Promise<EventPromoCodesCoreResult> {
   const { data: event, error: eventError } = await supabase
     .from("event")
-    .select("id")
+    .select("id, ticket_type(type)")
     .eq("id", eventId)
     .eq("organizer_id", userId)
     .maybeSingle();
@@ -84,7 +90,108 @@ export async function fetchEventPromoCodes(
     createdAt: p.created_at,
   })) as unknown as EventPromoCode[];
 
-  return { status: 200, message: "OK", data };
+  const freeEvent = (event.ticket_type ?? []).some(
+    (t) => t.type === FREE_TICKET_TYPE,
+  );
+
+  return { status: 200, message: "OK", data, freeEvent };
+}
+
+export type CreatePromoCodeCoreInput = {
+  eventId: string;
+  promoCode: string;
+  discountPercentage: number;
+  /** null = no limit. */
+  maxUses: number | null;
+  expiresAt: Date | string;
+};
+
+export type CreatePromoCodeCoreResult = {
+  status: 200 | 400 | 403 | 409 | 500;
+  message: string;
+};
+
+const CHECK_VIOLATION = "23514";
+const UNIQUE_VIOLATION = "23505";
+const PROMO_CODE_MAX_LENGTH = 40;
+
+// A new code on an event that already exists (event creation adds its own
+// through create_event). The caller's own client writes it: the
+// promo_code_organizer_insert policy and the restricted-account and
+// free-event triggers all apply, and the ownership check below is the same
+// one the edit and delete paths make.
+export async function createPromoCodeCore(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  input: CreatePromoCodeCoreInput,
+): Promise<CreatePromoCodeCoreResult> {
+  const code = input.promoCode.trim().toUpperCase();
+  const discount = input.discountPercentage;
+  const maxUses = input.maxUses;
+  if (
+    code.length === 0 ||
+    code.length > PROMO_CODE_MAX_LENGTH ||
+    !Number.isInteger(discount) ||
+    discount < 1 ||
+    discount > 100 ||
+    (maxUses !== null && (!Number.isInteger(maxUses) || maxUses < 1))
+  ) {
+    return { status: 400, message: tr("checkThePromoCodeDetails") };
+  }
+
+  const { data: event, error: eventError } = await supabase
+    .from("event")
+    .select("id, timezone, ticket_type(type)")
+    .eq("id", input.eventId)
+    .eq("organizer_id", userId)
+    .maybeSingle();
+
+  if (eventError) {
+    return { status: 500, message: userFacingError("Promo code", eventError) };
+  }
+
+  if (!event) {
+    return { status: 403, message: tr("notAuthorizedToAddPromoCodes") };
+  }
+
+  if ((event.ticket_type ?? []).some((t) => t.type === FREE_TICKET_TYPE)) {
+    return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
+  }
+
+  // The day the organizer picked, in the event's own calendar.
+  const expiresAt = promoExpiryForStorage(
+    input.expiresAt,
+    (event as { timezone?: string }).timezone ?? "UTC",
+  );
+  if (!expiresAt) {
+    return { status: 400, message: tr("checkThePromoCodeDetails") };
+  }
+
+  const { error: insertError } = await supabase.from("promo_code").insert({
+    event_id: input.eventId,
+    promo_code: code,
+    discount_percentage: discount,
+    max_uses: maxUses,
+    expires_at: expiresAt,
+  });
+
+  if (insertError) {
+    if (insertError.code === UNIQUE_VIOLATION) {
+      return { status: 409, message: tr("thisEventAlreadyHasThatPromoCode") };
+    }
+    if (insertError.code === CHECK_VIOLATION) {
+      return {
+        status: 400,
+        message: userFacingError("Promo code", insertError),
+      };
+    }
+    return {
+      status: 500,
+      message: userFacingError("Failed to add promo code", insertError),
+    };
+  }
+
+  return { status: 200, message: tr("promoCodeAdded") };
 }
 
 export type UpdatePromoCodeCoreInput = {
@@ -99,8 +206,6 @@ export type UpdatePromoCodeCoreResult = {
   status: 200 | 400 | 403 | 404 | 500;
   message: string;
 };
-
-const CHECK_VIOLATION = "23514";
 
 // Deliberately does not touch the promo_code text itself or event_id — keeps
 // this scoped to the terms of an existing code (discount, cap, expiry,

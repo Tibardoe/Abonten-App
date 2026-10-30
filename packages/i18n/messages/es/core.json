@@ -804,6 +804,14 @@
       "body": "{hasTitle, select, yes {Tu entrada para {title} está confirmada.} other {Tu entrada está confirmada.}}",
       "title": "Entrada confirmada"
     },
+    "ticket_sold": {
+      "body": "{hasTitle, select, yes {Alguien compró {count, plural, one {# entrada} other {# entradas}} para {title}.} other {Alguien compró {count, plural, one {# entrada} other {# entradas}} para tu evento.}}",
+      "title": "Nueva venta de entradas"
+    },
+    "ticket_reserved": {
+      "body": "{hasTitle, select, yes {Alguien reservó {count, plural, one {una entrada gratuita} other {# entradas gratuitas}} para {title}.} other {Alguien reservó {count, plural, one {una entrada gratuita} other {# entradas gratuitas}} para tu evento.}}",
+      "title": "Entrada gratuita reservada"
+    },
     "verification_approved": {
       "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {Este lugar} other {Tu perfil de organizador}}}} ya está verificado en Abonten.",
       "title": "Verificado"
@@ -1276,5 +1284,12 @@
   "identity": {
     "badgeLabel": "Identidad verificada",
     "badgeExplanation": "Abonten ha revisado el documento de identidad oficial de esta persona y un selfie hecho en directo. Eso no significa que Abonten responda por esta persona, sus eventos o sus lugares."
+  },
+  "promoDraft": {
+    "code": "Escribe un código de hasta {max} caracteres.",
+    "discount": "Escribe un descuento del 1 al 100 %.",
+    "maxUses": "Indica cuántas veces se puede usar, o déjalo vacío para no poner límite.",
+    "maxUsesRequired": "Indica cuántas veces se puede usar.",
+    "expiry": "Elige el último día en que funciona el código."
   }
 }

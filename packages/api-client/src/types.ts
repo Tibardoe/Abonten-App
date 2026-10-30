@@ -1249,8 +1249,29 @@ export type EventPromoCode = {
 };
 
 export type EventPromoCodesResult =
-  | { status: 200; message: string; data: EventPromoCode[] }
+  | {
+      status: 200;
+      message: string;
+      data: EventPromoCode[];
+      /** A free event takes no new codes (older servers leave it out). */
+      freeEvent?: boolean;
+    }
   | { status: 401 | 403 | 500; message: string; data: EventPromoCode[] };
+
+// A new code on an event that already exists.
+export type CreatePromoCodeBody = {
+  promoCode: string;
+  /** Whole percent, 1–100. */
+  discountPercentage: number;
+  /** null = no limit. */
+  maxUses: number | null;
+  /** ISO string; the day counts in the event's own calendar. */
+  expiresAt: string;
+};
+
+export type CreatePromoCodeResult =
+  | { status: 200; message: string }
+  | { status: 400 | 401 | 403 | 409 | 500; message: string };
 
 // Only the terms change — never the code text or the event it belongs to.
 export type UpdatePromoCodeBody = {

@@ -7,6 +7,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { notifyOrganizerOfSale } from "../notifications/notifyOrganizerOfSale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import {
   generateQRCodeDataURL,
@@ -202,6 +203,12 @@ export async function registerForFreeEventCore(
   // The confirmation email (React PDF + Resend) is apps/web-only — the
   // caller schedules it via next/server `after` once this returns 200.
   onRegistered?.(ticketId as string);
+  await notifyOrganizerOfSale({
+    eventId,
+    buyerId: userId,
+    count: 1,
+    free: true,
+  });
 
   return {
     status: 200,

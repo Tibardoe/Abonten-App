@@ -7,6 +7,7 @@ import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
+import { notifyOrganizerOfSale } from "@abonten/services/notifications/notifyOrganizerOfSale";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
@@ -366,6 +367,14 @@ export default async function generateTicket(
   }).catch((error) =>
     logger.error(`Failed creating ticket notification: ${error}`),
   );
+
+  // And the organizer hears about the order (awaited for the same reason).
+  await notifyOrganizerOfSale({
+    eventId,
+    buyerId: userId,
+    count: rows.reduce((sum, row) => sum + row.quantity, 0),
+    free: !transactionId,
+  });
 
   return { status: 200, message: tr("ticketsGeneratedSuccessfully") };
 }

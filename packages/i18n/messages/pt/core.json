@@ -804,6 +804,14 @@
       "body": "{hasTitle, select, yes {O seu bilhete para {title} está confirmado.} other {O seu bilhete está confirmado.}}",
       "title": "Bilhete confirmado"
     },
+    "ticket_sold": {
+      "body": "{hasTitle, select, yes {Alguém comprou {count, plural, one {# bilhete} other {# bilhetes}} para {title}.} other {Alguém comprou {count, plural, one {# bilhete} other {# bilhetes}} para o seu evento.}}",
+      "title": "Nova venda de bilhetes"
+    },
+    "ticket_reserved": {
+      "body": "{hasTitle, select, yes {Alguém reservou {count, plural, one {um bilhete gratuito} other {# bilhetes gratuitos}} para {title}.} other {Alguém reservou {count, plural, one {um bilhete gratuito} other {# bilhetes gratuitos}} para o seu evento.}}",
+      "title": "Bilhete gratuito reservado"
+    },
     "verification_approved": {
       "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {Este local} other {O seu perfil de organizador}}}} está agora verificado no Abonten.",
       "title": "Verificado"
@@ -1276,5 +1284,12 @@
   "identity": {
     "badgeLabel": "Identidade verificada",
     "badgeExplanation": "O Abonten verificou o documento de identificação oficial desta pessoa e uma selfie tirada em direto. Isso não significa que o Abonten responda por esta pessoa, pelos seus eventos ou pelos seus locais."
+  },
+  "promoDraft": {
+    "code": "Introduza um código com até {max} caracteres.",
+    "discount": "Introduza um desconto de 1 a 100%.",
+    "maxUses": "Indique quantas vezes pode ser usado, ou deixe em branco para não ter limite.",
+    "maxUsesRequired": "Indique quantas vezes pode ser usado.",
+    "expiry": "Escolha o último dia em que o código funciona."
   }
 }

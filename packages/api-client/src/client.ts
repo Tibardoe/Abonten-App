@@ -112,6 +112,8 @@ import type {
   ConversationRoleScope,
   ConversationType,
   ConversationsListResult,
+  CreatePromoCodeBody,
+  CreatePromoCodeResult,
   CreditActivityResult,
   CreditQuoteResult,
   CreditSummaryResult,
@@ -1603,8 +1605,7 @@ export function createApiClient(options: ApiClientOptions) {
       },
       /**
        * The caller's own event's promo codes, newest first, with usage
-       * counts. Codes are created only in the event wizard's Promos step;
-       * this surface edits or removes existing ones. 403 if not owned.
+       * counts. 403 if not owned.
        */
       eventPromoCodes(eventId: string) {
         return request<EventPromoCodesResult>(
@@ -1612,6 +1613,18 @@ export function createApiClient(options: ApiClientOptions) {
             eventId,
           )}/promo-codes`,
           { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Add a promo code to the caller's own existing event. 409 when the
+       * event already has that code, 400 on a free event. 403 if not owned.
+       */
+      createPromoCode(eventId: string, body: CreatePromoCodeBody) {
+        return request<CreatePromoCodeResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promo-codes`,
+          { method: "POST", body, auth: true },
         );
       },
       /**

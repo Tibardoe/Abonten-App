@@ -8,6 +8,8 @@
 // `kind` drives routing + which thumbnail to show.
 export type NotificationEntityKind =
   | "ticket"
+  /** To the organizer: an order for their event (opens its insights). */
+  | "ticket_sale"
   | "event"
   | "place"
   | "event_featured"

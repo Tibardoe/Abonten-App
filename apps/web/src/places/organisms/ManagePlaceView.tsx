@@ -132,10 +132,12 @@ export default function ManagePlaceView({
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  // A verification notification deep-links straight to its tab.
-  const [activeTab, setActiveTab] = useState<Tab>(() =>
-    searchParams.get("tab") === "verification" ? "verification" : "details",
-  );
+  // A notification deep-links straight to its tab (?tab=verification,
+  // ?tab=bookings).
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const requested = searchParams.get("tab");
+    return TABS.find((tab) => tab.id === requested)?.id ?? "details";
+  });
   const [showEventModal, setShowEventModal] = useState(false);
 
   const refresh = () => router.refresh();

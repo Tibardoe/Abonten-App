@@ -154,7 +154,8 @@ export async function requestPlaceBookingCore(
       id: "place_booking_requested",
       params: { place: place.name },
     },
-    link: `/manage/places/${placeId}`,
+    // Opens the owner's Bookings tab, where the request waits for an answer.
+    link: `/manage/places/${placeId}?tab=bookings`,
   });
 
   return { status: 200, message: tr("bookingRequestSent") };
@@ -235,7 +236,7 @@ export async function cancelPlaceBookingCore(
         id: "place_booking_cancelled",
         params: { place: place.name ?? null },
       },
-      link: `/manage/places/${booking.place_id}`,
+      link: `/manage/places/${booking.place_id}?tab=bookings`,
     });
   }
 

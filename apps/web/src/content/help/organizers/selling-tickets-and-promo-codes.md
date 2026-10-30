@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-10-29
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,7 @@ owner: Abonten Hub
 
 1. A buyer picks tickets; those units are **held for 30 minutes** while they pay. Held-but-unpaid tickets return to the pool when the hold expires.
 2. Payment is taken by Paystack and verified by Abonten.
-3. Tickets are issued to the buyer, and **100% of your ticket price** is recorded as a pending earning for you.
+3. Tickets are issued to the buyer, and **100% of your ticket price** is recorded as a pending earning for you. You get a notification for each order.
 4. The buyer receives their tickets in the app and by email.
 
 Buyers can hold at most 50 of one ticket type and 100 tickets per order, and one order per event at a time.
@@ -35,6 +35,7 @@ Open your event › **Promo codes** (web: Manage › Events › event; app: Orga
 
 - **Free events have no promo codes.** A code discounts a ticket price, and a free ticket has none, so the option is not offered for a free event. Making a paid event free removes its codes: never-used codes are deleted and used ones are deactivated (their history stays). Make the event paid again to add codes.
 
+- Add codes while you create the event, or at any time afterwards under **Promo codes**: a code, a discount from 1 to 100%, how many times it can be used (or no limit) and the last day it works.
 - A code applies a **percentage discount** to the ticket price for your event only.
 - You can set how many times it may be used and edit or delete it later; deleting does not affect tickets already bought with it.
 - Buyers enter the code at checkout; the discount shows before they pay. Abonten limits how fast one account can try codes to stop guessing.

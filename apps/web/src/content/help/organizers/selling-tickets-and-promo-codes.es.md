@@ -2,7 +2,7 @@
 title: Vender entradas, códigos promocionales y comisión de promotores
 summary: Cómo funcionan las ventas y las reservas, crear códigos promocionales, ofrecer una comisión a promotores y leer las estadísticas de ventas.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-10-29
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,7 @@ owner: Abonten Hub
 
 1. Quien compra elige entradas; esas unidades quedan **reservadas 30 minutos** mientras paga. Las entradas reservadas sin pagar vuelven a estar disponibles cuando caduca la reserva.
 2. Paystack cobra el pago y Abonten lo verifica.
-3. Se emiten las entradas a quien compró y se registra a tu favor **el 100 % del precio de tu entrada** como ganancia pendiente.
+3. Se emiten las entradas a quien compró y se registra a tu favor **el 100 % del precio de tu entrada** como ganancia pendiente. Recibes una notificación por cada pedido.
 4. Quien compró recibe sus entradas en la aplicación y por correo.
 
 Cada persona puede reservar como máximo 50 entradas de un mismo tipo y 100 por pedido, y un solo pedido por evento a la vez.
@@ -35,6 +35,7 @@ Abre tu evento › **Códigos promocionales** (web: Gestionar › Eventos › el
 
 - **Los eventos gratuitos no tienen códigos promocionales.** Un código rebaja el precio de una entrada, y una entrada gratuita no tiene precio, así que la opción no aparece en un evento gratuito. Si haces gratuito un evento de pago, se quitan sus códigos: los que nunca se usaron se eliminan y los usados se desactivan (su historial se conserva). Vuelve a hacer el evento de pago para añadir códigos.
 
+- Añade códigos al crear el evento, o en cualquier momento después en **Códigos promocionales**: un código, un descuento del 1 al 100 %, cuántas veces se puede usar (o sin límite) y el último día en que funciona.
 - Un código aplica un **descuento porcentual** al precio de la entrada, solo para tu evento.
 - Puedes fijar cuántas veces se puede usar y editarlo o eliminarlo después; eliminarlo no afecta a las entradas ya compradas con él.
 - Quien compra escribe el código al pagar; el descuento se ve antes de pagar. Abonten limita la rapidez con la que una cuenta puede probar códigos para evitar que se adivinen.

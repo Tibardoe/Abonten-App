@@ -68,6 +68,10 @@ import {
   profileCompletionGroupTitle,
   profileCompletionItemCopy,
 } from "../profileCompletion";
+import {
+  type PromoCodeDraftGap,
+  promoCodeDraftGapMessage,
+} from "../promoCodeDraft";
 import { promotionKindLabel, promotionStateLabel } from "../promotionSummary";
 import { getRefundStatusLabel } from "../refundStatus";
 import { reviewSortOptions } from "../reviews/reviewList";
@@ -326,6 +330,18 @@ describe("core copy keys", () => {
     blockedAccountName(strict, {
       deleted: true,
     } as Parameters<typeof blockedAccountName>[1]);
+  });
+
+  it("promo code form gaps", () => {
+    for (const gap of [
+      "code",
+      "discount",
+      "maxUses",
+      "maxUsesRequired",
+      "expiry",
+    ] satisfies PromoCodeDraftGap[]) {
+      promoCodeDraftGapMessage(strict, gap);
+    }
   });
 
   it("every event category, event type and place category", () => {

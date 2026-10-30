@@ -18,6 +18,7 @@ import {
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
 import { useExploreHref } from "@/hooks/useExploreHref";
+import { useSignInHref } from "@/hooks/useSignInHref";
 import { MessagesNavLink } from "@/messaging/components/MessagesNavLink";
 import { signOut } from "@/services/authService";
 import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
@@ -37,6 +38,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const exploreHref = useExploreHref();
+  const signInHref = useSignInHref();
 
   // Shared with SideBar/MobileNavBar/etc. — one cached fetch instead of
   // each component independently calling supabase.auth.getUser().
@@ -191,14 +193,14 @@ export default function Header() {
         ) : (
           <div className="flex items-center gap-2">
             <Link
-              href="/auth/signin"
+              href={signInHref}
               className="hidden sm:inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-accent"
             >
               {t("signIn")}
             </Link>
 
             <Link
-              href="/auth/signin"
+              href={signInHref}
               className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {t("signUp")}
