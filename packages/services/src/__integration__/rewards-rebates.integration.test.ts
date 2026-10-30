@@ -584,7 +584,10 @@ describe("monthly rebates: organizer, venue and milestone", () => {
   // Audit 2026-09-26: the month used to be UTC's for every event.
   it("counts an event in the month it settled in the event's own zone", async () => {
     await setSettings({ shadow_mode: true });
-    const organizer = await newUser({ ageDays: 60 });
+    // This event settles at the start of the month, so near the month's end
+    // a 60-day-old account was under 30 days old when it settled
+    // (account_too_new): the test failed in the last days of every month.
+    const organizer = await newUser({ ageDays: 120 });
     const [buyerA, buyerB] = await Promise.all([newUser(), newUser()]);
     const event = await newEvent(organizer.id);
     await buy(buyerA, event);

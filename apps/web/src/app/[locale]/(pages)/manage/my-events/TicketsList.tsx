@@ -14,6 +14,7 @@ import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import {
   getRefundStatusKind,
   getRefundStatusLabel,
+  ticketRefundState,
 } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -42,17 +43,19 @@ function TicketCard({
   const t = useTranslations("manage");
   const tc = useTranslations("core");
 
-  const refundBadge =
+  // The ticket's own refund when its payment is refunded ticket by
+  // ticket, else its payment's (refundStatus.ticketRefundState).
+  const refund =
     showRefundInfo && event.status === "cancelled" && event.transaction
-      ? getRefundStatusLabel(
-          tc,
-          event.transaction.status,
-          event.transaction.refund_requested_at,
-        )
+      ? ticketRefundState(event)
       : null;
+  const refundBadge = refund
+    ? getRefundStatusLabel(tc, refund.status, refund.refundRequestedAt)
+    : null;
   // Only set when this card came from the Refunds tab (TICKET_REFUND_SELECT)
-  // — Active/Cancelled fetch a lighter transaction shape without it.
-  const refundAmount = event.transaction?.amount;
+  // or the ticket has its own refund — Active/Cancelled fetch a lighter
+  // transaction shape without the payment's amount.
+  const refundAmount = refund?.amount ?? undefined;
   // Distinguishes "the organizer cancelled the whole event" from "you
   // cancelled this ticket yourself" — both land on ticket.status='cancelled',
   // but event.status is already fetched on every card (TICKET_WITH_EVENT_SELECT/
@@ -68,13 +71,13 @@ function TicketCard({
       event.event.ends_at,
       event.event.occurrences,
     ) === "ended";
+  // A refused refund, or one never asked for, can be asked for again.
+  const refundKind = refund
+    ? getRefundStatusKind(refund.status, refund.refundRequestedAt)
+    : null;
   const canRetryRefund =
     refundBadge !== null &&
-    event.transaction &&
-    getRefundStatusKind(
-      event.transaction.status,
-      event.transaction.refund_requested_at,
-    ) === "failed" &&
+    (refundKind === "failed" || refundKind === "none") &&
     event.transaction_id;
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
@@ -126,7 +129,7 @@ function TicketCard({
               <RefundStatusBadge badge={refundBadge} />
               {refundAmount !== undefined && (
                 <span className="text-sm font-semibold">
-                  {formatMoney(event.transaction?.currency, refundAmount, {
+                  {formatMoney(refund?.currency, refundAmount, {
                     locale,
                   })}
                 </span>
@@ -141,6 +144,7 @@ function TicketCard({
               <RetryRefundBtn
                 transactionId={event.transaction_id}
                 queryKey={queryKey}
+                neverRequested={refundKind === "none"}
               />
             )}
           </div>

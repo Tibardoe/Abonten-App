@@ -4,8 +4,8 @@ purpose: The exact refund rules and procedures — buyer cancellation, organizer
 audience: Finance admins, support leads, engineering
 scope: Ticket refunds through Paystack; promotions (non-refundable); credit refunds
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-25
+version: 1.2
+lastReviewed: 2026-10-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -16,10 +16,10 @@ complianceReviewRequired: no
 
 ## Rules the code enforces
 
-1. **Refund amount = ticket price only.** `issueRefundCore` (`packages/services/src/organizer/issueRefundCore.ts`) asks `get_transaction_refundable_amount(transaction_id)` for the proportional `gross_amount` of the cancelled tickets and requests a **partial** Paystack refund of exactly that. **The service fee is retained** and recorded by `record_fee_refund_adjustment`.
-2. **Refund is requested, then confirmed.** `record_refund_hold` moves the transaction to `refund_pending` and writes a negative `refund_hold` on the organizer ledger. The Paystack webhook `refund.processed` moves it to `refunded` (`record_refund_release` finalises the ledger); `refund.failed` returns it to `successful` with `refund_requested_at` set, and the buyer sees **Retry refund**.
+1. **Refund amount = ticket price only, ticket by ticket.** A payment made in cash (card or mobile money) is refunded per cancelled ticket (2026-10-30): `issueRefundCore` (`packages/services/src/organizer/issueRefundCore.ts`) calls `refund_prepare`, which picks the cancelled tickets no live refund covers and prices them as their share of their checkout line — cumulatively, so a line's parts add up to what was paid for it (three tickets of a GH₵100 line: 33.33, 33.34, 33.33) — and asks the provider for exactly that (a **partial** refund keyed by the part, so two parts of the same amount stay two refunds). **The service fee is retained**: a `fee_refund_adjustment` row tagged with the part's `refund_id` is written when the part is confirmed. A payment made partly with Abonten Credit, or paid small small, is refunded **as a whole** (`get_transaction_refundable_amount`, `record_fee_refund_adjustment`), so its tickets are cancelled together and the whole-payment refund waits until none of them is still active.
+2. **Refund is requested, then confirmed.** Each part is a `transaction_refund` row (`preparing` → `requested` → `processed` | `failed`, which tickets in `transaction_refund_ticket`). `refund_mark_requested` writes the part's negative `refund_hold` (tagged `refund_id`); the payment stays `successful` until its last tickets are refunded, when it moves to `refund_pending` and, once that part is confirmed, `refunded` — as a whole refund always did. The webhook matches each `refund.processed` / `refund.failed` to its part (`refund_match`: the provider's refund id, else the amount, else the only open part). A failed part gives its hold back (`refund_release`, same `refund_id`) and leaves its tickets uncovered, so the buyer sees **Retry refund** for that ticket (website and app). A whole-payment refund works as before: `record_refund_hold` → `refund_pending`; `refund.failed` returns it to `successful` with `refund_requested_at` set.
 3. **Idempotent.** `issueRefundCore` checks `transaction.status` first; a repeat call on `refund_pending`/`refunded` does nothing except finish a missing credit step.
-4. **Cancelling a ticket** (`cancelUserTicketCore`) releases the inventory unit and requests the refund for that ticket's share; already-cancelled tickets return success without repeating anything.
+4. **Cancelling a ticket** (`cancelUserTicketCore`) releases the inventory unit and, on a cash payment, requests that ticket's refund at once while the payment's other tickets stay valid (a checked-in ticket of the same payment does not stop it). On a credit or Pay small small payment the other active tickets must go with it (`scope: "payment"`, else 409), and none can be cancelled for a refund once one was checked in. Already-cancelled tickets return success without repeating anything. The buyer sees what comes back before confirming (`ticketCancelQuoteCore`).
 5. **Orphan transactions** (no linked tickets — 5 early-2026 test rows) return 400 "No tickets are linked to this payment" and are refunded manually if ever needed.
 6. **Promotions are not refundable** in code (no refund path exists); a failed activation with credit captured is corrected by an audited credit adjustment.
 7. **A purchase paid small small goes back through its parts.** Its transaction's provider is `abonten_plan`: `issueRefundCore` works out the ticket revenue as usual, then `ticket_plan_plan_purchase_refund` splits that cash across the parts' own charges, each asked of the provider separately. The transaction is `refunded` once every share has landed. An unfinished plan that ends (deadline, buyer, cancelled event) is refunded the same way, keeping the service-fee share of what was paid when the plan's terms say so ([architecture/ticket-plans.md](../architecture/ticket-plans.md) §5).
@@ -46,7 +46,7 @@ Buyer: *Retry refund*. Staff: check Paystack dashboard for the refund's status; 
 
 ### E. Refund confirmed by Paystack but still `refund_pending` in Abonten
 
-The webhook did not arrive or failed. Check the webhook route errors (Sentry), replay the event from the Paystack dashboard. If replay is impossible, an engineer calls `record_refund_release` for the transaction on the service role and records an admin note.
+The webhook did not arrive or failed. Check the webhook route errors (Sentry), replay the event from the Paystack dashboard. If replay is impossible: for a payment refunded ticket by ticket (Admin › Finance › Transactions › [transaction] lists its **Refund parts**), an engineer calls `refund_mark_outcome(refund_id, 'processed')` for the confirmed part on the service role; for a whole-payment refund, `record_refund_release` as before. Record an admin note either way.
 
 ### F. Credit-funded purchases
 

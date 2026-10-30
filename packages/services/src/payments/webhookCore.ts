@@ -134,6 +134,80 @@ async function handlePaymentOutcome(
   };
 }
 
+type RefundOutcomeRow = {
+  refund_id: string;
+  transaction_id: string;
+  user_id: string;
+  amount: number | string;
+  currency: string;
+  completes_payment: boolean;
+  changed: boolean;
+};
+
+/**
+ * Settles the refund part a provider event is about (refund_match), and
+ * tells the buyer. "none" when the event is not about one of the parts.
+ */
+async function settleRefundPart(
+  supabase: ServiceRoleClient,
+  transactionId: string,
+  event: Extract<
+    NormalizedWebhookEvent,
+    { type: "refund.processed" | "refund.failed" }
+  >,
+): Promise<"settled" | "none" | "error"> {
+  const amountMinor = event.amount?.amountMinor ?? null;
+  const { data: refundId, error: matchError } = await supabase.rpc(
+    "refund_match",
+    {
+      p_transaction_id: transactionId,
+      p_provider_refund_id: event.providerRefundId ?? null,
+      p_amount_minor: amountMinor,
+    },
+  );
+  if (matchError) {
+    logger.error(
+      `webhook: failed matching a refund part: ${matchError.message}`,
+    );
+    return "error";
+  }
+  if (!refundId) return "none";
+
+  const processed = event.type === "refund.processed";
+  const { data: rows, error: outcomeError } = await supabase.rpc(
+    "refund_mark_outcome",
+    {
+      p_refund_id: refundId as string,
+      p_outcome: processed ? "processed" : "failed",
+      p_detail: event.type === "refund.failed" ? (event.detail ?? null) : null,
+    },
+  );
+  if (outcomeError) {
+    logger.error(
+      `webhook: failed settling refund ${refundId}: ${outcomeError.message}`,
+    );
+    return "error";
+  }
+  const row = ((rows ?? []) as RefundOutcomeRow[])[0];
+  if (!row?.changed) return "settled";
+
+  logger.info(
+    `webhook: refund ${row.refund_id} of transaction ${row.transaction_id} -> ${processed ? "processed" : "failed"} via ${event.type}`,
+  );
+  await createNotificationCore(supabase, {
+    userId: row.user_id,
+    type: processed ? "refund_completed" : "refund_failed",
+    notice: { id: processed ? "refund_completed" : "refund_failed" },
+    link: "/transactions",
+    data: { kind: "ticket" },
+  }).catch((error) => {
+    logger.error(
+      `webhook: failed sending refund notification for refund ${row.refund_id}: ${error}`,
+    );
+  });
+  return "settled";
+}
+
 async function handleRefundOutcome(
   supabase: ServiceRoleClient,
   provider: string,
@@ -204,6 +278,20 @@ async function handleRefundOutcome(
       settled: true,
     };
   }
+  // A refund of part of a payment (or the last part of one refunded ticket
+  // by ticket) is its own row: settle that row. No row: the whole-payment
+  // path below.
+  const part = await settleRefundPart(supabase, match.id as string, event);
+  if (part !== "none") {
+    return part === "error"
+      ? {
+          status: WEBHOOK_ACK_RETRY,
+          body: { error: "Server error" },
+          settled: false,
+        }
+      : { status: WEBHOOK_ACK_OK, body: { received: true }, settled: true };
+  }
+
   const newStatus =
     event.type === "refund.processed" ? "refunded" : "successful";
 

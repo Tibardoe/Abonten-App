@@ -520,7 +520,7 @@
   "refundNext": {
     "failed": "We couldn't complete the refund automatically. Our team has been notified and will resolve it — you don't need to do anything.",
     "issued": "This was refunded to your original payment method. It can take a few business days to show on your statement.",
-    "none": "A refund is issued once every ticket in this order is cancelled.",
+    "none": "The refund for this ticket hasn't been requested yet.",
     "pending": "Your refund is on its way to your original payment method — this usually takes a few business days. Nothing more is needed from you."
   },
   "refundRequestedAgain": "Refund requested again.",

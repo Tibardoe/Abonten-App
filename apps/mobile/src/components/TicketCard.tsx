@@ -3,6 +3,7 @@ import { useCancelTicketFlow } from "@/features/tickets/useCancelTicket";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { AppText, Icon, TicketStatusBadge, useToast } from "@abonten/ui-native";
@@ -49,6 +50,7 @@ export function TicketCard({
   const txn = ticket.transaction;
   const showRefundPanel =
     showRefundInfo && ticket.status === "cancelled" && !!txn;
+  const refund = showRefundPanel ? ticketRefundState(ticket) : null;
 
   const canCancel =
     ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
@@ -108,12 +110,13 @@ export function TicketCard({
           ) : null}
         </View>
 
-        {showRefundPanel && txn ? (
+        {showRefundPanel && refund ? (
           <RefundStatusPanel
-            transactionStatus={txn.status}
-            refundRequestedAt={txn.refund_requested_at}
-            amount={txn.amount}
-            currency={txn.currency}
+            transactionStatus={refund.status}
+            refundRequestedAt={refund.refundRequestedAt}
+            amount={refund.amount}
+            currency={refund.currency}
+            transactionId={ticket.transaction_id}
           />
         ) : null}
 

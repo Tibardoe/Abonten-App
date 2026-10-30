@@ -12,6 +12,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -118,6 +119,7 @@ export default function TicketDetailScreen() {
     locale,
   );
   const cancelledByOrganizer = ticket.event.status === "canceled";
+  const refund = ticketRefundState(ticket);
   const eventEnded =
     getEventStatus(
       ticket.event.starts_at,
@@ -204,12 +206,13 @@ export default function TicketDetailScreen() {
         </View>
 
         {/* Refund status — only for a cancelled ticket that had a payment */}
-        {ticket.status === "cancelled" && ticket.transaction ? (
+        {ticket.status === "cancelled" && refund ? (
           <RefundStatusPanel
-            transactionStatus={ticket.transaction.status}
-            refundRequestedAt={ticket.transaction.refund_requested_at}
-            amount={ticket.transaction.amount}
-            currency={ticket.transaction.currency}
+            transactionStatus={refund.status}
+            refundRequestedAt={refund.refundRequestedAt}
+            amount={refund.amount}
+            currency={refund.currency}
+            transactionId={ticket.transaction_id}
           />
         ) : null}
 

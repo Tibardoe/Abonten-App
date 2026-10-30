@@ -549,7 +549,12 @@
     "youHaveStartedALotOfConversations": "Du hast in letzter Zeit sehr viele Unterhaltungen begonnen. Bitte versuche es später erneut.",
     "yourAccountHasBeenRestricted": "Dein Konto wurde eingeschränkt.",
     "yourCreditBalanceIsNegative": "Dein Guthaben ist negativ",
-    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt"
+    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt",
+    "aRefundForThisPaymentIsBeing": "Für diese Zahlung wird gerade eine Erstattung angefordert",
+    "refundNotFound": "Erstattung nicht gefunden",
+    "thisPaymentIsRefundedAsAWhole": "Diese Zahlung wird nur als Ganzes erstattet",
+    "transactionNotFound": "Transaktion nicht gefunden",
+    "unknownRefundOutcome": "Unbekanntes Ergebnis der Erstattung"
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1331,5 +1336,7 @@
   "thisTicketWasPaidForTogether": "Dieses Ticket wurde zusammen mit {count, plural, one {# weiteren Ticket} other {# weiteren Tickets}} bezahlt. Eine Erstattung gilt für die ganze Zahlung, storniere sie deshalb zusammen.",
   "aTicketFromThisPaymentWasChecked": "Ein Ticket dieser Zahlung wurde bereits beim Einlass gescannt, deshalb kann dieses Ticket nicht mehr gegen Erstattung storniert werden.",
   "ticketsCancelledRefund": "{count, plural, one {# Ticket storniert} other {# Tickets storniert}}. {refundMessage}.",
-  "thisTicketIsAlreadyCancelled": "Dieses Ticket ist bereits storniert."
+  "thisTicketIsAlreadyCancelled": "Dieses Ticket ist bereits storniert.",
+  "thereIsNothingLeftToRefund": "Für diese Zahlung ist nichts mehr zu erstatten",
+  "nothingWasPaidForThisTicket": "Für dieses Ticket wurde nichts bezahlt, es gibt also nichts zu erstatten"
 }

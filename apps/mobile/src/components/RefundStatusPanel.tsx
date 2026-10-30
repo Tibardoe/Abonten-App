@@ -1,3 +1,4 @@
+import { useRequestTicketRefund } from "@/features/tickets/useCancelTicket";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
   type RefundStatusKind,
@@ -9,13 +10,16 @@ import {
   Icon,
   type IoniconName,
   StatusPill,
+  useToast,
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
-// §10 — one place that turns a cancelled ticket's transaction state into a
+// §10 — one place that turns a cancelled ticket's refund state (its own
+// refund, else its payment's: refundStatus.ticketRefundState) into a
 // clear "here's what's happening with your money" panel, used on both the
-// Tickets list card and the ticket detail screen. Only the four states the
+// Tickets list card and the ticket detail screen. A refused refund, or one
+// never asked for, can be asked for again from here (transactionId). Only the four states the
 // backend actually produces (see @abonten/core/refundStatus): Refund
 // pending / Refund issued / Refund failed / No refund yet. Each pairs the
 // shared StatusPill with an icon, the amount, and a plain-English line
@@ -35,15 +39,19 @@ export function RefundStatusPanel({
   refundRequestedAt,
   amount,
   currency,
+  transactionId,
 }: {
   transactionStatus: string | null | undefined;
   refundRequestedAt: string | null | undefined;
   amount: number | null | undefined;
   currency: string | null | undefined;
+  transactionId?: string | null;
 }) {
   const { locale } = useLocale();
   const t = useTranslations("common");
   const tc = useTranslations("core");
+  const toast = useToast();
+  const request = useRequestTicketRefund();
   const kind = getRefundStatusKind(
     transactionStatus ?? "",
     refundRequestedAt ?? null,
@@ -82,6 +90,28 @@ export function RefundStatusPanel({
           {t(`refundNext.${kind}`)}
         </AppText>
       </View>
+      {transactionId && (kind === "failed" || kind === "none") ? (
+        <Pressable
+          accessibilityRole="button"
+          disabled={request.isPending}
+          onPress={async () => {
+            const res = await request
+              .mutateAsync({ transactionId })
+              .catch(() => null);
+            if (res?.status === 200) toast.success(res.message ?? "");
+            else toast.error(res?.message ?? t("couldnTRetryTheRefundPlease"));
+          }}
+          className="self-start py-1 active:opacity-60"
+        >
+          <AppText variant="small" tone="brand" className="font-semibold">
+            {request.isPending
+              ? t("retrying")
+              : kind === "failed"
+                ? t("retryRefund")
+                : t("requestRefund")}
+          </AppText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

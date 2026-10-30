@@ -1077,7 +1077,7 @@
     "failed": "Échec du remboursement",
     "issued": "Remboursement effectué",
     "none": "Pas encore de remboursement",
-    "noneDescription": "Émis une fois tous les billets de cette commande annulés.",
+    "noneDescription": "Le remboursement de ce billet n'a pas encore été demandé.",
     "pending": "Remboursement en attente"
   },
   "report": {
@@ -1304,6 +1304,7 @@
     "confirmOne": "Annuler le billet",
     "confirmAll": "Annuler les {count} billets",
     "keepOne": "Garder le billet",
-    "keepAll": "Garder les billets"
+    "keepAll": "Garder les billets",
+    "othersStayValid": "{count, plural, one {Votre autre billet de ce paiement reste valable.} other {Vos # autres billets de ce paiement restent valables.}}"
   }
 }

@@ -7,16 +7,14 @@ import type { CoreTranslator } from "./i18n/translator";
 // meaningful for a transaction linked to a CANCELLED ticket. Words live
 // under `refundStatus.*` of the core namespace.
 //
-// cancelUserTicket.ts defers requesting a refund until every ticket sharing
-// a transaction is cancelled (a single Paystack charge can cover multiple
-// tickets, ticket types, or even events — see generateTicket.ts — and this
-// integration has no per-ticket partial-refund amount, so refunding early
-// would refund the whole order while other tickets in it are still active).
-// That means a cancelled ticket's transaction sitting at "successful" is
-// ambiguous on its own: refund_requested_at disambiguates "not requested
-// yet, waiting on the rest of the order" (null) from "requested and failed"
-// (set — the initial API call failed, or Paystack later reported
-// refund.failed, see the webhook route).
+// A cash payment is refunded ticket by ticket (2026-10-30): each cancelled
+// ticket has its own refund (transaction_refund) while the payment stays
+// "successful", so a ticket's state comes from that refund first
+// (ticketRefundState). Without one (a payment refunded only as a whole, or a
+// ticket cancelled before 2026-10-30), the payment's state speaks for it:
+// at "successful", refund_requested_at tells "not requested yet" (null)
+// from "requested and failed" (set — the request failed, or the provider
+// later reported refund.failed).
 export type RefundStatusKind = "pending" | "issued" | "failed" | "none";
 
 /** Which of the four refund states applies, or null when none does. */
@@ -57,4 +55,60 @@ export function getRefundStatusLabel(
     default:
       return null;
   }
+}
+
+/** A cancelled ticket's own refund (transaction_refund via TICKET_*_SELECT). */
+export type TicketRefundPart = {
+  status: string;
+  amount: number;
+  currency: string;
+  created_at: string;
+};
+
+export type TicketRefundState = {
+  /** In the payment-status terms the functions above read. */
+  status: string;
+  refundRequestedAt: string | null;
+  /** This ticket's refund when it has its own, else the payment's amount. */
+  amount: number | null;
+  currency: string | null;
+};
+
+/**
+ * The refund state of one cancelled ticket: its own latest refund when the
+ * payment is refunded ticket by ticket, else its payment's.
+ */
+export function ticketRefundState(ticket: {
+  transaction: {
+    status: string;
+    refund_requested_at: string | null;
+    amount?: number;
+    currency?: string;
+  } | null;
+  refund_parts?: { refund: TicketRefundPart | null }[] | null;
+}): TicketRefundState | null {
+  const latest = (ticket.refund_parts ?? [])
+    .map((part) => part.refund)
+    .filter((refund): refund is TicketRefundPart => refund !== null)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  if (latest) {
+    return {
+      status:
+        latest.status === "processed"
+          ? "refunded"
+          : latest.status === "failed"
+            ? "successful"
+            : "refund_pending",
+      refundRequestedAt: latest.created_at,
+      amount: Number(latest.amount),
+      currency: latest.currency,
+    };
+  }
+  if (!ticket.transaction) return null;
+  return {
+    status: ticket.transaction.status,
+    refundRequestedAt: ticket.transaction.refund_requested_at,
+    amount: ticket.transaction.amount ?? null,
+    currency: ticket.transaction.currency ?? null,
+  };
 }

@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { invalidateAfterTicketMutation } from "@/lib/ticketMutationInvalidation";
 import type {
   CancelTicketBody,
+  RequestTicketRefundBody,
   TicketCancelQuoteBody,
 } from "@abonten/api-client";
 import { ticketCancelDialog } from "@abonten/core/ticketCancelQuote";
@@ -23,6 +24,18 @@ export function useCancelTicket() {
       // "You're going" badge, event detail and the organizer's attendee
       // list all need to reflect it — same fan-out as a purchase.
       invalidateAfterTicketMutation(qc);
+    },
+  });
+}
+
+/** Asks again for a cancelled ticket's refund (refused, or never asked). */
+export function useRequestTicketRefund() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RequestTicketRefundBody) =>
+      api.tickets.requestRefund(body),
+    onSuccess: (res) => {
+      if (res.status === 200) invalidateAfterTicketMutation(qc);
     },
   });
 }

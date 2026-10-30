@@ -1,7 +1,10 @@
 import { logger } from "@abonten/core/logger";
 import { releasePromoUsage } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
-import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
+import {
+  issueRefundCore,
+  refundsTicketByTicket,
+} from "@abonten/services/organizer/issueRefundCore";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
@@ -40,7 +43,8 @@ export type CancelUserTicketCoreResult = {
 
 /**
  * "ticket": this ticket alone. "payment": this ticket and the caller's
- * other active tickets from the same payment, which a refund needs.
+ * other active tickets from the same payment (required for a payment that
+ * is refunded only as a whole).
  */
 export type CancelTicketScope = "ticket" | "payment";
 
@@ -114,13 +118,19 @@ export async function cancelUserTicketCore(
   // Paid with cash, Abonten Credit, or both: an order paid entirely with
   // credit has amount 0 and is refunded to credit.
   let paymentId: string | null = null;
+  let wholePaymentOnly = false;
   if (ticket.transaction_id) {
     const { data: transaction, error: transactionError } = await supabase
       .from("transaction")
-      .select("id, amount, credit_amount")
+      .select("id, amount, credit_amount, provider")
       .eq("id", ticket.transaction_id)
       .eq("user_id", userId)
-      .maybeSingle<{ id: string; amount: number; credit_amount: number }>();
+      .maybeSingle<{
+        id: string;
+        amount: number;
+        credit_amount: number;
+        provider: string;
+      }>();
 
     if (transactionError || !transaction) {
       logger.error(`Failed fetching transaction: ${transactionError?.message}`);
@@ -131,6 +141,7 @@ export async function cancelUserTicketCore(
       0
     ) {
       paymentId = transaction.id;
+      wholePaymentOnly = !refundsTicketByTicket(transaction);
     }
   }
 
@@ -144,15 +155,17 @@ export async function cancelUserTicketCore(
   ];
 
   // A single charge (transaction) can cover several tickets — every
-  // quantity, and every event of a basket paid at once. A refund returns
-  // that whole payment's ticket revenue, so it is requested only once every
-  // ticket it paid for is cancelled. Cancelling one of them alone used to
-  // put the seat back on sale and give nothing back (pilot 2026-10-30): such
-  // a ticket is now cancelled together with the others, or not at all.
+  // quantity, and every event of a basket paid at once. A cash payment is
+  // refunded ticket by ticket: each cancelled ticket's price comes back on
+  // its own (issueRefundCore). A payment made with Abonten Credit or paid
+  // small small is refunded only as a whole, once every ticket it paid for
+  // is cancelled: such a ticket is cancelled together with the others, or
+  // not at all (alone it used to put the seat back on sale and give
+  // nothing back, pilot 2026-10-30).
   if (paymentId) {
     const tickets = await ticketsOfPayment(supabase, paymentId);
     if (!tickets) return { status: 500, message: tr("somethingWentWrong") };
-    if (tickets.some((t) => t.status === "used")) {
+    if (wholePaymentOnly && tickets.some((t) => t.status === "used")) {
       return {
         status: 409,
         message: tr("aTicketFromThisPaymentWasChecked"),
@@ -162,14 +175,14 @@ export async function cancelUserTicketCore(
     const others = tickets.filter(
       (t) => t.id !== ticketId && t.status === "active",
     );
-    if (others.length > 0 && options.scope !== "payment") {
+    if (wholePaymentOnly && others.length > 0 && options.scope !== "payment") {
       return {
         status: 409,
         message: tr("thisTicketWasPaidForTogether", { count: others.length }),
         ...about,
       };
     }
-    for (const other of others) {
+    for (const other of options.scope === "payment" ? others : []) {
       targets.push({
         id: other.id,
         ticketTypeId: other.ticketTypeId,
@@ -242,12 +255,12 @@ export async function cancelUserTicketCore(
   let refundDeferred = false;
 
   if (paymentId) {
-    // Every ticket the payment covered must be cancelled first: a gate scan
-    // racing the flips above can still leave one live.
-    const allCancelled = await areAllTicketsForTransactionCancelled(
-      supabase,
-      paymentId,
-    );
+    // A whole-payment refund waits until every ticket the payment covered is
+    // cancelled (a gate scan racing the flips above can still leave one
+    // live); a cash payment refunds what was just cancelled.
+    const allCancelled =
+      !wholePaymentOnly ||
+      (await areAllTicketsForTransactionCancelled(supabase, paymentId));
 
     if (allCancelled) {
       const response = await issueRefundCore(supabase, paymentId, {

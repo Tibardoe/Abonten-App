@@ -1077,7 +1077,7 @@
     "failed": "Reembolso falhou",
     "issued": "Reembolso emitido",
     "none": "Ainda sem reembolso",
-    "noneDescription": "Emitido quando todos os bilhetes desta encomenda forem cancelados.",
+    "noneDescription": "O reembolso deste bilhete ainda não foi pedido.",
     "pending": "Reembolso pendente"
   },
   "report": {
@@ -1304,6 +1304,7 @@
     "confirmOne": "Cancelar bilhete",
     "confirmAll": "Cancelar os {count} bilhetes",
     "keepOne": "Manter bilhete",
-    "keepAll": "Manter bilhetes"
+    "keepAll": "Manter bilhetes",
+    "othersStayValid": "{count, plural, one {O seu outro bilhete deste pagamento continua válido.} other {Os seus outros # bilhetes deste pagamento continuam válidos.}}"
   }
 }

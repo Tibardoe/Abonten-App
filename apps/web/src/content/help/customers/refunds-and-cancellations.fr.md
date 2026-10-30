@@ -18,12 +18,13 @@ Ouvrez le billet dans Mes billets (Gérer › Mes billets sur le site web, Compt
 - Le **prix du billet** annulé est remboursé sur le moyen de paiement utilisé.
 - **Les frais de service ne sont pas remboursés.**
 - Les billets gratuits n'ont rien à rembourser ; ils passent simplement à *Annulé*.
-- Un remboursement couvre tout un paiement. Si vous avez acheté plusieurs billets en un seul paiement (plus d'un billet, ou des billets pour plusieurs événements payés ensemble), ils sont annulés ensemble : la fenêtre indique combien de billets et quel montant vous est rendu avant que vous confirmiez. L'un d'eux ne peut pas être annulé seul.
-- Dès qu'un billet d'un paiement a été scanné à l'entrée, les autres billets de ce paiement ne peuvent plus être annulés pour un remboursement.
+- Si vous avez acheté plusieurs billets en un seul paiement, vous pouvez n'en annuler qu'un : le prix de ce billet vous est remboursé et les autres restent valables. Vous en avez acheté trois et un ami ne peut pas venir ? Annulez le billet de cet ami. Si une réduction a baissé le total de la commande, c'est la part de chaque billet dans le prix réduit qui vous est rendue.
+- Avant que vous confirmiez, la fenêtre indique le montant qui vous est rendu.
+- Un paiement réglé en partie avec du Crédit Abonten, ou payé en plusieurs fois, est remboursé en entier : ses billets sont annulés ensemble, et aucun ne peut plus être annulé pour un remboursement dès que l'un d'eux a été scanné à l'entrée.
 
 ## Combien de temps cela prend
 
-L'annulation **demande** immédiatement le remboursement à Paystack. Votre transaction affiche **Remboursement en attente** jusqu'à ce que Paystack le confirme, puis **Remboursé**. Ensuite, le délai pour le voir apparaître sur votre carte ou votre solde mobile money dépend de votre banque ou de votre réseau : en général quelques jours pour les cartes.
+L'annulation **demande** immédiatement le remboursement à Paystack. Le billet annulé affiche **Remboursement en attente** jusqu'à ce que Paystack le confirme, puis **Remboursé** ; le paiement lui-même affiche **Remboursé** une fois tous ses billets remboursés. Ensuite, le délai pour le voir apparaître sur votre carte ou votre solde mobile money dépend de votre banque ou de votre réseau : en général quelques jours pour les cartes.
 
 Si la demande échoue (par exemple si Paystack était injoignable), votre billet affiche **Échec du remboursement** avec un bouton **Relancer le remboursement**. L'assistance peut aussi relancer la demande.
 

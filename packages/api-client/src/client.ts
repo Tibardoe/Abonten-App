@@ -253,6 +253,8 @@ import type {
   RequestPhoneOtpData,
   RequestPlaceBookingBody,
   RequestPlaceBookingResult,
+  RequestTicketRefundBody,
+  RequestTicketRefundResult,
   ResolvedAddress,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
@@ -959,6 +961,14 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+      /** Ask again for the refund of the caller's cancelled tickets on a
+       *  payment (a refused one, or one never asked for). */
+      requestRefund(body: RequestTicketRefundBody) {
+        return request<RequestTicketRefundResult>(
+          "/api/mobile/tickets/refund",
+          { method: "POST", body, auth: true },
+        );
       },
       /** What cancelling this ticket would give back, and whether the
        *  payment's other tickets go with it. Asked before the dialog. */

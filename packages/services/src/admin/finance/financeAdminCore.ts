@@ -306,6 +306,7 @@ export async function getTransactionDetailCore(
     { data: fees },
     { data: ticketRows },
     { data: refundable },
+    { data: refundParts },
   ] = await Promise.all([
     supabase
       .from("payment_attempt")
@@ -335,6 +336,14 @@ export async function getTransactionDetailCore(
     supabase.rpc("get_transaction_refundable_amount", {
       p_transaction_id: txId,
     }),
+    // A cash payment is refunded ticket by ticket: one row per part.
+    supabase
+      .from("transaction_refund")
+      .select(
+        "id, amount, currency, status, completes_payment, provider_refund_id, failure_detail, created_at, processed_at, failed_at, transaction_refund_ticket(ticket_id)",
+      )
+      .eq("transaction_id", txId)
+      .order("created_at", { ascending: true }),
   ]);
 
   const names = await orgNames(
@@ -395,7 +404,15 @@ export async function getTransactionDetailCore(
       metadata: (t.metadata as Record<string, unknown>) ?? null,
       createdAt: t.created_at,
       refundRequestedAt: t.refund_requested_at ?? null,
-      refundableAmount: num(refundable),
+      // What is left: the ticket revenue less the parts already refunded
+      // or on their way back.
+      refundableAmount: Math.max(
+        num(refundable) -
+          (refundParts ?? [])
+            .filter((r) => r.status !== "failed")
+            .reduce((sum, r) => sum + num(r.amount), 0),
+        0,
+      ),
       attempts: (attempts ?? []).map((a) => ({
         id: a.id,
         status: a.status,
@@ -440,6 +457,19 @@ export async function getTransactionDetailCore(
         createdAt: f.created_at,
       })),
       ticketsIssued: (ticketRows ?? []).length,
+      refundParts: (refundParts ?? []).map((r) => ({
+        id: r.id,
+        amount: num(r.amount),
+        currency: r.currency,
+        status: r.status,
+        completesPayment: r.completes_payment,
+        providerRefundId: r.provider_refund_id ?? null,
+        failureDetail: r.failure_detail ?? null,
+        ticketCount: (r.transaction_refund_ticket ?? []).length,
+        createdAt: r.created_at,
+        processedAt: r.processed_at ?? null,
+        failedAt: r.failed_at ?? null,
+      })),
       checkouts,
     },
   };

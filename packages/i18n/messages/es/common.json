@@ -520,7 +520,7 @@
   "refundNext": {
     "failed": "No pudimos completar el reembolso automáticamente. Hemos avisado a nuestro equipo y lo resolverá — no tienes que hacer nada.",
     "issued": "Se reembolsó a tu método de pago original. Puede tardar unos días hábiles en aparecer en tu extracto.",
-    "none": "El reembolso se emite cuando se cancelan todas las entradas de este pedido.",
+    "none": "Aún no se ha pedido el reembolso de esta entrada.",
     "pending": "Tu reembolso va de camino a tu método de pago original — suele tardar unos días hábiles. No necesitas hacer nada más."
   },
   "refundRequestedAgain": "Reembolso solicitado de nuevo.",

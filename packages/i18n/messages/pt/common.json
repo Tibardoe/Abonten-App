@@ -520,7 +520,7 @@
   "refundNext": {
     "failed": "Não foi possível concluir o reembolso automaticamente. A nossa equipa foi avisada e irá resolver — não precisa de fazer nada.",
     "issued": "O valor foi reembolsado no seu método de pagamento original. Pode demorar alguns dias úteis a aparecer no seu extrato.",
-    "none": "O reembolso é emitido quando todos os bilhetes desta encomenda forem cancelados.",
+    "none": "O reembolso deste bilhete ainda não foi pedido.",
     "pending": "O seu reembolso está a caminho do seu método de pagamento original — normalmente demora alguns dias úteis. Não precisa de fazer mais nada."
   },
   "refundRequestedAgain": "Reembolso pedido novamente.",

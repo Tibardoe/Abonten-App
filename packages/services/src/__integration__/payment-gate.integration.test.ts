@@ -22,6 +22,7 @@ import {
 import { cancelTicketCheckoutSessionCore } from "../checkout/cancelTicketCheckoutSessionCore";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { invalidateMarketCache } from "../markets/marketConfig";
+import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
@@ -54,6 +55,8 @@ function fakePaystack() {
   const paid = new Set<string>();
   const reportCurrency = new Map<string, string>();
   const refunds: string[] = [];
+  const refundAmounts: (number | null)[] = [];
+  let refundFailures = 0;
   let verifyFailures = 0;
   const init = async (
     _account: unknown,
@@ -95,7 +98,13 @@ function fakePaystack() {
   );
   vi.spyOn(paystackProvider, "refund").mockImplementation(
     async (_account, input) => {
+      if (refundFailures > 0) {
+        refundFailures -= 1;
+        throw new Error("simulated refund refusal");
+      }
       refunds.push(input.reference ?? "");
+      refundAmounts.push(input.amount?.amountMinor ?? null);
+      return { providerRefundId: `rf-${refunds.length}-${input.reference}` };
     },
   );
   return {
@@ -103,8 +112,12 @@ function fakePaystack() {
     paid,
     reportCurrency,
     refunds,
+    refundAmounts,
     failNextVerify: (n = 1) => {
       verifyFailures = n;
+    },
+    failNextRefund: (n = 1) => {
+      refundFailures = n;
     },
   };
 }
@@ -556,12 +569,12 @@ describe("payment production gate", () => {
     expect(ticketAfter.status).toBe("cancelled");
   });
 
-  async function buyTwo() {
+  async function buy(quantity: number) {
     const provider = fakePaystack();
     const fixture = await newEvent();
     const opened = await validateCheckoutCore(buyer.client, buyer.id, {
       eventId: fixture.eventId,
-      quantities: { [fixture.ticketTypeId]: 2 },
+      quantities: { [fixture.ticketTypeId]: quantity },
     });
     expect(opened.status, opened.message).toBe(200);
     const started = await pay([opened.checkoutSessionId as string]);
@@ -569,8 +582,9 @@ describe("payment production gate", () => {
     provider.paid.add(ref);
     await finalizePayment(started.attempts[0].id, deps);
     const tickets = await ticketsOf(buyer);
-    expect(tickets).toHaveLength(2);
-    return { provider, fixture, ref, tickets };
+    expect(tickets).toHaveLength(quantity);
+    const [txn] = await transactionsOf(buyer);
+    return { provider, fixture, ref, tickets, txn };
   }
 
   async function seatsLeft(ticketTypeId: string) {
@@ -582,8 +596,67 @@ describe("payment production gate", () => {
     return data?.quantity;
   }
 
-  it("two tickets from one payment: one alone is refused, both together are refunded once", async () => {
-    const { provider, fixture, ref, tickets } = await buyTwo();
+  async function refundsOf(transactionId: string) {
+    const { data } = await service
+      .from("transaction_refund")
+      .select("id, amount, status, completes_payment, provider_refund_id")
+      .eq("transaction_id", transactionId)
+      .order("created_at");
+    return data ?? [];
+  }
+
+  async function holdsOf(transactionId: string) {
+    const { data } = await service
+      .from("organizer_ledger_entry")
+      .select("entry_type, amount, refund_id")
+      .eq("transaction_id", transactionId)
+      .neq("entry_type", "earning")
+      .order("created_at");
+    return data ?? [];
+  }
+
+  async function statusOf(transactionId: string) {
+    const { data } = await service
+      .from("transaction")
+      .select("status, refund_requested_at")
+      .eq("id", transactionId)
+      .single();
+    return data;
+  }
+
+  async function refundWebhook(
+    event: "refund.processed" | "refund.failed",
+    reference: string,
+    refundId: string | null,
+    amountMinor: number | null,
+  ) {
+    const { body, headers } = signed(event, {
+      ...(refundId ? { id: refundId } : {}),
+      status: event === "refund.processed" ? "processed" : "failed",
+      transaction_reference: reference,
+      ...(amountMinor != null ? { amount: amountMinor, currency: "GHS" } : {}),
+    });
+    return handleProviderWebhook({
+      providerCode: "paystack",
+      countryCode: "GH",
+      rawBody: body,
+      headers,
+      deps,
+    });
+  }
+
+  async function cancel(ticketId: string, scope?: "ticket" | "payment") {
+    return cancelUserTicketCore(
+      buyer.client,
+      buyer.id,
+      ticketId,
+      null,
+      scope ? { scope } : {},
+    );
+  }
+
+  it("three tickets, one friend can't come: that ticket's price comes back, the other two stay valid", async () => {
+    const { provider, fixture, ref, tickets, txn } = await buy(3);
     const [first, second] = tickets;
 
     const quote = await ticketCancelQuoteCore(buyer.client, buyer.id, first.id);
@@ -591,69 +664,160 @@ describe("payment production gate", () => {
       status: 200,
       data: {
         paid: true,
-        otherTicketIds: [second.id],
+        otherTicketIds: [],
+        keptTicketCount: 2,
         otherEvents: false,
         checkedIn: false,
-        refund: { cashMinor: 10000, creditMinor: 0, currency: "GHS" },
+        refund: { cashMinor: 5000, creditMinor: 0, currency: "GHS" },
       },
     });
 
-    // Alone it would put the seat back on sale and give nothing back.
-    const alone = await cancelUserTicketCore(
-      buyer.client,
-      buyer.id,
-      first.id,
-      first.transaction_id,
-    );
-    expect(alone.status).toBe(409);
-    expect((await ticketsOf(buyer)).map((t) => t.status)).toEqual([
-      "active",
-      "active",
-    ]);
+    const one = await cancel(first.id);
+    expect(one.status, one.message).toBe(200);
+    const after = await ticketsOf(buyer);
+    expect(after.find((t) => t.id === first.id)?.status).toBe("cancelled");
+    expect(after.filter((t) => t.status === "active")).toHaveLength(2);
     expect(await seatsLeft(fixture.ticketTypeId)).toBe(18);
-    expect(provider.refunds).toEqual([]);
-
-    const together = await cancelUserTicketCore(
-      buyer.client,
-      buyer.id,
-      first.id,
-      first.transaction_id,
-      { scope: "payment" },
-    );
-    expect(together.status, together.message).toBe(200);
-    expect((await ticketsOf(buyer)).map((t) => t.status)).toEqual([
-      "cancelled",
-      "cancelled",
-    ]);
-    expect(await seatsLeft(fixture.ticketTypeId)).toBe(20);
     expect(provider.refunds).toEqual([ref]);
-    const [txn] = await transactionsOf(buyer);
-    expect(txn.status).toBe("refund_pending");
-    const { data: ledger } = await service
-      .from("organizer_ledger_entry")
-      .select("entry_type, amount")
+    expect(provider.refundAmounts).toEqual([5000]);
+    // The payment itself is not being refunded: it still reads as paid.
+    expect(await statusOf(txn.id)).toEqual({
+      status: "successful",
+      refund_requested_at: null,
+    });
+    const [part] = await refundsOf(txn.id);
+    expect(part).toMatchObject({
+      amount: 50,
+      status: "requested",
+      completes_payment: false,
+      provider_refund_id: `rf-1-${ref}`,
+    });
+    expect(await holdsOf(txn.id)).toEqual([
+      { entry_type: "refund_hold", amount: -50, refund_id: part.id },
+    ]);
+
+    // The provider confirms it: that part is done, the payment still paid.
+    const hook = await refundWebhook(
+      "refund.processed",
+      ref,
+      `rf-1-${ref}`,
+      5000,
+    );
+    expect(hook.status).toBe(200);
+    expect((await refundsOf(txn.id))[0].status).toBe("processed");
+    expect((await statusOf(txn.id))?.status).toBe("successful");
+    const { data: fee } = await service
+      .from("platform_fee_entry")
+      .select("entry_type, ticket_revenue, refund_id")
       .eq("transaction_id", txn.id)
-      .order("created_at");
-    expect(ledger).toEqual([
-      { entry_type: "earning", amount: 100 },
-      { entry_type: "refund_hold", amount: -100 },
+      .eq("entry_type", "fee_refund_adjustment");
+    expect(fee).toEqual([
+      {
+        entry_type: "fee_refund_adjustment",
+        ticket_revenue: -50,
+        refund_id: part.id,
+      },
     ]);
 
-    // A retry changes nothing.
-    const again = await cancelUserTicketCore(
-      buyer.client,
-      buyer.id,
-      second.id,
-      second.transaction_id,
-      { scope: "payment" },
-    );
-    expect(again.status).toBe(200);
+    // Later the other two are cancelled together: the rest comes back and
+    // the payment is refunded as a whole.
+    const rest = await cancel(second.id, "payment");
+    expect(rest.status, rest.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000, 10000]);
+    expect((await statusOf(txn.id))?.status).toBe("refund_pending");
     expect(await seatsLeft(fixture.ticketTypeId)).toBe(20);
-    expect(provider.refunds).toEqual([ref]);
+    const holds = await holdsOf(txn.id);
+    expect(holds.reduce((sum, h) => sum + Number(h.amount), 0)).toBe(-150);
+
+    // A redelivery of the first confirmation changes nothing; the second
+    // finishes the payment.
+    await refundWebhook("refund.processed", ref, `rf-1-${ref}`, 5000);
+    expect((await statusOf(txn.id))?.status).toBe("refund_pending");
+    await refundWebhook("refund.processed", ref, `rf-2-${ref}`, 10000);
+    expect((await statusOf(txn.id))?.status).toBe("refunded");
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual([
+      "processed",
+      "processed",
+    ]);
   });
 
-  it("a payment with a checked-in ticket can't be cancelled for a refund", async () => {
-    const { provider, fixture, tickets } = await buyTwo();
+  it("the parts of a line add up to what was paid for it", async () => {
+    const { txn, tickets } = await buy(3);
+    // A line of three that came to 100 (a discount): 33.33 + 33.34 + 33.33.
+    const { data: line } = await service
+      .from("ticket")
+      .select("ticket_checkout_id")
+      .eq("id", tickets[0].id)
+      .single();
+    await service
+      .from("ticket_checkout")
+      .update({ total_price: 100 })
+      .eq("id", line?.ticket_checkout_id as string);
+    await service
+      .from("organizer_ledger_entry")
+      .update({ amount: 100 })
+      .eq("ticket_checkout_id", line?.ticket_checkout_id as string)
+      .eq("entry_type", "earning");
+
+    for (const ticket of tickets) {
+      expect((await cancel(ticket.id)).status).toBe(200);
+    }
+    const parts = await refundsOf(txn.id);
+    expect(parts.map((r) => Number(r.amount))).toEqual([33.33, 33.34, 33.33]);
+    expect(parts.map((r) => r.completes_payment)).toEqual([false, false, true]);
+    const holds = await holdsOf(txn.id);
+    expect(holds.map((h) => Number(h.amount))).toEqual([
+      -33.33, -33.34, -33.33,
+    ]);
+  });
+
+  it("a refused part can be asked again, and the organizer's hold follows", async () => {
+    const { provider, ref, tickets, txn } = await buy(2);
+
+    // The provider refuses when asked.
+    provider.failNextRefund();
+    const refused = await cancel(tickets[0].id);
+    expect(refused.status).toBe(200);
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual(["failed"]);
+    expect(await holdsOf(txn.id)).toEqual([]);
+
+    // Retry refund (issueRefundCore) asks again for that ticket.
+    const retry = await issueRefundCore(buyer.client, txn.id, {
+      expectedUserId: buyer.id,
+    });
+    expect(retry.status, retry.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000]);
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual([
+      "failed",
+      "requested",
+    ]);
+
+    // Then the provider reports that part failed: the hold goes back and
+    // the ticket can be refunded again.
+    await refundWebhook("refund.failed", ref, `rf-1-${ref}`, null);
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual([
+      "failed",
+      "failed",
+    ]);
+    const net = (await holdsOf(txn.id)).reduce(
+      (sum, h) => sum + Number(h.amount),
+      0,
+    );
+    expect(net).toBe(0);
+    expect((await statusOf(txn.id))?.status).toBe("successful");
+    const again = await issueRefundCore(buyer.client, txn.id, {
+      expectedUserId: buyer.id,
+    });
+    expect(again.status, again.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000, 5000]);
+
+    // The ticket left in the payment is untouched throughout.
+    const left = (await ticketsOf(buyer)).find((t) => t.id === tickets[1].id);
+    expect(left?.status).toBe("active");
+  });
+
+  it("a checked-in ticket doesn't stop the others of its payment being refunded", async () => {
+    const { provider, tickets } = await buy(2);
     const [scanned, other] = tickets;
     await service
       .from("ticket")
@@ -661,22 +825,11 @@ describe("payment production gate", () => {
       .eq("id", scanned.id);
 
     const quote = await ticketCancelQuoteCore(buyer.client, buyer.id, other.id);
-    expect(quote.status).toBe(200);
-    if (quote.status === 200) expect(quote.data.checkedIn).toBe(true);
-
-    for (const scope of ["ticket", "payment"] as const) {
-      const refused = await cancelUserTicketCore(
-        buyer.client,
-        buyer.id,
-        other.id,
-        other.transaction_id,
-        { scope },
-      );
-      expect(refused.status).toBe(409);
-    }
-    const after = await ticketsOf(buyer);
-    expect(after.find((t) => t.id === other.id)?.status).toBe("active");
-    expect(await seatsLeft(fixture.ticketTypeId)).toBe(18);
-    expect(provider.refunds).toEqual([]);
+    expect(quote.status === 200 && quote.data.checkedIn).toBe(false);
+    const cancelled = await cancel(other.id);
+    expect(cancelled.status, cancelled.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000]);
+    // The checked-in ticket can't be cancelled.
+    expect((await cancel(scanned.id)).status).toBe(409);
   });
 });

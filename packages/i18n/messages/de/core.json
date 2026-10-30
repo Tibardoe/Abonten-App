@@ -1077,7 +1077,7 @@
     "failed": "Erstattung fehlgeschlagen",
     "issued": "Erstattung veranlasst",
     "none": "Noch keine Erstattung",
-    "noneDescription": "Wird veranlasst, sobald alle Tickets dieser Bestellung storniert sind.",
+    "noneDescription": "Die Erstattung für dieses Ticket wurde noch nicht angefordert.",
     "pending": "Erstattung ausstehend"
   },
   "report": {
@@ -1304,6 +1304,7 @@
     "confirmOne": "Ticket stornieren",
     "confirmAll": "Alle {count} Tickets stornieren",
     "keepOne": "Ticket behalten",
-    "keepAll": "Tickets behalten"
+    "keepAll": "Tickets behalten",
+    "othersStayValid": "{count, plural, one {Dein anderes Ticket aus dieser Zahlung bleibt gültig.} other {Deine # anderen Tickets aus dieser Zahlung bleiben gültig.}}"
   }
 }

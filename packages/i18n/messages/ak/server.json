@@ -549,7 +549,12 @@
     "youHaveStartedALotOfConversations": "You have started a lot of conversations recently. Please try again later.",
     "yourAccountHasBeenRestricted": "Your account has been restricted.",
     "yourCreditBalanceIsNegative": "Your credit balance is negative",
-    "yourCreditIsOnHold": "Your credit is on hold"
+    "yourCreditIsOnHold": "Your credit is on hold",
+    "aRefundForThisPaymentIsBeing": "A refund for this payment is being requested",
+    "refundNotFound": "Refund not found",
+    "thisPaymentIsRefundedAsAWhole": "This payment is refunded as a whole",
+    "transactionNotFound": "Transaction not found",
+    "unknownRefundOutcome": "Unknown refund outcome"
   },
   "defaultPaymentMethodUpdated": "Default payment method updated",
   "defaultPayoutAccountUpdated": "Default payout account updated",
@@ -1331,5 +1336,7 @@
   "thisTicketWasPaidForTogether": "This ticket was paid for together with {count, plural, one {# other ticket} other {# other tickets}}. A refund covers the whole payment, so cancel them together.",
   "aTicketFromThisPaymentWasChecked": "A ticket from this payment has been checked in, so this ticket can no longer be cancelled for a refund.",
   "ticketsCancelledRefund": "{count, plural, one {# ticket} other {# tickets}} cancelled. {refundMessage}.",
-  "thisTicketIsAlreadyCancelled": "This ticket is already cancelled."
+  "thisTicketIsAlreadyCancelled": "This ticket is already cancelled.",
+  "thereIsNothingLeftToRefund": "There is nothing left to refund for this payment",
+  "nothingWasPaidForThisTicket": "Nothing was paid for this ticket, so there is nothing to refund"
 }

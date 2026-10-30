@@ -4,10 +4,10 @@ import { formatMoney } from "./money/formatMoney";
 
 // What cancelling a ticket gives back, asked of the server before the
 // cancel dialog opens (ticketCancelQuoteCore), and the words that dialog
-// shows on the website and in the app. A refund covers a whole payment, so
-// a ticket bought together with others is cancelled with them: pilot
-// testers cancelled one of two tickets, were promised a refund, got
-// nothing back and lost the seat (2026-10-30).
+// shows on the website and in the app. A cash payment is refunded ticket
+// by ticket ("one friend can't come": that ticket's price back, the others
+// stay valid); a payment made with Abonten Credit or paid small small is
+// refunded only as a whole, so its tickets are cancelled together.
 
 export type TicketCancelDialog = {
   body: string;
@@ -62,8 +62,12 @@ export function ticketCancelDialog(
   }
   const others = quote.otherTicketIds.length;
   if (others === 0) {
+    const refund = refundSentence(i18n, quote.refund);
     return {
-      body: refundSentence(i18n, quote.refund),
+      body:
+        quote.keptTicketCount > 0
+          ? `${refund} ${t("ticketCancel.othersStayValid", { count: quote.keptTicketCount })}`
+          : refund,
       confirm: t("ticketCancel.confirmOne"),
       keep: t("ticketCancel.keepOne"),
       wholePayment: false,

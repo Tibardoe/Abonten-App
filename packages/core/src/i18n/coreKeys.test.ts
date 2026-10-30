@@ -338,6 +338,7 @@ describe("core copy keys", () => {
     const quote = {
       paid: true,
       otherTicketIds: [],
+      keptTicketCount: 0,
       otherEvents: false,
       checkedIn: false,
       refund,
@@ -348,6 +349,7 @@ describe("core copy keys", () => {
       { ...quote, refund: null },
       { ...quote, refund: { ...refund, cashMinor: 0, creditMinor: 4000 } },
       { ...quote, refund: { ...refund, creditMinor: 1000 } },
+      { ...quote, keptTicketCount: 2 },
       { ...quote, otherTicketIds: ["b"] },
       { ...quote, otherTicketIds: ["b"], otherEvents: true },
       { ...quote, checkedIn: true },

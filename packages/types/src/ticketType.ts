@@ -35,6 +35,15 @@ export type UserTicketType = {
     amount?: number;
     currency?: string;
   } | null;
+  /** This ticket's own refunds (a payment refunded ticket by ticket). */
+  refund_parts?: {
+    refund: {
+      status: string;
+      amount: number;
+      currency: string;
+      created_at: string;
+    } | null;
+  }[];
   seat_number: string | null;
   status: "active" | "cancelled" | string;
   qr_public_id: string;
@@ -94,14 +103,18 @@ export type CheckoutSessionStatus =
 
 /**
  * What cancelling one of the buyer's tickets would give back, asked before
- * the cancel dialog opens (ticketCancelQuoteCore). A refund covers a whole
- * payment, so a ticket bought together with others is cancelled with them.
+ * the cancel dialog opens (ticketCancelQuoteCore). A cash payment is
+ * refunded ticket by ticket; one made with Abonten Credit or paid small
+ * small only as a whole, so its tickets are cancelled together.
  */
 export type TicketCancelQuote = {
   /** Paid with money or credit; a free ticket has nothing to give back. */
   paid: boolean;
-  /** The buyer's other active tickets from the same payment. */
+  /** The buyer's other active tickets that go with this one (a payment
+   *  refunded only as a whole). */
   otherTicketIds: string[];
+  /** The buyer's other active tickets from the payment that stay valid. */
+  keptTicketCount: number;
   /** Some of those are for another event (a basket paid at once). */
   otherEvents: boolean;
   /** A ticket from that payment was checked in: nothing can be refunded. */

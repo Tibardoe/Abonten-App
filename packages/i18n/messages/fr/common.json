@@ -520,7 +520,7 @@
   "refundNext": {
     "failed": "Nous n'avons pas pu effectuer le remboursement automatiquement. Notre équipe a été prévenue et s'en occupe — vous n'avez rien à faire.",
     "issued": "Ce montant a été remboursé sur votre moyen de paiement d'origine. Il peut falloir quelques jours ouvrés pour qu'il apparaisse sur votre relevé.",
-    "none": "Le remboursement est émis une fois tous les billets de cette commande annulés.",
+    "none": "Le remboursement de ce billet n'a pas encore été demandé.",
     "pending": "Votre remboursement est en route vers votre moyen de paiement d'origine — cela prend généralement quelques jours ouvrés. Vous n'avez rien d'autre à faire."
   },
   "refundRequestedAgain": "Remboursement demandé à nouveau.",

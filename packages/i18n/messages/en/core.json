@@ -363,7 +363,7 @@
     "issued": "Refund issued",
     "failed": "Refund failed",
     "none": "No refund yet",
-    "noneDescription": "Issued once every ticket in this order is cancelled."
+    "noneDescription": "The refund for this ticket hasn't been requested yet."
   },
   "fulfillment": {
     "ticket": "Payment successful. Preparing your tickets…",
@@ -1304,6 +1304,7 @@
     "confirmOne": "Cancel ticket",
     "confirmAll": "Cancel all {count} tickets",
     "keepOne": "Keep ticket",
-    "keepAll": "Keep tickets"
+    "keepAll": "Keep tickets",
+    "othersStayValid": "{count, plural, one {Your other ticket from this payment stays valid.} other {Your other # tickets from this payment stay valid.}}"
   }
 }

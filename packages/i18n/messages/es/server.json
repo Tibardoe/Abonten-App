@@ -549,7 +549,12 @@
     "youHaveStartedALotOfConversations": "Has iniciado muchas conversaciones últimamente. Inténtalo de nuevo más tarde.",
     "yourAccountHasBeenRestricted": "Tu cuenta ha sido restringida.",
     "yourCreditBalanceIsNegative": "Tu saldo de crédito es negativo",
-    "yourCreditIsOnHold": "Tu crédito está retenido"
+    "yourCreditIsOnHold": "Tu crédito está retenido",
+    "aRefundForThisPaymentIsBeing": "Se está pidiendo un reembolso de este pago",
+    "refundNotFound": "Reembolso no encontrado",
+    "thisPaymentIsRefundedAsAWhole": "Este pago se reembolsa entero",
+    "transactionNotFound": "Transacción no encontrada",
+    "unknownRefundOutcome": "Resultado de reembolso desconocido"
   },
   "defaultPaymentMethodUpdated": "Método de pago predeterminado actualizado",
   "defaultPayoutAccountUpdated": "Cuenta de cobro predeterminada actualizada",
@@ -1331,5 +1336,7 @@
   "thisTicketWasPaidForTogether": "Esta entrada se pagó junto con {count, plural, one {# entrada más} other {# entradas más}}. Un reembolso cubre todo el pago, así que cancélalas juntas.",
   "aTicketFromThisPaymentWasChecked": "Una entrada de este pago ya se escaneó en el acceso, así que esta entrada ya no se puede cancelar con reembolso.",
   "ticketsCancelledRefund": "{count, plural, one {# entrada cancelada} other {# entradas canceladas}}. {refundMessage}.",
-  "thisTicketIsAlreadyCancelled": "Esta entrada ya está cancelada."
+  "thisTicketIsAlreadyCancelled": "Esta entrada ya está cancelada.",
+  "thereIsNothingLeftToRefund": "No queda nada por reembolsar de este pago",
+  "nothingWasPaidForThisTicket": "No se pagó nada por esta entrada, así que no hay nada que reembolsar"
 }

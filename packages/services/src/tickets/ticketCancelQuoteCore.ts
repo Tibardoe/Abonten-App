@@ -4,15 +4,20 @@ import type { Database } from "@abonten/types/database.types";
 import type { TicketCancelQuote } from "@abonten/types/ticketType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
-import { tenderSplit } from "../organizer/issueRefundCore";
+import {
+  refundsTicketByTicket,
+  tenderSplit,
+} from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { ticketsOfPayment } from "./ticketsOfPayment";
 
 // What cancelling one of the caller's tickets would give back, before
 // anything moves: the cancel dialog says it in so many words (the web
 // action getTicketCancelQuote and POST /api/mobile/tickets/cancel/quote run
-// this). The amount is the one issueRefundCore would refund: the ticket
-// price of everything the payment bought, never the service fee.
+// this). The amount is the one issueRefundCore would refund, never the
+// service fee: on a cash payment this ticket's share of its checkout line
+// (refund_quote_amount), on one refunded only as a whole the ticket price
+// of everything the payment bought.
 
 export type TicketCancelQuoteResult =
   | { status: 200; data: TicketCancelQuote }
@@ -53,6 +58,7 @@ export async function ticketCancelQuoteCore(
   const quote: TicketCancelQuote = {
     paid: false,
     otherTicketIds: [],
+    keptTicketCount: 0,
     otherEvents: false,
     checkedIn: false,
     refund: null,
@@ -61,7 +67,7 @@ export async function ticketCancelQuoteCore(
 
   const { data: payment, error: paymentError } = await supabase
     .from("transaction")
-    .select("id, status, amount, credit_amount, currency")
+    .select("id, status, amount, credit_amount, currency, provider")
     .eq("id", ticket.transaction_id)
     .eq("user_id", userId)
     .maybeSingle();
@@ -83,6 +89,35 @@ export async function ticketCancelQuoteCore(
   const others = tickets.filter(
     (t) => t.id !== ticket.id && t.status === "active",
   );
+
+  if (refundsTicketByTicket(payment)) {
+    // This ticket alone; the others stay valid.
+    quote.keptTicketCount = others.length;
+    if (payment.status === "successful") {
+      const { data: amount, error: amountError } =
+        await getSupabaseServiceClient().rpc("refund_quote_amount", {
+          p_transaction_id: payment.id,
+          p_ticket_ids: [ticket.id],
+        });
+      if (amountError) {
+        logger.error(
+          `Failed pricing a ticket's refund for a quote: ${amountError.message}`,
+        );
+      } else {
+        const cashMinor = fromMajor(
+          Number(amount ?? 0),
+          payment.currency,
+        ).amountMinor;
+        quote.refund = {
+          cashMinor,
+          creditMinor: 0,
+          currency: payment.currency,
+        };
+      }
+    }
+    return { status: 200, data: quote };
+  }
+
   quote.otherTicketIds = others.map((t) => t.id);
   quote.otherEvents = others.some((t) => t.eventId !== eventId);
   quote.checkedIn = tickets.some((t) => t.status === "used");

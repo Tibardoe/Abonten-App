@@ -40,6 +40,7 @@ import {
 import { runTicketPlanMaintenanceCore } from "../ticketPlans/ticketPlanMaintenanceCore";
 import { resetTicketPlanSettingsCache } from "../ticketPlans/ticketPlanProgram";
 import { handlePlanPartRefundOutcome } from "../ticketPlans/ticketPlanRefunds";
+import { cancelTicketsForTransactionCore } from "../tickets/cancelTicketsForTransactionCore";
 import {
   type TestUser,
   createTestUser,
@@ -538,6 +539,8 @@ describe("Pay small small", () => {
 
     // Refunding the purchase goes back through both parts' charges: the
     // ticket revenue (200.00), the fee kept, half on each part.
+    // As Admin › Finance refunds an order: its tickets are cancelled first.
+    await cancelTicketsForTransactionCore(p.transaction_id as string);
     const refund = await issueRefundCore(service, p.transaction_id as string);
     expect(refund.status).toBe(200);
     const amounts = paystack.refundTransaction.mock.calls

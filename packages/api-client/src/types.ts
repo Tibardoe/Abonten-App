@@ -365,6 +365,12 @@ export type CancelTicketBody = {
 
 export type CancelTicketResult = { status: number; message?: string };
 
+// Asks again for the refund of the caller's cancelled tickets on a payment
+// (a refused one, or one never asked for): issueRefundCore.
+export type RequestTicketRefundBody = { transactionId: string };
+
+export type RequestTicketRefundResult = { status: number; message?: string };
+
 // What cancelling would give back (ticketCancelQuoteCore), asked before
 // the dialog opens. 404 = not the caller's ticket; 409 = not cancellable.
 export type TicketCancelQuoteBody = { ticketId: string };

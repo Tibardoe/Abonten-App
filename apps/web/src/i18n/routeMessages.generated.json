@@ -2695,6 +2695,7 @@
         "ticketCancel.free",
         "ticketCancel.keepAll",
         "ticketCancel.keepOne",
+        "ticketCancel.othersStayValid",
         "ticketCancel.refundBoth",
         "ticketCancel.refundCash",
         "ticketCancel.refundCredit",

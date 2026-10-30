@@ -18,8 +18,8 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-10-30 — Pilot check-ins
 
-- Help `customers/refunds-and-cancellations` (five languages): a refund covers a whole payment, so tickets bought in one payment are cancelled together; none can be cancelled for a refund once one of them was checked in. The page had said each ticket refunds its own price, which the code never did.
-- PROJECT.md §69: cancel quote (`ticketCancelQuoteCore`, `POST /api/mobile/tickets/cancel/quote`), `scope: "payment"` on ticket cancellation, cancelling a checkout whose payment page was left open (`dropOpenAttempts`), the app's promo code field.
+- Refunds per ticket (migration `ticket_partial_refunds`: `transaction_refund`, `transaction_refund_ticket`, `refund_*` functions, `refund_id` on `organizer_ledger_entry` and `platform_fee_entry`): help `customers/refunds-and-cancellations` (five languages) — one ticket of a payment can be cancelled and refunded on its own, the others stay valid; credit and Pay small small payments are refunded as a whole. `finance/refunds-and-cancellations.md` 1.2 (rules 1, 2, 4, procedure E), `admin/finance.md` (refund parts on the transaction trace), feature inventory, PROJECT.md §69, CLAUDE.md quick facts.
+- PROJECT.md §69: cancel quote (`ticketCancelQuoteCore`, `POST /api/mobile/tickets/cancel/quote`), `POST /api/mobile/tickets/refund`, cancelling a checkout whose payment page was left open (`dropOpenAttempts`), the app's promo code field.
 
 ## 2026-10-29 — Pilot follow-ups
 

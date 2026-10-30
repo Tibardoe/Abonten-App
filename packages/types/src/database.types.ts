@@ -7562,6 +7562,7 @@ export type Database = {
           id: string
           organizer_id: string
           payout_id: string | null
+          refund_id: string | null
           ticket_checkout_id: string | null
           transaction_id: string | null
         }
@@ -7576,6 +7577,7 @@ export type Database = {
           id?: string
           organizer_id: string
           payout_id?: string | null
+          refund_id?: string | null
           ticket_checkout_id?: string | null
           transaction_id?: string | null
         }
@@ -7590,6 +7592,7 @@ export type Database = {
           id?: string
           organizer_id?: string
           payout_id?: string | null
+          refund_id?: string | null
           ticket_checkout_id?: string | null
           transaction_id?: string | null
         }
@@ -9374,6 +9377,7 @@ export type Database = {
           id: string
           net_revenue: number | null
           processing_cost: number | null
+          refund_id: string | null
           service_fee: number
           ticket_revenue: number
           total_customer_payment: number
@@ -9389,6 +9393,7 @@ export type Database = {
           id?: string
           net_revenue?: number | null
           processing_cost?: number | null
+          refund_id?: string | null
           service_fee: number
           ticket_revenue: number
           total_customer_payment: number
@@ -9404,6 +9409,7 @@ export type Database = {
           id?: string
           net_revenue?: number | null
           processing_cost?: number | null
+          refund_id?: string | null
           service_fee?: number
           ticket_revenue?: number
           total_customer_payment?: number
@@ -13391,6 +13397,92 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profile_details"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      transaction_refund: {
+        Row: {
+          amount: number
+          completes_payment: boolean
+          created_at: string
+          currency: string
+          failed_at: string | null
+          failure_detail: string | null
+          id: string
+          processed_at: string | null
+          provider_refund_id: string | null
+          requested_at: string | null
+          status: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          completes_payment?: boolean
+          created_at?: string
+          currency: string
+          failed_at?: string | null
+          failure_detail?: string | null
+          id?: string
+          processed_at?: string | null
+          provider_refund_id?: string | null
+          requested_at?: string | null
+          status?: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completes_payment?: boolean
+          created_at?: string
+          currency?: string
+          failed_at?: string | null
+          failure_detail?: string | null
+          id?: string
+          processed_at?: string | null
+          provider_refund_id?: string | null
+          requested_at?: string | null
+          status?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_refund_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transaction"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_refund_ticket: {
+        Row: {
+          refund_id: string
+          ticket_id: string
+        }
+        Insert: {
+          refund_id: string
+          ticket_id: string
+        }
+        Update: {
+          refund_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_refund_ticket_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_refund"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_refund_ticket_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -17494,6 +17586,64 @@ export type Database = {
       }
       referral_resolve_code: { Args: { p_code: string }; Returns: Json }
       referral_stats: { Args: { p_user_id: string }; Returns: Json }
+      refund_mark_outcome: {
+        Args: {
+          p_detail?: string | null
+          p_outcome: "processed" | "failed"
+          p_refund_id: string
+        }
+        Returns: {
+          amount: number
+          changed: boolean
+          completes_payment: boolean
+          currency: string
+          refund_id: string
+          transaction_id: string
+          user_id: string
+        }[]
+      }
+      refund_mark_requested: {
+        Args: { p_provider_refund_id?: string | null; p_refund_id: string }
+        Returns: undefined
+      }
+      // The generator drops `| null` from the first two arguments and the
+      // result; kept by hand (the function takes and returns nulls).
+      refund_match: {
+        Args: {
+          p_amount_minor: number | null
+          p_provider_refund_id: string | null
+          p_transaction_id: string
+        }
+        Returns: string | null
+      }
+      refund_prepare: {
+        Args: { p_transaction_id: string }
+        Returns: {
+          amount: number
+          completes_payment: boolean
+          created_at: string
+          currency: string
+          failed_at: string | null
+          failure_detail: string | null
+          id: string
+          processed_at: string | null
+          provider_refund_id: string | null
+          requested_at: string | null
+          status: string
+          transaction_id: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "transaction_refund"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      refund_quote_amount: {
+        Args: { p_ticket_ids: string[]; p_transaction_id: string }
+        Returns: number
+      }
       release_transaction_refund_claim: {
         Args: { p_transaction_id: string }
         Returns: undefined

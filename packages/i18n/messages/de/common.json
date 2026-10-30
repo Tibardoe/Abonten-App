@@ -520,7 +520,7 @@
   "refundNext": {
     "failed": "Wir konnten die Erstattung nicht automatisch abschließen. Unser Team wurde informiert und kümmert sich darum — du musst nichts tun.",
     "issued": "Der Betrag wurde auf deine ursprüngliche Zahlungsmethode erstattet. Es kann einige Werktage dauern, bis er auf deinem Kontoauszug erscheint.",
-    "none": "Eine Erstattung erfolgt, sobald alle Tickets dieser Bestellung storniert sind.",
+    "none": "Die Erstattung für dieses Ticket wurde noch nicht angefordert.",
     "pending": "Deine Erstattung ist unterwegs zu deiner ursprünglichen Zahlungsmethode — das dauert in der Regel einige Werktage. Du musst nichts weiter tun."
   },
   "refundRequestedAgain": "Erstattung erneut angefordert.",

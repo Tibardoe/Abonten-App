@@ -12,19 +12,21 @@ type RetryRefundBtnProps = {
   // this card was rendered from — refetched on success so the refund status
   // badge updates without a manual page reload.
   queryKey: unknown[];
+  /** The refund was never asked for (a ticket cancelled before tickets
+   *  were refunded one by one): "Request refund", not "Retry". */
+  neverRequested?: boolean;
 };
 
 /**
- * Shown only when a refund was actually attempted and failed (transaction
- * still "successful" but refund_requested_at is set — see
- * src/utils/refundStatus.ts). Reuses issueRefund.ts unchanged: it's already
- * idempotent (re-checks transaction.status before doing anything), so
- * calling it again here is a safe, legitimate retry, never a duplicate
- * refund.
+ * Shown when a cancelled ticket's refund failed, or was never asked for
+ * (@abonten/core/refundStatus). Reuses issueRefund.ts unchanged: it refunds
+ * only cancelled tickets no live refund covers yet, so calling it again is
+ * a safe, legitimate retry, never a duplicate refund.
  */
 export default function RetryRefundBtn({
   transactionId,
   queryKey,
+  neverRequested = false,
 }: RetryRefundBtnProps) {
   const t = useTranslations("common");
 
@@ -56,7 +58,11 @@ export default function RetryRefundBtn({
       disabled={isPending}
       className="text-xs font-semibold text-primary hover:underline disabled:opacity-60"
     >
-      {isPending ? t("retrying") : t("retryRefund")}
+      {isPending
+        ? t("retrying")
+        : neverRequested
+          ? t("requestRefund")
+          : t("retryRefund")}
     </button>
   );
 }

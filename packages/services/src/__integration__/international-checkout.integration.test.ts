@@ -15,6 +15,7 @@ import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCh
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import { paystackProvider } from "../payments/providers/paystackProvider";
+import { cancelTicketsForTransactionCore } from "../tickets/cancelTicketsForTransactionCore";
 import {
   type TestUser,
   createTestUser,
@@ -294,8 +295,11 @@ describe("a paid checkout in XOF (no minor unit)", () => {
     vi.spyOn(paystackProvider, "refund").mockImplementation(
       async (_account, input) => {
         if (input.amount) refunds.push(input.amount);
+        return { providerRefundId: null };
       },
     );
+    // As Admin › Finance refunds an order: its tickets are cancelled first.
+    await cancelTicketsForTransactionCore(txn?.id as string);
     const refund = await issueRefundCore(service, txn?.id as string);
     expect(refund.status, refund.message).toBe(200);
     expect(refunds).toEqual([{ amountMinor: 5000, currency: "XOF" }]);

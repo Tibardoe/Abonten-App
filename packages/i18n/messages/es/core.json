@@ -1077,7 +1077,7 @@
     "failed": "Reembolso fallido",
     "issued": "Reembolso emitido",
     "none": "Aún sin reembolso",
-    "noneDescription": "Se emite cuando se cancelan todas las entradas de este pedido.",
+    "noneDescription": "Aún no se ha pedido el reembolso de esta entrada.",
     "pending": "Reembolso pendiente"
   },
   "report": {
@@ -1304,6 +1304,7 @@
     "confirmOne": "Cancelar entrada",
     "confirmAll": "Cancelar las {count} entradas",
     "keepOne": "Conservar entrada",
-    "keepAll": "Conservar entradas"
+    "keepAll": "Conservar entradas",
+    "othersStayValid": "{count, plural, one {Tu otra entrada de este pago sigue siendo válida.} other {Tus otras # entradas de este pago siguen siendo válidas.}}"
   }
 }
