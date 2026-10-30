@@ -1327,5 +1327,9 @@
       "verified_badges": "Verify your identity before you get a Verified badge. Go to Settings › Identity verification.",
       "paid_events": "Verify your identity before you sell tickets. Go to Settings › Identity verification, or make the event free."
     }
-  }
+  },
+  "thisTicketWasPaidForTogether": "This ticket was paid for together with {count, plural, one {# other ticket} other {# other tickets}}. A refund covers the whole payment, so cancel them together.",
+  "aTicketFromThisPaymentWasChecked": "A ticket from this payment has been checked in, so this ticket can no longer be cancelled for a refund.",
+  "ticketsCancelledRefund": "{count, plural, one {# ticket} other {# tickets}} cancelled. {refundMessage}.",
+  "thisTicketIsAlreadyCancelled": "This ticket is already cancelled."
 }

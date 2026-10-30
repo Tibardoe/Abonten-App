@@ -2,7 +2,7 @@
 title: Reembolsos e cancelamentos
 summary: Cancelar um bilhete, o que é reembolsado (e o que não é), quanto tempo demoram os reembolsos e o que acontece quando um organizador cancela um evento.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,7 +18,8 @@ Abra o bilhete em Os meus bilhetes (Gerir › Os meus bilhetes no website, Conta
 - O **preço do bilhete** cancelado é reembolsado no método de pagamento que utilizou.
 - **A taxa de serviço não é reembolsada.**
 - Os bilhetes gratuitos não têm nada a reembolsar; passam simplesmente a *Cancelado*.
-- Se comprou vários bilhetes num só pagamento, cada bilhete que cancelar reembolsa o seu próprio preço. Os reembolsos da Paystack são pedidos pela parte da cobrança que corresponde a cada bilhete cancelado.
+- Um reembolso cobre todo um pagamento. Se comprou vários bilhetes num só pagamento (mais do que um bilhete, ou bilhetes para mais do que um evento pagos de uma vez), são cancelados em conjunto: antes de confirmar, a janela indica quantos são e quanto lhe é devolvido. Um deles não pode ser cancelado sozinho.
+- Depois de um bilhete de um pagamento ser validado à entrada, os outros bilhetes desse pagamento já não podem ser cancelados com reembolso.
 
 ## Quanto tempo demora
 

@@ -70,6 +70,7 @@ import type {
   RewardEmailPreference,
   RewardsProgram,
 } from "@abonten/types/rewards";
+import type { TicketCancelQuote } from "@abonten/types/ticketType";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
@@ -357,9 +358,20 @@ export type FreeRsvpResult = { status: number; message?: string };
 export type CancelTicketBody = {
   ticketId: string;
   transactionId?: string | null;
+  /** "payment" also cancels the other tickets the same payment bought,
+   *  which a refund needs (409 when they exist and this is "ticket"). */
+  scope?: "ticket" | "payment";
 };
 
 export type CancelTicketResult = { status: number; message?: string };
+
+// What cancelling would give back (ticketCancelQuoteCore), asked before
+// the dialog opens. 404 = not the caller's ticket; 409 = not cancellable.
+export type TicketCancelQuoteBody = { ticketId: string };
+
+export type TicketCancelQuoteResult =
+  | { status: 200; data: TicketCancelQuote }
+  | { status: 400 | 401 | 404 | 409 | 500; message: string };
 
 // ---- highlights -------------------------------------------------------
 

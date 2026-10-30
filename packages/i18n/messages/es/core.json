@@ -1291,5 +1291,19 @@
     "maxUses": "Indica cuántas veces se puede usar, o déjalo vacío para no poner límite.",
     "maxUsesRequired": "Indica cuántas veces se puede usar.",
     "expiry": "Elige el último día en que funciona el código."
+  },
+  "ticketCancel": {
+    "free": "Tu plaza queda libre para otra persona.",
+    "refundCash": "Se te devolverán {amount} a tu método de pago original. La tarifa de servicio de Abonten no se reembolsa.",
+    "refundCredit": "Se te devolverán {amount} como Crédito Abonten. La tarifa de servicio de Abonten no se reembolsa.",
+    "refundBoth": "Se te devolverán {cash} a tu método de pago original y {credit} como Crédito Abonten. La tarifa de servicio de Abonten no se reembolsa.",
+    "refundUnknown": "Se reembolsará el precio de la entrada a tu método de pago original. La tarifa de servicio de Abonten no se reembolsa.",
+    "together": "Esta entrada se pagó junto con {count, plural, one {# entrada más} other {# entradas más}}. Un reembolso cubre todo el pago, así que se cancelan juntas.",
+    "togetherOtherEvents": "Esta entrada se pagó junto con {count, plural, one {# entrada más para otro evento} other {# entradas más, algunas para otro evento}}. Un reembolso cubre todo el pago, así que se cancelan juntas.",
+    "checkedIn": "Una entrada de este pago ya se escaneó en el acceso, así que esta entrada ya no se puede cancelar con reembolso.",
+    "confirmOne": "Cancelar entrada",
+    "confirmAll": "Cancelar las {count} entradas",
+    "keepOne": "Conservar entrada",
+    "keepAll": "Conservar entradas"
   }
 }

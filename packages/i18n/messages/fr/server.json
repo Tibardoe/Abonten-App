@@ -1327,5 +1327,9 @@
       "verified_badges": "Faites vérifier votre identité avant d'obtenir un badge Vérifié. Rendez-vous dans Paramètres › Vérification d'identité.",
       "paid_events": "Faites vérifier votre identité avant de vendre des billets. Rendez-vous dans Paramètres › Vérification d'identité, ou rendez l'événement gratuit."
     }
-  }
+  },
+  "thisTicketWasPaidForTogether": "Ce billet a été payé en même temps que {count, plural, one {# autre billet} other {# autres billets}}. Un remboursement couvre tout le paiement, annulez-les donc ensemble.",
+  "aTicketFromThisPaymentWasChecked": "Un billet de ce paiement a déjà été scanné à l'entrée, ce billet ne peut donc plus être annulé pour un remboursement.",
+  "ticketsCancelledRefund": "{count, plural, one {# billet annulé} other {# billets annulés}}. {refundMessage}.",
+  "thisTicketIsAlreadyCancelled": "Ce billet est déjà annulé."
 }

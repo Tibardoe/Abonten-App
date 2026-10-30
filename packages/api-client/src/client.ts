@@ -274,6 +274,8 @@ import type {
   SubmitChargeOtpResult,
   SubmitReportBody,
   SubmitReportResult,
+  TicketCancelQuoteBody,
+  TicketCancelQuoteResult,
   ToggleMessageReactionBody,
   ToggleMessageReactionResult,
   UnreadMessageCountResult,
@@ -957,6 +959,14 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+      /** What cancelling this ticket would give back, and whether the
+       *  payment's other tickets go with it. Asked before the dialog. */
+      cancelQuote(body: TicketCancelQuoteBody) {
+        return request<TicketCancelQuoteResult>(
+          "/api/mobile/tickets/cancel/quote",
+          { method: "POST", body, auth: true },
+        );
       },
     },
 

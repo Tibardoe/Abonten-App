@@ -73,10 +73,14 @@ async function returnCreditShare(
 /**
  * How the refundable ticket revenue splits between credit and cash, pro rata
  * to how the order was paid. `refundableMinor` of 0 with linked tickets is
- * an accounting gap: then everything paid is returned.
+ * an accounting gap: then everything paid is returned. Also what the
+ * cancel dialog quotes before anything moves (ticketCancelQuoteCore).
  */
-function tenderSplit(
-  transaction: RefundTransactionRow,
+export function tenderSplit(
+  transaction: Pick<
+    RefundTransactionRow,
+    "amount" | "credit_amount" | "currency"
+  >,
   refundableMinor: number,
 ) {
   const cashMinor = fromMajor(

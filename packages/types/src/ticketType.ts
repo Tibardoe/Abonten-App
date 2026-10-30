@@ -91,3 +91,21 @@ export type CheckoutSessionStatus =
   | "paid"
   | "expired"
   | "cancelled";
+
+/**
+ * What cancelling one of the buyer's tickets would give back, asked before
+ * the cancel dialog opens (ticketCancelQuoteCore). A refund covers a whole
+ * payment, so a ticket bought together with others is cancelled with them.
+ */
+export type TicketCancelQuote = {
+  /** Paid with money or credit; a free ticket has nothing to give back. */
+  paid: boolean;
+  /** The buyer's other active tickets from the same payment. */
+  otherTicketIds: string[];
+  /** Some of those are for another event (a basket paid at once). */
+  otherEvents: boolean;
+  /** A ticket from that payment was checked in: nothing can be refunded. */
+  checkedIn: boolean;
+  /** What the cancellation gives back, in minor units; null when unknown. */
+  refund: { cashMinor: number; creditMinor: number; currency: string } | null;
+};

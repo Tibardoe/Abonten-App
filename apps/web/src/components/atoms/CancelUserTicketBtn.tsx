@@ -1,6 +1,7 @@
 "use client";
 
 import cancelUserTicket from "@/actions/cancelUserTicket";
+import getTicketCancelQuote from "@/actions/getTicketCancelQuote";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import {
   Popover,
@@ -12,6 +13,10 @@ import {
   invalidateOrganizerFinanceQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
+import {
+  type TicketCancelDialog,
+  ticketCancelDialog,
+} from "@abonten/core/ticketCancelQuote";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import {
@@ -20,7 +25,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 type CancelTicketProp = {
@@ -40,9 +45,17 @@ export default function CancelUserTicketBtn({
   queryKey,
 }: CancelTicketProp) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
+  const locale = useLocale();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  // What cancelling gives back, asked before the dialog opens: a ticket
+  // paid for together with others is cancelled with them (their ids are
+  // pulled from the list too).
+  const [confirm, setConfirm] = useState<{
+    dialog: TicketCancelDialog;
+    ticketIds: string[];
+  } | null>(null);
 
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -52,15 +65,40 @@ export default function CancelUserTicketBtn({
   // the menu label reflects that instead of always saying "refund".
   const menuLabel = transactionId ? t("requestRefund") : t("cancelTicket");
 
+  const quote = useMutation({
+    mutationFn: () => getTicketCancelQuote(ticketId),
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        toast.error(response.message ?? t("couldnTCancelThisTicketPlease"));
+        return;
+      }
+      const dialog = ticketCancelDialog({ locale, t: tc }, response.data);
+      if (!dialog.confirm) {
+        toast.error(dialog.body);
+        return;
+      }
+      setConfirm({
+        dialog,
+        ticketIds: [ticketId, ...response.data.otherTicketIds],
+      });
+    },
+    onError: () => toast.error(t("couldnTCancelThisTicketPlease")),
+  });
+
   const { mutate, isPending } = useMutation({
-    mutationFn: () => cancelUserTicket(ticketId, transactionId),
+    mutationFn: ({ wholePayment }: { wholePayment: boolean; ids: string[] }) =>
+      cancelUserTicket(
+        ticketId,
+        transactionId,
+        wholePayment ? "payment" : "ticket",
+      ),
 
     // Cancellation is a simple, user-confirmed status flip (see
     // cancelUserTicket.ts) that's highly likely to succeed and trivial to
     // undo, so the card leaves the Active list the moment the user
     // confirms rather than waiting on the round trip.
-    onMutate: async () => {
-      setShowCancelConfirm(false);
+    onMutate: async ({ ids }) => {
+      setConfirm(null);
 
       await queryClient.cancelQueries({ queryKey });
 
@@ -73,7 +111,7 @@ export default function CancelUserTicketBtn({
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              data: page.data.filter((ticket) => ticket.id !== ticketId),
+              data: page.data.filter((ticket) => !ids.includes(ticket.id)),
             })),
           },
       );
@@ -128,9 +166,10 @@ export default function CancelUserTicketBtn({
           <button
             type="button"
             className="w-full rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
+            disabled={quote.isPending}
             onClick={() => {
               setMenuOpen(false);
-              setShowCancelConfirm(true);
+              quote.mutate();
             }}
           >
             {menuLabel}
@@ -138,20 +177,23 @@ export default function CancelUserTicketBtn({
         </PopoverContent>
       </Popover>
 
-      {showCancelConfirm && (
+      {confirm?.dialog.confirm ? (
         <ConfirmDeleteModal
           title={t("cancelThisTicket")}
-          message={
-            transactionId ? t("areYouSureYouWantTo") : t("areYouSureYouWantTo2")
-          }
-          confirmLabel={t("cancelTicket")}
-          cancelLabel={t("keepTicket")}
+          message={confirm.dialog.body}
+          confirmLabel={confirm.dialog.confirm}
+          cancelLabel={confirm.dialog.keep}
           loadingLabel={t("cancelling")}
           isLoading={isPending}
-          onConfirm={() => mutate()}
-          onCancel={() => setShowCancelConfirm(false)}
+          onConfirm={() =>
+            mutate({
+              wholePayment: confirm.dialog.wholePayment,
+              ids: confirm.ticketIds,
+            })
+          }
+          onCancel={() => setConfirm(null)}
         />
-      )}
+      ) : null}
     </>
   );
 }

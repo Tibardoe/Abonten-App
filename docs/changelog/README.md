@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-30 — Pilot check-ins
+
+- Help `customers/refunds-and-cancellations` (five languages): a refund covers a whole payment, so tickets bought in one payment are cancelled together; none can be cancelled for a refund once one of them was checked in. The page had said each ticket refunds its own price, which the code never did.
+- PROJECT.md §69: cancel quote (`ticketCancelQuoteCore`, `POST /api/mobile/tickets/cancel/quote`), `scope: "payment"` on ticket cancellation, cancelling a checkout whose payment page was left open (`dropOpenAttempts`), the app's promo code field.
+
 ## 2026-10-29 — Pilot follow-ups
 
 - Help `organizers/selling-tickets-and-promo-codes` (five languages): promo codes can be added after the event is created; organizers get a notification for each order.

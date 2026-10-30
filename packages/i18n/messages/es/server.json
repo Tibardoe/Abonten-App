@@ -1327,5 +1327,9 @@
       "verified_badges": "Verifica tu identidad antes de obtener una insignia de Verificado. Ve a Ajustes › Verificación de identidad.",
       "paid_events": "Verifica tu identidad antes de vender entradas. Ve a Ajustes › Verificación de identidad, o haz que el evento sea gratuito."
     }
-  }
+  },
+  "thisTicketWasPaidForTogether": "Esta entrada se pagó junto con {count, plural, one {# entrada más} other {# entradas más}}. Un reembolso cubre todo el pago, así que cancélalas juntas.",
+  "aTicketFromThisPaymentWasChecked": "Una entrada de este pago ya se escaneó en el acceso, así que esta entrada ya no se puede cancelar con reembolso.",
+  "ticketsCancelledRefund": "{count, plural, one {# entrada cancelada} other {# entradas canceladas}}. {refundMessage}.",
+  "thisTicketIsAlreadyCancelled": "Esta entrada ya está cancelada."
 }

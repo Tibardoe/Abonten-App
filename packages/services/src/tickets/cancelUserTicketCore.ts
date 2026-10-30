@@ -6,6 +6,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { ticketsOfPayment } from "./ticketsOfPayment";
 
 // Post-auth body of cancelUserTicket, lifted so the mobile API route
 // (`/api/mobile/tickets/cancel`) and the "use server" action run the exact
@@ -23,6 +24,7 @@ type TicketRow = {
   status: string;
   ticket_type_id: string;
   ticket_checkout_id: string | null;
+  transaction_id: string | null;
   ticket_type: {
     event_id: string;
     event: { event_code: string } | null;
@@ -36,16 +38,31 @@ export type CancelUserTicketCoreResult = {
   eventCode?: string;
 };
 
+/**
+ * "ticket": this ticket alone. "payment": this ticket and the caller's
+ * other active tickets from the same payment, which a refund needs.
+ */
+export type CancelTicketScope = "ticket" | "payment";
+
+type CancelTarget = {
+  id: string;
+  ticketTypeId: string;
+  checkoutId: string | null;
+  eventId: string | null;
+};
+
 export async function cancelUserTicketCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   ticketId: string,
-  transactionId: string | null,
+  // Older app builds still send it; the ticket's own payment is used.
+  _transactionId: string | null,
+  options: { scope?: CancelTicketScope } = {},
 ): Promise<CancelUserTicketCoreResult> {
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "status, ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id(event_id, event:event_id(event_code))",
+      "status, ticket_type_id, ticket_checkout_id, transaction_id, ticket_type:ticket_type_id(event_id, event:event_id(event_code))",
     )
     .eq("id", ticketId)
     .eq("user_id", userId)
@@ -57,9 +74,12 @@ export async function cancelUserTicketCore(
   }
 
   const ticket = rawTicket as unknown as TicketRow;
-  const ticketTypeId = ticket.ticket_type_id;
   const eventId = ticket.ticket_type?.event_id;
   const eventCode = ticket.ticket_type?.event?.event_code;
+  const about = {
+    eventId: eventId ?? undefined,
+    eventCode: eventCode ?? undefined,
+  };
 
   // A checked-in ticket has already been used to enter the event, so
   // cancelling it would refund someone who attended and hand their seat
@@ -72,8 +92,7 @@ export async function cancelUserTicketCore(
     return {
       status: 409,
       message: tr("thisTicketHasAlreadyBeenChecked"),
-      eventId: eventId ?? undefined,
-      eventCode: eventCode ?? undefined,
+      ...about,
     };
   }
 
@@ -88,21 +107,90 @@ export async function cancelUserTicketCore(
     return {
       status: 200,
       message: tr("ticketCancelledSuccessfully"),
-      eventId: eventId ?? undefined,
-      eventCode: eventCode ?? undefined,
+      ...about,
     };
   }
 
-  // Compare-and-set: only the caller that actually flips the row from a
-  // live status to 'cancelled' goes on to release inventory and request the
+  // Paid with cash, Abonten Credit, or both: an order paid entirely with
+  // credit has amount 0 and is refunded to credit.
+  let paymentId: string | null = null;
+  if (ticket.transaction_id) {
+    const { data: transaction, error: transactionError } = await supabase
+      .from("transaction")
+      .select("id, amount, credit_amount")
+      .eq("id", ticket.transaction_id)
+      .eq("user_id", userId)
+      .maybeSingle<{ id: string; amount: number; credit_amount: number }>();
+
+    if (transactionError || !transaction) {
+      logger.error(`Failed fetching transaction: ${transactionError?.message}`);
+      return { status: 500, message: tr("somethingWentWrong") };
+    }
+    if (
+      Number(transaction.amount) + Number(transaction.credit_amount ?? 0) >
+      0
+    ) {
+      paymentId = transaction.id;
+    }
+  }
+
+  const targets: CancelTarget[] = [
+    {
+      id: ticketId,
+      ticketTypeId: ticket.ticket_type_id,
+      checkoutId: ticket.ticket_checkout_id,
+      eventId: eventId ?? null,
+    },
+  ];
+
+  // A single charge (transaction) can cover several tickets — every
+  // quantity, and every event of a basket paid at once. A refund returns
+  // that whole payment's ticket revenue, so it is requested only once every
+  // ticket it paid for is cancelled. Cancelling one of them alone used to
+  // put the seat back on sale and give nothing back (pilot 2026-10-30): such
+  // a ticket is now cancelled together with the others, or not at all.
+  if (paymentId) {
+    const tickets = await ticketsOfPayment(supabase, paymentId);
+    if (!tickets) return { status: 500, message: tr("somethingWentWrong") };
+    if (tickets.some((t) => t.status === "used")) {
+      return {
+        status: 409,
+        message: tr("aTicketFromThisPaymentWasChecked"),
+        ...about,
+      };
+    }
+    const others = tickets.filter(
+      (t) => t.id !== ticketId && t.status === "active",
+    );
+    if (others.length > 0 && options.scope !== "payment") {
+      return {
+        status: 409,
+        message: tr("thisTicketWasPaidForTogether", { count: others.length }),
+        ...about,
+      };
+    }
+    for (const other of others) {
+      targets.push({
+        id: other.id,
+        ticketTypeId: other.ticketTypeId,
+        checkoutId: other.checkoutId,
+        eventId: other.eventId,
+      });
+    }
+  }
+
+  // Compare-and-set: only the caller that actually flips a row from a live
+  // status to 'cancelled' goes on to release inventory and request the
   // refund. The read above is not enough on its own -- two requests fired
   // together (a double tap, a client retry) both see 'active' and would both
   // release a seat and both start a refund.
-  const { data: flipped, error: updateStatusError } =
-    await getSupabaseServiceClient()
+  const service = getSupabaseServiceClient();
+  const flipped: CancelTarget[] = [];
+  for (const target of targets) {
+    const { data: rows, error: updateStatusError } = await service
       .from("ticket")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
-      .eq("id", ticketId)
+      .eq("id", target.id)
       .eq("user_id", userId)
       .neq("status", "cancelled")
       // Also excludes 'used': the read above can race a gate scan, and a
@@ -110,17 +198,25 @@ export async function cancelUserTicketCore(
       .neq("status", "used")
       .select("id");
 
-  if (updateStatusError) {
-    logger.error(`Error updating ticket status:${updateStatusError.message}`);
-    return { status: 500, message: tr("somethingWentWrong") };
+    if (updateStatusError) {
+      logger.error(`Error updating ticket status:${updateStatusError.message}`);
+      if (flipped.length === 0) {
+        return { status: 500, message: tr("somethingWentWrong") };
+      }
+      // Some are cancelled already: their seats go back below, and the
+      // refund waits until every ticket of the payment is cancelled.
+      break;
+    }
+    if (rows && rows.length > 0) flipped.push(target);
+    else if (target.id === ticketId) break;
   }
 
-  if (!flipped || flipped.length === 0) {
+  if (!flipped.some((t) => t.id === ticketId)) {
     // Zero rows now has two possible meanings: another concurrent call
     // already cancelled this ticket (idempotent success), or a gate scan
     // checked it in between the read and this write (must NOT be reported
     // as cancelled). Re-read to tell them apart rather than guess.
-    const { data: settled } = await getSupabaseServiceClient()
+    const { data: settled } = await service
       .from("ticket")
       .select("status")
       .eq("id", ticketId)
@@ -131,111 +227,88 @@ export async function cancelUserTicketCore(
       return {
         status: 409,
         message: tr("thisTicketHasAlreadyBeenChecked"),
-        eventId: eventId ?? undefined,
-        eventCode: eventCode ?? undefined,
+        ...about,
       };
     }
 
     return {
       status: 200,
       message: tr("ticketCancelledSuccessfully"),
-      eventId: eventId ?? undefined,
-      eventCode: eventCode ?? undefined,
+      ...about,
     };
   }
 
   let refundMessage: string | null = null;
   let refundDeferred = false;
 
-  if (transactionId) {
-    const { data: transaction, error: transactionError } = await supabase
-      .from("transaction")
-      .select("id, amount, credit_amount")
-      .eq("id", transactionId)
-      .eq("user_id", userId)
-      .maybeSingle<{ id: string; amount: number; credit_amount: number }>();
-
-    if (transactionError || !transaction) {
-      logger.error(`Failed fetching transaction: ${transactionError?.message}`);
-      return { status: 500, message: tr("somethingWentWrong") };
-    }
-
-    // Paid with cash, Abonten Credit, or both: an order paid entirely with
-    // credit has amount 0 and is refunded to credit.
-    if (
-      Number(transaction.amount) + Number(transaction.credit_amount ?? 0) >
-      0
-    ) {
-      // A single Paystack charge (transaction) can cover multiple tickets —
-      // every ticket, quantity, and even every event in a multi-checkout
-      // group shares one transaction_id (see generateTicket.ts). The refund
-      // (issueRefundCore) is a partial refund of the ticket revenue only,
-      // but it still targets the whole order's ticket revenue, so it must
-      // only fire once THIS cancellation makes every ticket sharing this
-      // transaction cancelled — mirroring markCheckoutCancelledIfAllTicketsCancelled
-      // one level up.
-      const allCancelled = await areAllTicketsForTransactionCancelled(
-        supabase,
-        transaction.id,
-      );
-
-      if (allCancelled) {
-        const response = await issueRefundCore(supabase, transaction.id, {
-          expectedUserId: userId,
-        });
-
-        if (response.status === 200) {
-          refundMessage = response.message;
-        }
-      } else {
-        refundDeferred = true;
-      }
-    }
-  }
-
-  // State-based, not a delete: the attendance row for this exact ticket
-  // (one row per ticket, written by the issuing RPCs) is marked cancelled so
-  // attendance_count queries (which filter status = 'attending') stop
-  // counting it, while keeping the row for any future audit/history need.
-  const { error: updateAttendanceError } = await supabase
-    .from("attendance")
-    .update({ status: "cancelled" })
-    .eq("ticket_id", ticketId)
-    .eq("user_id", userId);
-
-  if (updateAttendanceError) {
-    logger.error(
-      `Error updating user attendance: ${updateAttendanceError.message}`,
-    );
-    return { status: 500, message: tr("somethingWentWrong") };
-  }
-
-  if (ticket.ticket_checkout_id) {
-    await markCheckoutCancelledIfAllTicketsCancelled(
+  if (paymentId) {
+    // Every ticket the payment covered must be cancelled first: a gate scan
+    // racing the flips above can still leave one live.
+    const allCancelled = await areAllTicketsForTransactionCancelled(
       supabase,
-      ticket.ticket_checkout_id,
+      paymentId,
     );
+
+    if (allCancelled) {
+      const response = await issueRefundCore(supabase, paymentId, {
+        expectedUserId: userId,
+      });
+
+      if (response.status === 200) {
+        refundMessage = response.message;
+      }
+    } else {
+      refundDeferred = true;
+    }
   }
 
-  await releaseTicketQuantity(ticketTypeId, 1);
+  for (const target of flipped) {
+    // State-based, not a delete: the attendance row for this exact ticket
+    // (one row per ticket, written by the issuing RPCs) is marked cancelled
+    // so attendance_count queries (which filter status = 'attending') stop
+    // counting it, while keeping the row for any future audit/history need.
+    const { error: updateAttendanceError } = await supabase
+      .from("attendance")
+      .update({ status: "cancelled" })
+      .eq("ticket_id", target.id)
+      .eq("user_id", userId);
+
+    if (updateAttendanceError) {
+      logger.error(
+        `Error updating user attendance: ${updateAttendanceError.message}`,
+      );
+    }
+
+    if (target.checkoutId) {
+      await markCheckoutCancelledIfAllTicketsCancelled(
+        supabase,
+        target.checkoutId,
+      );
+    }
+
+    await releaseTicketQuantity(target.ticketTypeId, 1);
+  }
 
   // A promo code should only count as "used" while the purchase it was
   // applied to is still active. Only release it once this was the user's
   // LAST active ticket for the event.
-  if (eventId) {
-    await releasePromoUsageIfEventFullyCancelled(supabase, userId, eventId);
+  const events = new Set(
+    flipped.map((t) => t.eventId).filter((id): id is string => !!id),
+  );
+  for (const event of events) {
+    await releasePromoUsageIfEventFullyCancelled(supabase, userId, event);
   }
 
-  return {
-    status: 200,
-    message: refundMessage
-      ? tr("ticketCancelled", { refundMessage: refundMessage })
-      : refundDeferred
-        ? tr("ticketCancelledTheRefundForThis")
-        : tr("ticketCancelledSuccessfully"),
-    eventId: eventId ?? undefined,
-    eventCode: eventCode ?? undefined,
-  };
+  const message =
+    refundMessage && flipped.length > 1
+      ? tr("ticketsCancelledRefund", { count: flipped.length, refundMessage })
+      : refundMessage
+        ? tr("ticketCancelled", { refundMessage })
+        : refundDeferred
+          ? tr("ticketCancelledTheRefundForThis")
+          : tr("ticketCancelledSuccessfully");
+
+  return { status: 200, message, ...about };
 }
 
 // Checks whether every ticket sharing this transaction (across every

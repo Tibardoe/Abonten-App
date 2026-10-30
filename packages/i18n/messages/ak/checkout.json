@@ -35,7 +35,6 @@
   "expiresIn": "Expires in {formatCountdown}",
   "free": "Free",
   "groupTotal": "Group total: {formatMoney}",
-  "haveAPromoCode": "Have a promo code?",
   "inProgress": "in progress",
   "inProgress2": " · in progress",
   "itCanTPayForThis": "It can't pay for this order.",
@@ -135,5 +134,6 @@
   "yourPaymentWentThroughButThe": "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButThe2": "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButWe": "Your payment went through, but we haven't issued your ticket yet. Retry now — you won't be charged again.",
-  "yourSeatsAreHeldForA": "Your seats are held for a limited time."
+  "yourSeatsAreHeldForA": "Your seats are held for a limited time.",
+  "haveAPromoCodeAddIt": "Have a promo code? Add it with your tickets"
 }

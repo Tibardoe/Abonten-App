@@ -2,7 +2,7 @@
 title: Remboursements et annulations
 summary: Annuler un billet, ce qui est remboursé (et ce qui ne l'est pas), le délai des remboursements et ce qui se passe quand un organisateur annule un événement.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,7 +18,8 @@ Ouvrez le billet dans Mes billets (Gérer › Mes billets sur le site web, Compt
 - Le **prix du billet** annulé est remboursé sur le moyen de paiement utilisé.
 - **Les frais de service ne sont pas remboursés.**
 - Les billets gratuits n'ont rien à rembourser ; ils passent simplement à *Annulé*.
-- Si vous avez acheté plusieurs billets en un seul paiement, chaque billet annulé est remboursé de son propre prix. Les remboursements Paystack sont demandés pour la part du paiement correspondant à chaque billet annulé.
+- Un remboursement couvre tout un paiement. Si vous avez acheté plusieurs billets en un seul paiement (plus d'un billet, ou des billets pour plusieurs événements payés ensemble), ils sont annulés ensemble : la fenêtre indique combien de billets et quel montant vous est rendu avant que vous confirmiez. L'un d'eux ne peut pas être annulé seul.
+- Dès qu'un billet d'un paiement a été scanné à l'entrée, les autres billets de ce paiement ne peuvent plus être annulés pour un remboursement.
 
 ## Combien de temps cela prend
 

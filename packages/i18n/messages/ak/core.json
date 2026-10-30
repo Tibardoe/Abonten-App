@@ -1291,5 +1291,19 @@
     "maxUses": "Enter how many times it can be used, or leave it blank for no limit.",
     "maxUsesRequired": "Enter how many times it can be used.",
     "expiry": "Choose the last day the code works."
+  },
+  "ticketCancel": {
+    "free": "Your place is given back for someone else to take.",
+    "refundCash": "{amount} comes back to your original payment method. The Abonten service fee is not refunded.",
+    "refundCredit": "{amount} comes back as Abonten Credit. The Abonten service fee is not refunded.",
+    "refundBoth": "{cash} comes back to your original payment method and {credit} as Abonten Credit. The Abonten service fee is not refunded.",
+    "refundUnknown": "The ticket price comes back to your original payment method. The Abonten service fee is not refunded.",
+    "together": "This ticket was paid for together with {count, plural, one {# other ticket} other {# other tickets}}. A refund covers the whole payment, so they are cancelled together.",
+    "togetherOtherEvents": "This ticket was paid for together with {count, plural, one {# other ticket for another event} other {# other tickets, some for another event}}. A refund covers the whole payment, so they are cancelled together.",
+    "checkedIn": "A ticket from this payment has been checked in, so this ticket can no longer be cancelled for a refund.",
+    "confirmOne": "Cancel ticket",
+    "confirmAll": "Cancel all {count} tickets",
+    "keepOne": "Keep ticket",
+    "keepAll": "Keep tickets"
   }
 }

@@ -2,7 +2,7 @@
 title: Erstattungen und Stornierungen
 summary: Ein Ticket stornieren, was erstattet wird (und was nicht), wie lange Erstattungen dauern und was passiert, wenn ein Veranstalter ein Event absagt.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,7 +18,8 @@ owner: Abonten Hub
 - Der **Ticketpreis** des stornierten Tickets wird auf die Zahlungsmethode erstattet, mit der du bezahlt hast.
 - **Die Servicegebühr wird nicht erstattet.**
 - Bei kostenlosen Tickets gibt es nichts zu erstatten; sie wechseln einfach zu *Storniert*.
-- Hast du mehrere Tickets mit einer Zahlung gekauft, wird für jedes stornierte Ticket dessen eigener Preis erstattet. Bei Paystack wird für jedes stornierte Ticket sein Anteil an der Zahlung zurückgefordert.
+- Eine Erstattung gilt für eine ganze Zahlung. Hast du mehrere Tickets mit einer Zahlung gekauft (mehr als ein Ticket oder Tickets für mehrere Events auf einmal bezahlt), werden sie zusammen storniert: Bevor du bestätigst, zeigt das Fenster, wie viele es sind und wie viel zurückkommt. Eines davon allein kann nicht storniert werden.
+- Sobald ein Ticket einer Zahlung beim Einlass gescannt wurde, können die anderen Tickets dieser Zahlung nicht mehr gegen Erstattung storniert werden.
 
 ## Wie lange es dauert
 

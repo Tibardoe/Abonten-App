@@ -2,7 +2,7 @@
 title: Refunds and cancellations
 summary: Cancelling a ticket, what is refunded (and what is not), how long refunds take, and what happens when an organizer cancels an event.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,7 +18,8 @@ Open the ticket in My Tickets (Manage › My Tickets on the web, Account › My 
 - The **ticket price** for the cancelled ticket is refunded to the payment method you paid with.
 - The **service fee is not refunded.**
 - Free tickets have nothing to refund; they simply move to *Cancelled*.
-- If you bought several tickets in one payment, each one you cancel refunds its own ticket price. Paystack refunds are requested per cancelled ticket's share of the charge.
+- A refund covers a whole payment. If you bought several tickets in one payment (more than one ticket, or tickets for more than one event paid at once), they are cancelled together: the dialog says how many and how much comes back before you confirm. One of them cannot be cancelled on its own.
+- Once a ticket from a payment has been checked in at the door, the other tickets from that payment can no longer be cancelled for a refund.
 
 ## How long it takes
 

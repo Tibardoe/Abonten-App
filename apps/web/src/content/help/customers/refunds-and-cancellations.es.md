@@ -2,7 +2,7 @@
 title: Reembolsos y cancelaciones
 summary: Cancelar una entrada, qué se reembolsa (y qué no), cuánto tardan los reembolsos y qué pasa cuando un organizador cancela un evento.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,7 +18,8 @@ Abre la entrada en Mis entradas (Gestionar › Mis entradas en la web, Cuenta �
 - El **precio de la entrada** cancelada se reembolsa al método de pago que usaste.
 - **La tarifa de servicio no se reembolsa.**
 - Las entradas gratuitas no tienen nada que reembolsar; simplemente pasan a *Cancelada*.
-- Si compraste varias entradas en un solo pago, cada una que canceles reembolsa su propio precio. Los reembolsos de Paystack se piden por la parte del cobro que corresponde a cada entrada cancelada.
+- Un reembolso cubre todo un pago. Si compraste varias entradas en un solo pago (más de una entrada, o entradas para más de un evento pagadas a la vez), se cancelan juntas: antes de confirmar, la ventana te dice cuántas son y cuánto se te devuelve. Una de ellas no se puede cancelar sola.
+- Cuando una entrada de un pago ya se escaneó en el acceso, las demás entradas de ese pago ya no se pueden cancelar con reembolso.
 
 ## Cuánto tarda
 

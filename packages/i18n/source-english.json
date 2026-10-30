@@ -240,7 +240,6 @@
     "expiresIn": "caad8ae4",
     "free": "75f52718",
     "groupTotal": "ae63024f",
-    "haveAPromoCode": "b830436b",
     "inProgress": "d6e91b2a",
     "inProgress2": "2b5e857e",
     "itCanTPayForThis": "7236cda5",
@@ -340,11 +339,11 @@
     "yourSeatsAreHeldForA": "d230f358",
     "yourOrder": "d2467b40",
     "paidWithAmountCredit": "78c4589a",
-    "viewMyTickets": "af510cfa"
+    "viewMyTickets": "af510cfa",
+    "haveAPromoCodeAddIt": "37db4ede"
   },
   "common": {
     "aPendingCheckoutJustExpired": "4b7fe9d6",
-    "aRefundOfTheTicketPrice": "6041c0d7",
     "abonten": "acfdb324",
     "abontenFees": "3f2b4f0d",
     "abontenHub": "b4792dcc",
@@ -382,8 +381,6 @@
     "anythingThatHelpsUsUnderstandThe": "21dd7a89",
     "apply": "cfea419c",
     "approveThisPaymentOnYourPhone": "3dc4da4d",
-    "areYouSureYouWantTo": "3a4f82e9",
-    "areYouSureYouWantTo2": "41c06964",
     "areYouSureYouWantTo3": "b41371b9",
     "areYouSureYouWantTo4": "231f5524",
     "areYouSureYouWantTo5": "0e3e51ab",
@@ -692,8 +689,6 @@
     "issuedOn2": "267e9820",
     "itIsShownWithASponsored": "eebf012d",
     "keepOrder": "3725fed9",
-    "keepTicket": "1be739d1",
-    "keepTicket2": "bd530729",
     "lastEdited": "510c4516",
     "leaveBlankForUnlimitedCapacity": "b42943d1",
     "left": "62abbdae",
@@ -765,7 +760,6 @@
     "notEnoughAttendeesYetToCalculate": "da6e4bbb",
     "notNow": "e4571490",
     "notSavedOnThisPhoneYet": "a8769d2a",
-    "nothingHasChangedPleaseTryAgain": "c1b3141d",
     "notifications": "753a22b2",
     "notificationsAreOff": "cb1f75d5",
     "notificationsUnread": "25d18c18",
@@ -1159,7 +1153,6 @@
     "warning": "e9c45563",
     "waysToPay": "705052dd",
     "weCouldnTApplyThatPromo": "9eb6f947",
-    "weCouldnTCancelThisTicket": "3b97ecec",
     "weCouldnTCheckWhatNeeds": "89dde891",
     "weCouldnTDeleteThatPromo": "9fdecbb0",
     "weCouldnTDeleteThatPromo2": "bafa3abf",
@@ -2135,7 +2128,19 @@
     "promoDraft.discount": "4ff266fc",
     "promoDraft.maxUses": "6d2e80da",
     "promoDraft.maxUsesRequired": "1f455e69",
-    "promoDraft.expiry": "04cd46c9"
+    "promoDraft.expiry": "04cd46c9",
+    "ticketCancel.free": "1b8b370a",
+    "ticketCancel.refundCash": "889b5714",
+    "ticketCancel.refundCredit": "1e55a8ea",
+    "ticketCancel.refundBoth": "36172108",
+    "ticketCancel.refundUnknown": "0e6cec91",
+    "ticketCancel.together": "5413dd5e",
+    "ticketCancel.togetherOtherEvents": "69343329",
+    "ticketCancel.checkedIn": "f4b826f0",
+    "ticketCancel.confirmOne": "c06c6bce",
+    "ticketCancel.confirmAll": "ca66235c",
+    "ticketCancel.keepOne": "bd530729",
+    "ticketCancel.keepAll": "32dbb9d1"
   },
   "discovery": {
     "aboutNewPostsFrom": "c0cd83e2",
@@ -7104,7 +7109,11 @@
     "identity.required.payouts": "b40935e6",
     "identity.required.place_claims": "f9134399",
     "identity.required.verified_badges": "4aad9313",
-    "identity.required.paid_events": "e8cb1333"
+    "identity.required.paid_events": "e8cb1333",
+    "thisTicketWasPaidForTogether": "9357d94d",
+    "aTicketFromThisPaymentWasChecked": "f4b826f0",
+    "ticketsCancelledRefund": "241ac8ff",
+    "thisTicketIsAlreadyCancelled": "6d56fe8c"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -7903,8 +7912,6 @@
     "yourPlans": "dfbf9c60"
   },
   "tickets": {
-    "aRefundOfTheTicketPrice": "6041c0d7",
-    "areYouSureYouWantTo": "41c06964",
     "cancelThisTicket": "a0093f4b",
     "cancelTicket": "c06c6bce",
     "cancelTicketRequestRefund": "01a9b84b",
@@ -7921,7 +7928,6 @@
     "empty.past.title": "33c8c2a3",
     "empty.refunds.description": "9f3002f4",
     "empty.refunds.title": "d76f9de9",
-    "keepTicket": "bd530729",
     "locationUnavailable": "d4c2227e",
     "noQrCode": "513a975d",
     "pleaseTryAgainInAMoment": "a917db7a",

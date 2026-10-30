@@ -1291,5 +1291,19 @@
     "maxUses": "Indique quantas vezes pode ser usado, ou deixe em branco para não ter limite.",
     "maxUsesRequired": "Indique quantas vezes pode ser usado.",
     "expiry": "Escolha o último dia em que o código funciona."
+  },
+  "ticketCancel": {
+    "free": "O seu lugar fica livre para outra pessoa.",
+    "refundCash": "{amount} serão devolvidos ao seu método de pagamento original. A taxa de serviço do Abonten não é reembolsada.",
+    "refundCredit": "{amount} serão devolvidos como Crédito Abonten. A taxa de serviço do Abonten não é reembolsada.",
+    "refundBoth": "{cash} serão devolvidos ao seu método de pagamento original e {credit} como Crédito Abonten. A taxa de serviço do Abonten não é reembolsada.",
+    "refundUnknown": "O preço do bilhete será reembolsado no seu método de pagamento original. A taxa de serviço do Abonten não é reembolsada.",
+    "together": "Este bilhete foi pago juntamente com {count, plural, one {# outro bilhete} other {# outros bilhetes}}. Um reembolso cobre todo o pagamento, por isso são cancelados em conjunto.",
+    "togetherOtherEvents": "Este bilhete foi pago juntamente com {count, plural, one {# outro bilhete para outro evento} other {# outros bilhetes, alguns para outro evento}}. Um reembolso cobre todo o pagamento, por isso são cancelados em conjunto.",
+    "checkedIn": "Um bilhete deste pagamento já foi validado à entrada, por isso este bilhete já não pode ser cancelado com reembolso.",
+    "confirmOne": "Cancelar bilhete",
+    "confirmAll": "Cancelar os {count} bilhetes",
+    "keepOne": "Manter bilhete",
+    "keepAll": "Manter bilhetes"
   }
 }

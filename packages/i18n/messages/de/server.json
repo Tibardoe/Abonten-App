@@ -1327,5 +1327,9 @@
       "verified_badges": "Lass deine Identität prüfen, bevor du ein Verifiziert-Abzeichen bekommst. Geh zu Einstellungen › Identitätsprüfung.",
       "paid_events": "Lass deine Identität prüfen, bevor du Tickets verkaufst. Geh zu Einstellungen › Identitätsprüfung oder mach das Event kostenlos."
     }
-  }
+  },
+  "thisTicketWasPaidForTogether": "Dieses Ticket wurde zusammen mit {count, plural, one {# weiteren Ticket} other {# weiteren Tickets}} bezahlt. Eine Erstattung gilt für die ganze Zahlung, storniere sie deshalb zusammen.",
+  "aTicketFromThisPaymentWasChecked": "Ein Ticket dieser Zahlung wurde bereits beim Einlass gescannt, deshalb kann dieses Ticket nicht mehr gegen Erstattung storniert werden.",
+  "ticketsCancelledRefund": "{count, plural, one {# Ticket storniert} other {# Tickets storniert}}. {refundMessage}.",
+  "thisTicketIsAlreadyCancelled": "Dieses Ticket ist bereits storniert."
 }

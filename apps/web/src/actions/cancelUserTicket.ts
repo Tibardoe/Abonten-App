@@ -4,18 +4,23 @@ import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { tr } from "@abonten/services/i18n/requestLocale";
-import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
+import {
+  type CancelTicketScope,
+  cancelUserTicketCore,
+} from "@abonten/services/tickets/cancelUserTicketCore";
 
 /**
- * Cancels one of the caller's tickets. If it was paid and this makes every
- * ticket sharing its transaction cancelled, a partial Paystack refund of
- * the ticket revenue (the Abonten service fee is retained) is requested.
+ * Cancels one of the caller's tickets ("payment": with the other tickets
+ * the same payment bought). Once every ticket of a paid payment is
+ * cancelled, a partial refund of the ticket revenue (the Abonten service
+ * fee is retained) is requested.
  * Post-auth logic lives in cancelUserTicketCore so the mobile API route
  * shares it.
  */
 export default withActionLocale(async function cancelUserTicket(
   ticketId: string,
   transactionId: string | null,
+  scope: CancelTicketScope = "ticket",
 ) {
   const supabase = await createClient();
 
@@ -33,6 +38,7 @@ export default withActionLocale(async function cancelUserTicket(
     user.id,
     ticketId,
     transactionId,
+    { scope: scope === "payment" ? "payment" : "ticket" },
   );
 
   if (result.status === 200) {

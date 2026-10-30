@@ -1291,5 +1291,19 @@
     "maxUses": "Indiquez combien de fois il peut être utilisé, ou laissez vide pour aucune limite.",
     "maxUsesRequired": "Indiquez combien de fois il peut être utilisé.",
     "expiry": "Choisissez le dernier jour de validité du code."
+  },
+  "ticketCancel": {
+    "free": "Votre place est libérée pour quelqu'un d'autre.",
+    "refundCash": "{amount} vous sera remboursé sur votre moyen de paiement d'origine. Les frais de service Abonten ne sont pas remboursés.",
+    "refundCredit": "{amount} vous sera rendu en Crédit Abonten. Les frais de service Abonten ne sont pas remboursés.",
+    "refundBoth": "{cash} vous sera remboursé sur votre moyen de paiement d'origine et {credit} en Crédit Abonten. Les frais de service Abonten ne sont pas remboursés.",
+    "refundUnknown": "Le prix du billet sera remboursé sur votre moyen de paiement d'origine. Les frais de service Abonten ne sont pas remboursés.",
+    "together": "Ce billet a été payé en même temps que {count, plural, one {# autre billet} other {# autres billets}}. Un remboursement couvre tout le paiement, ils sont donc annulés ensemble.",
+    "togetherOtherEvents": "Ce billet a été payé en même temps que {count, plural, one {# autre billet pour un autre événement} other {# autres billets, dont certains pour un autre événement}}. Un remboursement couvre tout le paiement, ils sont donc annulés ensemble.",
+    "checkedIn": "Un billet de ce paiement a déjà été scanné à l'entrée, ce billet ne peut donc plus être annulé pour un remboursement.",
+    "confirmOne": "Annuler le billet",
+    "confirmAll": "Annuler les {count} billets",
+    "keepOne": "Garder le billet",
+    "keepAll": "Garder les billets"
   }
 }

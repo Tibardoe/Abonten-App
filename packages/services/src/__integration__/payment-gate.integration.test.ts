@@ -33,6 +33,7 @@ import type {
 import { verifyPaymentCore } from "../payments/verifyPaymentCore";
 import { handleProviderWebhook } from "../payments/webhookCore";
 import { cancelUserTicketCore } from "../tickets/cancelUserTicketCore";
+import { ticketCancelQuoteCore } from "../tickets/ticketCancelQuoteCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -415,34 +416,58 @@ describe("payment production gate", () => {
     expect(await transactionsOf(buyer)).toHaveLength(1);
   });
 
-  it("an order can't be cancelled while its payment is open; a payment after it closed is refunded", async () => {
+  it("an order whose payment page was left open can be cancelled; paying that page afterwards is refunded", async () => {
     const provider = fakePaystack();
     const fixture = await newEvent();
     const session = await openSession(fixture);
     const started = await pay([session]);
     const ref = started.payment?.reference as string;
-    const refused = await cancelTicketCheckoutSessionCore(
+    // The app closed on the payment page: the buyer cancels the order.
+    const cancelled = await cancelTicketCheckoutSessionCore(
       buyer.client,
       buyer.id,
       session,
     );
-    expect(refused.status).not.toBe(200);
-    // The buyer abandons the page: the attempt closes, the checkout lapses.
-    await service
+    expect(cancelled.status).toBe(200);
+    const { data: attempt } = await service
       .from("payment_attempt")
-      .update({ status: "failed" })
-      .eq("id", started.attempts[0].id);
-    await service
-      .from("ticket_checkout")
-      .update({ expires_at: new Date(Date.now() - 60_000).toISOString() })
-      .eq("checkout_session_id", session);
-    await service.rpc("expire_stale_ticket_checkouts");
+      .select("status")
+      .eq("id", started.attempts[0].id)
+      .single();
+    expect(attempt?.status).toBe("cancelled");
     // …then pays the old page anyway.
     provider.paid.add(ref);
     const hook = await webhookSuccess(ref);
     expect(hook.status).toBe(200);
     expect(await ticketsOf(buyer)).toHaveLength(0);
     expect(provider.refunds).toEqual([ref]);
+  });
+
+  it("an order can't be cancelled while its payment is being confirmed", async () => {
+    fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    const started = await pay([session]);
+    await service
+      .from("payment_attempt")
+      .update({ status: "processing" })
+      .eq("id", started.attempts[0].id);
+    const refused = await cancelTicketCheckoutSessionCore(
+      buyer.client,
+      buyer.id,
+      session,
+    );
+    expect(refused.status).toBe(409);
+    const { data: rows } = await service
+      .from("ticket_checkout")
+      .select("status")
+      .eq("checkout_session_id", session);
+    expect(rows?.map((r) => r.status)).toEqual(["pending"]);
+    // Leave nothing open for the next test.
+    await service
+      .from("payment_attempt")
+      .update({ status: "failed" })
+      .eq("id", started.attempts[0].id);
   });
 
   it("a payment in the wrong currency issues nothing and is refunded", async () => {
@@ -529,5 +554,129 @@ describe("payment production gate", () => {
     expect(after.status).toBe("refunded");
     const [ticketAfter] = await ticketsOf(buyer);
     expect(ticketAfter.status).toBe("cancelled");
+  });
+
+  async function buyTwo() {
+    const provider = fakePaystack();
+    const fixture = await newEvent();
+    const opened = await validateCheckoutCore(buyer.client, buyer.id, {
+      eventId: fixture.eventId,
+      quantities: { [fixture.ticketTypeId]: 2 },
+    });
+    expect(opened.status, opened.message).toBe(200);
+    const started = await pay([opened.checkoutSessionId as string]);
+    const ref = started.payment?.reference as string;
+    provider.paid.add(ref);
+    await finalizePayment(started.attempts[0].id, deps);
+    const tickets = await ticketsOf(buyer);
+    expect(tickets).toHaveLength(2);
+    return { provider, fixture, ref, tickets };
+  }
+
+  async function seatsLeft(ticketTypeId: string) {
+    const { data } = await service
+      .from("ticket_type")
+      .select("quantity")
+      .eq("id", ticketTypeId)
+      .single();
+    return data?.quantity;
+  }
+
+  it("two tickets from one payment: one alone is refused, both together are refunded once", async () => {
+    const { provider, fixture, ref, tickets } = await buyTwo();
+    const [first, second] = tickets;
+
+    const quote = await ticketCancelQuoteCore(buyer.client, buyer.id, first.id);
+    expect(quote).toEqual({
+      status: 200,
+      data: {
+        paid: true,
+        otherTicketIds: [second.id],
+        otherEvents: false,
+        checkedIn: false,
+        refund: { cashMinor: 10000, creditMinor: 0, currency: "GHS" },
+      },
+    });
+
+    // Alone it would put the seat back on sale and give nothing back.
+    const alone = await cancelUserTicketCore(
+      buyer.client,
+      buyer.id,
+      first.id,
+      first.transaction_id,
+    );
+    expect(alone.status).toBe(409);
+    expect((await ticketsOf(buyer)).map((t) => t.status)).toEqual([
+      "active",
+      "active",
+    ]);
+    expect(await seatsLeft(fixture.ticketTypeId)).toBe(18);
+    expect(provider.refunds).toEqual([]);
+
+    const together = await cancelUserTicketCore(
+      buyer.client,
+      buyer.id,
+      first.id,
+      first.transaction_id,
+      { scope: "payment" },
+    );
+    expect(together.status, together.message).toBe(200);
+    expect((await ticketsOf(buyer)).map((t) => t.status)).toEqual([
+      "cancelled",
+      "cancelled",
+    ]);
+    expect(await seatsLeft(fixture.ticketTypeId)).toBe(20);
+    expect(provider.refunds).toEqual([ref]);
+    const [txn] = await transactionsOf(buyer);
+    expect(txn.status).toBe("refund_pending");
+    const { data: ledger } = await service
+      .from("organizer_ledger_entry")
+      .select("entry_type, amount")
+      .eq("transaction_id", txn.id)
+      .order("created_at");
+    expect(ledger).toEqual([
+      { entry_type: "earning", amount: 100 },
+      { entry_type: "refund_hold", amount: -100 },
+    ]);
+
+    // A retry changes nothing.
+    const again = await cancelUserTicketCore(
+      buyer.client,
+      buyer.id,
+      second.id,
+      second.transaction_id,
+      { scope: "payment" },
+    );
+    expect(again.status).toBe(200);
+    expect(await seatsLeft(fixture.ticketTypeId)).toBe(20);
+    expect(provider.refunds).toEqual([ref]);
+  });
+
+  it("a payment with a checked-in ticket can't be cancelled for a refund", async () => {
+    const { provider, fixture, tickets } = await buyTwo();
+    const [scanned, other] = tickets;
+    await service
+      .from("ticket")
+      .update({ status: "used", used_at: new Date().toISOString() })
+      .eq("id", scanned.id);
+
+    const quote = await ticketCancelQuoteCore(buyer.client, buyer.id, other.id);
+    expect(quote.status).toBe(200);
+    if (quote.status === 200) expect(quote.data.checkedIn).toBe(true);
+
+    for (const scope of ["ticket", "payment"] as const) {
+      const refused = await cancelUserTicketCore(
+        buyer.client,
+        buyer.id,
+        other.id,
+        other.transaction_id,
+        { scope },
+      );
+      expect(refused.status).toBe(409);
+    }
+    const after = await ticketsOf(buyer);
+    expect(after.find((t) => t.id === other.id)?.status).toBe("active");
+    expect(await seatsLeft(fixture.ticketTypeId)).toBe(18);
+    expect(provider.refunds).toEqual([]);
   });
 });
