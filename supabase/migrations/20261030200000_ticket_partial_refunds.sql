@@ -12,8 +12,8 @@
 -- part or all of a payment; transaction_refund_ticket says which tickets it
 -- covers (a ticket is covered by at most one refund that has not failed).
 -- The amounts are cumulative per checkout line, so the parts add up to the
--- line exactly: three tickets of a GH₵100 line come back as 33.33, 33.33
--- and 33.34, never one pesewa more or less than was paid. The service fee
+-- line exactly: three tickets of a GH₵100 line come back as 33.33, 33.34
+-- and 33.33, never one pesewa more or less than was paid. The service fee
 -- is kept, as before.
 --
 -- A refund moves through these functions only (service role only):
