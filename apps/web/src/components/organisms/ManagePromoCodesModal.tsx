@@ -8,7 +8,7 @@ import ModalShell from "@/components/atoms/ModalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
-import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
+import { formatDate, formatPercent } from "@abonten/core/i18n/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -280,10 +280,12 @@ export default function ManagePromoCodesModal({
                           </p>
                         </div>
                         <div className="flex justify-between">
-                          <p>{t("expires")}</p>
+                          <p>{t("lastDayItWorks")}</p>
                           <p>
+                            {/* The stored day's midnight: the code works
+                                all that day. */}
                             {code.expiresAt
-                              ? formatDateTime(code.expiresAt, locale)
+                              ? formatDate(code.expiresAt, locale)
                               : t("never")}
                           </p>
                         </div>

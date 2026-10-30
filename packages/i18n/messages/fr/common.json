@@ -267,6 +267,7 @@
   "expandPaymentSection": "Développer la section de paiement",
   "expired": "Expiré",
   "expires": "Expire le",
+  "lastDayItWorks": "Dernier jour de validité",
   "expiresIn": "Expire dans {formatCountdown}",
   "expiryDate": "Date d'expiration",
   "expiryTime": "Heure d'expiration",

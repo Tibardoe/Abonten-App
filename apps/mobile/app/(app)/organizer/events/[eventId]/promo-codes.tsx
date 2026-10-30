@@ -11,7 +11,7 @@ import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { settleEnvelope } from "@/lib/envelope";
 import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
-import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
+import { formatDate, formatPercent } from "@abonten/core/i18n/format";
 import {
   promoCodeDraftGap,
   promoCodeDraftGapMessage,
@@ -268,11 +268,12 @@ function PromoCodeCard({
             </View>
             <View className="flex-row justify-between">
               <AppText className="text-sm text-muted-foreground">
-                {t("expires")}
+                {t("lastDayItWorks")}
               </AppText>
               <AppText className="text-sm text-foreground">
+                {/* The stored day's midnight: the code works all that day. */}
                 {code.expiresAt
-                  ? formatDateTime(code.expiresAt, locale)
+                  ? formatDate(code.expiresAt, locale)
                   : t("never")}
               </AppText>
             </View>

@@ -42,7 +42,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type PayChoice = { paymentMethodId: string | null; method: string | null };
 
@@ -122,6 +122,11 @@ type PaymentUiState =
   | { phase: "succeeded" };
 
 const DIRECT_CHARGE_POLL_INTERVAL_MS = 4000;
+
+// "We're finishing up your payment" (the webhook was issuing the tickets at
+// that moment, or mobile money is waiting on the phone) is asked again on
+// its own for about a minute; "Check status" stays for after that.
+const PENDING_POLL_MAX_TRIES = 15;
 
 /**
  * Shared "select a payment method and pay" step for ticket and promotion
@@ -654,6 +659,32 @@ export default function PaymentMethodSelector(
 
     const interval = setInterval(() => {
       verifyMutation.mutate(uiState.primaryAttemptId);
+    }, DIRECT_CHARGE_POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [uiState]);
+
+  // Each 202 answer sets a fresh pending state, which restarts this effect,
+  // so the tries are counted per attempt in a ref rather than per run.
+  const pendingPolls = useRef<{ attemptId: string; tries: number } | null>(
+    null,
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: as above, only uiState drives polling.
+  useEffect(() => {
+    if (uiState.phase !== "pending") return;
+    const attemptId = uiState.primaryAttemptId;
+    if (pendingPolls.current?.attemptId !== attemptId) {
+      pendingPolls.current = { attemptId, tries: 0 };
+    }
+    const interval = setInterval(() => {
+      const polls = pendingPolls.current;
+      if (!polls || polls.tries >= PENDING_POLL_MAX_TRIES) {
+        clearInterval(interval);
+        return;
+      }
+      if (verifyMutation.isPending) return;
+      polls.tries += 1;
+      verifyMutation.mutate(attemptId);
     }, DIRECT_CHARGE_POLL_INTERVAL_MS);
 
     return () => clearInterval(interval);

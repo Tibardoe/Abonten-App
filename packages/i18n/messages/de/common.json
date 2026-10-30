@@ -267,6 +267,7 @@
   "expandPaymentSection": "Zahlungsbereich ausklappen",
   "expired": "Abgelaufen",
   "expires": "Läuft ab",
+  "lastDayItWorks": "Letzter gültiger Tag",
   "expiresIn": "Läuft ab in {formatCountdown}",
   "expiryDate": "Ablaufdatum",
   "expiryTime": "Ablaufzeit",

@@ -61,8 +61,20 @@ export function DateRangeField({
     const out: (Date | null)[] = [];
     for (let i = 0; i < firstWeekday; i++) out.push(null);
     for (let d = 1; d <= daysInMonth; d++) out.push(new Date(year, month, d));
+    while (out.length % 7 !== 0) out.push(null);
     return out;
   }, [view]);
+
+  const weeks = useMemo(() => {
+    const rows: { key: string; days: (Date | null)[] }[] = [];
+    for (let i = 0; i < cells.length; i += 7) {
+      rows.push({
+        key: `${view.getFullYear()}-${view.getMonth()}-${i / 7}`,
+        days: cells.slice(i, i + 7),
+      });
+    }
+    return rows;
+  }, [cells, view]);
 
   function pick(d: Date) {
     const s = iso(d);
@@ -127,63 +139,67 @@ export function DateRangeField({
         })}
       </View>
 
-      <View className="flex-row flex-wrap">
-        {cells.map((d, i) => {
-          if (!d) {
-            return (
-              <View
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length calendar padding
-                key={`pad-${i}`}
-                style={{ width: `${100 / 7}%` }}
-                className="h-9"
-              />
-            );
-          }
-          const ms = d.getTime();
-          const isStart = startMs != null && ms === startMs;
-          const isEnd = endMs != null && ms === endMs;
-          const inRange =
-            startMs != null && endMs != null && ms > startMs && ms < endMs;
-          const isPast = ms < today.getTime();
-          const selected = isStart || isEnd;
+      {/* One row per week, each day flex-1. Cells sized at 100/7 % in one
+          wrapping row came out a fraction too wide after pixel rounding at
+          some widths (the promo card, the wizard), so Saturday wrapped to
+          the next line and every date sat under the wrong weekday. */}
+      {weeks.map((week) => (
+        <View key={week.key} className="flex-row">
+          {week.days.map((d, i) => {
+            if (!d) {
+              return (
+                <View
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length calendar padding
+                  key={`pad-${i}`}
+                  className="h-9 flex-1"
+                />
+              );
+            }
+            const ms = d.getTime();
+            const isStart = startMs != null && ms === startMs;
+            const isEnd = endMs != null && ms === endMs;
+            const inRange =
+              startMs != null && endMs != null && ms > startMs && ms < endMs;
+            const isPast = ms < today.getTime();
+            const selected = isStart || isEnd;
 
-          return (
-            <Pressable
-              accessibilityRole="button"
-              key={iso(d)}
-              disabled={isPast}
-              onPress={() => pick(d)}
-              style={{ width: `${100 / 7}%` }}
-              className="h-9 items-center justify-center"
-            >
-              <View
-                className="h-8 w-8 items-center justify-center rounded-full"
-                style={{
-                  backgroundColor: selected
-                    ? c.primary
-                    : inRange
-                      ? c.muted
-                      : "transparent",
-                }}
+            return (
+              <Pressable
+                accessibilityRole="button"
+                key={iso(d)}
+                disabled={isPast}
+                onPress={() => pick(d)}
+                className="h-9 flex-1 items-center justify-center"
               >
-                <AppText
-                  className="text-[13px]"
+                <View
+                  className="h-8 w-8 items-center justify-center rounded-full"
                   style={{
-                    color: selected
-                      ? c["primary-foreground"]
-                      : isPast
-                        ? c["muted-foreground"]
-                        : c.foreground,
-                    opacity: isPast ? 0.4 : 1,
+                    backgroundColor: selected
+                      ? c.primary
+                      : inRange
+                        ? c.muted
+                        : "transparent",
                   }}
                 >
-                  {d.getDate()}
-                </AppText>
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
+                  <AppText
+                    className="text-[13px]"
+                    style={{
+                      color: selected
+                        ? c["primary-foreground"]
+                        : isPast
+                          ? c["muted-foreground"]
+                          : c.foreground,
+                      opacity: isPast ? 0.4 : 1,
+                    }}
+                  >
+                    {d.getDate()}
+                  </AppText>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
 
       {(start || end) && (
         <Pressable
