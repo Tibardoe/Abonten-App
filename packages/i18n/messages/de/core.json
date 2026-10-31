@@ -1077,7 +1077,7 @@
     "failed": "Erstattung fehlgeschlagen",
     "issued": "Erstattung veranlasst",
     "none": "Noch keine Erstattung",
-    "noneDescription": "Wird veranlasst, sobald alle Tickets dieser Bestellung storniert sind.",
+    "noneDescription": "Die Erstattung für dieses Ticket wurde noch nicht angefordert.",
     "pending": "Erstattung ausstehend"
   },
   "report": {
@@ -1291,5 +1291,26 @@
     "maxUses": "Gib an, wie oft er genutzt werden kann, oder lass das Feld leer für unbegrenzt.",
     "maxUsesRequired": "Gib an, wie oft er genutzt werden kann.",
     "expiry": "Wähle den letzten Tag, an dem der Code gilt."
+  },
+  "ticketCancel": {
+    "free": "Dein Platz wird für jemand anderen frei.",
+    "refundCash": "{amount} werden auf deine ursprüngliche Zahlungsmethode erstattet. Die Abonten-Servicegebühr wird nicht erstattet.",
+    "refundCredit": "{amount} kommen als Abonten-Guthaben zurück. Die Abonten-Servicegebühr wird nicht erstattet.",
+    "refundBoth": "{cash} werden auf deine ursprüngliche Zahlungsmethode erstattet und {credit} kommen als Abonten-Guthaben zurück. Die Abonten-Servicegebühr wird nicht erstattet.",
+    "refundUnknown": "Der Ticketpreis wird auf deine ursprüngliche Zahlungsmethode erstattet. Die Abonten-Servicegebühr wird nicht erstattet.",
+    "together": "Dieses Ticket wurde zusammen mit {count, plural, one {# weiteren Ticket} other {# weiteren Tickets}} bezahlt. Eine Erstattung gilt für die ganze Zahlung, deshalb werden sie zusammen storniert.",
+    "togetherOtherEvents": "Dieses Ticket wurde zusammen mit {count, plural, one {# weiteren Ticket für ein anderes Event} other {# weiteren Tickets, darunter welche für ein anderes Event,}} bezahlt. Eine Erstattung gilt für die ganze Zahlung, deshalb werden sie zusammen storniert.",
+    "checkedIn": "Ein Ticket dieser Zahlung wurde bereits beim Einlass gescannt, deshalb kann dieses Ticket nicht mehr gegen Erstattung storniert werden.",
+    "confirmOne": "Ticket stornieren",
+    "confirmAll": "Alle {count} Tickets stornieren",
+    "keepOne": "Ticket behalten",
+    "keepAll": "Tickets behalten",
+    "othersStayValid": "{count, plural, one {Dein anderes Ticket aus dieser Zahlung bleibt gültig.} other {Deine # anderen Tickets aus dieser Zahlung bleiben gültig.}}",
+    "cancelAllForEvent": "Alle {count} für dieses Event stornieren",
+    "eventTitle": "Alle deine Tickets für dieses Event stornieren?",
+    "eventAll": "{count, plural, one {Dein Ticket für dieses Event wird storniert.} other {Alle # deiner Tickets für dieses Event werden storniert.}}",
+    "eventFree": "{count, plural, one {Dein Platz für dieses Event wird für jemand anderen frei.} other {Deine # Plätze für dieses Event werden für andere frei.}}",
+    "eventOtherEvents": "Einige dieser Tickets wurden zusammen mit Tickets für ein anderes Event bezahlt und können nur mit diesen storniert werden. Storniere sie stattdessen über eines dieser Tickets.",
+    "confirmEvent": "{count, plural, one {# Ticket stornieren} other {Alle # Tickets stornieren}}"
   }
 }

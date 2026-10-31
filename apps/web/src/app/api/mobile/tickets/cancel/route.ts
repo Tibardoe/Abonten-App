@@ -7,12 +7,13 @@ import {
 } from "@abonten/services/i18n/requestLocale";
 import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
 
-// POST /api/mobile/tickets/cancel  { ticketId: string, transactionId?: string | null }
+// POST /api/mobile/tickets/cancel
+//   { ticketId: string, transactionId?: string | null, scope?: "ticket" | "payment" }
 //
-// Cancels one of the caller's tickets. If it was paid and this makes every
-// ticket sharing its transaction cancelled, a partial Paystack refund of
-// the ticket revenue (fee retained) is requested. Same cancelUserTicketCore
-// the web action runs.
+// Cancels one of the caller's tickets ("payment": with the other tickets
+// the same payment bought). Once every ticket of a paid payment is
+// cancelled, a partial refund of the ticket revenue (fee retained) is
+// requested. Same cancelUserTicketCore the web action runs.
 export async function POST(req: Request) {
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => null)) as {
       ticketId?: unknown;
       transactionId?: unknown;
+      scope?: unknown;
     } | null;
 
     if (typeof body?.ticketId !== "string" || body.ticketId.length === 0) {
@@ -41,6 +43,7 @@ export async function POST(req: Request) {
       auth.user.id,
       body.ticketId,
       transactionId,
+      { scope: body.scope === "payment" ? "payment" : "ticket" },
     );
 
     return apiJson({ status: result.status, message: result.message });

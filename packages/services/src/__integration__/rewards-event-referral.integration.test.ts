@@ -25,6 +25,7 @@ import {
   getReferralLinkCore,
   recordReferralTouchCore,
 } from "../rewards/referralCore";
+import { cancelTicketsForTransactionCore } from "../tickets/cancelTicketsForTransactionCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -461,6 +462,8 @@ describe("event referrals: capture, attribution and the reward engine", () => {
     const before = await account(referrer.id);
     expect((await rewardFor(bought.checkoutId))?.status).toBe("pending");
 
+    // As Admin › Finance refunds an order: its tickets are cancelled first.
+    await cancelTicketsForTransactionCore(bought.transactionId);
     const refund = await issueRefundCore(service, bought.transactionId);
     expect(refund.status).toBe(200);
     await runEngine();

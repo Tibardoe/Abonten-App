@@ -2,7 +2,7 @@
 title: Remboursements et annulations
 summary: Annuler un billet, ce qui est remboursé (et ce qui ne l'est pas), le délai des remboursements et ce qui se passe quand un organisateur annule un événement.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,11 +18,15 @@ Ouvrez le billet dans Mes billets (Gérer › Mes billets sur le site web, Compt
 - Le **prix du billet** annulé est remboursé sur le moyen de paiement utilisé.
 - **Les frais de service ne sont pas remboursés.**
 - Les billets gratuits n'ont rien à rembourser ; ils passent simplement à *Annulé*.
-- Si vous avez acheté plusieurs billets en un seul paiement, chaque billet annulé est remboursé de son propre prix. Les remboursements Paystack sont demandés pour la part du paiement correspondant à chaque billet annulé.
+- Si vous avez acheté plusieurs billets en un seul paiement, vous pouvez n'en annuler qu'un : le prix de ce billet vous est remboursé et les autres restent valables. Vous en avez acheté trois et un ami ne peut pas venir ? Annulez le billet de cet ami. Si une réduction a baissé le total de la commande, c'est la part de chaque billet dans le prix réduit qui vous est rendue.
+- Avant que vous confirmiez, la fenêtre indique le montant qui vous est rendu.
+- Vous avez plusieurs billets pour un même événement, même achetés en plusieurs paiements ? La fenêtre propose aussi **Annuler les billets de cet événement** : tous vos billets pour cet événement sont annulés d'un coup et chaque paiement rend sa part.
+- Votre historique de paiements indique un achat dont certains billets ont été remboursés comme remboursé en partie (sur le site, combien ont été annulés et l'état de leur remboursement).
+- Un paiement réglé en partie avec du Crédit Abonten, ou payé en plusieurs fois, est remboursé en entier : ses billets sont annulés ensemble, et aucun ne peut plus être annulé pour un remboursement dès que l'un d'eux a été scanné à l'entrée.
 
 ## Combien de temps cela prend
 
-L'annulation **demande** immédiatement le remboursement à Paystack. Votre transaction affiche **Remboursement en attente** jusqu'à ce que Paystack le confirme, puis **Remboursé**. Ensuite, le délai pour le voir apparaître sur votre carte ou votre solde mobile money dépend de votre banque ou de votre réseau : en général quelques jours pour les cartes.
+L'annulation **demande** immédiatement le remboursement à Paystack. Le billet annulé affiche **Remboursement en attente** jusqu'à ce que Paystack le confirme, puis **Remboursé** ; le paiement lui-même affiche **Remboursé** une fois tous ses billets remboursés. Ensuite, le délai pour le voir apparaître sur votre carte ou votre solde mobile money dépend de votre banque ou de votre réseau : en général quelques jours pour les cartes.
 
 Si la demande échoue (par exemple si Paystack était injoignable), votre billet affiche **Échec du remboursement** avec un bouton **Relancer le remboursement**. L'assistance peut aussi relancer la demande.
 

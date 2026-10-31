@@ -19,9 +19,11 @@ import {
   it,
   vi,
 } from "vitest";
+import { listRefundPartsCore } from "../admin/finance/financeAdminCore";
 import { cancelTicketCheckoutSessionCore } from "../checkout/cancelTicketCheckoutSessionCore";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { invalidateMarketCache } from "../markets/marketConfig";
+import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
@@ -32,7 +34,12 @@ import type {
 } from "../payments/providers/types";
 import { verifyPaymentCore } from "../payments/verifyPaymentCore";
 import { handleProviderWebhook } from "../payments/webhookCore";
+import {
+  cancelEventTicketsCore,
+  eventCancelQuoteCore,
+} from "../tickets/cancelEventTicketsCore";
 import { cancelUserTicketCore } from "../tickets/cancelUserTicketCore";
+import { ticketCancelQuoteCore } from "../tickets/ticketCancelQuoteCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -53,6 +60,8 @@ function fakePaystack() {
   const paid = new Set<string>();
   const reportCurrency = new Map<string, string>();
   const refunds: string[] = [];
+  const refundAmounts: (number | null)[] = [];
+  let refundFailures = 0;
   let verifyFailures = 0;
   const init = async (
     _account: unknown,
@@ -94,7 +103,13 @@ function fakePaystack() {
   );
   vi.spyOn(paystackProvider, "refund").mockImplementation(
     async (_account, input) => {
+      if (refundFailures > 0) {
+        refundFailures -= 1;
+        throw new Error("simulated refund refusal");
+      }
       refunds.push(input.reference ?? "");
+      refundAmounts.push(input.amount?.amountMinor ?? null);
+      return { providerRefundId: `rf-${refunds.length}-${input.reference}` };
     },
   );
   return {
@@ -102,8 +117,12 @@ function fakePaystack() {
     paid,
     reportCurrency,
     refunds,
+    refundAmounts,
     failNextVerify: (n = 1) => {
       verifyFailures = n;
+    },
+    failNextRefund: (n = 1) => {
+      refundFailures = n;
     },
   };
 }
@@ -415,34 +434,58 @@ describe("payment production gate", () => {
     expect(await transactionsOf(buyer)).toHaveLength(1);
   });
 
-  it("an order can't be cancelled while its payment is open; a payment after it closed is refunded", async () => {
+  it("an order whose payment page was left open can be cancelled; paying that page afterwards is refunded", async () => {
     const provider = fakePaystack();
     const fixture = await newEvent();
     const session = await openSession(fixture);
     const started = await pay([session]);
     const ref = started.payment?.reference as string;
-    const refused = await cancelTicketCheckoutSessionCore(
+    // The app closed on the payment page: the buyer cancels the order.
+    const cancelled = await cancelTicketCheckoutSessionCore(
       buyer.client,
       buyer.id,
       session,
     );
-    expect(refused.status).not.toBe(200);
-    // The buyer abandons the page: the attempt closes, the checkout lapses.
-    await service
+    expect(cancelled.status).toBe(200);
+    const { data: attempt } = await service
       .from("payment_attempt")
-      .update({ status: "failed" })
-      .eq("id", started.attempts[0].id);
-    await service
-      .from("ticket_checkout")
-      .update({ expires_at: new Date(Date.now() - 60_000).toISOString() })
-      .eq("checkout_session_id", session);
-    await service.rpc("expire_stale_ticket_checkouts");
+      .select("status")
+      .eq("id", started.attempts[0].id)
+      .single();
+    expect(attempt?.status).toBe("cancelled");
     // …then pays the old page anyway.
     provider.paid.add(ref);
     const hook = await webhookSuccess(ref);
     expect(hook.status).toBe(200);
     expect(await ticketsOf(buyer)).toHaveLength(0);
     expect(provider.refunds).toEqual([ref]);
+  });
+
+  it("an order can't be cancelled while its payment is being confirmed", async () => {
+    fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    const started = await pay([session]);
+    await service
+      .from("payment_attempt")
+      .update({ status: "processing" })
+      .eq("id", started.attempts[0].id);
+    const refused = await cancelTicketCheckoutSessionCore(
+      buyer.client,
+      buyer.id,
+      session,
+    );
+    expect(refused.status).toBe(409);
+    const { data: rows } = await service
+      .from("ticket_checkout")
+      .select("status")
+      .eq("checkout_session_id", session);
+    expect(rows?.map((r) => r.status)).toEqual(["pending"]);
+    // Leave nothing open for the next test.
+    await service
+      .from("payment_attempt")
+      .update({ status: "failed" })
+      .eq("id", started.attempts[0].id);
   });
 
   it("a payment in the wrong currency issues nothing and is refunded", async () => {
@@ -529,5 +572,381 @@ describe("payment production gate", () => {
     expect(after.status).toBe("refunded");
     const [ticketAfter] = await ticketsOf(buyer);
     expect(ticketAfter.status).toBe("cancelled");
+  });
+
+  async function buy(
+    quantity: number,
+    on?: {
+      provider: ReturnType<typeof fakePaystack>;
+      fixture: { eventId: string; ticketTypeId: string };
+    },
+  ) {
+    const provider = on?.provider ?? fakePaystack();
+    const fixture = on?.fixture ?? (await newEvent());
+    const opened = await validateCheckoutCore(buyer.client, buyer.id, {
+      eventId: fixture.eventId,
+      quantities: { [fixture.ticketTypeId]: quantity },
+    });
+    expect(opened.status, opened.message).toBe(200);
+    const started = await pay([opened.checkoutSessionId as string]);
+    const ref = started.payment?.reference as string;
+    provider.paid.add(ref);
+    await finalizePayment(started.attempts[0].id, deps);
+    const tickets = (await ticketsOf(buyer)).filter(
+      (t) => t.transaction_id && !on,
+    );
+    if (!on) expect(tickets).toHaveLength(quantity);
+    const [txn] = await transactionsOf(buyer);
+    return { provider, fixture, ref, tickets, txn };
+  }
+
+  async function historyOf(user: TestUser) {
+    const { data, error } = await user.client.rpc(
+      "get_user_transaction_history",
+      {
+        p_start: null,
+        p_end: null,
+        p_cursor_created_at: null,
+        p_cursor_id: null,
+        p_limit: 20,
+      } as never,
+    );
+    expect(error).toBeNull();
+    return (data ?? []) as {
+      kind: string;
+      quantity: number;
+      cancelled_quantity: number;
+      refund_status: string | null;
+      refund_requested_at: string | null;
+    }[];
+  }
+
+  async function seatsLeft(ticketTypeId: string) {
+    const { data } = await service
+      .from("ticket_type")
+      .select("quantity")
+      .eq("id", ticketTypeId)
+      .single();
+    return data?.quantity;
+  }
+
+  async function refundsOf(transactionId: string) {
+    const { data } = await service
+      .from("transaction_refund")
+      .select("id, amount, status, completes_payment, provider_refund_id")
+      .eq("transaction_id", transactionId)
+      .order("created_at");
+    return data ?? [];
+  }
+
+  async function holdsOf(transactionId: string) {
+    const { data } = await service
+      .from("organizer_ledger_entry")
+      .select("entry_type, amount, refund_id")
+      .eq("transaction_id", transactionId)
+      .neq("entry_type", "earning")
+      .order("created_at");
+    return data ?? [];
+  }
+
+  async function statusOf(transactionId: string) {
+    const { data } = await service
+      .from("transaction")
+      .select("status, refund_requested_at")
+      .eq("id", transactionId)
+      .single();
+    return data;
+  }
+
+  async function refundWebhook(
+    event: "refund.processed" | "refund.failed",
+    reference: string,
+    refundId: string | null,
+    amountMinor: number | null,
+  ) {
+    const { body, headers } = signed(event, {
+      ...(refundId ? { id: refundId } : {}),
+      status: event === "refund.processed" ? "processed" : "failed",
+      transaction_reference: reference,
+      ...(amountMinor != null ? { amount: amountMinor, currency: "GHS" } : {}),
+    });
+    return handleProviderWebhook({
+      providerCode: "paystack",
+      countryCode: "GH",
+      rawBody: body,
+      headers,
+      deps,
+    });
+  }
+
+  async function cancel(ticketId: string, scope?: "ticket" | "payment") {
+    return cancelUserTicketCore(
+      buyer.client,
+      buyer.id,
+      ticketId,
+      null,
+      scope ? { scope } : {},
+    );
+  }
+
+  it("three tickets, one friend can't come: that ticket's price comes back, the other two stay valid", async () => {
+    const { provider, fixture, ref, tickets, txn } = await buy(3);
+    const [first, second] = tickets;
+
+    const quote = await ticketCancelQuoteCore(buyer.client, buyer.id, first.id);
+    expect(quote).toEqual({
+      status: 200,
+      data: {
+        paid: true,
+        otherTicketIds: [],
+        keptTicketCount: 2,
+        eventTicketCount: 3,
+        otherEvents: false,
+        checkedIn: false,
+        refund: { cashMinor: 5000, creditMinor: 0, currency: "GHS" },
+      },
+    });
+
+    const one = await cancel(first.id);
+    expect(one.status, one.message).toBe(200);
+    const after = await ticketsOf(buyer);
+    expect(after.find((t) => t.id === first.id)?.status).toBe("cancelled");
+    expect(after.filter((t) => t.status === "active")).toHaveLength(2);
+    expect(await seatsLeft(fixture.ticketTypeId)).toBe(18);
+    expect(provider.refunds).toEqual([ref]);
+    expect(provider.refundAmounts).toEqual([5000]);
+    // The payment itself is not being refunded: it still reads as paid.
+    expect(await statusOf(txn.id)).toEqual({
+      status: "successful",
+      refund_requested_at: null,
+    });
+    const [part] = await refundsOf(txn.id);
+    expect(part).toMatchObject({
+      amount: 50,
+      status: "requested",
+      completes_payment: false,
+      provider_refund_id: `rf-1-${ref}`,
+    });
+    expect(await holdsOf(txn.id)).toEqual([
+      { entry_type: "refund_hold", amount: -50, refund_id: part.id },
+    ]);
+    // Payment history reads the line from its ticket's refund, not from the
+    // payment (still "successful").
+    expect((await historyOf(buyer))[0]).toMatchObject({
+      quantity: 3,
+      cancelled_quantity: 1,
+      refund_status: "refund_pending",
+    });
+
+    // The provider confirms it: that part is done, the payment still paid.
+    const hook = await refundWebhook(
+      "refund.processed",
+      ref,
+      `rf-1-${ref}`,
+      5000,
+    );
+    expect(hook.status).toBe(200);
+    expect((await refundsOf(txn.id))[0].status).toBe("processed");
+    expect((await statusOf(txn.id))?.status).toBe("successful");
+    expect((await historyOf(buyer))[0].refund_status).toBe("refunded");
+    const { data: fee } = await service
+      .from("platform_fee_entry")
+      .select("entry_type, ticket_revenue, refund_id")
+      .eq("transaction_id", txn.id)
+      .eq("entry_type", "fee_refund_adjustment");
+    expect(fee).toEqual([
+      {
+        entry_type: "fee_refund_adjustment",
+        ticket_revenue: -50,
+        refund_id: part.id,
+      },
+    ]);
+
+    // Later the other two are cancelled together: the rest comes back and
+    // the payment is refunded as a whole.
+    const rest = await cancel(second.id, "payment");
+    expect(rest.status, rest.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000, 10000]);
+    expect((await statusOf(txn.id))?.status).toBe("refund_pending");
+    expect(await seatsLeft(fixture.ticketTypeId)).toBe(20);
+    const holds = await holdsOf(txn.id);
+    expect(holds.reduce((sum, h) => sum + Number(h.amount), 0)).toBe(-150);
+
+    // A redelivery of the first confirmation changes nothing; the second
+    // finishes the payment.
+    await refundWebhook("refund.processed", ref, `rf-1-${ref}`, 5000);
+    expect((await statusOf(txn.id))?.status).toBe("refund_pending");
+    await refundWebhook("refund.processed", ref, `rf-2-${ref}`, 10000);
+    expect((await statusOf(txn.id))?.status).toBe("refunded");
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual([
+      "processed",
+      "processed",
+    ]);
+  });
+
+  it("the parts of a line add up to what was paid for it", async () => {
+    const { txn, tickets } = await buy(3);
+    // A line of three that came to 100 (a discount): 33.33 + 33.34 + 33.33.
+    const { data: line } = await service
+      .from("ticket")
+      .select("ticket_checkout_id")
+      .eq("id", tickets[0].id)
+      .single();
+    await service
+      .from("ticket_checkout")
+      .update({ total_price: 100 })
+      .eq("id", line?.ticket_checkout_id as string);
+    await service
+      .from("organizer_ledger_entry")
+      .update({ amount: 100 })
+      .eq("ticket_checkout_id", line?.ticket_checkout_id as string)
+      .eq("entry_type", "earning");
+
+    for (const ticket of tickets) {
+      expect((await cancel(ticket.id)).status).toBe(200);
+    }
+    const parts = await refundsOf(txn.id);
+    expect(parts.map((r) => Number(r.amount))).toEqual([33.33, 33.34, 33.33]);
+    expect(parts.map((r) => r.completes_payment)).toEqual([false, false, true]);
+    const holds = await holdsOf(txn.id);
+    expect(holds.map((h) => Number(h.amount))).toEqual([
+      -33.33, -33.34, -33.33,
+    ]);
+  });
+
+  it("a refused part can be asked again, and the organizer's hold follows", async () => {
+    const { provider, ref, tickets, txn } = await buy(2);
+
+    // The provider refuses when asked.
+    provider.failNextRefund();
+    const refused = await cancel(tickets[0].id);
+    expect(refused.status).toBe(200);
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual(["failed"]);
+    expect(await holdsOf(txn.id)).toEqual([]);
+
+    // Retry refund (issueRefundCore) asks again for that ticket.
+    const retry = await issueRefundCore(buyer.client, txn.id, {
+      expectedUserId: buyer.id,
+    });
+    expect(retry.status, retry.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000]);
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual([
+      "failed",
+      "requested",
+    ]);
+
+    // Then the provider reports that part failed: the hold goes back and
+    // the ticket can be refunded again.
+    await refundWebhook("refund.failed", ref, `rf-1-${ref}`, null);
+    expect((await refundsOf(txn.id)).map((r) => r.status)).toEqual([
+      "failed",
+      "failed",
+    ]);
+    const net = (await holdsOf(txn.id)).reduce(
+      (sum, h) => sum + Number(h.amount),
+      0,
+    );
+    expect(net).toBe(0);
+    expect((await statusOf(txn.id))?.status).toBe("successful");
+    const again = await issueRefundCore(buyer.client, txn.id, {
+      expectedUserId: buyer.id,
+    });
+    expect(again.status, again.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000, 5000]);
+
+    // The ticket left in the payment is untouched throughout.
+    const left = (await ticketsOf(buyer)).find((t) => t.id === tickets[1].id);
+    expect(left?.status).toBe("active");
+  });
+
+  it("a checked-in ticket doesn't stop the others of its payment being refunded", async () => {
+    const { provider, tickets } = await buy(2);
+    const [scanned, other] = tickets;
+    await service
+      .from("ticket")
+      .update({ status: "used", used_at: new Date().toISOString() })
+      .eq("id", scanned.id);
+
+    const quote = await ticketCancelQuoteCore(buyer.client, buyer.id, other.id);
+    expect(quote.status === 200 && quote.data.checkedIn).toBe(false);
+    const cancelled = await cancel(other.id);
+    expect(cancelled.status, cancelled.message).toBe(200);
+    expect(provider.refundAmounts).toEqual([5000]);
+    // The checked-in ticket can't be cancelled.
+    expect((await cancel(scanned.id)).status).toBe(409);
+  });
+
+  it("cancel all my tickets for an event: every payment gives back its share", async () => {
+    const first = await buy(2);
+    await buy(1, { provider: first.provider, fixture: first.fixture });
+    const tickets = await ticketsOf(buyer);
+    expect(tickets).toHaveLength(3);
+
+    const single = await ticketCancelQuoteCore(
+      buyer.client,
+      buyer.id,
+      tickets[0].id,
+    );
+    expect(single.status === 200 && single.data.eventTicketCount).toBe(3);
+
+    const quote = await eventCancelQuoteCore(
+      buyer.client,
+      buyer.id,
+      first.fixture.eventId,
+    );
+    expect(quote.status).toBe(200);
+    if (quote.status !== 200) throw new Error("unreachable");
+    expect(quote.data.ticketIds).toHaveLength(3);
+    expect(quote.data).toMatchObject({
+      paid: true,
+      blocked: null,
+      refund: { cashMinor: 15000, creditMinor: 0, currency: "GHS" },
+    });
+
+    const all = await cancelEventTicketsCore(
+      buyer.client,
+      buyer.id,
+      first.fixture.eventId,
+    );
+    expect(all.status, all.message).toBe(200);
+    expect((await ticketsOf(buyer)).map((t) => t.status)).toEqual([
+      "cancelled",
+      "cancelled",
+      "cancelled",
+    ]);
+    expect(await seatsLeft(first.fixture.ticketTypeId)).toBe(20);
+    expect([...first.provider.refundAmounts].sort()).toEqual([10000, 5000]);
+    const payments = await transactionsOf(buyer);
+    expect(payments.map((p) => p.status)).toEqual([
+      "refund_pending",
+      "refund_pending",
+    ]);
+
+    // Nothing left: a second tap says so.
+    const again = await cancelEventTicketsCore(
+      buyer.client,
+      buyer.id,
+      first.fixture.eventId,
+    );
+    expect(again.status).toBe(404);
+
+    // Admin › Finance › Refunds › Ticket refunds lists both parts.
+    const parts = await listRefundPartsCore(
+      service as never,
+      {
+        userId: buyer.id,
+        email: null,
+        roles: ["finance_admin"],
+        permissions: ["finance.view"],
+        reauthenticatedAt: Date.now(),
+      },
+      {},
+    );
+    expect(parts.status).toBe(200);
+    const ours = parts.data.filter((p) =>
+      payments.some((t) => t.id === p.transactionId),
+    );
+    expect(ours.map((p) => p.amount).sort()).toEqual([100, 50]);
+    expect(ours.every((p) => p.completesPayment)).toBe(true);
   });
 });

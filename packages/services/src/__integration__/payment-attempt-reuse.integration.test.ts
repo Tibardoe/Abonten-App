@@ -80,6 +80,7 @@ function fakePaystack({ delayMs = 0 }: { delayMs?: number } = {}) {
   vi.spyOn(paystackProvider, "refund").mockImplementation(
     async (_account, input) => {
       refunds.push(input.reference ?? "");
+      return { providerRefundId: null };
     },
   );
   return { opened, paid, refunds };

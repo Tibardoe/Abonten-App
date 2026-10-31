@@ -30,7 +30,10 @@ import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { tryFromMajor } from "@abonten/core/money/money";
-import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import {
+  hasFreeRegistration,
+  ticketTypeLabel,
+} from "@abonten/core/ticketTiers";
 import {
   AppText,
   BottomBar,
@@ -106,7 +109,6 @@ export default function BuyTicketsScreen() {
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [occurrenceId, setOccurrenceId] = useState<string | null>(null);
-  const [promoOpen, setPromoOpen] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
   const [applied, setApplied] = useState<AppliedPromo | null>(null);
@@ -297,7 +299,6 @@ export default function BuyTicketsScreen() {
         discountPercentage: res.discountPercentage,
         remainingUses: res.remainingUses,
       });
-      setPromoOpen(false);
       setPromoInput("");
       return;
     }
@@ -553,8 +554,15 @@ export default function BuyTicketsScreen() {
           />
         ) : null}
 
-        {/* Promo code */}
-        <View className={paySmallSmall ? "hidden" : "gap-2"}>
+        {/* Promo code: an open field, not a "Have a promo code?" link, which
+            pilot testers looked past (2026-10-30). A free event has none. */}
+        <View
+          className={
+            paySmallSmall || hasFreeRegistration(event.ticket_type)
+              ? "hidden"
+              : "gap-2"
+          }
+        >
           {applied ? (
             <View className="gap-1.5 rounded-xl border border-primary/40 bg-primary/5 p-3.5">
               <View className="flex-row items-center justify-between">
@@ -592,7 +600,7 @@ export default function BuyTicketsScreen() {
                 </AppText>
               ) : null}
             </View>
-          ) : promoOpen ? (
+          ) : (
             <View className="gap-2">
               <AppText variant="overline">{t("promoCode")}</AppText>
               <View className="flex-row gap-2">
@@ -622,17 +630,6 @@ export default function BuyTicketsScreen() {
                 </AppText>
               ) : null}
             </View>
-          ) : (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setPromoOpen(true)}
-              className="flex-row items-center gap-2 py-1 active:opacity-60"
-            >
-              <Icon name="pricetag-outline" size={15} tone="primary" />
-              <AppText variant="small" tone="brand" className="font-semibold">
-                {t("haveAPromoCode")}
-              </AppText>
-            </Pressable>
           )}
           {applied && promoError ? (
             <AppText variant="caption" tone="error">

@@ -35,7 +35,6 @@
   "expiresIn": "Expires in {formatCountdown}",
   "free": "Free",
   "groupTotal": "Group total: {formatMoney}",
-  "haveAPromoCode": "Have a promo code?",
   "inProgress": "in progress",
   "inProgress2": " · in progress",
   "itCanTPayForThis": "It can't pay for this order.",
@@ -135,5 +134,6 @@
   "yourSeatsAreHeldForA": "Your seats are held for a limited time.",
   "yourOrder": "Your order",
   "paidWithAmountCredit": "Paid with {amount} credit",
-  "viewMyTickets": "View my tickets"
+  "viewMyTickets": "View my tickets",
+  "haveAPromoCodeAddIt": "Have a promo code? Add it with your tickets"
 }

@@ -1077,7 +1077,7 @@
     "failed": "Refund failed",
     "issued": "Refund issued",
     "none": "No refund yet",
-    "noneDescription": "Issued once every ticket in this order is cancelled.",
+    "noneDescription": "The refund for this ticket hasn't been requested yet.",
     "pending": "Refund pending"
   },
   "report": {
@@ -1291,5 +1291,26 @@
     "maxUses": "Enter how many times it can be used, or leave it blank for no limit.",
     "maxUsesRequired": "Enter how many times it can be used.",
     "expiry": "Choose the last day the code works."
+  },
+  "ticketCancel": {
+    "free": "Your place is given back for someone else to take.",
+    "refundCash": "{amount} comes back to your original payment method. The Abonten service fee is not refunded.",
+    "refundCredit": "{amount} comes back as Abonten Credit. The Abonten service fee is not refunded.",
+    "refundBoth": "{cash} comes back to your original payment method and {credit} as Abonten Credit. The Abonten service fee is not refunded.",
+    "refundUnknown": "The ticket price comes back to your original payment method. The Abonten service fee is not refunded.",
+    "together": "This ticket was paid for together with {count, plural, one {# other ticket} other {# other tickets}}. A refund covers the whole payment, so they are cancelled together.",
+    "togetherOtherEvents": "This ticket was paid for together with {count, plural, one {# other ticket for another event} other {# other tickets, some for another event}}. A refund covers the whole payment, so they are cancelled together.",
+    "checkedIn": "A ticket from this payment has been checked in, so this ticket can no longer be cancelled for a refund.",
+    "confirmOne": "Cancel ticket",
+    "confirmAll": "Cancel all {count} tickets",
+    "keepOne": "Keep ticket",
+    "keepAll": "Keep tickets",
+    "othersStayValid": "{count, plural, one {Your other ticket from this payment stays valid.} other {Your other # tickets from this payment stay valid.}}",
+    "cancelAllForEvent": "Cancel all {count} for this event",
+    "eventTitle": "Cancel all your tickets for this event?",
+    "eventAll": "{count, plural, one {Your # ticket for this event is cancelled.} other {All # of your tickets for this event are cancelled.}}",
+    "eventFree": "{count, plural, one {Your place for this event is given back for someone else to take.} other {Your # places for this event are given back for others to take.}}",
+    "eventOtherEvents": "Some of these tickets were paid for in one payment with tickets for another event, so they can only be cancelled with those. Cancel them from one of those tickets instead.",
+    "confirmEvent": "{count, plural, one {Cancel # ticket} other {Cancel all # tickets}}"
   }
 }

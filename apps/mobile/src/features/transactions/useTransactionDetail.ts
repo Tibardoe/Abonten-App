@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { fromMajor, toMajor } from "@abonten/core/money/money";
+import type { TicketRefundPart } from "@abonten/core/refundStatus";
 import type {
   TransactionKind,
   TransactionStatus,
@@ -35,7 +36,12 @@ export type TicketTransactionDetail = {
   completed_at: string | null;
   event: { title: string } | null;
   ticket_type: { type: string; currency: string | null } | null;
-  tickets: { status: string; transaction: TxnRef | null }[];
+  tickets: {
+    status: string;
+    transaction: TxnRef | null;
+    /** The ticket's own refunds (a payment refunded ticket by ticket). */
+    refund_parts?: { refund: TicketRefundPart | null }[];
+  }[];
   serviceFee: number;
   totalPaid: number;
 };
@@ -64,7 +70,7 @@ async function fetchTicketDetail(
   const { data, error } = await supabase
     .from("ticket_checkout")
     .select(
-      "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(id, status, refund_requested_at, amount))",
+      "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(id, status, refund_requested_at, amount), refund_parts:transaction_refund_ticket(refund:refund_id(status, amount, currency, created_at)))",
     )
     .eq("id", id)
     .eq("user_id", userId)

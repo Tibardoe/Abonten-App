@@ -1077,7 +1077,7 @@
     "failed": "Reembolso falhou",
     "issued": "Reembolso emitido",
     "none": "Ainda sem reembolso",
-    "noneDescription": "Emitido quando todos os bilhetes desta encomenda forem cancelados.",
+    "noneDescription": "O reembolso deste bilhete ainda não foi pedido.",
     "pending": "Reembolso pendente"
   },
   "report": {
@@ -1291,5 +1291,26 @@
     "maxUses": "Indique quantas vezes pode ser usado, ou deixe em branco para não ter limite.",
     "maxUsesRequired": "Indique quantas vezes pode ser usado.",
     "expiry": "Escolha o último dia em que o código funciona."
+  },
+  "ticketCancel": {
+    "free": "O seu lugar fica livre para outra pessoa.",
+    "refundCash": "{amount} serão devolvidos ao seu método de pagamento original. A taxa de serviço do Abonten não é reembolsada.",
+    "refundCredit": "{amount} serão devolvidos como Crédito Abonten. A taxa de serviço do Abonten não é reembolsada.",
+    "refundBoth": "{cash} serão devolvidos ao seu método de pagamento original e {credit} como Crédito Abonten. A taxa de serviço do Abonten não é reembolsada.",
+    "refundUnknown": "O preço do bilhete será reembolsado no seu método de pagamento original. A taxa de serviço do Abonten não é reembolsada.",
+    "together": "Este bilhete foi pago juntamente com {count, plural, one {# outro bilhete} other {# outros bilhetes}}. Um reembolso cobre todo o pagamento, por isso são cancelados em conjunto.",
+    "togetherOtherEvents": "Este bilhete foi pago juntamente com {count, plural, one {# outro bilhete para outro evento} other {# outros bilhetes, alguns para outro evento}}. Um reembolso cobre todo o pagamento, por isso são cancelados em conjunto.",
+    "checkedIn": "Um bilhete deste pagamento já foi validado à entrada, por isso este bilhete já não pode ser cancelado com reembolso.",
+    "confirmOne": "Cancelar bilhete",
+    "confirmAll": "Cancelar os {count} bilhetes",
+    "keepOne": "Manter bilhete",
+    "keepAll": "Manter bilhetes",
+    "othersStayValid": "{count, plural, one {O seu outro bilhete deste pagamento continua válido.} other {Os seus outros # bilhetes deste pagamento continuam válidos.}}",
+    "cancelAllForEvent": "Cancelar os {count} deste evento",
+    "eventTitle": "Cancelar todos os seus bilhetes para este evento?",
+    "eventAll": "{count, plural, one {O seu bilhete para este evento é cancelado.} other {Os seus # bilhetes para este evento são cancelados.}}",
+    "eventFree": "{count, plural, one {O seu lugar neste evento fica livre para outra pessoa.} other {Os seus # lugares neste evento ficam livres para outras pessoas.}}",
+    "eventOtherEvents": "Alguns destes bilhetes foram pagos juntamente com bilhetes para outro evento, por isso só podem ser cancelados com esses. Cancele-os a partir de um desses bilhetes.",
+    "confirmEvent": "{count, plural, one {Cancelar # bilhete} other {Cancelar os # bilhetes}}"
   }
 }

@@ -162,6 +162,11 @@ export type TransferInput = {
 };
 
 /** Provider webhooks, normalised. */
+export type RefundRequestResult = {
+  /** The provider's id for the refund, when it gives one. */
+  providerRefundId: string | null;
+};
+
 export type NormalizedWebhookEvent =
   | {
       type: "payment.succeeded";
@@ -179,12 +184,16 @@ export type NormalizedWebhookEvent =
       reference: string | null;
       providerTransactionId: string | null;
       amount: Money | null;
+      /** The provider's id for this refund, when the event carries it. */
+      providerRefundId?: string | null;
     }
   | {
       type: "refund.failed";
       reference: string | null;
       providerTransactionId: string | null;
       detail: string | null;
+      amount?: Money | null;
+      providerRefundId?: string | null;
     }
   | {
       type: "dispute.opened" | "dispute.updated" | "dispute.closed";
@@ -269,14 +278,21 @@ export interface PaymentProvider {
     account: ProviderAccount,
     reference: string,
   ): Promise<VerificationResult>;
+  /**
+   * Refunds all of a charge, or `amount` of it. `refundKey` names this
+   * refund (one payment can be refunded in several parts, possibly of the
+   * same amount); the provider's id for the refund comes back when it
+   * gives one, so its webhook can be matched to the part.
+   */
   refund(
     account: ProviderAccount,
     input: {
       reference: string;
       providerTransactionId: string | null;
       amount?: Money | null;
+      refundKey?: string | null;
     },
-  ): Promise<void>;
+  ): Promise<RefundRequestResult | undefined>;
 
   parseWebhook(
     account: ProviderAccount,

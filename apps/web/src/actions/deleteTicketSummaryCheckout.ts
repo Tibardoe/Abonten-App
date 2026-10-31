@@ -10,6 +10,7 @@ import {
 } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import { tr } from "@abonten/services/i18n/requestLocale";
+import { dropOpenAttempts } from "@abonten/services/payments/dropOpenAttempts";
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 
 /**
@@ -70,7 +71,16 @@ export default withActionLocale(async function deleteTicketSummaryCheckout(
 
   // Phase 12 race guard: a payment_attempt is scoped to the whole
   // checkout_session_id, not this one line — never delete a line out from
-  // under a payment that's currently being confirmed for its session.
+  // under a payment that's currently being confirmed for its session. A
+  // payment page merely left open is closed first, as when the whole
+  // checkout is cancelled (cancelTicketCheckoutSessionCore.ts): its amount
+  // covered this line, so it could not be paid as it stands anyway.
+  const dropped = await dropOpenAttempts(
+    userData.user.id,
+    [checkout.checkout_session_id],
+    { onlyCredit: false, reason: "checkout_cancelled" },
+  );
+  if (dropped !== "ok") return dropped;
   if (
     await hasOpenPaymentAttempt(
       supabase,

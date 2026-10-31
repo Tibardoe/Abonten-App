@@ -21,6 +21,7 @@ import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
+import { cancelTicketsForTransactionCore } from "../tickets/cancelTicketsForTransactionCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -345,6 +346,8 @@ describe("paying for tickets with credit", () => {
     expect(earning?.reduce((s, r) => s + Number(r.amount), 0)).toBe(100);
 
     // Refunded entirely to credit, at once, without touching Paystack.
+    // As Admin › Finance refunds an order: its tickets are cancelled first.
+    await cancelTicketsForTransactionCore(txn?.id as string);
     const refund = await issueRefundCore(service, txn?.id as string);
     expect(refund.status).toBe(200);
     expect(paystack.refundTransaction).not.toHaveBeenCalled();
@@ -422,6 +425,8 @@ describe("paying for tickets with credit", () => {
     // Refund GH₵ 100 of ticket revenue: 30/105 of it back as credit, the
     // rest through Paystack. The service fee is retained.
     await setBalance(buyer, 0);
+    // As Admin › Finance refunds an order: its tickets are cancelled first.
+    await cancelTicketsForTransactionCore(txn?.id as string);
     const refund = await issueRefundCore(service, txn?.id as string);
     expect(refund.status).toBe(200);
     expect(paystack.refundTransaction).toHaveBeenCalledWith(

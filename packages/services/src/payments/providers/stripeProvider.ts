@@ -315,7 +315,7 @@ export const stripeProvider: PaymentProvider = {
     };
   },
 
-  async refund(account, input): Promise<void> {
+  async refund(account, input) {
     let paymentIntent = input.providerTransactionId;
     if (!paymentIntent) {
       const v = await this.verify(account, input.reference);
@@ -330,12 +330,19 @@ export const stripeProvider: PaymentProvider = {
     const body: Record<string, unknown> = { payment_intent: paymentIntent };
     if (input.amount && input.amount.amountMinor > 0)
       body.amount = input.amount.amountMinor;
+    // Keyed by the refund itself when the caller names it: two parts of
+    // one payment can be the same amount, and keyed by amount alone Stripe
+    // would answer the second with the first.
     const { ok, status, json } = await call<unknown>(account, "/refunds", {
       method: "POST",
       body,
-      idempotencyKey: `refund:${input.reference}:${input.amount?.amountMinor ?? "full"}`,
+      idempotencyKey: input.refundKey
+        ? `refund:${input.refundKey}`
+        : `refund:${input.reference}:${input.amount?.amountMinor ?? "full"}`,
     });
     if (!ok) fail(json, "Refund failed", status);
+    const id = (json as { id?: unknown } | null)?.id;
+    return { providerRefundId: typeof id === "string" ? id : null };
   },
 
   parseWebhook(account, rawBody, headers): ParsedWebhook {

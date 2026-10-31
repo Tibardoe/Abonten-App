@@ -35,7 +35,6 @@
   "expiresIn": "Caduca en {formatCountdown}",
   "free": "Gratis",
   "groupTotal": "Total del grupo: {formatMoney}",
-  "haveAPromoCode": "¿Tienes un código promocional?",
   "inProgress": "en curso",
   "inProgress2": " · en curso",
   "itCanTPayForThis": "No puede pagar este pedido.",
@@ -135,5 +134,6 @@
   "yourPaymentWentThroughButThe": "Tu pago se procesó, pero la promoción aún no está activa. Reintenta ahora — no se te cobrará de nuevo.",
   "yourPaymentWentThroughButThe2": "Tu pago se procesó, pero la promoción aún no ha llegado a revisión. Reintenta ahora — no se te cobrará de nuevo.",
   "yourPaymentWentThroughButWe": "Tu pago se procesó, pero aún no hemos emitido tu entrada. Reintenta ahora — no se te cobrará de nuevo.",
-  "yourSeatsAreHeldForA": "Tus plazas se reservan por tiempo limitado."
+  "yourSeatsAreHeldForA": "Tus plazas se reservan por tiempo limitado.",
+  "haveAPromoCodeAddIt": "¿Tienes un código promocional? Añádelo con tus entradas"
 }

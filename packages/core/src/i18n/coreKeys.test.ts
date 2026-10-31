@@ -81,6 +81,7 @@ import {
   searchRatingOptions,
   searchWhenOptions,
 } from "../search/searchFilters";
+import { eventCancelDialog, ticketCancelDialog } from "../ticketCancelQuote";
 import {
   FREE_EVENT_PROMO_CODES_KEY,
   ticketTierProblemMessage,
@@ -330,6 +331,46 @@ describe("core copy keys", () => {
     blockedAccountName(strict, {
       deleted: true,
     } as Parameters<typeof blockedAccountName>[1]);
+  });
+
+  it("ticket cancel dialog", () => {
+    const refund = { cashMinor: 4000, creditMinor: 0, currency: "GHS" };
+    const quote = {
+      paid: true,
+      otherTicketIds: [],
+      keptTicketCount: 0,
+      eventTicketCount: 2,
+      otherEvents: false,
+      checkedIn: false,
+      refund,
+    };
+    for (const variant of [
+      quote,
+      { ...quote, paid: false, refund: null },
+      { ...quote, refund: null },
+      { ...quote, refund: { ...refund, cashMinor: 0, creditMinor: 4000 } },
+      { ...quote, refund: { ...refund, creditMinor: 1000 } },
+      { ...quote, keptTicketCount: 2 },
+      { ...quote, otherTicketIds: ["b"] },
+      { ...quote, otherTicketIds: ["b"], otherEvents: true },
+      { ...quote, checkedIn: true },
+    ]) {
+      ticketCancelDialog(i18n, variant);
+    }
+    const event = {
+      ticketIds: ["a", "b"],
+      paid: true,
+      refund,
+      blocked: null,
+    };
+    for (const variant of [
+      event,
+      { ...event, paid: false, refund: null },
+      { ...event, blocked: "other_events" as const },
+      { ...event, blocked: "checked_in" as const },
+    ]) {
+      eventCancelDialog(i18n, variant);
+    }
   });
 
   it("promo code form gaps", () => {

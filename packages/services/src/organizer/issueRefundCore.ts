@@ -73,10 +73,14 @@ async function returnCreditShare(
 /**
  * How the refundable ticket revenue splits between credit and cash, pro rata
  * to how the order was paid. `refundableMinor` of 0 with linked tickets is
- * an accounting gap: then everything paid is returned.
+ * an accounting gap: then everything paid is returned. Also what the
+ * cancel dialog quotes before anything moves (ticketCancelQuoteCore).
  */
-function tenderSplit(
-  transaction: RefundTransactionRow,
+export function tenderSplit(
+  transaction: Pick<
+    RefundTransactionRow,
+    "amount" | "credit_amount" | "currency"
+  >,
   refundableMinor: number,
 ) {
   const cashMinor = fromMajor(
@@ -93,6 +97,136 @@ function tenderSplit(
     cashMinor,
     creditMinor,
   });
+}
+
+/**
+ * Whether a payment is refunded ticket by ticket: paid in cash alone, by a
+ * card or mobile-money charge. Abonten Credit came out of the credit ledger
+ * and a Pay small small purchase through each part's own charge, each
+ * refunded once per payment, so those still go back as a whole.
+ */
+export function refundsTicketByTicket(transaction: {
+  provider: string;
+  credit_amount: number | string | null;
+}): boolean {
+  return (
+    Number(transaction.credit_amount ?? 0) === 0 &&
+    transaction.provider !== PLAN_PROVIDER
+  );
+}
+
+type PreparedRefund = {
+  id: string;
+  amount: number | string;
+  currency: string;
+  completes_payment: boolean;
+};
+
+/**
+ * Refunds the cancelled tickets of a cash payment that no refund covers
+ * yet: refund_prepare picks and prices them (that ticket's share of its
+ * checkout line, never the service fee) under a lock on the payment, the
+ * provider is asked for that amount, refund_mark_requested holds the
+ * organizer's share. Cancelling one of three tickets gives back that
+ * ticket's price; the last tickets of a payment move it to refund_pending,
+ * then refunded, as a whole refund always did. The webhook settles each
+ * part (refund_mark_outcome); a refused part leaves its tickets uncovered,
+ * so calling this again (Retry refund) asks again.
+ */
+async function refundCancelledTickets(
+  transaction: RefundTransactionRow,
+): Promise<IssueRefundResult> {
+  const service = getSupabaseServiceClient();
+  const { data: prepared, error: prepareError } = await service.rpc(
+    "refund_prepare",
+    { p_transaction_id: transaction.id },
+  );
+  if (prepareError) {
+    if (prepareError.code === "55P03") {
+      return { status: 409, message: tr("aRefundForThisPaymentWas") };
+    }
+    logger.error(
+      `Failed preparing a refund for transaction ${transaction.id}: ${prepareError.message}`,
+    );
+    return { status: 500, message: tr("somethingWentWrongTryAgain") };
+  }
+  const refund = ((prepared ?? []) as PreparedRefund[])[0];
+  if (!refund) {
+    return { status: 200, message: tr("thereIsNothingLeftToRefund") };
+  }
+
+  const amountMinor = fromMajor(
+    Number(refund.amount),
+    refund.currency,
+  ).amountMinor;
+  let providerRefundId: string | null = null;
+  if (amountMinor > 0) {
+    try {
+      const { provider, account } = await resolveProviderAccount({
+        countryCode: transaction.country_code,
+        currency: transaction.currency,
+        providerCode: transaction.provider,
+      });
+      const result = await provider.refund(account, {
+        reference: transaction.provider_reference as string,
+        providerTransactionId: transaction.provider_transaction_id,
+        amount: money(amountMinor, transaction.currency),
+        refundKey: refund.id,
+      });
+      providerRefundId = result?.providerRefundId ?? null;
+    } catch (error) {
+      logger.error(
+        `Refund ${refund.id} of transaction ${transaction.id} failed: ${error}`,
+      );
+      // Its tickets are uncovered again, so Retry refund asks again.
+      const { error: outcomeError } = await service.rpc("refund_mark_outcome", {
+        p_refund_id: refund.id,
+        p_outcome: "failed",
+        p_detail: "The provider refused the refund request",
+      });
+      if (outcomeError) {
+        logger.error(
+          `Failed recording refused refund ${refund.id}: ${outcomeError.message}`,
+        );
+      }
+      return { status: 500, message: tr("refundCouldNotBeProcessedPlease") };
+    }
+  }
+
+  const { error: requestedError } = await service.rpc("refund_mark_requested", {
+    p_refund_id: refund.id,
+    p_provider_refund_id: providerRefundId,
+  });
+  if (requestedError) {
+    logger.error(
+      `Refund ${refund.id} was requested but not recorded: ${requestedError.message}`,
+    );
+    return { status: 500, message: tr("refundWasRequestedButCouldnT") };
+  }
+
+  // A ticket that cost nothing (a 100% promo unit) has nothing to send.
+  if (amountMinor === 0) {
+    await service.rpc("refund_mark_outcome", {
+      p_refund_id: refund.id,
+      p_outcome: "processed",
+      p_detail: null,
+    });
+    return { status: 200, message: tr("nothingWasPaidForThisTicket") };
+  }
+
+  await createNotificationCore(service, {
+    userId: transaction.user_id,
+    type: "refund_requested",
+    notice: { id: "refund_requested" },
+    link: "/transactions",
+    data: { kind: "ticket" },
+  }).catch((error) => {
+    logger.error(
+      `Failed sending refund-requested notification for refund ${refund.id}: ${error}`,
+    );
+  });
+
+  return { status: 200, message: tr("refundRequestedYouLlBeNotified") };
 }
 
 /**
@@ -173,6 +307,35 @@ export async function issueRefundCore(
     return {
       status: 400,
       message: tr("noPaymentReferenceOnThisTransaction"),
+    };
+  }
+
+  // Paid in cash alone: refunded ticket by ticket (refundCancelledTickets).
+  // Credit and Pay small small payments keep the whole-payment path below.
+  if (refundsTicketByTicket(transaction)) {
+    return refundCancelledTickets(transaction);
+  }
+
+  // A whole-payment refund returns every ticket's price, so it waits until
+  // none of them is still valid (the buyer, Admin and event cancellation
+  // all cancel first). Called directly before that, it used to refund
+  // tickets that stayed usable.
+  const { count: stillActive, error: activeError } =
+    await getSupabaseServiceClient()
+      .from("ticket")
+      .select("id", { count: "exact", head: true })
+      .eq("transaction_id", transaction.id)
+      .eq("status", "active");
+  if (activeError) {
+    logger.error(
+      `Failed checking tickets before refunding transaction ${transaction.id}: ${activeError.message}`,
+    );
+    return { status: 500, message: tr("somethingWentWrongTryAgain") };
+  }
+  if ((stillActive ?? 0) > 0) {
+    return {
+      status: 409,
+      message: tr("thisTicketWasPaidForTogether", { count: stillActive ?? 0 }),
     };
   }
 

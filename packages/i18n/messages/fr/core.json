@@ -1077,7 +1077,7 @@
     "failed": "Échec du remboursement",
     "issued": "Remboursement effectué",
     "none": "Pas encore de remboursement",
-    "noneDescription": "Émis une fois tous les billets de cette commande annulés.",
+    "noneDescription": "Le remboursement de ce billet n'a pas encore été demandé.",
     "pending": "Remboursement en attente"
   },
   "report": {
@@ -1291,5 +1291,26 @@
     "maxUses": "Indiquez combien de fois il peut être utilisé, ou laissez vide pour aucune limite.",
     "maxUsesRequired": "Indiquez combien de fois il peut être utilisé.",
     "expiry": "Choisissez le dernier jour de validité du code."
+  },
+  "ticketCancel": {
+    "free": "Votre place est libérée pour quelqu'un d'autre.",
+    "refundCash": "{amount} vous sera remboursé sur votre moyen de paiement d'origine. Les frais de service Abonten ne sont pas remboursés.",
+    "refundCredit": "{amount} vous sera rendu en Crédit Abonten. Les frais de service Abonten ne sont pas remboursés.",
+    "refundBoth": "{cash} vous sera remboursé sur votre moyen de paiement d'origine et {credit} en Crédit Abonten. Les frais de service Abonten ne sont pas remboursés.",
+    "refundUnknown": "Le prix du billet sera remboursé sur votre moyen de paiement d'origine. Les frais de service Abonten ne sont pas remboursés.",
+    "together": "Ce billet a été payé en même temps que {count, plural, one {# autre billet} other {# autres billets}}. Un remboursement couvre tout le paiement, ils sont donc annulés ensemble.",
+    "togetherOtherEvents": "Ce billet a été payé en même temps que {count, plural, one {# autre billet pour un autre événement} other {# autres billets, dont certains pour un autre événement}}. Un remboursement couvre tout le paiement, ils sont donc annulés ensemble.",
+    "checkedIn": "Un billet de ce paiement a déjà été scanné à l'entrée, ce billet ne peut donc plus être annulé pour un remboursement.",
+    "confirmOne": "Annuler le billet",
+    "confirmAll": "Annuler les {count} billets",
+    "keepOne": "Garder le billet",
+    "keepAll": "Garder les billets",
+    "othersStayValid": "{count, plural, one {Votre autre billet de ce paiement reste valable.} other {Vos # autres billets de ce paiement restent valables.}}",
+    "cancelAllForEvent": "Annuler les {count} pour cet événement",
+    "eventTitle": "Annuler tous vos billets pour cet événement ?",
+    "eventAll": "{count, plural, one {Votre billet pour cet événement est annulé.} other {Vos # billets pour cet événement sont annulés.}}",
+    "eventFree": "{count, plural, one {Votre place pour cet événement est libérée pour quelqu'un d'autre.} other {Vos # places pour cet événement sont libérées pour d'autres personnes.}}",
+    "eventOtherEvents": "Certains de ces billets ont été payés en même temps que des billets pour un autre événement : ils ne peuvent être annulés qu'avec eux. Annulez-les plutôt depuis l'un de ces billets.",
+    "confirmEvent": "{count, plural, one {Annuler # billet} other {Annuler les # billets}}"
   }
 }

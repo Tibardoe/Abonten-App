@@ -282,14 +282,15 @@ export const paystackProvider: PaymentProvider = {
     };
   },
 
-  async refund(account, input): Promise<void> {
-    await api.refundTransaction(
+  async refund(account, input) {
+    const result = await api.refundTransaction(
       account,
       input.reference,
       input.amount && input.amount.amountMinor > 0
         ? toMinorAmount(input.amount)
         : null,
     );
+    return { providerRefundId: result.id };
   },
 
   parseWebhook(account, rawBody, headers): ParsedWebhook {
@@ -370,6 +371,8 @@ export const paystackProvider: PaymentProvider = {
           reference: txRef,
           providerTransactionId: null,
           amount: currency && amount != null ? money(amount, currency) : null,
+          // On a refund event, `data.id` is the refund's own id.
+          providerRefundId: id,
         };
         break;
       }
@@ -381,11 +384,16 @@ export const paystackProvider: PaymentProvider = {
               ?.reference,
           ) ??
           reference;
+        const currency = str(data.currency);
+        const amount = num(data.amount);
         event = {
           type: "refund.failed",
           reference: txRef,
           providerTransactionId: null,
           detail: str(data.message),
+          amount: currency && amount != null ? money(amount, currency) : null,
+          // On a refund event, `data.id` is the refund's own id.
+          providerRefundId: id,
         };
         break;
       }

@@ -302,6 +302,24 @@ describe("paystack adapter", () => {
       reference: "PSK-1",
       providerTransactionId: null,
       amount: money(5000, "GHS"),
+      providerRefundId: null,
+    });
+    // The refund's own id names the part of a payment it settles.
+    expect(
+      parse("refund.failed", {
+        id: 3018284,
+        transaction_reference: "PSK-1",
+        amount: 2500,
+        currency: "GHS",
+        message: "Card closed",
+      }).event,
+    ).toEqual({
+      type: "refund.failed",
+      reference: "PSK-1",
+      providerTransactionId: null,
+      detail: "Card closed",
+      amount: money(2500, "GHS"),
+      providerRefundId: "3018284",
     });
     expect(
       parse("charge.dispute.create", {
