@@ -1305,6 +1305,12 @@
     "confirmAll": "Alle {count} Tickets stornieren",
     "keepOne": "Ticket behalten",
     "keepAll": "Tickets behalten",
-    "othersStayValid": "{count, plural, one {Dein anderes Ticket aus dieser Zahlung bleibt gültig.} other {Deine # anderen Tickets aus dieser Zahlung bleiben gültig.}}"
+    "othersStayValid": "{count, plural, one {Dein anderes Ticket aus dieser Zahlung bleibt gültig.} other {Deine # anderen Tickets aus dieser Zahlung bleiben gültig.}}",
+    "cancelAllForEvent": "Alle {count} für dieses Event stornieren",
+    "eventTitle": "Alle deine Tickets für dieses Event stornieren?",
+    "eventAll": "{count, plural, one {Dein Ticket für dieses Event wird storniert.} other {Alle # deiner Tickets für dieses Event werden storniert.}}",
+    "eventFree": "{count, plural, one {Dein Platz für dieses Event wird für jemand anderen frei.} other {Deine # Plätze für dieses Event werden für andere frei.}}",
+    "eventOtherEvents": "Einige dieser Tickets wurden zusammen mit Tickets für ein anderes Event bezahlt und können nur mit diesen storniert werden. Storniere sie stattdessen über eines dieser Tickets.",
+    "confirmEvent": "{count, plural, one {# Ticket stornieren} other {Alle # Tickets stornieren}}"
   }
 }

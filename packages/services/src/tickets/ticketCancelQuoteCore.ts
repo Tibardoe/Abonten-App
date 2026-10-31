@@ -55,10 +55,28 @@ export async function ticketCancelQuoteCore(
     return { status: 409, message: tr("thisTicketIsAlreadyCancelled") };
   }
 
+  // Every active ticket the caller holds for this event, across payments:
+  // more than one offers "cancel all for this event" (cancelEventTicketsCore).
+  const eventId = ticket.ticket_type?.event_id ?? null;
+  let eventTicketCount = 1;
+  if (eventId) {
+    const { count } = await supabase
+      .from("ticket")
+      .select("id, ticket_type:ticket_type_id!inner(event_id)", {
+        count: "exact",
+        head: true,
+      })
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .eq("ticket_type.event_id", eventId);
+    eventTicketCount = Math.max(count ?? 1, 1);
+  }
+
   const quote: TicketCancelQuote = {
     paid: false,
     otherTicketIds: [],
     keptTicketCount: 0,
+    eventTicketCount,
     otherEvents: false,
     checkedIn: false,
     refund: null,
@@ -85,7 +103,6 @@ export async function ticketCancelQuoteCore(
 
   const tickets = await ticketsOfPayment(supabase, payment.id);
   if (!tickets) return { status: 500, message: tr("somethingWentWrong") };
-  const eventId = ticket.ticket_type?.event_id ?? null;
   const others = tickets.filter(
     (t) => t.id !== ticket.id && t.status === "active",
   );

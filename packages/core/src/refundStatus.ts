@@ -82,8 +82,8 @@ export function ticketRefundState(ticket: {
   transaction: {
     status: string;
     refund_requested_at: string | null;
-    amount?: number;
-    currency?: string;
+    amount?: number | null;
+    currency?: string | null;
   } | null;
   refund_parts?: { refund: TicketRefundPart | null }[] | null;
 }): TicketRefundState | null {
@@ -111,4 +111,29 @@ export function ticketRefundState(ticket: {
     amount: ticket.transaction.amount ?? null,
     currency: ticket.transaction.currency ?? null,
   };
+}
+
+/**
+ * One refund state for several cancelled tickets (a purchase line): a
+ * failed refund first (it needs the buyer), then one on its way, then
+ * refunded, then not asked for.
+ */
+export function combinedRefundState(
+  states: (TicketRefundState | null)[],
+): TicketRefundState | null {
+  const order: Record<RefundStatusKind, number> = {
+    failed: 0,
+    pending: 1,
+    issued: 2,
+    none: 3,
+  };
+  const rank = (state: TicketRefundState) => {
+    const kind = getRefundStatusKind(state.status, state.refundRequestedAt);
+    return kind ? order[kind] : 4;
+  };
+  return (
+    states
+      .filter((state): state is TicketRefundState => state !== null)
+      .sort((a, b) => rank(a) - rank(b))[0] ?? null
+  );
 }

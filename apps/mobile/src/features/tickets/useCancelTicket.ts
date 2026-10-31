@@ -2,10 +2,14 @@ import { api } from "@/lib/api";
 import { invalidateAfterTicketMutation } from "@/lib/ticketMutationInvalidation";
 import type {
   CancelTicketBody,
+  EventTicketsBody,
   RequestTicketRefundBody,
   TicketCancelQuoteBody,
 } from "@abonten/api-client";
-import { ticketCancelDialog } from "@abonten/core/ticketCancelQuote";
+import {
+  eventCancelDialog,
+  ticketCancelDialog,
+} from "@abonten/core/ticketCancelQuote";
 import { useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -47,6 +51,24 @@ export function useTicketCancelQuote() {
   });
 }
 
+/** What cancelling all of the caller's tickets for an event gives back. */
+export function useEventCancelQuote() {
+  return useMutation({
+    mutationFn: (body: EventTicketsBody) => api.tickets.eventCancelQuote(body),
+  });
+}
+
+/** Cancels every active ticket the caller holds for an event. */
+export function useCancelEventTickets() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: EventTicketsBody) => api.tickets.cancelEvent(body),
+    onSuccess: (res) => {
+      if (res.status === 200) invalidateAfterTicketMutation(qc);
+    },
+  });
+}
+
 /**
  * Cancel from the ticket screen or a ticket card: asks what cancelling
  * gives back, says it in the dialog (a ticket paid for together with
@@ -60,17 +82,55 @@ export function useCancelTicketFlow() {
   const toast = useToast();
   const quote = useTicketCancelQuote();
   const cancel = useCancelTicket();
+  const eventQuote = useEventCancelQuote();
+  const cancelEvent = useCancelEventTickets();
+  const busy =
+    quote.isPending ||
+    cancel.isPending ||
+    eventQuote.isPending ||
+    cancelEvent.isPending;
 
   const failed = (message?: string) =>
     toast.error(t("couldnTCancel"), {
       description: message ?? t("pleaseTryAgainInAMoment"),
     });
 
-  async function start(
-    ticket: { id: string; transaction_id: string | null },
+  // "Cancel all N for this event": what that gives back, then confirm.
+  async function startEvent(
+    eventId: string,
     onCancelled: (message: string) => void,
   ) {
-    if (quote.isPending || cancel.isPending) return;
+    const res = await eventQuote.mutateAsync({ eventId }).catch(() => null);
+    if (!res || res.status !== 200) {
+      failed(res?.message);
+      return;
+    }
+    const dialog = eventCancelDialog({ locale, t: tc }, res.data);
+    if (!dialog.confirm) {
+      Alert.alert(dialog.title, dialog.body, [{ text: "OK" }]);
+      return;
+    }
+    Alert.alert(dialog.title, dialog.body, [
+      { text: dialog.keep, style: "cancel" },
+      {
+        text: dialog.confirm,
+        style: "destructive",
+        onPress: async () => {
+          const done = await cancelEvent
+            .mutateAsync({ eventId })
+            .catch(() => null);
+          if (done?.status === 200) onCancelled(done.message ?? "");
+          else failed(done?.message);
+        },
+      },
+    ]);
+  }
+
+  async function start(
+    ticket: { id: string; transaction_id: string | null; eventId: string },
+    onCancelled: (message: string) => void,
+  ) {
+    if (busy) return;
     const res = await quote
       .mutateAsync({ ticketId: ticket.id })
       .catch(() => null);
@@ -85,6 +145,14 @@ export function useCancelTicketFlow() {
     }
     Alert.alert(t("cancelThisTicket"), dialog.body, [
       { text: dialog.keep, style: "cancel" },
+      ...(dialog.allForEvent
+        ? [
+            {
+              text: dialog.allForEvent,
+              onPress: () => startEvent(ticket.eventId, onCancelled),
+            },
+          ]
+        : []),
       {
         text: dialog.confirm,
         style: "destructive",
@@ -103,5 +171,5 @@ export function useCancelTicketFlow() {
     ]);
   }
 
-  return { start, pending: quote.isPending || cancel.isPending };
+  return { start, pending: busy };
 }

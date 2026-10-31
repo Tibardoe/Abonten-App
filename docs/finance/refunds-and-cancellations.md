@@ -28,7 +28,7 @@ complianceReviewRequired: no
 
 ### A. Buyer cancels (self-service)
 
-Web My Tickets / app Tickets → Cancel ticket → `cancelUserTicket` → `cancelUserTicketCore` → `issueRefundCore` (buyer context). Nothing for staff to do unless the refund fails.
+Web My Tickets / app Tickets → Cancel ticket → `cancelUserTicket` → `cancelUserTicketCore` → `issueRefundCore` (buyer context). A buyer holding several tickets for the event can choose **Cancel all for this event** instead (`cancelEventTicketsCore`): every active ticket they hold for it is cancelled and each payment refunds its share. Nothing for staff to do unless a refund fails.
 
 ### B. Organizer cancels an event
 

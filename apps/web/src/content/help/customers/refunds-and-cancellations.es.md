@@ -20,6 +20,8 @@ Abre la entrada en Mis entradas (Gestionar › Mis entradas en la web, Cuenta �
 - Las entradas gratuitas no tienen nada que reembolsar; simplemente pasan a *Cancelada*.
 - Si compraste varias entradas en un solo pago, puedes cancelar solo una: se te devuelve el precio de esa entrada y las demás siguen siendo válidas. ¿Compraste tres y un amigo no puede ir? Cancela la entrada de ese amigo. Si un descuento rebajó el pedido, se te devuelve la parte de cada entrada en el precio rebajado.
 - Antes de confirmar, la ventana te dice cuánto se te devuelve.
+- ¿Tienes varias entradas para un mismo evento, aunque sean de pagos distintos? La ventana también ofrece **Cancelar las de este evento**: se cancelan a la vez todas tus entradas para ese evento y cada pago devuelve su parte.
+- Tu historial de pagos muestra una compra con algunas entradas reembolsadas como reembolsada en parte (en la web, cuántas se cancelaron y el estado de su reembolso).
 - Un pago hecho en parte con Crédito Abonten, o pagado a plazos, se reembolsa entero: sus entradas se cancelan juntas, y ninguna se puede cancelar con reembolso cuando una de ellas ya se escaneó en el acceso.
 
 ## Cuánto tarda

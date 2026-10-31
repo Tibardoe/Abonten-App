@@ -631,6 +631,149 @@ begin
 end;
 $$;
 
+-- Payment history: a line whose tickets were refunded one at a time reads
+-- its refund state from those refunds (latest per ticket: any failed ->
+-- failed, any open -> pending, else refunded), not from the payment, which
+-- stays 'successful' until its last tickets go. Otherwise unchanged from
+-- migration global_markets_money_precision; create or replace keeps the
+-- grants (it runs as the caller: transaction_refund is owner-readable).
+create or replace function public.get_user_transaction_history(p_start timestamp with time zone, p_end timestamp with time zone, p_cursor_created_at timestamp with time zone, p_cursor_id uuid, p_limit integer)
+ RETURNS TABLE(id uuid, kind text, status text, created_at timestamp with time zone, completed_at timestamp with time zone, amount numeric, currency text, title text, subtitle text, quantity integer, reference uuid, cancelled_quantity integer, refund_status text, refund_requested_at timestamp with time zone, service_fee numeric, total_paid numeric, credit_used numeric)
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
+begin
+  return query
+  with raw as (
+    select
+      tc.id,
+      'ticket'::text as kind,
+      tc.status,
+      (tc.created_at at time zone 'UTC') as created_at,
+      tc.completed_at,
+      tc.total_price as amount,
+      tt.currency::text as currency,
+      e.title,
+      tt.type as subtitle,
+      tc.quantity,
+      coalesce(tc.checkout_session_id, tc.id) as reference,
+      tix.cancelled_quantity,
+      -- A payment refunded ticket by ticket: the line's cancelled tickets'
+      -- own refunds speak for it (their payment stays 'successful' until its
+      -- last tickets go). Without any, the payment's status, as before.
+      case when parts.covered > 0 then parts.status else tix.refund_status end as refund_status,
+      case when parts.covered > 0 then parts.requested_at else tix.refund_requested_at end as refund_requested_at,
+      tix.txn_id,
+      tix.txn_amount,
+      tix.txn_credit
+    from public.ticket_checkout tc
+    left join public.ticket_type tt on tt.id = tc.ticket_type_id
+    left join public.event e on e.id = tc.event_id
+    left join lateral (
+      select
+        count(*) filter (where t.status = 'cancelled')::integer as cancelled_quantity,
+        (array_agg(tr.status order by t.updated_at desc nulls last) filter (where t.status = 'cancelled'))[1] as refund_status,
+        (array_agg(tr.refund_requested_at order by t.updated_at desc nulls last) filter (where t.status = 'cancelled'))[1] as refund_requested_at,
+        (array_agg(t.transaction_id) filter (where t.transaction_id is not null))[1] as txn_id,
+        max(tr.amount + coalesce(tr.credit_amount, 0)) as txn_amount,
+        max(coalesce(tr.credit_amount, 0)) as txn_credit
+      from public.ticket t
+      left join public.transaction tr on tr.id = t.transaction_id
+      where t.ticket_checkout_id = tc.id
+    ) tix on true
+    left join lateral (
+      select
+        count(*)::integer as covered,
+        case
+          when bool_or(p.status = 'failed') then 'successful'
+          when bool_or(p.status in ('preparing', 'requested')) then 'refund_pending'
+          else 'refunded'
+        end as status,
+        coalesce(max(p.created_at) filter (where p.status = 'failed'), max(p.created_at)) as requested_at
+      from public.ticket t
+      join lateral (
+        select r.status, r.created_at
+        from public.transaction_refund_ticket rt
+        join public.transaction_refund r on r.id = rt.refund_id
+        where rt.ticket_id = t.id
+        order by r.created_at desc
+        limit 1
+      ) p on true
+      where t.ticket_checkout_id = tc.id and t.status = 'cancelled'
+    ) parts on true
+    where tc.user_id = auth.uid()
+      and (p_start is null or (tc.created_at at time zone 'UTC') >= p_start)
+      and (p_end   is null or (tc.created_at at time zone 'UTC') <= p_end)
+
+    union all
+
+    select
+      sc.id,
+      'subscription'::text,
+      sc.status,
+      sc.created_at,
+      sc.completed_at,
+      sc.total_price,
+      sc.currency::text,
+      sc.subscription_plan_name,
+      'Subscription'::text,
+      null::integer,
+      sc.id,
+      null::integer,
+      null::text,
+      null::timestamptz,
+      null::uuid,
+      null::numeric,
+      null::numeric
+    from public.subscription_checkout sc
+    where sc.user_id = auth.uid()
+      and (p_start is null or sc.created_at >= p_start)
+      and (p_end   is null or sc.created_at <= p_end)
+  ),
+  shared as (
+    select
+      r.*,
+      r.amount / nullif((
+        select sum(tc2.total_price)
+        from public.ticket_checkout tc2
+        where tc2.id in (
+          select distinct t2.ticket_checkout_id
+          from public.ticket t2
+          where t2.transaction_id = r.txn_id
+            and t2.ticket_checkout_id is not null
+        )
+      ), 0) as share
+    from raw r
+  ),
+  priced as (
+    select
+      s.*,
+      case
+        when s.txn_id is null or s.txn_amount is null then 0::numeric
+        else greatest(public.money_round(s.txn_amount * s.share - s.amount, s.currency), 0::numeric)
+      end as service_fee,
+      case
+        when s.txn_id is null or coalesce(s.txn_credit, 0) = 0 then 0::numeric
+        else public.money_round(s.txn_credit * coalesce(s.share, 0), s.currency)
+      end as credit_used
+    from shared s
+  )
+  select
+    u.id, u.kind, u.status, u.created_at, u.completed_at, u.amount, u.currency,
+    u.title, u.subtitle, u.quantity, u.reference, u.cancelled_quantity,
+    u.refund_status, u.refund_requested_at,
+    u.service_fee,
+    u.amount + u.service_fee as total_paid,
+    u.credit_used
+  from priced u
+  where p_cursor_created_at is null
+     or u.created_at < p_cursor_created_at
+     or (u.created_at = p_cursor_created_at and u.id < p_cursor_id)
+  order by u.created_at desc, u.id desc
+  limit p_limit;
+end;
+$function$;
+
 do $$
 declare
   fn text;

@@ -70,7 +70,10 @@ import type {
   RewardEmailPreference,
   RewardsProgram,
 } from "@abonten/types/rewards";
-import type { TicketCancelQuote } from "@abonten/types/ticketType";
+import type {
+  EventCancelQuote,
+  TicketCancelQuote,
+} from "@abonten/types/ticketType";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
@@ -364,6 +367,17 @@ export type CancelTicketBody = {
 };
 
 export type CancelTicketResult = { status: number; message?: string };
+
+// "Cancel all my tickets for this event" (cancelEventTicketsCore): the
+// quote first, then the cancellation. 404 = no active ticket for it;
+// 409 = they can't all go (the quote's `blocked` says why).
+export type EventTicketsBody = { eventId: string };
+
+export type EventCancelQuoteResult =
+  | { status: 200; data: EventCancelQuote }
+  | { status: 400 | 401 | 404 | 500; message: string };
+
+export type CancelEventTicketsResult = { status: number; message?: string };
 
 // Asks again for the refund of the caller's cancelled tickets on a payment
 // (a refused one, or one never asked for): issueRefundCore.

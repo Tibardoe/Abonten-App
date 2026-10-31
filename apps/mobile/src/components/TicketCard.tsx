@@ -56,7 +56,7 @@ export function TicketCard({
     ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
 
   function onCancel() {
-    cancelFlow.start(ticket, (message) =>
+    cancelFlow.start({ ...ticket, eventId: ticket.event.id }, (message) =>
       toast.success(t("ticketCancelled"), {
         description: message || undefined,
       }),

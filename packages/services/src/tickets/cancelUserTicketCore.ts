@@ -48,7 +48,7 @@ export type CancelUserTicketCoreResult = {
  */
 export type CancelTicketScope = "ticket" | "payment";
 
-type CancelTarget = {
+export type CancelTarget = {
   id: string;
   ticketTypeId: string;
   checkoutId: string | null;
@@ -275,6 +275,31 @@ export async function cancelUserTicketCore(
     }
   }
 
+  await releaseCancelledTickets(supabase, userId, flipped);
+
+  const message =
+    refundMessage && flipped.length > 1
+      ? tr("ticketsCancelledRefund", { count: flipped.length, refundMessage })
+      : refundMessage
+        ? tr("ticketCancelled", { refundMessage })
+        : refundDeferred
+          ? tr("ticketCancelledTheRefundForThis")
+          : tr("ticketCancelledSuccessfully");
+
+  return { status: 200, message, ...about };
+}
+
+/**
+ * What follows a ticket's cancellation, for tickets the caller just flipped
+ * to 'cancelled': its attendance, its checkout line once all of the line's
+ * tickets are cancelled, its seat back on sale, and the event's promo
+ * usage once the caller holds no live ticket for it.
+ */
+export async function releaseCancelledTickets(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  flipped: CancelTarget[],
+) {
   for (const target of flipped) {
     // State-based, not a delete: the attendance row for this exact ticket
     // (one row per ticket, written by the issuing RPCs) is marked cancelled
@@ -311,17 +336,6 @@ export async function cancelUserTicketCore(
   for (const event of events) {
     await releasePromoUsageIfEventFullyCancelled(supabase, userId, event);
   }
-
-  const message =
-    refundMessage && flipped.length > 1
-      ? tr("ticketsCancelledRefund", { count: flipped.length, refundMessage })
-      : refundMessage
-        ? tr("ticketCancelled", { refundMessage })
-        : refundDeferred
-          ? tr("ticketCancelledTheRefundForThis")
-          : tr("ticketCancelledSuccessfully");
-
-  return { status: 200, message, ...about };
 }
 
 // Checks whether every ticket sharing this transaction (across every

@@ -1338,5 +1338,8 @@
   "ticketsCancelledRefund": "{count, plural, one {# Ticket storniert} other {# Tickets storniert}}. {refundMessage}.",
   "thisTicketIsAlreadyCancelled": "Dieses Ticket ist bereits storniert.",
   "thereIsNothingLeftToRefund": "Für diese Zahlung ist nichts mehr zu erstatten",
-  "nothingWasPaidForThisTicket": "Für dieses Ticket wurde nichts bezahlt, es gibt also nichts zu erstatten"
+  "nothingWasPaidForThisTicket": "Für dieses Ticket wurde nichts bezahlt, es gibt also nichts zu erstatten",
+  "someOfTheseTicketsWerePaidTogether": "Einige dieser Tickets wurden zusammen mit Tickets für ein anderes Event bezahlt und können nur mit diesen storniert werden",
+  "eventTicketsCancelled": "{count, plural, one {# Ticket storniert} other {# Tickets storniert}}",
+  "noActiveTicketsForThisEvent": "Du hast keine aktiven Tickets für dieses Event"
 }

@@ -81,7 +81,7 @@ import {
   searchRatingOptions,
   searchWhenOptions,
 } from "../search/searchFilters";
-import { ticketCancelDialog } from "../ticketCancelQuote";
+import { eventCancelDialog, ticketCancelDialog } from "../ticketCancelQuote";
 import {
   FREE_EVENT_PROMO_CODES_KEY,
   ticketTierProblemMessage,
@@ -339,6 +339,7 @@ describe("core copy keys", () => {
       paid: true,
       otherTicketIds: [],
       keptTicketCount: 0,
+      eventTicketCount: 2,
       otherEvents: false,
       checkedIn: false,
       refund,
@@ -355,6 +356,20 @@ describe("core copy keys", () => {
       { ...quote, checkedIn: true },
     ]) {
       ticketCancelDialog(i18n, variant);
+    }
+    const event = {
+      ticketIds: ["a", "b"],
+      paid: true,
+      refund,
+      blocked: null,
+    };
+    for (const variant of [
+      event,
+      { ...event, paid: false, refund: null },
+      { ...event, blocked: "other_events" as const },
+      { ...event, blocked: "checked_in" as const },
+    ]) {
+      eventCancelDialog(i18n, variant);
     }
   });
 

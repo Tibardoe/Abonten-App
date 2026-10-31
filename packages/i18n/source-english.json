@@ -2141,7 +2141,13 @@
     "ticketCancel.confirmAll": "ca66235c",
     "ticketCancel.keepOne": "bd530729",
     "ticketCancel.keepAll": "32dbb9d1",
-    "ticketCancel.othersStayValid": "81fbabd8"
+    "ticketCancel.othersStayValid": "81fbabd8",
+    "ticketCancel.cancelAllForEvent": "97e68f3c",
+    "ticketCancel.eventTitle": "b435e592",
+    "ticketCancel.eventAll": "b5a0d947",
+    "ticketCancel.eventFree": "23f8b859",
+    "ticketCancel.eventOtherEvents": "22106d12",
+    "ticketCancel.confirmEvent": "1288dfb2"
   },
   "discovery": {
     "aboutNewPostsFrom": "c0cd83e2",
@@ -7121,7 +7127,10 @@
     "ticketsCancelledRefund": "241ac8ff",
     "thisTicketIsAlreadyCancelled": "6d56fe8c",
     "thereIsNothingLeftToRefund": "7d2626d4",
-    "nothingWasPaidForThisTicket": "15ea6646"
+    "nothingWasPaidForThisTicket": "15ea6646",
+    "someOfTheseTicketsWerePaidTogether": "28d20b2b",
+    "eventTicketsCancelled": "5b063cc6",
+    "noActiveTicketsForThisEvent": "b0604922"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -7972,6 +7981,7 @@
     "noTransactionsForThisPeriod2": "0386781f",
     "orderReference": "92d22e50",
     "orderReference2": "bc071ffb",
+    "partlyRefunded": "35e32291",
     "plan": "ae2f98a0",
     "purchasesAndPromotionsYouPayFor": "35437286",
     "quantity": "44f6af69",

@@ -1176,6 +1176,22 @@ export type RefundListItem = {
   createdAt: string;
 };
 
+/** One refund of part or all of a cash payment (transaction_refund). */
+export type RefundPartListItem = {
+  id: string;
+  transactionId: string;
+  amount: number;
+  currency: string;
+  /** preparing | requested | processed | failed */
+  status: string;
+  completesPayment: boolean;
+  ticketCount: number;
+  payerName: string | null;
+  providerReference: string | null;
+  failureDetail: string | null;
+  createdAt: string;
+};
+
 export type PayoutStatus = string;
 
 export type PayoutListItem = {

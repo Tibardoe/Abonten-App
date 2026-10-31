@@ -1338,5 +1338,8 @@
   "ticketsCancelledRefund": "{count, plural, one {# billet annulé} other {# billets annulés}}. {refundMessage}.",
   "thisTicketIsAlreadyCancelled": "Ce billet est déjà annulé.",
   "thereIsNothingLeftToRefund": "Il ne reste rien à rembourser pour ce paiement",
-  "nothingWasPaidForThisTicket": "Rien n'a été payé pour ce billet, il n'y a donc rien à rembourser"
+  "nothingWasPaidForThisTicket": "Rien n'a été payé pour ce billet, il n'y a donc rien à rembourser",
+  "someOfTheseTicketsWerePaidTogether": "Certains de ces billets ont été payés en même temps que des billets pour un autre événement : ils ne peuvent être annulés qu'avec eux",
+  "eventTicketsCancelled": "{count, plural, one {# billet annulé} other {# billets annulés}}",
+  "noActiveTicketsForThisEvent": "Vous n'avez aucun billet actif pour cet événement"
 }

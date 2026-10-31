@@ -4,7 +4,11 @@ import { useTransactionDetail } from "@/features/transactions/useTransactionDeta
 import { useQueryView } from "@/lib/useQueryView";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { getRefundStatusLabel } from "@abonten/core/refundStatus";
+import {
+  combinedRefundState,
+  getRefundStatusLabel,
+  ticketRefundState,
+} from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { TransactionKind } from "@abonten/types/transactions";
 import {
@@ -121,14 +125,18 @@ export default function TransactionDetailScreen() {
     data.kind === "ticket"
       ? data.tickets.filter((t) => t.status === "cancelled")
       : [];
-  const refund =
-    cancelled.length > 0 && cancelled[0].transaction
-      ? getRefundStatusLabel(
-          tc,
-          cancelled[0].transaction.status,
-          cancelled[0].transaction.refund_requested_at,
-        )
-      : null;
+  // Each cancelled ticket's own refund when its payment is refunded ticket
+  // by ticket (else its payment's): one state for the line.
+  const refundState = combinedRefundState(
+    cancelled.map((ticket) => ticketRefundState(ticket)),
+  );
+  const refund = refundState
+    ? getRefundStatusLabel(
+        tc,
+        refundState.status,
+        refundState.refundRequestedAt,
+      )
+    : null;
 
   return (
     <ScrollView

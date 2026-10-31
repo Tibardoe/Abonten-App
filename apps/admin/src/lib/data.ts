@@ -80,6 +80,7 @@ import {
   getTransactionDetailCore,
   listOrphanCapturesCore,
   listPayoutsCore,
+  listRefundPartsCore,
   listRefundsCore,
   listTransactionsCore,
 } from "@abonten/services/admin/finance/financeAdminCore";
@@ -375,6 +376,12 @@ export async function loadRefunds(
 ) {
   const ctx = await requireAdmin();
   return listRefundsCore(getServiceClient(), ctx, filters);
+}
+export async function loadRefundParts(
+  filters: Parameters<typeof listRefundPartsCore>[2],
+) {
+  const ctx = await requireAdmin();
+  return listRefundPartsCore(getServiceClient(), ctx, filters);
 }
 export async function loadOrphanCaptures() {
   const ctx = await requireAdmin();

@@ -20,6 +20,8 @@ Ouvrez le billet dans Mes billets (Gérer › Mes billets sur le site web, Compt
 - Les billets gratuits n'ont rien à rembourser ; ils passent simplement à *Annulé*.
 - Si vous avez acheté plusieurs billets en un seul paiement, vous pouvez n'en annuler qu'un : le prix de ce billet vous est remboursé et les autres restent valables. Vous en avez acheté trois et un ami ne peut pas venir ? Annulez le billet de cet ami. Si une réduction a baissé le total de la commande, c'est la part de chaque billet dans le prix réduit qui vous est rendue.
 - Avant que vous confirmiez, la fenêtre indique le montant qui vous est rendu.
+- Vous avez plusieurs billets pour un même événement, même achetés en plusieurs paiements ? La fenêtre propose aussi **Annuler les billets de cet événement** : tous vos billets pour cet événement sont annulés d'un coup et chaque paiement rend sa part.
+- Votre historique de paiements indique un achat dont certains billets ont été remboursés comme remboursé en partie (sur le site, combien ont été annulés et l'état de leur remboursement).
 - Un paiement réglé en partie avec du Crédit Abonten, ou payé en plusieurs fois, est remboursé en entier : ses billets sont annulés ensemble, et aucun ne peut plus être annulé pour un remboursement dès que l'un d'eux a été scanné à l'entrée.
 
 ## Combien de temps cela prend

@@ -20,6 +20,8 @@ owner: Abonten Hub
 - Bei kostenlosen Tickets gibt es nichts zu erstatten; sie wechseln einfach zu *Storniert*.
 - Hast du mehrere Tickets mit einer Zahlung gekauft, kannst du auch nur eines stornieren: Der Preis dieses Tickets wird erstattet, die anderen bleiben gültig. Drei gekauft und ein Freund kann nicht kommen? Storniere das Ticket dieses Freundes. Hat ein Rabatt die Bestellung günstiger gemacht, kommt der Anteil jedes Tickets am rabattierten Preis zurück.
 - Bevor du bestätigst, zeigt das Fenster, wie viel zurückkommt.
+- Mehrere Tickets für ein Event, auch aus verschiedenen Zahlungen? Das Fenster bietet auch **Alle für dieses Event stornieren** an: Alle deine Tickets für dieses Event werden auf einmal storniert, und jede Zahlung erstattet ihren Anteil.
+- Dein Zahlungsverlauf zeigt einen Kauf, bei dem einige Tickets erstattet wurden, als teilweise erstattet (auf der Website, wie viele storniert wurden und wie es um ihre Erstattung steht).
 - Eine Zahlung, die teilweise mit Abonten-Guthaben oder in Raten bezahlt wurde, wird nur als Ganzes erstattet: Ihre Tickets werden zusammen storniert, und keines kann mehr gegen Erstattung storniert werden, sobald eines davon beim Einlass gescannt wurde.
 
 ## Wie lange es dauert

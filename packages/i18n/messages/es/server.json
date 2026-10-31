@@ -1338,5 +1338,8 @@
   "ticketsCancelledRefund": "{count, plural, one {# entrada cancelada} other {# entradas canceladas}}. {refundMessage}.",
   "thisTicketIsAlreadyCancelled": "Esta entrada ya está cancelada.",
   "thereIsNothingLeftToRefund": "No queda nada por reembolsar de este pago",
-  "nothingWasPaidForThisTicket": "No se pagó nada por esta entrada, así que no hay nada que reembolsar"
+  "nothingWasPaidForThisTicket": "No se pagó nada por esta entrada, así que no hay nada que reembolsar",
+  "someOfTheseTicketsWerePaidTogether": "Algunas de estas entradas se pagaron junto con entradas para otro evento, así que solo se pueden cancelar con ellas",
+  "eventTicketsCancelled": "{count, plural, one {# entrada cancelada} other {# entradas canceladas}}",
+  "noActiveTicketsForThisEvent": "No tienes entradas activas para este evento"
 }

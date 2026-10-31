@@ -1305,6 +1305,12 @@
     "confirmAll": "Cancelar os {count} bilhetes",
     "keepOne": "Manter bilhete",
     "keepAll": "Manter bilhetes",
-    "othersStayValid": "{count, plural, one {O seu outro bilhete deste pagamento continua válido.} other {Os seus outros # bilhetes deste pagamento continuam válidos.}}"
+    "othersStayValid": "{count, plural, one {O seu outro bilhete deste pagamento continua válido.} other {Os seus outros # bilhetes deste pagamento continuam válidos.}}",
+    "cancelAllForEvent": "Cancelar os {count} deste evento",
+    "eventTitle": "Cancelar todos os seus bilhetes para este evento?",
+    "eventAll": "{count, plural, one {O seu bilhete para este evento é cancelado.} other {Os seus # bilhetes para este evento são cancelados.}}",
+    "eventFree": "{count, plural, one {O seu lugar neste evento fica livre para outra pessoa.} other {Os seus # lugares neste evento ficam livres para outras pessoas.}}",
+    "eventOtherEvents": "Alguns destes bilhetes foram pagos juntamente com bilhetes para outro evento, por isso só podem ser cancelados com esses. Cancele-os a partir de um desses bilhetes.",
+    "confirmEvent": "{count, plural, one {Cancelar # bilhete} other {Cancelar os # bilhetes}}"
   }
 }

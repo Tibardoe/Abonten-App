@@ -167,6 +167,7 @@ function TicketCard({
               <CancelUserTicketBtn
                 ticketId={event.id}
                 transactionId={event.transaction_id}
+                eventId={event.event.id}
                 queryKey={queryKey}
               />
             )}

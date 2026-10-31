@@ -1,4 +1,7 @@
-import type { TicketCancelQuote } from "@abonten/types/ticketType";
+import type {
+  EventCancelQuote,
+  TicketCancelQuote,
+} from "@abonten/types/ticketType";
 import type { CoreI18n } from "./i18n/translator";
 import { formatMoney } from "./money/formatMoney";
 
@@ -16,6 +19,9 @@ export type TicketCancelDialog = {
   keep: string;
   /** Cancelling takes the payment's other tickets with it. */
   wholePayment: boolean;
+  /** "Cancel all N for this event": the buyer holds more than this ticket
+   *  for the event (eventCancelDialog then says what that gives back). */
+  allForEvent: string | null;
 };
 
 function refundSentence(
@@ -44,12 +50,17 @@ export function ticketCancelDialog(
   quote: TicketCancelQuote,
 ): TicketCancelDialog {
   const { t } = i18n;
+  const allForEvent =
+    quote.eventTicketCount > 1 && quote.otherTicketIds.length === 0
+      ? t("ticketCancel.cancelAllForEvent", { count: quote.eventTicketCount })
+      : null;
   if (!quote.paid) {
     return {
       body: t("ticketCancel.free"),
       confirm: t("ticketCancel.confirmOne"),
       keep: t("ticketCancel.keepOne"),
       wholePayment: false,
+      allForEvent,
     };
   }
   if (quote.checkedIn) {
@@ -58,6 +69,7 @@ export function ticketCancelDialog(
       confirm: null,
       keep: t("ticketCancel.keepOne"),
       wholePayment: false,
+      allForEvent,
     };
   }
   const others = quote.otherTicketIds.length;
@@ -71,6 +83,7 @@ export function ticketCancelDialog(
       confirm: t("ticketCancel.confirmOne"),
       keep: t("ticketCancel.keepOne"),
       wholePayment: false,
+      allForEvent,
     };
   }
   const together = t(
@@ -84,5 +97,51 @@ export function ticketCancelDialog(
     confirm: t("ticketCancel.confirmAll", { count: others + 1 }),
     keep: t("ticketCancel.keepAll"),
     wholePayment: true,
+    allForEvent: null,
+  };
+}
+
+export type EventCancelDialog = {
+  title: string;
+  body: string;
+  /** Null when they can't all be cancelled (the body says why). */
+  confirm: string | null;
+  keep: string;
+};
+
+/** The words for cancelling all of the buyer's tickets for an event. */
+export function eventCancelDialog(
+  i18n: CoreI18n,
+  quote: EventCancelQuote,
+): EventCancelDialog {
+  const { t } = i18n;
+  const count = quote.ticketIds.length;
+  const title = t("ticketCancel.eventTitle");
+  const keep = t("ticketCancel.keepAll");
+  if (quote.blocked === "other_events") {
+    return {
+      title,
+      body: t("ticketCancel.eventOtherEvents"),
+      confirm: null,
+      keep,
+    };
+  }
+  if (quote.blocked === "checked_in") {
+    return { title, body: t("ticketCancel.checkedIn"), confirm: null, keep };
+  }
+  const confirm = t("ticketCancel.confirmEvent", { count });
+  if (!quote.paid) {
+    return {
+      title,
+      body: t("ticketCancel.eventFree", { count }),
+      confirm,
+      keep,
+    };
+  }
+  return {
+    title,
+    body: `${t("ticketCancel.eventAll", { count })} ${refundSentence(i18n, quote.refund)}`,
+    confirm,
+    keep,
   };
 }

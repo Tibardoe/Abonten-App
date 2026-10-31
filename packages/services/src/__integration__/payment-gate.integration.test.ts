@@ -19,6 +19,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { listRefundPartsCore } from "../admin/finance/financeAdminCore";
 import { cancelTicketCheckoutSessionCore } from "../checkout/cancelTicketCheckoutSessionCore";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { invalidateMarketCache } from "../markets/marketConfig";
@@ -33,6 +34,10 @@ import type {
 } from "../payments/providers/types";
 import { verifyPaymentCore } from "../payments/verifyPaymentCore";
 import { handleProviderWebhook } from "../payments/webhookCore";
+import {
+  cancelEventTicketsCore,
+  eventCancelQuoteCore,
+} from "../tickets/cancelEventTicketsCore";
 import { cancelUserTicketCore } from "../tickets/cancelUserTicketCore";
 import { ticketCancelQuoteCore } from "../tickets/ticketCancelQuoteCore";
 import {
@@ -569,9 +574,15 @@ describe("payment production gate", () => {
     expect(ticketAfter.status).toBe("cancelled");
   });
 
-  async function buy(quantity: number) {
-    const provider = fakePaystack();
-    const fixture = await newEvent();
+  async function buy(
+    quantity: number,
+    on?: {
+      provider: ReturnType<typeof fakePaystack>;
+      fixture: { eventId: string; ticketTypeId: string };
+    },
+  ) {
+    const provider = on?.provider ?? fakePaystack();
+    const fixture = on?.fixture ?? (await newEvent());
     const opened = await validateCheckoutCore(buyer.client, buyer.id, {
       eventId: fixture.eventId,
       quantities: { [fixture.ticketTypeId]: quantity },
@@ -581,10 +592,33 @@ describe("payment production gate", () => {
     const ref = started.payment?.reference as string;
     provider.paid.add(ref);
     await finalizePayment(started.attempts[0].id, deps);
-    const tickets = await ticketsOf(buyer);
-    expect(tickets).toHaveLength(quantity);
+    const tickets = (await ticketsOf(buyer)).filter(
+      (t) => t.transaction_id && !on,
+    );
+    if (!on) expect(tickets).toHaveLength(quantity);
     const [txn] = await transactionsOf(buyer);
     return { provider, fixture, ref, tickets, txn };
+  }
+
+  async function historyOf(user: TestUser) {
+    const { data, error } = await user.client.rpc(
+      "get_user_transaction_history",
+      {
+        p_start: null,
+        p_end: null,
+        p_cursor_created_at: null,
+        p_cursor_id: null,
+        p_limit: 20,
+      } as never,
+    );
+    expect(error).toBeNull();
+    return (data ?? []) as {
+      kind: string;
+      quantity: number;
+      cancelled_quantity: number;
+      refund_status: string | null;
+      refund_requested_at: string | null;
+    }[];
   }
 
   async function seatsLeft(ticketTypeId: string) {
@@ -666,6 +700,7 @@ describe("payment production gate", () => {
         paid: true,
         otherTicketIds: [],
         keptTicketCount: 2,
+        eventTicketCount: 3,
         otherEvents: false,
         checkedIn: false,
         refund: { cashMinor: 5000, creditMinor: 0, currency: "GHS" },
@@ -695,6 +730,13 @@ describe("payment production gate", () => {
     expect(await holdsOf(txn.id)).toEqual([
       { entry_type: "refund_hold", amount: -50, refund_id: part.id },
     ]);
+    // Payment history reads the line from its ticket's refund, not from the
+    // payment (still "successful").
+    expect((await historyOf(buyer))[0]).toMatchObject({
+      quantity: 3,
+      cancelled_quantity: 1,
+      refund_status: "refund_pending",
+    });
 
     // The provider confirms it: that part is done, the payment still paid.
     const hook = await refundWebhook(
@@ -706,6 +748,7 @@ describe("payment production gate", () => {
     expect(hook.status).toBe(200);
     expect((await refundsOf(txn.id))[0].status).toBe("processed");
     expect((await statusOf(txn.id))?.status).toBe("successful");
+    expect((await historyOf(buyer))[0].refund_status).toBe("refunded");
     const { data: fee } = await service
       .from("platform_fee_entry")
       .select("entry_type, ticket_revenue, refund_id")
@@ -831,5 +874,79 @@ describe("payment production gate", () => {
     expect(provider.refundAmounts).toEqual([5000]);
     // The checked-in ticket can't be cancelled.
     expect((await cancel(scanned.id)).status).toBe(409);
+  });
+
+  it("cancel all my tickets for an event: every payment gives back its share", async () => {
+    const first = await buy(2);
+    await buy(1, { provider: first.provider, fixture: first.fixture });
+    const tickets = await ticketsOf(buyer);
+    expect(tickets).toHaveLength(3);
+
+    const single = await ticketCancelQuoteCore(
+      buyer.client,
+      buyer.id,
+      tickets[0].id,
+    );
+    expect(single.status === 200 && single.data.eventTicketCount).toBe(3);
+
+    const quote = await eventCancelQuoteCore(
+      buyer.client,
+      buyer.id,
+      first.fixture.eventId,
+    );
+    expect(quote.status).toBe(200);
+    if (quote.status !== 200) throw new Error("unreachable");
+    expect(quote.data.ticketIds).toHaveLength(3);
+    expect(quote.data).toMatchObject({
+      paid: true,
+      blocked: null,
+      refund: { cashMinor: 15000, creditMinor: 0, currency: "GHS" },
+    });
+
+    const all = await cancelEventTicketsCore(
+      buyer.client,
+      buyer.id,
+      first.fixture.eventId,
+    );
+    expect(all.status, all.message).toBe(200);
+    expect((await ticketsOf(buyer)).map((t) => t.status)).toEqual([
+      "cancelled",
+      "cancelled",
+      "cancelled",
+    ]);
+    expect(await seatsLeft(first.fixture.ticketTypeId)).toBe(20);
+    expect([...first.provider.refundAmounts].sort()).toEqual([10000, 5000]);
+    const payments = await transactionsOf(buyer);
+    expect(payments.map((p) => p.status)).toEqual([
+      "refund_pending",
+      "refund_pending",
+    ]);
+
+    // Nothing left: a second tap says so.
+    const again = await cancelEventTicketsCore(
+      buyer.client,
+      buyer.id,
+      first.fixture.eventId,
+    );
+    expect(again.status).toBe(404);
+
+    // Admin › Finance › Refunds › Ticket refunds lists both parts.
+    const parts = await listRefundPartsCore(
+      service as never,
+      {
+        userId: buyer.id,
+        email: null,
+        roles: ["finance_admin"],
+        permissions: ["finance.view"],
+        reauthenticatedAt: Date.now(),
+      },
+      {},
+    );
+    expect(parts.status).toBe(200);
+    const ours = parts.data.filter((p) =>
+      payments.some((t) => t.id === p.transactionId),
+    );
+    expect(ours.map((p) => p.amount).sort()).toEqual([100, 50]);
+    expect(ours.every((p) => p.completesPayment)).toBe(true);
   });
 });

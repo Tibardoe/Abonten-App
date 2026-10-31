@@ -2,7 +2,7 @@ import type { TicketCancelQuote } from "@abonten/types/ticketType";
 import { describe, expect, it } from "vitest";
 import type { CoreTranslator } from "./i18n/translator";
 import { getRefundStatusKind, ticketRefundState } from "./refundStatus";
-import { ticketCancelDialog } from "./ticketCancelQuote";
+import { eventCancelDialog, ticketCancelDialog } from "./ticketCancelQuote";
 
 // Echoes the key and its values, so the test reads which sentence was
 // picked and what it was given.
@@ -14,6 +14,7 @@ const paid: TicketCancelQuote = {
   paid: true,
   otherTicketIds: [],
   keptTicketCount: 0,
+  eventTicketCount: 1,
   otherEvents: false,
   checkedIn: false,
   refund: { cashMinor: 4000, creditMinor: 0, currency: "GHS" },
@@ -61,7 +62,34 @@ describe("ticketCancelDialog", () => {
       confirm: "ticketCancel.confirmOne",
       keep: "ticketCancel.keepOne",
       wholePayment: false,
+      allForEvent: null,
     });
+  });
+
+  it("offers every ticket for the event when there are several", () => {
+    expect(
+      ticketCancelDialog(i18n, { ...paid, eventTicketCount: 3 }).allForEvent,
+    ).toBe('ticketCancel.cancelAllForEvent{"count":3}');
+    const all = eventCancelDialog(i18n, {
+      ticketIds: ["a", "b", "c"],
+      paid: true,
+      refund: { cashMinor: 12000, creditMinor: 0, currency: "GHS" },
+      blocked: null,
+    });
+    expect(all).toEqual({
+      title: "ticketCancel.eventTitle",
+      body: 'ticketCancel.eventAll{"count":3} ticketCancel.refundCash{"amount":"GH₵120.00"}',
+      confirm: 'ticketCancel.confirmEvent{"count":3}',
+      keep: "ticketCancel.keepAll",
+    });
+    expect(
+      eventCancelDialog(i18n, {
+        ticketIds: ["a", "b"],
+        paid: true,
+        refund: null,
+        blocked: "other_events",
+      }).confirm,
+    ).toBeNull();
   });
 
   it("a ticket paid for with others is cancelled with them", () => {
@@ -75,6 +103,7 @@ describe("ticketCancelDialog", () => {
       confirm: 'ticketCancel.confirmAll{"count":2}',
       keep: "ticketCancel.keepAll",
       wholePayment: true,
+      allForEvent: null,
     });
     expect(
       ticketCancelDialog(i18n, {

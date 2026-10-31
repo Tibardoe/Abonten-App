@@ -132,7 +132,7 @@ export default function TicketDetailScreen() {
 
   function onCancelTicket() {
     if (!ticket) return;
-    cancelFlow.start(ticket, (message) =>
+    cancelFlow.start({ ...ticket, eventId: ticket.event.id }, (message) =>
       Alert.alert(t("ticketCancelled"), message, [
         { text: "OK", onPress: () => router.back() },
       ]),

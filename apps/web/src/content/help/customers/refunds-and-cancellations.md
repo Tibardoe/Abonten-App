@@ -20,6 +20,8 @@ Open the ticket in My Tickets (Manage › My Tickets on the web, Account › My 
 - Free tickets have nothing to refund; they simply move to *Cancelled*.
 - If you bought several tickets in one payment, you can cancel just one: that ticket's price comes back and the others stay valid. Bought three and one friend can't come? Cancel that friend's ticket. If a discount brought the order down, each ticket's share of the discounted price comes back.
 - Before you confirm, the dialog says how much comes back.
+- Holding several tickets for one event, even from different payments? The dialog also offers **Cancel all for this event**: every ticket you hold for it is cancelled at once and each payment gives back its share.
+- Your payment history shows a purchase with some tickets refunded as partly refunded (on the website, how many were cancelled and their refund status).
 - A payment made partly with Abonten Credit, or paid small small, is refunded as a whole: its tickets are cancelled together, and none can be cancelled for a refund once one of them has been checked in.
 
 ## How long it takes

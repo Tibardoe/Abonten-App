@@ -71,6 +71,7 @@ import type {
   BlockParticipantBody,
   BookingStatus,
   CancelEventResult,
+  CancelEventTicketsResult,
   CancelPlaceBookingResult,
   CancelTicketBody,
   CancelTicketResult,
@@ -125,6 +126,7 @@ import type {
   DeviceRegisterBody,
   DeviceTokenResult,
   EditMessageBody,
+  EventCancelQuoteResult,
   EventCancellationImpactResult,
   EventCreateBody,
   EventCreateResult,
@@ -135,6 +137,7 @@ import type {
   EventPromoCodesResult,
   EventPromoterCommissionResult,
   EventPromotionContextResult,
+  EventTicketsBody,
   FieldOpsAnalyticsResult,
   FieldOpsAnnouncementBody,
   FieldOpsAnnouncementResult,
@@ -961,6 +964,21 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+      /** What cancelling all of the caller's tickets for an event would
+       *  give back. Asked before the "cancel all" dialog. */
+      eventCancelQuote(body: EventTicketsBody) {
+        return request<EventCancelQuoteResult>(
+          "/api/mobile/tickets/cancel-event/quote",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Cancel every active ticket the caller holds for an event. */
+      cancelEvent(body: EventTicketsBody) {
+        return request<CancelEventTicketsResult>(
+          "/api/mobile/tickets/cancel-event",
+          { method: "POST", body, auth: true },
+        );
       },
       /** Ask again for the refund of the caller's cancelled tickets on a
        *  payment (a refused one, or one never asked for). */
