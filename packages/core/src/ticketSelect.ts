@@ -9,7 +9,7 @@ export const TICKET_WITH_EVENT_SELECT = `
   *,
   transaction:transaction_id ( status, refund_requested_at ),
   refund_parts:transaction_refund_ticket (
-    refund:refund_id ( status, amount, currency, created_at )
+    refund:refund_id ( status, amount, currency, created_at, tickets:transaction_refund_ticket ( ticket_id ) )
   ),
   ticket_type:ticket_type_id (
     *,
@@ -31,7 +31,7 @@ export const TICKET_REFUND_SELECT = `
   *,
   transaction:transaction_id!inner ( status, refund_requested_at, amount, currency ),
   refund_parts:transaction_refund_ticket (
-    refund:refund_id ( status, amount, currency, created_at )
+    refund:refund_id ( status, amount, currency, created_at, tickets:transaction_refund_ticket ( ticket_id ) )
   ),
   ticket_type:ticket_type_id (
     *,

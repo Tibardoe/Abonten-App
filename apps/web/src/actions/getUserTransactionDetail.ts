@@ -40,7 +40,7 @@ export const getUserTransactionDetail = withActionLocale(
       const { data, error } = await supabase
         .from("ticket_checkout")
         .select(
-          "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(id, status, refund_requested_at, amount), refund_parts:transaction_refund_ticket(refund:refund_id(status, amount, currency, created_at)))",
+          "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(id, status, refund_requested_at, amount), refund_parts:transaction_refund_ticket(refund:refund_id(status, amount, currency, created_at, tickets:transaction_refund_ticket(ticket_id))))",
         )
         .eq("id", id)
         .eq("user_id", user.user.id)

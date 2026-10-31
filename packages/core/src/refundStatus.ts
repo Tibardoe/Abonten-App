@@ -60,9 +60,11 @@ export function getRefundStatusLabel(
 /** A cancelled ticket's own refund (transaction_refund via TICKET_*_SELECT). */
 export type TicketRefundPart = {
   status: string;
+  /** The whole part: it can cover several tickets cancelled together. */
   amount: number;
   currency: string;
   created_at: string;
+  tickets?: { ticket_id: string }[];
 };
 
 export type TicketRefundState = {
@@ -100,7 +102,9 @@ export function ticketRefundState(ticket: {
             ? "successful"
             : "refund_pending",
       refundRequestedAt: latest.created_at,
-      amount: Number(latest.amount),
+      // This ticket's share: two tickets cancelled together are one part
+      // of GH₵80, shown as GH₵40 on each.
+      amount: Number(latest.amount) / Math.max(latest.tickets?.length ?? 1, 1),
       currency: latest.currency,
     };
   }

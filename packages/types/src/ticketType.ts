@@ -42,6 +42,7 @@ export type UserTicketType = {
       amount: number;
       currency: string;
       created_at: string;
+      tickets?: { ticket_id: string }[];
     } | null;
   }[];
   seat_number: string | null;
