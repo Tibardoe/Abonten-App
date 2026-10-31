@@ -91,6 +91,7 @@ function fakePaystack() {
   vi.spyOn(paystackProvider, "refund").mockImplementation(
     async (_account, input) => {
       refunds.push(input.reference ?? "");
+      return { providerRefundId: null };
     },
   );
   return { opened, paid, pending, refunds };

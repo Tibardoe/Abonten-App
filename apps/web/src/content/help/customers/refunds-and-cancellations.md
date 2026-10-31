@@ -2,7 +2,7 @@
 title: Refunds and cancellations
 summary: Cancelling a ticket, what is refunded (and what is not), how long refunds take, and what happens when an organizer cancels an event.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,11 +18,15 @@ Open the ticket in My Tickets (Manage › My Tickets on the web, Account › My 
 - The **ticket price** for the cancelled ticket is refunded to the payment method you paid with.
 - The **service fee is not refunded.**
 - Free tickets have nothing to refund; they simply move to *Cancelled*.
-- If you bought several tickets in one payment, each one you cancel refunds its own ticket price. Paystack refunds are requested per cancelled ticket's share of the charge.
+- If you bought several tickets in one payment, you can cancel just one: that ticket's price comes back and the others stay valid. Bought three and one friend can't come? Cancel that friend's ticket. If a discount brought the order down, each ticket's share of the discounted price comes back.
+- Before you confirm, the dialog says how much comes back.
+- Holding several tickets for one event, even from different payments? The dialog also offers **Cancel all for this event**: every ticket you hold for it is cancelled at once and each payment gives back its share.
+- Your payment history shows a purchase with some tickets refunded as partly refunded (on the website, how many were cancelled and their refund status).
+- A payment made partly with Abonten Credit, or paid small small, is refunded as a whole: its tickets are cancelled together, and none can be cancelled for a refund once one of them has been checked in.
 
 ## How long it takes
 
-Cancelling **requests** the refund from Paystack immediately. Your transaction shows **Refund pending** until Paystack confirms it, then **Refunded**. After that, the time it takes to appear on your card or mobile-money balance depends on your bank or network — typically a few days for cards.
+Cancelling **requests** the refund from Paystack immediately. The cancelled ticket shows **Refund pending** until Paystack confirms it, then **Refunded**; the payment itself shows **Refunded** once every ticket from it has been refunded. After that, the time it takes to appear on your card or mobile-money balance depends on your bank or network — typically a few days for cards.
 
 If the request fails (for example Paystack was unreachable), your ticket shows **Refund failed** with a **Retry refund** button. Support can also re-request it.
 

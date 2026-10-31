@@ -2,7 +2,7 @@
 title: Reembolsos y cancelaciones
 summary: Cancelar una entrada, qué se reembolsa (y qué no), cuánto tardan los reembolsos y qué pasa cuando un organizador cancela un evento.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,11 +18,15 @@ Abre la entrada en Mis entradas (Gestionar › Mis entradas en la web, Cuenta �
 - El **precio de la entrada** cancelada se reembolsa al método de pago que usaste.
 - **La tarifa de servicio no se reembolsa.**
 - Las entradas gratuitas no tienen nada que reembolsar; simplemente pasan a *Cancelada*.
-- Si compraste varias entradas en un solo pago, cada una que canceles reembolsa su propio precio. Los reembolsos de Paystack se piden por la parte del cobro que corresponde a cada entrada cancelada.
+- Si compraste varias entradas en un solo pago, puedes cancelar solo una: se te devuelve el precio de esa entrada y las demás siguen siendo válidas. ¿Compraste tres y un amigo no puede ir? Cancela la entrada de ese amigo. Si un descuento rebajó el pedido, se te devuelve la parte de cada entrada en el precio rebajado.
+- Antes de confirmar, la ventana te dice cuánto se te devuelve.
+- ¿Tienes varias entradas para un mismo evento, aunque sean de pagos distintos? La ventana también ofrece **Cancelar las de este evento**: se cancelan a la vez todas tus entradas para ese evento y cada pago devuelve su parte.
+- Tu historial de pagos muestra una compra con algunas entradas reembolsadas como reembolsada en parte (en la web, cuántas se cancelaron y el estado de su reembolso).
+- Un pago hecho en parte con Crédito Abonten, o pagado a plazos, se reembolsa entero: sus entradas se cancelan juntas, y ninguna se puede cancelar con reembolso cuando una de ellas ya se escaneó en el acceso.
 
 ## Cuánto tarda
 
-Al cancelar se **pide** el reembolso a Paystack de inmediato. Tu transacción muestra **Reembolso pendiente** hasta que Paystack lo confirma y después **Reembolsado**. A partir de ahí, lo que tarde en verse en tu tarjeta o en tu saldo de dinero móvil depende de tu banco o tu operador; con tarjeta, normalmente unos días.
+Al cancelar se **pide** el reembolso a Paystack de inmediato. La entrada cancelada muestra **Reembolso pendiente** hasta que Paystack lo confirma y después **Reembolsado**; el pago en sí muestra **Reembolsado** cuando todas sus entradas se han reembolsado. A partir de ahí, lo que tarde en verse en tu tarjeta o en tu saldo de dinero móvil depende de tu banco o tu operador; con tarjeta, normalmente unos días.
 
 Si la solicitud falla (por ejemplo, porque no se pudo contactar con Paystack), tu entrada muestra **Reembolso fallido** con un botón **Reintentar reembolso**. Soporte también puede volver a pedirlo.
 

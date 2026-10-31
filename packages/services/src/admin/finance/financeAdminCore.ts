@@ -22,6 +22,7 @@ import type {
   PayoutListItem,
   PayoutReviewEvent,
   RefundListItem,
+  RefundPartListItem,
   TransactionDetail,
   TransactionListItem,
 } from "@abonten/types/adminTypes";
@@ -306,6 +307,7 @@ export async function getTransactionDetailCore(
     { data: fees },
     { data: ticketRows },
     { data: refundable },
+    { data: refundParts },
   ] = await Promise.all([
     supabase
       .from("payment_attempt")
@@ -335,6 +337,14 @@ export async function getTransactionDetailCore(
     supabase.rpc("get_transaction_refundable_amount", {
       p_transaction_id: txId,
     }),
+    // A cash payment is refunded ticket by ticket: one row per part.
+    supabase
+      .from("transaction_refund")
+      .select(
+        "id, amount, currency, status, completes_payment, provider_refund_id, failure_detail, created_at, processed_at, failed_at, transaction_refund_ticket(ticket_id)",
+      )
+      .eq("transaction_id", txId)
+      .order("created_at", { ascending: true }),
   ]);
 
   const names = await orgNames(
@@ -395,7 +405,15 @@ export async function getTransactionDetailCore(
       metadata: (t.metadata as Record<string, unknown>) ?? null,
       createdAt: t.created_at,
       refundRequestedAt: t.refund_requested_at ?? null,
-      refundableAmount: num(refundable),
+      // What is left: the ticket revenue less the parts already refunded
+      // or on their way back.
+      refundableAmount: Math.max(
+        num(refundable) -
+          (refundParts ?? [])
+            .filter((r) => r.status !== "failed")
+            .reduce((sum, r) => sum + num(r.amount), 0),
+        0,
+      ),
       attempts: (attempts ?? []).map((a) => ({
         id: a.id,
         status: a.status,
@@ -440,6 +458,19 @@ export async function getTransactionDetailCore(
         createdAt: f.created_at,
       })),
       ticketsIssued: (ticketRows ?? []).length,
+      refundParts: (refundParts ?? []).map((r) => ({
+        id: r.id,
+        amount: num(r.amount),
+        currency: r.currency,
+        status: r.status,
+        completesPayment: r.completes_payment,
+        providerRefundId: r.provider_refund_id ?? null,
+        failureDetail: r.failure_detail ?? null,
+        ticketCount: (r.transaction_refund_ticket ?? []).length,
+        createdAt: r.created_at,
+        processedAt: r.processed_at ?? null,
+        failedAt: r.failed_at ?? null,
+      })),
       checkouts,
     },
   };
@@ -546,6 +577,89 @@ export async function listRefundsCore(
       ? encodeCursor<SimpleCursor>({
           sortValue: String(last.createdAt),
           id: last.transactionId,
+        })
+      : null;
+  return { status: 200, data: page, nextCursor, hasNextPage };
+}
+
+/**
+ * Every refund asked of a provider for a cash payment, newest first: a
+ * payment refunded one ticket at a time stays `successful` (so off the list
+ * above) until its last tickets go, and its earlier parts are here.
+ */
+export async function listRefundPartsCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  filters: { cursor?: string | null } = {},
+): Promise<PaginatedResult<RefundPartListItem>> {
+  try {
+    assertPermission(ctx, "finance.view");
+  } catch (e) {
+    return {
+      status: 403,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: (e as Error).message,
+    };
+  }
+
+  const pageSize = DEFAULT_EVENTS_PAGE_SIZE;
+  const cursor = decodeCursor<SimpleCursor>(filters.cursor);
+
+  let query = supabase
+    .from("transaction_refund")
+    .select(
+      "id, transaction_id, amount, currency, status, completes_payment, failure_detail, created_at, transaction:transaction_id(full_name, provider_reference), transaction_refund_ticket(ticket_id)",
+    )
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
+  if (cursor) {
+    query = query.or(
+      `created_at.lt.${cursor.sortValue},and(created_at.eq.${cursor.sortValue},id.lt.${cursor.id})`,
+    );
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    logger.error(`listRefundPartsCore failed: ${error.message}`);
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "Something went wrong",
+    };
+  }
+
+  const mapped: RefundPartListItem[] = (data ?? []).map((r) => {
+    const txn = r.transaction as {
+      full_name: string | null;
+      provider_reference: string | null;
+    } | null;
+    return {
+      id: r.id,
+      transactionId: r.transaction_id,
+      amount: num(r.amount),
+      currency: r.currency,
+      status: r.status,
+      completesPayment: r.completes_payment,
+      ticketCount: (r.transaction_refund_ticket ?? []).length,
+      payerName: txn?.full_name ?? null,
+      providerReference: txn?.provider_reference ?? null,
+      failureDetail: r.failure_detail ?? null,
+      createdAt: r.created_at,
+    };
+  });
+
+  const { page, hasNextPage } = splitPage(mapped, pageSize);
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasNextPage && last
+      ? encodeCursor<SimpleCursor>({
+          sortValue: String(last.createdAt),
+          id: last.id,
         })
       : null;
   return { status: 200, data: page, nextCursor, hasNextPage };

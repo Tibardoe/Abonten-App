@@ -1,6 +1,4 @@
 {
-  "aRefundOfTheTicketPrice": "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded.",
-  "areYouSureYouWantTo": "Are you sure you want to cancel this ticket?",
   "cancelThisTicket": "Cancel this ticket?",
   "cancelTicket": "Cancel ticket",
   "cancelTicketRequestRefund": "Cancel ticket & request refund",
@@ -27,7 +25,6 @@
       "title": "No refunds yet"
     }
   },
-  "keepTicket": "Keep ticket",
   "locationUnavailable": "Location unavailable",
   "noQrCode": "No QR code",
   "pleaseTryAgainInAMoment": "Please try again in a moment.",

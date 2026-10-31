@@ -230,6 +230,37 @@ export default async function TransactionDetailPage({
           )}
         </Card>
 
+        {t.refundParts.length > 0 ? (
+          <Card className="p-4">
+            <h3 className="mb-2 text-sm font-semibold">
+              Refund parts ({t.refundParts.length})
+            </h3>
+            <ul className="space-y-2 text-sm">
+              {t.refundParts.map((r) => (
+                <li key={r.id} className="rounded bg-muted/50 p-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">
+                      {r.status}
+                      {r.completesPayment ? " · last of the payment" : ""}
+                    </span>
+                    <span className="tabular-nums">
+                      {money(r.amount, r.currency)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {r.ticketCount} ticket{r.ticketCount === 1 ? "" : "s"} ·
+                    asked {timeAgo(r.createdAt)}
+                    {r.providerRefundId
+                      ? ` · provider ${r.providerRefundId}`
+                      : ""}
+                    {r.failureDetail ? ` · ${r.failureDetail}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        ) : null}
+
         <Card className="p-4">
           <h3 className="mb-2 text-sm font-semibold">
             Platform fee entries ({t.feeEntries.length})

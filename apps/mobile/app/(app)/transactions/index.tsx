@@ -73,9 +73,17 @@ function TransactionRow({
   const hasRefund = !!row.refund_status && row.refund_status !== "none";
   // A cancelled ticket whose transaction still reads "successful" but has a
   // refund request on file = the refund attempt failed (see refundStatus.ts).
+  // Some of the line's tickets refunded, the rest still valid: a payment
+  // refunded ticket by ticket.
+  const partly =
+    row.kind === "ticket" &&
+    (row.cancelled_quantity ?? 0) > 0 &&
+    (row.cancelled_quantity ?? 0) < (row.quantity ?? 0);
   const refundLabel =
     row.refund_status === "refunded"
-      ? t("refundIssued")
+      ? partly
+        ? t("partlyRefunded")
+        : t("refundIssued")
       : row.refund_status === "refund_pending"
         ? t("refundPending")
         : row.refund_status === "successful" && row.refund_requested_at

@@ -35,6 +35,15 @@ export type UserTicketType = {
     amount?: number;
     currency?: string;
   } | null;
+  /** This ticket's own refunds (a payment refunded ticket by ticket). */
+  refund_parts?: {
+    refund: {
+      status: string;
+      amount: number;
+      currency: string;
+      created_at: string;
+    } | null;
+  }[];
   seat_number: string | null;
   status: "active" | "cancelled" | string;
   qr_public_id: string;
@@ -91,3 +100,43 @@ export type CheckoutSessionStatus =
   | "paid"
   | "expired"
   | "cancelled";
+
+/**
+ * What cancelling one of the buyer's tickets would give back, asked before
+ * the cancel dialog opens (ticketCancelQuoteCore). A cash payment is
+ * refunded ticket by ticket; one made with Abonten Credit or paid small
+ * small only as a whole, so its tickets are cancelled together.
+ */
+export type TicketCancelQuote = {
+  /** Paid with money or credit; a free ticket has nothing to give back. */
+  paid: boolean;
+  /** The buyer's other active tickets that go with this one (a payment
+   *  refunded only as a whole). */
+  otherTicketIds: string[];
+  /** The buyer's other active tickets from the payment that stay valid. */
+  keptTicketCount: number;
+  /** The buyer's active tickets for this ticket's event (this one too),
+   *  across payments: more than one offers "cancel all for this event". */
+  eventTicketCount: number;
+  /** Some of those are for another event (a basket paid at once). */
+  otherEvents: boolean;
+  /** A ticket from that payment was checked in: nothing can be refunded. */
+  checkedIn: boolean;
+  /** What the cancellation gives back, in minor units; null when unknown. */
+  refund: { cashMinor: number; creditMinor: number; currency: string } | null;
+};
+
+/**
+ * What cancelling all of the buyer's active tickets for an event would give
+ * back (eventCancelQuoteCore), across every payment they bought them in.
+ */
+export type EventCancelQuote = {
+  ticketIds: string[];
+  /** At least one of them was paid for. */
+  paid: boolean;
+  /** Summed over the payments, in minor units; null when unknown. */
+  refund: { cashMinor: number; creditMinor: number; currency: string } | null;
+  /** Why they can't all go: a payment refunded only as a whole also paid
+   *  for another event's tickets, or one of its tickets was checked in. */
+  blocked: "other_events" | "checked_in" | null;
+};

@@ -318,16 +318,17 @@ describe("admin finance overview", () => {
     );
     expect(
       d.current.serviceFeeRevenue - baseOverview.current.serviceFeeRevenue,
-    ).toBe(15);
+    ).toBeCloseTo(15, 6);
     expect(d.current.totalCharged - baseOverview.current.totalCharged).toBe(
       315,
     );
 
     // Only the row whose processing cost Paystack reported contributes: the
-    // NULL-cost one is unknown, not zero.
+    // NULL-cost one is unknown, not zero. Money sums over a shared database
+    // are floats, so they are compared closely, not bit for bit.
     expect(
       d.current.netPlatformRevenue - baseOverview.current.netPlatformRevenue,
-    ).toBe(7);
+    ).toBeCloseTo(7, 6);
     expect(d.current.processingCost - baseOverview.current.processingCost).toBe(
       3,
     );

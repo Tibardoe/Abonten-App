@@ -18,7 +18,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import type { PreparedCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { CreditQuote } from "@abonten/types/rewards";
-import { AppText, useToast } from "@abonten/ui-native";
+import { AppText, Icon, useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -249,6 +249,7 @@ function CheckoutReady({
 }) {
   const { locale } = useLocale();
   const t = useTranslations("checkout");
+  const router = useRouter();
 
   const payment = useTicketPayment({
     sessionId,
@@ -296,6 +297,25 @@ function CheckoutReady({
             strong
           />
         </View>
+
+        {/* The code goes in with the tickets (the seats are held at its
+            price), so a buyer who remembers one here is sent back to that
+            screen: pilot testers looked for the field on this one. Back
+            from here keeps their selection; from the Home banner the
+            ticket screen opens afresh. */}
+        {session.discount === 0 && session.subtotal > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            disabled={payment.pending}
+            onPress={() => router.dismissTo(`/(app)/buy/${session.eventId}`)}
+            className="-mt-2 flex-row items-center gap-2 py-1 active:opacity-60"
+          >
+            <Icon name="pricetag-outline" size={15} tone="primary" />
+            <AppText variant="small" tone="brand" className="font-semibold">
+              {t("haveAPromoCodeAddIt")}
+            </AppText>
+          </Pressable>
+        ) : null}
 
         {grandTotal !== session.total ? (
           <AppText variant="muted">

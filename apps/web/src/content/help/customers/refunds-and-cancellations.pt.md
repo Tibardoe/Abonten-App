@@ -2,7 +2,7 @@
 title: Reembolsos e cancelamentos
 summary: Cancelar um bilhete, o que é reembolsado (e o que não é), quanto tempo demoram os reembolsos e o que acontece quando um organizador cancela um evento.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,11 +18,15 @@ Abra o bilhete em Os meus bilhetes (Gerir › Os meus bilhetes no website, Conta
 - O **preço do bilhete** cancelado é reembolsado no método de pagamento que utilizou.
 - **A taxa de serviço não é reembolsada.**
 - Os bilhetes gratuitos não têm nada a reembolsar; passam simplesmente a *Cancelado*.
-- Se comprou vários bilhetes num só pagamento, cada bilhete que cancelar reembolsa o seu próprio preço. Os reembolsos da Paystack são pedidos pela parte da cobrança que corresponde a cada bilhete cancelado.
+- Se comprou vários bilhetes num só pagamento, pode cancelar apenas um: o preço desse bilhete é-lhe devolvido e os outros continuam válidos. Comprou três e um amigo não pode ir? Cancele o bilhete desse amigo. Se um desconto baixou o total da encomenda, é devolvida a parte de cada bilhete no preço com desconto.
+- Antes de confirmar, a janela indica quanto lhe é devolvido.
+- Tem vários bilhetes para o mesmo evento, mesmo de pagamentos diferentes? A janela também oferece **Cancelar os deste evento**: todos os seus bilhetes para esse evento são cancelados de uma vez e cada pagamento devolve a sua parte.
+- O seu histórico de pagamentos mostra uma compra com alguns bilhetes reembolsados como reembolsada em parte (no website, quantos foram cancelados e o estado do reembolso).
+- Um pagamento feito em parte com Crédito Abonten, ou pago em prestações, é reembolsado por inteiro: os seus bilhetes são cancelados em conjunto, e nenhum pode ser cancelado com reembolso depois de um deles ser validado à entrada.
 
 ## Quanto tempo demora
 
-Ao cancelar, o reembolso é **pedido** de imediato à Paystack. A sua transação mostra **Reembolso pendente** até a Paystack o confirmar e depois **Reembolsado**. A partir daí, o tempo até aparecer no seu cartão ou no saldo de mobile money depende do seu banco ou da sua rede; nos cartões, normalmente alguns dias.
+Ao cancelar, o reembolso é **pedido** de imediato à Paystack. O bilhete cancelado mostra **Reembolso pendente** até a Paystack o confirmar e depois **Reembolsado**; o pagamento em si mostra **Reembolsado** quando todos os seus bilhetes tiverem sido reembolsados. A partir daí, o tempo até aparecer no seu cartão ou no saldo de mobile money depende do seu banco ou da sua rede; nos cartões, normalmente alguns dias.
 
 Se o pedido falhar (por exemplo, se a Paystack estiver inacessível), o seu bilhete mostra **Reembolso falhou** com um botão **Repetir o reembolso**. O apoio também o pode pedir de novo.
 

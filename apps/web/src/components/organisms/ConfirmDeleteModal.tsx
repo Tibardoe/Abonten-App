@@ -8,6 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
 type ConfirmDeleteModalProps = {
   /** Short question naming the action, e.g. "Delete this event?" */
@@ -22,6 +23,8 @@ type ConfirmDeleteModalProps = {
   isLoading: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Something more to offer under the message (another choice). */
+  extra?: ReactNode;
 };
 
 // Every caller mounts/unmounts this to control visibility (see
@@ -38,6 +41,7 @@ export default function ConfirmDeleteModal({
   isLoading,
   onConfirm,
   onCancel,
+  extra,
 }: ConfirmDeleteModalProps) {
   const t = useTranslations("common");
   const cancelLabel = cancelLabelProp ?? t("buttons.cancel");
@@ -53,6 +57,7 @@ export default function ConfirmDeleteModal({
         <AlertDialogDescription className="text-destructive">
           {message}
         </AlertDialogDescription>
+        {extra}
 
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel} disabled={isLoading}>

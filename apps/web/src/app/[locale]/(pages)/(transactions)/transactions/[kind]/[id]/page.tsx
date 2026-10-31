@@ -4,7 +4,12 @@ import TransactionStatusIcon, {
 } from "@/components/atoms/TransactionStatusIcon";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { getRefundStatusLabel } from "@abonten/core/refundStatus";
+import {
+  type TicketRefundPart,
+  combinedRefundState,
+  getRefundStatusLabel,
+  ticketRefundState,
+} from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type {
   TransactionKind,
@@ -77,6 +82,7 @@ export default async function Page({
                 status: string;
                 refund_requested_at: string | null;
               } | null;
+              refund_parts?: { refund: TicketRefundPart | null }[];
             }[];
           }
         | {
@@ -97,17 +103,19 @@ export default async function Page({
     row.kind === "ticket"
       ? row.tickets.filter((t) => t.status === "cancelled")
       : [];
-  // Every ticket from one checkout line shares the same transaction (see
-  // generateTicket.ts), so the first cancelled ticket's refund status
-  // speaks for all of them.
-  const refundBadge =
-    cancelledTickets.length > 0 && cancelledTickets[0].transaction
-      ? getRefundStatusLabel(
-          tc,
-          cancelledTickets[0].transaction.status,
-          cancelledTickets[0].transaction.refund_requested_at,
-        )
-      : null;
+  // Each cancelled ticket has its own refund when its payment is refunded
+  // ticket by ticket (else its payment's): one state for the line, a failed
+  // refund first.
+  const refundState = combinedRefundState(
+    cancelledTickets.map((ticket) => ticketRefundState(ticket)),
+  );
+  const refundBadge = refundState
+    ? getRefundStatusLabel(
+        tc,
+        refundState.status,
+        refundState.refundRequestedAt,
+      )
+    : null;
   const statusLabel = tCommon(getTransactionStatusMeta(row.status).labelKey);
   const contextualDate =
     row.status === "paid"

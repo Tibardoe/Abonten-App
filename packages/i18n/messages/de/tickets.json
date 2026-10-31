@@ -1,6 +1,4 @@
 {
-  "aRefundOfTheTicketPrice": "Der Ticketpreis wird auf deine ursprüngliche Zahlungsmethode erstattet. Die Abonten-Servicegebühr wird nicht erstattet.",
-  "areYouSureYouWantTo": "Möchtest du dieses Ticket wirklich stornieren?",
   "cancelThisTicket": "Dieses Ticket stornieren?",
   "cancelTicket": "Ticket stornieren",
   "cancelTicketRequestRefund": "Ticket stornieren & Erstattung anfordern",
@@ -27,7 +25,6 @@
       "title": "Noch keine Erstattungen"
     }
   },
-  "keepTicket": "Ticket behalten",
   "locationUnavailable": "Ort nicht verfügbar",
   "noQrCode": "Kein QR-Code",
   "pleaseTryAgainInAMoment": "Bitte versuche es gleich noch einmal.",

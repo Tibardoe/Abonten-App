@@ -28,6 +28,7 @@ import {
   getReferralInviteCore,
   resolveReferralCodeCore,
 } from "../rewards/inviteCore";
+import { cancelTicketsForTransactionCore } from "../tickets/cancelTicketsForTransactionCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -651,6 +652,8 @@ describe("friend invites: binding, welcome credit and the inviter's reward", () 
     await runEngine();
     expect((await inviteRewards(friend))[0]?.status).toBe("pending");
 
+    // As Admin › Finance refunds an order: its tickets are cancelled first.
+    await cancelTicketsForTransactionCore(first.transactionId);
     expect((await issueRefundCore(service, first.transactionId)).status).toBe(
       200,
     );

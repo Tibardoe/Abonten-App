@@ -316,10 +316,10 @@ export async function refundTransaction(
   account: ProviderAccount,
   reference: string,
   amountMinor?: number | null,
-): Promise<{ status: string }> {
+): Promise<{ status: string; id: string | null }> {
   const { ok, status, json } = await call<{
     status?: boolean;
-    data?: { status?: string };
+    data?: { status?: string; id?: string | number };
   }>(account, "/refund", {
     method: "POST",
     body:
@@ -328,7 +328,11 @@ export async function refundTransaction(
         : { transaction: reference },
   });
   if (!ok) fail(messageOf(json), "Refund failed", status);
-  return { status: json?.data?.status ?? "pending" };
+  const id = json?.data?.id;
+  return {
+    status: json?.data?.status ?? "pending",
+    id: id == null ? null : String(id),
+  };
 }
 
 export async function listBanks(

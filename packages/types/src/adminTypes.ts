@@ -1135,6 +1135,22 @@ export type TransactionDetail = {
   ledgerEntries: LedgerEntryView[];
   feeEntries: FeeEntryView[];
   ticketsIssued: number;
+  /** Refunds of part or all of a cash payment, one per request
+   *  (transaction_refund); empty for a payment refunded as a whole. */
+  refundParts: {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    /** The last tickets of the payment: it moved to refund_pending. */
+    completesPayment: boolean;
+    providerRefundId: string | null;
+    failureDetail: string | null;
+    ticketCount: number;
+    createdAt: string;
+    processedAt: string | null;
+    failedAt: string | null;
+  }[];
   checkouts: {
     id: string;
     kind: "ticket" | "other";
@@ -1157,6 +1173,22 @@ export type RefundListItem = {
   providerReference: string | null;
   refundRequestedAt: string | null;
   refundableAmount: number;
+  createdAt: string;
+};
+
+/** One refund of part or all of a cash payment (transaction_refund). */
+export type RefundPartListItem = {
+  id: string;
+  transactionId: string;
+  amount: number;
+  currency: string;
+  /** preparing | requested | processed | failed */
+  status: string;
+  completesPayment: boolean;
+  ticketCount: number;
+  payerName: string | null;
+  providerReference: string | null;
+  failureDetail: string | null;
   createdAt: string;
 };
 

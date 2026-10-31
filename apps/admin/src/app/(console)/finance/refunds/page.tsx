@@ -10,7 +10,7 @@ import {
   money,
   timeAgo,
 } from "@/components/ui";
-import { loadOrphanCaptures, loadRefunds } from "@/lib/data";
+import { loadOrphanCaptures, loadRefundParts, loadRefunds } from "@/lib/data";
 import Link from "next/link";
 import { FinanceTabs } from "../FinanceTabs";
 
@@ -18,7 +18,16 @@ const TABS = [
   { key: "refund_pending", label: "Pending" },
   { key: "refunded", label: "Completed" },
   { key: "all", label: "All" },
+  // A cash payment is refunded one ticket at a time; each part is here.
+  { key: "parts", label: "Ticket refunds" },
 ];
+
+const PART_STATUS: Record<string, string> = {
+  preparing: "Being asked",
+  requested: "Requested",
+  processed: "Refunded",
+  failed: "Failed",
+};
 
 export default async function RefundsPage({
   searchParams,
@@ -26,13 +35,21 @@ export default async function RefundsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const status = (
-    TABS.some((t) => t.key === sp.status) ? sp.status : "refund_pending"
-  ) as "refund_pending" | "refunded" | "all";
-  const [res, orphans] = await Promise.all([
-    loadRefunds({ status, cursor: sp.cursor ?? null }),
+  const tab = TABS.some((t) => t.key === sp.status)
+    ? (sp.status as string)
+    : "refund_pending";
+  const showParts = tab === "parts";
+  const status = (showParts ? "all" : tab) as
+    | "refund_pending"
+    | "refunded"
+    | "all";
+  const [res, parts, orphans] = await Promise.all([
+    showParts ? null : loadRefunds({ status, cursor: sp.cursor ?? null }),
+    showParts ? loadRefundParts({ cursor: sp.cursor ?? null }) : null,
     loadOrphanCaptures(),
   ]);
+  const listed = parts ?? res;
+  const nextCursor = listed?.hasNextPage ? listed.nextCursor : null;
 
   return (
     <div>
@@ -49,7 +66,7 @@ export default async function RefundsPage({
             href={`/finance/refunds?status=${t.key}`}
             className={cn(
               "rounded px-2.5 py-1 text-xs",
-              status === t.key
+              tab === t.key
                 ? "bg-primary text-primary-foreground"
                 : "border border-border hover:bg-muted",
             )}
@@ -59,7 +76,59 @@ export default async function RefundsPage({
         ))}
       </div>
 
-      {res.status !== 200 ? (
+      {parts ? (
+        parts.status !== 200 ? (
+          <EmptyState>{parts.message ?? "Couldn't load refunds."}</EmptyState>
+        ) : parts.data.length === 0 ? (
+          <EmptyState>No ticket refunds yet.</EmptyState>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <Th>Reference</Th>
+                <Th>Payer</Th>
+                <Th>Refunded</Th>
+                <Th>Tickets</Th>
+                <Th>Status</Th>
+                <Th>Asked</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {parts.data.map((r) => (
+                <tr key={r.id} className="hover:bg-muted/40">
+                  <Td>
+                    <Link
+                      href={`/finance/transactions/${r.transactionId}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {r.providerReference ?? `${r.transactionId.slice(0, 8)}…`}
+                    </Link>
+                  </Td>
+                  <Td>{r.payerName ?? "—"}</Td>
+                  <Td className="tabular-nums">
+                    {money(r.amount, r.currency)}
+                  </Td>
+                  <Td className="tabular-nums">
+                    {r.ticketCount}
+                    {r.completesPayment ? " · last of the payment" : ""}
+                  </Td>
+                  <Td>
+                    <Badge>{PART_STATUS[r.status] ?? r.status}</Badge>
+                    {r.failureDetail ? (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        {r.failureDetail}
+                      </span>
+                    ) : null}
+                  </Td>
+                  <Td className="whitespace-nowrap text-muted-foreground">
+                    {timeAgo(r.createdAt)}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )
+      ) : !res ? null : res.status !== 200 ? (
         <EmptyState>{res.message ?? "Couldn't load refunds."}</EmptyState>
       ) : res.data.length === 0 ? (
         <EmptyState>No refunds in this view.</EmptyState>
@@ -103,10 +172,10 @@ export default async function RefundsPage({
         </Table>
       )}
 
-      {res.hasNextPage && res.nextCursor ? (
+      {nextCursor ? (
         <div className="mt-3">
           <Link
-            href={`/finance/refunds?status=${status}&cursor=${encodeURIComponent(res.nextCursor)}`}
+            href={`/finance/refunds?status=${tab}&cursor=${encodeURIComponent(nextCursor)}`}
             className="text-sm text-primary hover:underline"
           >
             Next page →

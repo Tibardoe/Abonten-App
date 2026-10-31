@@ -35,7 +35,6 @@
   "expiresIn": "Läuft ab in {formatCountdown}",
   "free": "Kostenlos",
   "groupTotal": "Gruppensumme: {formatMoney}",
-  "haveAPromoCode": "Hast du einen Promo-Code?",
   "inProgress": "läuft gerade",
   "inProgress2": " · läuft gerade",
   "itCanTPayForThis": "Damit kann diese Bestellung nicht bezahlt werden.",
@@ -135,5 +134,6 @@
   "yourPaymentWentThroughButThe": "Deine Zahlung ist durchgegangen, aber die Promotion ist noch nicht aktiv. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
   "yourPaymentWentThroughButThe2": "Deine Zahlung ist durchgegangen, aber die Promotion ist noch nicht in der Prüfung. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
   "yourPaymentWentThroughButWe": "Deine Zahlung ist durchgegangen, aber dein Ticket wurde noch nicht ausgestellt. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
-  "yourSeatsAreHeldForA": "Deine Plätze sind für begrenzte Zeit reserviert."
+  "yourSeatsAreHeldForA": "Deine Plätze sind für begrenzte Zeit reserviert.",
+  "haveAPromoCodeAddIt": "Hast du einen Promo-Code? Gib ihn bei deinen Tickets ein"
 }

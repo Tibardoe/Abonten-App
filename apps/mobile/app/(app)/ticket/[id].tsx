@@ -4,7 +4,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useDirections } from "@/features/directions/DirectionsSheet";
 import { TicketSafetyButton } from "@/features/safety/TicketSafetyButton";
-import { useCancelTicket } from "@/features/tickets/useCancelTicket";
+import { useCancelTicketFlow } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
 import { coordsFromLocation } from "@/lib/directions";
@@ -12,6 +12,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -21,7 +22,6 @@ import {
   Refresher,
   ScreenError,
   TicketStatusBadge,
-  useToast,
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
@@ -55,12 +55,11 @@ export default function TicketDetailScreen() {
   const t = useTranslations("tickets");
   const tc = useTranslations("core");
 
-  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const query = useTicketDetail(id);
   const { data: ticket, isRefetching, refetch } = query;
-  const cancel = useCancelTicket();
+  const cancelFlow = useCancelTicketFlow();
   const receipt = useTicketReceipt();
   // Loading, offline and failed are told apart from "no such ticket".
   // Tickets are never cached on disk (a QR code is money), so offline with
@@ -120,6 +119,7 @@ export default function TicketDetailScreen() {
     locale,
   );
   const cancelledByOrganizer = ticket.event.status === "canceled";
+  const refund = ticketRefundState(ticket);
   const eventEnded =
     getEventStatus(
       ticket.event.starts_at,
@@ -132,32 +132,10 @@ export default function TicketDetailScreen() {
 
   function onCancelTicket() {
     if (!ticket) return;
-    const paid = ticket.transaction_id != null;
-    Alert.alert(
-      t("cancelThisTicket"),
-      paid ? t("aRefundOfTheTicketPrice") : t("areYouSureYouWantTo"),
-      [
-        { text: t("keepTicket"), style: "cancel" },
-        {
-          text: t("cancelTicket"),
-          style: "destructive",
-          onPress: async () => {
-            const res = await cancel.mutateAsync({
-              ticketId: ticket.id,
-              transactionId: ticket.transaction_id,
-            });
-            if (res.status === 200) {
-              Alert.alert(t("ticketCancelled"), res.message ?? "", [
-                { text: "OK", onPress: () => router.back() },
-              ]);
-            } else {
-              toast.error(t("couldnTCancel"), {
-                description: res.message ?? t("pleaseTryAgainInAMoment"),
-              });
-            }
-          },
-        },
-      ],
+    cancelFlow.start({ ...ticket, eventId: ticket.event.id }, (message) =>
+      Alert.alert(t("ticketCancelled"), message, [
+        { text: "OK", onPress: () => router.back() },
+      ]),
     );
   }
 
@@ -228,12 +206,13 @@ export default function TicketDetailScreen() {
         </View>
 
         {/* Refund status — only for a cancelled ticket that had a payment */}
-        {ticket.status === "cancelled" && ticket.transaction ? (
+        {ticket.status === "cancelled" && refund ? (
           <RefundStatusPanel
-            transactionStatus={ticket.transaction.status}
-            refundRequestedAt={ticket.transaction.refund_requested_at}
-            amount={ticket.transaction.amount}
-            currency={ticket.transaction.currency}
+            transactionStatus={refund.status}
+            refundRequestedAt={refund.refundRequestedAt}
+            amount={refund.amount}
+            currency={refund.currency}
+            transactionId={ticket.transaction_id}
           />
         ) : null}
 
@@ -317,12 +296,12 @@ export default function TicketDetailScreen() {
           {canCancel ? (
             <Pressable
               accessibilityRole="button"
-              disabled={cancel.isPending}
+              disabled={cancelFlow.pending}
               className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
               onPress={onCancelTicket}
             >
               <AppText variant="small" tone="error" className="font-semibold">
-                {cancel.isPending
+                {cancelFlow.pending
                   ? t("cancelling")
                   : ticket.transaction_id
                     ? t("cancelTicketRequestRefund")

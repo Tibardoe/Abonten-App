@@ -1,15 +1,16 @@
 import { RefundStatusPanel } from "@/components/RefundStatusPanel";
-import { useCancelTicket } from "@/features/tickets/useCancelTicket";
+import { useCancelTicketFlow } from "@/features/tickets/useCancelTicket";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { AppText, Icon, TicketStatusBadge, useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 // Native echo of the web My-Events TicketCard (TicketsList.tsx): the event
 // flyer on top, then title + status badge, the ticket type / code line,
@@ -30,7 +31,7 @@ export function TicketCard({
 
   const router = useRouter();
   const toast = useToast();
-  const cancel = useCancelTicket();
+  const cancelFlow = useCancelTicketFlow();
 
   const event = ticket.event;
   const flyer =
@@ -49,37 +50,16 @@ export function TicketCard({
   const txn = ticket.transaction;
   const showRefundPanel =
     showRefundInfo && ticket.status === "cancelled" && !!txn;
+  const refund = showRefundPanel ? ticketRefundState(ticket) : null;
 
   const canCancel =
     ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
 
   function onCancel() {
-    const paid = ticket.transaction_id != null;
-    Alert.alert(
-      t("cancelThisTicket"),
-      paid ? t("aRefundOfTheTicketPrice") : t("areYouSureYouWantTo2"),
-      [
-        { text: t("keepTicket2"), style: "cancel" },
-        {
-          text: t("cancelTicket2"),
-          style: "destructive",
-          onPress: async () => {
-            const res = await cancel.mutateAsync({
-              ticketId: ticket.id,
-              transactionId: ticket.transaction_id,
-            });
-            if (res.status === 200) {
-              toast.success(t("ticketCancelled"), {
-                description: res.message ?? undefined,
-              });
-            } else {
-              toast.error(res.message ?? t("weCouldnTCancelThisTicket"), {
-                description: t("nothingHasChangedPleaseTryAgain"),
-              });
-            }
-          },
-        },
-      ],
+    cancelFlow.start({ ...ticket, eventId: ticket.event.id }, (message) =>
+      toast.success(t("ticketCancelled"), {
+        description: message || undefined,
+      }),
     );
   }
 
@@ -130,12 +110,13 @@ export function TicketCard({
           ) : null}
         </View>
 
-        {showRefundPanel && txn ? (
+        {showRefundPanel && refund ? (
           <RefundStatusPanel
-            transactionStatus={txn.status}
-            refundRequestedAt={txn.refund_requested_at}
-            amount={txn.amount}
-            currency={txn.currency}
+            transactionStatus={refund.status}
+            refundRequestedAt={refund.refundRequestedAt}
+            amount={refund.amount}
+            currency={refund.currency}
+            transactionId={ticket.transaction_id}
           />
         ) : null}
 
@@ -155,12 +136,12 @@ export function TicketCard({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("cancelTicket2")}
-              disabled={cancel.isPending}
+              disabled={cancelFlow.pending}
               onPress={onCancel}
               className="min-h-[36px] justify-center rounded-lg border border-border px-3 active:opacity-70"
             >
               <AppText variant="small" tone="error" className="font-semibold">
-                {cancel.isPending ? t("cancelling") : t("cancel")}
+                {cancelFlow.pending ? t("cancelling") : t("cancel")}
               </AppText>
             </Pressable>
           ) : null}

@@ -549,7 +549,12 @@
     "youHaveStartedALotOfConversations": "Vous avez démarré beaucoup de conversations récemment. Veuillez réessayer plus tard.",
     "yourAccountHasBeenRestricted": "Votre compte a été restreint.",
     "yourCreditBalanceIsNegative": "Votre solde de crédit est négatif",
-    "yourCreditIsOnHold": "Votre crédit est suspendu"
+    "yourCreditIsOnHold": "Votre crédit est suspendu",
+    "aRefundForThisPaymentIsBeing": "Un remboursement de ce paiement est en cours de demande",
+    "refundNotFound": "Remboursement introuvable",
+    "thisPaymentIsRefundedAsAWhole": "Ce paiement est remboursé en une seule fois",
+    "transactionNotFound": "Transaction introuvable",
+    "unknownRefundOutcome": "Résultat de remboursement inconnu"
   },
   "defaultPaymentMethodUpdated": "Moyen de paiement par défaut mis à jour",
   "defaultPayoutAccountUpdated": "Compte de versement par défaut mis à jour",
@@ -1327,5 +1332,14 @@
       "verified_badges": "Faites vérifier votre identité avant d'obtenir un badge Vérifié. Rendez-vous dans Paramètres › Vérification d'identité.",
       "paid_events": "Faites vérifier votre identité avant de vendre des billets. Rendez-vous dans Paramètres › Vérification d'identité, ou rendez l'événement gratuit."
     }
-  }
+  },
+  "thisTicketWasPaidForTogether": "Ce billet a été payé en même temps que {count, plural, one {# autre billet} other {# autres billets}}. Un remboursement couvre tout le paiement, annulez-les donc ensemble.",
+  "aTicketFromThisPaymentWasChecked": "Un billet de ce paiement a déjà été scanné à l'entrée, ce billet ne peut donc plus être annulé pour un remboursement.",
+  "ticketsCancelledRefund": "{count, plural, one {# billet annulé} other {# billets annulés}}. {refundMessage}.",
+  "thisTicketIsAlreadyCancelled": "Ce billet est déjà annulé.",
+  "thereIsNothingLeftToRefund": "Il ne reste rien à rembourser pour ce paiement",
+  "nothingWasPaidForThisTicket": "Rien n'a été payé pour ce billet, il n'y a donc rien à rembourser",
+  "someOfTheseTicketsWerePaidTogether": "Certains de ces billets ont été payés en même temps que des billets pour un autre événement : ils ne peuvent être annulés qu'avec eux",
+  "eventTicketsCancelled": "{count, plural, one {# billet annulé} other {# billets annulés}}",
+  "noActiveTicketsForThisEvent": "Vous n'avez aucun billet actif pour cet événement"
 }

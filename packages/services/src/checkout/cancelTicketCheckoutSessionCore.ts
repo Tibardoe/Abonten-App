@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import { releasePromoUsage } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
+import { dropOpenAttempts } from "@abonten/services/payments/dropOpenAttempts";
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -52,7 +53,17 @@ export async function cancelTicketCheckoutSessionCore(
     return { status: 404, message: tr("checkoutNotFound") };
   }
 
-  // Phase 12 race guard — see deleteTicketSummaryCheckout.ts.
+  // A payment page left open (the app closed on it, the buyer changed their
+  // mind) kept this order uncancellable until a new payment replaced it
+  // (pilot 2026-10-30). Its attempt is closed here instead; a payment made
+  // on that old page afterwards is refunded in full. Only a payment being
+  // confirmed right now still holds the order. The re-check covers a
+  // confirmation that started between the two steps.
+  const dropped = await dropOpenAttempts(userId, [checkoutSessionId], {
+    onlyCredit: false,
+    reason: "checkout_cancelled",
+  });
+  if (dropped !== "ok") return dropped;
   if (
     await hasOpenPaymentAttempt(
       supabase,

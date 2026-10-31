@@ -2,7 +2,7 @@
 title: Erstattungen und Stornierungen
 summary: Ein Ticket stornieren, was erstattet wird (und was nicht), wie lange Erstattungen dauern und was passiert, wenn ein Veranstalter ein Event absagt.
 order: 6
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,11 +18,15 @@ owner: Abonten Hub
 - Der **Ticketpreis** des stornierten Tickets wird auf die Zahlungsmethode erstattet, mit der du bezahlt hast.
 - **Die Servicegebühr wird nicht erstattet.**
 - Bei kostenlosen Tickets gibt es nichts zu erstatten; sie wechseln einfach zu *Storniert*.
-- Hast du mehrere Tickets mit einer Zahlung gekauft, wird für jedes stornierte Ticket dessen eigener Preis erstattet. Bei Paystack wird für jedes stornierte Ticket sein Anteil an der Zahlung zurückgefordert.
+- Hast du mehrere Tickets mit einer Zahlung gekauft, kannst du auch nur eines stornieren: Der Preis dieses Tickets wird erstattet, die anderen bleiben gültig. Drei gekauft und ein Freund kann nicht kommen? Storniere das Ticket dieses Freundes. Hat ein Rabatt die Bestellung günstiger gemacht, kommt der Anteil jedes Tickets am rabattierten Preis zurück.
+- Bevor du bestätigst, zeigt das Fenster, wie viel zurückkommt.
+- Mehrere Tickets für ein Event, auch aus verschiedenen Zahlungen? Das Fenster bietet auch **Alle für dieses Event stornieren** an: Alle deine Tickets für dieses Event werden auf einmal storniert, und jede Zahlung erstattet ihren Anteil.
+- Dein Zahlungsverlauf zeigt einen Kauf, bei dem einige Tickets erstattet wurden, als teilweise erstattet (auf der Website, wie viele storniert wurden und wie es um ihre Erstattung steht).
+- Eine Zahlung, die teilweise mit Abonten-Guthaben oder in Raten bezahlt wurde, wird nur als Ganzes erstattet: Ihre Tickets werden zusammen storniert, und keines kann mehr gegen Erstattung storniert werden, sobald eines davon beim Einlass gescannt wurde.
 
 ## Wie lange es dauert
 
-Mit der Stornierung wird die Erstattung sofort bei Paystack **angefordert**. Deine Transaktion zeigt **Erstattung ausstehend**, bis Paystack sie bestätigt, danach **Erstattet**. Wie lange es dann dauert, bis der Betrag auf deiner Karte oder deinem Mobile-Money-Guthaben erscheint, hängt von deiner Bank oder deinem Netz ab – bei Karten meist einige Tage.
+Mit der Stornierung wird die Erstattung sofort bei Paystack **angefordert**. Das stornierte Ticket zeigt **Erstattung ausstehend**, bis Paystack sie bestätigt, danach **Erstattet**; die Zahlung selbst zeigt **Erstattet**, sobald alle ihre Tickets erstattet sind. Wie lange es dann dauert, bis der Betrag auf deiner Karte oder deinem Mobile-Money-Guthaben erscheint, hängt von deiner Bank oder deinem Netz ab – bei Karten meist einige Tage.
 
 Schlägt die Anforderung fehl (zum Beispiel weil Paystack nicht erreichbar war), zeigt dein Ticket **Erstattung fehlgeschlagen** mit der Schaltfläche **Erstattung erneut versuchen**. Auch der Support kann sie erneut anfordern.
 

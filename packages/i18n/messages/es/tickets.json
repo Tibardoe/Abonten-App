@@ -1,6 +1,4 @@
 {
-  "aRefundOfTheTicketPrice": "Se reembolsará el precio de la entrada a tu método de pago original. La tarifa de servicio de Abonten no se reembolsa.",
-  "areYouSureYouWantTo": "¿Seguro que quieres cancelar esta entrada?",
   "cancelThisTicket": "¿Cancelar esta entrada?",
   "cancelTicket": "Cancelar entrada",
   "cancelTicketRequestRefund": "Cancelar entrada y solicitar reembolso",
@@ -27,7 +25,6 @@
       "title": "Aún no hay reembolsos"
     }
   },
-  "keepTicket": "Mantener entrada",
   "locationUnavailable": "Ubicación no disponible",
   "noQrCode": "Sin código QR",
   "pleaseTryAgainInAMoment": "Inténtalo de nuevo en un momento.",
