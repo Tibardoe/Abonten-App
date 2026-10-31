@@ -1,4 +1,6 @@
 import { createHmac } from "node:crypto";
+import { ticketRefundState } from "@abonten/core/refundStatus";
+import { TICKET_REFUND_SELECT } from "@abonten/core/ticketSelect";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
@@ -921,6 +923,21 @@ describe("payment production gate", () => {
       "refund_pending",
       "refund_pending",
     ]);
+
+    // The buyer's own ticket screens read each ticket's share: two tickets
+    // refunded together as one GH₵100 part show GH₵50 each.
+    const { data: shown, error: shownError } = await buyer.client
+      .from("ticket")
+      .select(TICKET_REFUND_SELECT)
+      .eq("user_id", buyer.id)
+      .eq("status", "cancelled");
+    expect(shownError).toBeNull();
+    const shares = (
+      (shown ?? []) as unknown as Parameters<typeof ticketRefundState>[0][]
+    )
+      .map((t) => ticketRefundState(t)?.amount)
+      .sort();
+    expect(shares).toEqual([50, 50, 50]);
 
     // Nothing left: a second tap says so.
     const again = await cancelEventTicketsCore(

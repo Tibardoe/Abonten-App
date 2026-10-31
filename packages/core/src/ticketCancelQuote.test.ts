@@ -167,6 +167,25 @@ describe("ticketRefundState", () => {
     ).toBe("failed");
   });
 
+  it("shows a ticket its share of a part that covered several", () => {
+    expect(
+      ticketRefundState({
+        transaction: payment,
+        refund_parts: [
+          {
+            refund: {
+              status: "requested",
+              amount: 80,
+              currency: "GHS",
+              created_at: "2026-10-31T21:41:56Z",
+              tickets: [{ ticket_id: "a" }, { ticket_id: "b" }],
+            },
+          },
+        ],
+      })?.amount,
+    ).toBe(40);
+  });
+
   it("falls back to the payment without a refund of its own", () => {
     expect(
       ticketRefundState({ transaction: payment, refund_parts: [] }),
