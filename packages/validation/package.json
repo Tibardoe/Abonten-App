@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@abonten/core": "*",
-    "zod": "^3.24.2"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@abonten/config": "*",
