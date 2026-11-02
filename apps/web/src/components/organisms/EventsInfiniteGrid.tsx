@@ -6,7 +6,8 @@ import type { UserPostType } from "@abonten/types/postsType";
 
 type EventsInfiniteGridProps = {
   queryKey: unknown[];
-  initialPage: PaginatedResult<UserPostType>;
+  // Null when the server could not read it: the list asks again itself.
+  initialPage: PaginatedResult<UserPostType> | null;
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<UserPostType>>;
   renderItem: (event: UserPostType, index: number) => React.ReactNode;
   emptyState: React.ReactNode;

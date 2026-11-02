@@ -2,10 +2,10 @@
 title: Explore lists
 purpose: Explain how the lists of events and places on Explore are built (which listings are on, what each filter means, how a page and the Explore rows are chosen), what the apps send, and how to add a filter or a list without creating a second rule.
 audience: Engineering
-scope: public._explore_event_candidates, _event_cards, _place_cards, get_filtered_events, get_nearby_events, get_explore_event_sections, get_similar_events, get_place_events, get_events_in_window, get_filtered_places, get_nearby_places; @abonten/core exploreSections, exploreFilters and eventAvailability; the web Explore pages and the mobile Explore screens. Not covered - unified search and recommendations (discovery-search-and-recommendations.md) and how typed text is compared (search-languages.md).
+scope: public._explore_event_candidates, _event_cards, _place_cards, get_filtered_events, get_nearby_events, get_explore_event_sections, get_explore_place_sections, get_similar_events, get_place_events, get_events_in_window, get_filtered_places, get_nearby_places; @abonten/core exploreSections, explorePlaceSections, exploreFilters and eventAvailability; the web Explore pages and the mobile Explore screens. Not covered - unified search and recommendations (discovery-search-and-recommendations.md) and how typed text is compared (search-languages.md).
 status: Approved
-version: 1.0
-lastReviewed: 2026-10-03
+version: 1.1
+lastReviewed: 2026-11-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Explore lists
 
-Migration: `supabase/migrations/20261002180000_explore_lists_one_rule.sql`. Columns were only added to the list functions, never renamed or removed, so app versions already installed keep working.
+Migrations: `supabase/migrations/20261002180000_explore_lists_one_rule.sql`; the place rows in one call, `20261102150000_explore_place_sections.sql`. Columns were only added to the list functions, never renamed or removed, so app versions already installed keep working.
 
 ## 1. What was wrong
 
@@ -82,7 +82,8 @@ The three helpers are for the list functions only. `anon` and `authenticated` ca
 | `get_similar_events` | The same category near an event, without that event | Soonest |
 | `get_place_events` | The events at a place | Soonest |
 | `get_events_in_window` | The website's "See all" of a time row | Soonest date inside the window |
-| `get_filtered_places` | "All places", each place row, "Similar places" | Nearest, then id |
+| `get_explore_place_sections` | The Places tab's rows, in one call | Each row its own |
+| `get_filtered_places` | "All places", "Similar places" | Nearest, then id |
 | `get_nearby_places` | Places near a point | Nearest, then id |
 
 A page is at most 1,000 rows. Every list returns one row more than asked when there is a next page.
@@ -107,6 +108,18 @@ A page is at most 1,000 rows. Every list returns one row more than asked when th
 | `featured` | Events with an active promotion (or the staff-set `featured` flag) and a date still ahead |
 
 The reader's filters apply to every row except `featured`. Paid placement is not a search result.
+
+`get_explore_place_sections` does the same for the Places tab (until 2026-11-02 it was three `get_filtered_places` calls, each finding every place in range again). It finds the places in range once, by the rule of `get_filtered_places`, and returns each once with `sections`:
+
+| Row | What is in it |
+|---|---|
+| `aroundYou` | Places within `p_around_km` (5 km), nearest first |
+| `openNow` | Places open now (the same check as the list), nearest first |
+| `topRated` | Of the nearest rated at least `p_top_rated_min` (4) or the reader's rating, the best rated first |
+
+The reader's category, rating and "open now" apply to every row. Featured places come from `get_active_place_promotions`, and "All places" keeps its own call because it pages on. `@abonten/core/explorePlaceSections` builds the arguments (`explorePlaceSectionArgs`) and lays the rows out (`splitExplorePlaceSections`).
+
+When a row read fails, the website says it could not load them and offers to try again (`RefreshErrorRetry`), and the "All" list loads its first page itself: it never says there are no events or places here on a failed read.
 
 **The time rows do not repeat each other.** Each leaves out the events the time rows before it show, so a busy area does not show the same cards three times. A row that is full passes the rest of its stretch to the next one. The list behind a row ("See all") is the whole stretch: "this week" there starts with what is on today. A time row asked for by itself (`p_sections`) is whole too.
 

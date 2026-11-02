@@ -189,6 +189,13 @@ select * from (values
    'select count(*) from public.get_nearby_places(5.65, 0.0, 50000, null, null, 20)'),
   (36, 'places list   · Kumasi 20 km',
    'select count(*) from public.get_filtered_places(null, null, null, null, 6.69, -1.62, 20)'),
+  -- The Places tab's three rows: three list calls until 2026-11-02, one since.
+  (38, 'place rows    · Accra, three list calls',
+   'select (select count(*) from public.get_filtered_places(null, null, null, null, 5.65, 0.0, 5, null, null, 20)) + (select count(*) from public.get_filtered_places(null, null, null, true, 5.65, 0.0, 20, null, null, 10)) + (select count(*) from public.get_filtered_places(null, null, 4, null, 5.65, 0.0, 20, null, null, 20))'),
+  (39, 'place rows    · Accra, one call',
+   'select count(*) from public.get_explore_place_sections(5.65, 0.0, 20, 5)'),
+  (41, 'place rows    · Kumasi, one call',
+   'select count(*) from public.get_explore_place_sections(6.69, -1.62, 20, 5)'),
   (40, 'similar events · one category, 10 km',
    'select count(*) from (select * from public.get_similar_events(''Food & Drink'', extensions.st_setsrid(extensions.st_makepoint(0.0, 5.65), 4326)::extensions.geography, 10) order by starts_at limit 20) s'),
   (50, 'events in window · today, Accra 10 km',

@@ -1127,3 +1127,163 @@ describe("place lists", () => {
     expect(byFunction["temporarily closed"]).toBe(false);
   });
 });
+
+describe("get_explore_place_sections", () => {
+  // The Places tab's rows come from one call (2026-11-02); they used to be
+  // three get_filtered_places calls. Each row must still be what that list
+  // gives for the same question.
+  it("makes Around you, Open now and Top rated as the list does, in one call", async () => {
+    const CATEGORY = 6;
+    const make = async (
+      name: string,
+      north: number,
+      open: boolean,
+      ratings: number[],
+    ) => {
+      const { data, error } = await service
+        .from("place")
+        .insert({
+          country_code: "GH",
+          timezone: "Africa/Accra",
+          owner_id: orgA.id,
+          name,
+          slug: `${name.toLowerCase().replace(/\W+/g, "-")}-${crypto.randomUUID()}`,
+          description: "A place for the Explore rows integration test.",
+          category_id: CATEGORY,
+          location: `SRID=4326;POINT(${LNG} ${LAT + north})`,
+          address: { full_address: "Kintampo, Ghana" },
+          cover_public_id: "test/cover",
+          cover_version: "1",
+          status: "published",
+        } as never)
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      placeIds.push(data.id);
+      if (open) {
+        const hours = await service.from("place_opening_hours").insert(
+          [0, 1, 2, 3, 4, 5, 6].map((day) => ({
+            place_id: data.id,
+            day_of_week: day,
+            open_time: "00:00",
+            close_time: "00:00",
+            is_closed: false,
+          })) as never,
+        );
+        if (hours.error) throw new Error(hours.error.message);
+      }
+      const reviewers = [reader, orgD];
+      for (const [i, rating] of ratings.entries()) {
+        const review = await service.from("place_review").insert({
+          place_id: data.id,
+          reviewer_id: reviewers[i].id,
+          rating,
+          comment: "Explore rows test review.",
+          status: "approved",
+        } as never);
+        if (review.error) throw new Error(review.error.message);
+      }
+      return data.id as string;
+    };
+    // 0.01 degrees north is about 1.1 km. The reviews are removed at the
+    // end; the places go with the others in afterAll.
+    const nearRated = await make("Explore Rows Near Rated", 0.001, false, [5]);
+    const nearOpen = await make("Explore Rows Near Open", 0.002, true, [3]);
+    const midOpen = await make("Explore Rows Mid Open", 0.03, true, [4, 5]);
+    const farRated = await make("Explore Rows Far Rated", 0.08, false, [4]);
+    const outside = await make("Explore Rows Outside", 0.25, true, [5]);
+    const ours = [nearRated, nearOpen, midOpen, farRated, outside];
+    const mine = (rows: { id: string }[]) =>
+      rows.map((r) => r.id).filter((id) => ours.includes(id));
+
+    const sections = async (
+      args: Partial<
+        Database["public"]["Functions"]["get_explore_place_sections"]["Args"]
+      > = {},
+    ) => {
+      const { data, error } = await reader.client.rpc(
+        "get_explore_place_sections",
+        {
+          p_user_lat: LAT,
+          p_user_lng: LNG,
+          p_radius_km: 20,
+          p_around_km: 5,
+          p_category_id: CATEGORY,
+          ...args,
+        },
+      );
+      if (error) throw new Error(error.message);
+      const rows = (data ?? []) as {
+        id: string;
+        is_open: boolean;
+        avg_rating: number | null;
+        sections: Record<string, number>;
+      }[];
+      const row = (name: string) =>
+        rows
+          .filter((r) => typeof r.sections?.[name] === "number")
+          .sort((a, b) => a.sections[name] - b.sections[name]);
+      return {
+        rows,
+        aroundYou: row("aroundYou"),
+        openNow: row("openNow"),
+        topRated: row("topRated"),
+      };
+    };
+    const list = async (
+      args: Partial<
+        Database["public"]["Functions"]["get_filtered_places"]["Args"]
+      >,
+    ) => {
+      const { data, error } = await reader.client.rpc("get_filtered_places", {
+        p_category_id: CATEGORY,
+        p_user_lat: LAT,
+        p_user_lng: LNG,
+        p_max_distance_km: 20,
+        ...args,
+      });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    };
+
+    const all = await sections();
+    expect(mine(all.aroundYou)).toEqual([nearRated, nearOpen, midOpen]);
+    expect(mine(all.openNow)).toEqual([nearOpen, midOpen]);
+    expect(mine(all.topRated)).toEqual([nearRated, midOpen, farRated]);
+    // Each place once, whatever rows it is in, with its card.
+    expect(new Set(all.rows.map((r) => r.id)).size).toBe(all.rows.length);
+    expect(all.rows.find((r) => r.id === midOpen)?.avg_rating).toBe(4.5);
+    expect(all.openNow.every((r) => r.is_open)).toBe(true);
+    expect(mine(all.rows)).not.toContain(outside);
+
+    // The rows the list gives for the same questions.
+    expect(mine(all.aroundYou)).toEqual(
+      mine(await list({ p_max_distance_km: 5, p_page_size: 20 })).slice(0, 20),
+    );
+    expect(mine(all.openNow)).toEqual(
+      mine(await list({ p_open_now: true, p_page_size: 10 })).slice(0, 10),
+    );
+    const wellRated = await list({ p_min_rating: 4, p_page_size: 20 });
+    expect(mine(all.topRated)).toEqual(
+      mine(
+        [...wellRated.slice(0, 20)].sort(
+          (a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0),
+        ),
+      ),
+    );
+
+    // The reader's filters narrow every row.
+    const openOnly = await sections({ p_open_now: true });
+    expect(mine(openOnly.aroundYou)).toEqual([nearOpen, midOpen]);
+    expect(mine(openOnly.topRated)).toEqual([midOpen]);
+    const fourAndAHalf = await sections({ p_min_rating: 4.5 });
+    expect(mine(fourAndAHalf.aroundYou)).toEqual([nearRated, midOpen]);
+    expect(mine(fourAndAHalf.topRated)).toEqual([nearRated, midOpen]);
+    // A chosen distance narrows the area and "Around you" with it.
+    const close = await sections({ p_radius_km: 1, p_around_km: 1 });
+    expect(mine(close.aroundYou)).toEqual([nearRated, nearOpen]);
+    expect(mine(close.topRated)).toEqual([nearRated]);
+
+    await service.from("place_review").delete().in("place_id", ours);
+  });
+});

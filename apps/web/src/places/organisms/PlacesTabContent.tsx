@@ -1,7 +1,10 @@
 import { getActivePlacePromotions } from "@/actions/getActivePlacePromotions";
+import { getExplorePlaceSections } from "@/actions/getExplorePlaceSections";
 import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
+import RefreshErrorRetry from "@/components/molecules/RefreshErrorRetry";
 import ViewToggle from "@/components/molecules/ViewToggle";
+import { EXPLORE_PLACES_RADIUS_KM } from "@abonten/core/explorePlaceSections";
 import { getTranslations } from "next-intl/server";
 import NoPlacesEmptyState from "../molecules/NoPlacesEmptyState";
 import PlaceCategoryChips from "../molecules/PlaceCategoryChips";
@@ -10,26 +13,8 @@ import FeaturedPlacesSlider from "./FeaturedPlacesSlider";
 import PlacesMapView from "./PlacesMapView";
 import PlacesSlider from "./PlacesSlider";
 
-// Radius used for every Places section except "Around You" (which stays at
-// 5km, matching the Events tab's own Around-You radius) — wide enough to
-// cover a whole location without the naive "no radius filter at all" the
-// spec warns against.
-const EXPLORE_PLACES_RADIUS_KM = 20;
-const AROUND_YOU_RADIUS_KM = 5;
-const AROUND_YOU_SIZE = 20;
-const OPEN_NOW_SIZE = 10;
-
-// "Top Rated" means rated 4 or better, unless the visitor asked for more.
-const TOP_RATED_MIN_RATING = 4;
-
-// Phase 1's get_filtered_places RPC orders strictly by (distance_km, id) —
-// there's no rating-sort option (confirmed against
-// supabase/migrations/20260820090000_add_places_feature.sql), and adding one
-// is out of this milestone's scope. "Top Rated" instead fetches a bounded,
-// already radius + minRating-filtered page (still a real DB filter, not a
-// naive full-table scan) and re-sorts that small page client-side by
-// avg_rating for display only.
-const TOP_RATED_FETCH_SIZE = 20;
+// "Top Rated" comes best rated first from the nearest well-rated places
+// (get_explore_place_sections); the row shows the first ten.
 const TOP_RATED_DISPLAY_SIZE = 10;
 
 // Places Phase 2, Milestone 3: the map view isn't infinite-scrolled, so it
@@ -81,13 +66,11 @@ export default async function PlacesTabContent({
       : null;
 
   // The category chip row and the Filter modal drive every section on this
-  // tab. Each row is its own question to the database (nearest, open now,
-  // best rated) with the visitor's filters added to it, so a row shows what
-  // the whole area has for those filters. The rows used to be fetched
-  // without the filters and narrowed afterwards, which left "Open now" with
-  // whatever restaurants happened to be among the ten nearest open places.
-  // Featured is paid placement, not a search result: the filters do not
-  // touch it. A search narrows "All Places" only.
+  // tab. The rows (nearest, open now, best rated) come from one question to
+  // the database with the visitor's filters added to it, so a row shows
+  // what the whole area has for those filters, by the same rule as "All
+  // Places". Featured is paid placement, not a search result: the filters
+  // do not touch it. A search narrows "All Places" only.
   const effectiveMaxDistanceKm = maxDistanceKmParam ?? EXPLORE_PLACES_RADIUS_KM;
   const rowFilters = {
     lat,
@@ -98,49 +81,38 @@ export default async function PlacesTabContent({
     maxDistanceKm: effectiveMaxDistanceKm,
   };
 
-  const [
-    featuredResult,
-    aroundYouResult,
-    openNowResult,
-    topRatedResult,
-    allPlacesInitialPage,
-  ] = await Promise.all([
-    // Deliberately no lat/lng/maxDistanceKm -- a paid, limited-inventory
-    // placement buys real reach, not visibility only within a narrow
-    // radius. Random ordering (a real `ORDER BY random()` inside
-    // get_active_place_promotions) is what stops one advertiser from
-    // permanently holding the top slot, not a proximity cutoff.
-    getActivePlacePromotions(),
-    getQueriedPlaces({
-      ...rowFilters,
-      maxDistanceKm: Math.min(AROUND_YOU_RADIUS_KM, effectiveMaxDistanceKm),
-      pageSize: AROUND_YOU_SIZE,
-    }),
-    getQueriedPlaces({
-      ...rowFilters,
-      openNow: true,
-      pageSize: OPEN_NOW_SIZE,
-    }),
-    getQueriedPlaces({
-      ...rowFilters,
-      minRating: Math.max(TOP_RATED_MIN_RATING, minRatingParam ?? 0),
-      pageSize: TOP_RATED_FETCH_SIZE,
-    }),
-    getQueriedPlaces({
-      ...rowFilters,
-      searchText: searchText ?? null,
-      pageSize: view === "map" ? MAP_VIEW_PAGE_SIZE : undefined,
-    }),
-  ]);
+  const [featuredResult, sectionsResult, allPlacesInitialPage] =
+    await Promise.all([
+      // Deliberately no lat/lng/maxDistanceKm -- a paid, limited-inventory
+      // placement buys real reach, not visibility only within a narrow
+      // radius. Random ordering (a real `ORDER BY random()` inside
+      // get_active_place_promotions) is what stops one advertiser from
+      // permanently holding the top slot, not a proximity cutoff.
+      getActivePlacePromotions(),
+      getExplorePlaceSections({
+        lat,
+        lng,
+        filters: {
+          categoryId: rowFilters.categoryId,
+          minRating: rowFilters.minRating,
+          openNow: Boolean(openNow),
+          maxDistanceKm: effectiveMaxDistanceKm,
+        },
+      }),
+      getQueriedPlaces({
+        ...rowFilters,
+        searchText: searchText ?? null,
+        pageSize: view === "map" ? MAP_VIEW_PAGE_SIZE : undefined,
+      }),
+    ]);
 
   const featuredPlaces = featuredResult.data ?? [];
-  const aroundYouPlaces = aroundYouResult.data ?? [];
-  const openNowPlaces = openNowResult.data ?? [];
-  // get_filtered_places orders by distance: the well-rated places nearest
-  // to here, shown best first.
-  const topRatedPlaces = [...(topRatedResult.data ?? [])]
-    .sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0))
-    .slice(0, TOP_RATED_DISPLAY_SIZE);
+  // A read that failed is not "no places here": the rows say they could not
+  // be loaded, and "All Places" fetches its first page again in the browser.
+  const rowsFailed = sectionsResult.status !== 200;
+  const listFailed = allPlacesInitialPage.status !== 200;
+  const { aroundYou, openNow: openNowPlaces, topRated } = sectionsResult.data;
+  const topRatedPlaces = topRated.slice(0, TOP_RATED_DISPLAY_SIZE);
 
   async function fetchAllPlacesPage(cursor: string | null) {
     "use server";
@@ -170,11 +142,17 @@ export default async function PlacesTabContent({
           out of scope. */}
       <FeaturedPlacesSlider places={featuredPlaces} />
 
-      <PlacesSlider heading={t("aroundYou")} places={aroundYouPlaces} />
+      {rowsFailed ? (
+        <RefreshErrorRetry message={t("couldNotLoadPlacesHere")} />
+      ) : (
+        <>
+          <PlacesSlider heading={t("aroundYou")} places={aroundYou} />
 
-      <PlacesSlider heading={t("openNow")} places={openNowPlaces} />
+          <PlacesSlider heading={t("openNow")} places={openNowPlaces} />
 
-      <PlacesSlider heading={t("topRated")} places={topRatedPlaces} />
+          <PlacesSlider heading={t("topRated")} places={topRatedPlaces} />
+        </>
+      )}
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
@@ -183,7 +161,9 @@ export default async function PlacesTabContent({
         </div>
 
         {view === "map" ? (
-          (allPlacesInitialPage.data ?? []).length > 0 ? (
+          listFailed ? (
+            <RefreshErrorRetry message={t("couldNotLoadPlacesHere")} />
+          ) : (allPlacesInitialPage.data ?? []).length > 0 ? (
             <PlacesMapView places={allPlacesInitialPage.data} />
           ) : (
             <NoPlacesEmptyState />
@@ -202,7 +182,7 @@ export default async function PlacesTabContent({
               minRatingParam ?? null,
               searchText ?? null,
             ]}
-            initialPage={allPlacesInitialPage}
+            initialPage={listFailed ? null : allPlacesInitialPage}
             fetchPage={fetchAllPlacesPage}
             emptyState={<NoPlacesEmptyState />}
           />

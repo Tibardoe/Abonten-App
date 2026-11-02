@@ -233,6 +233,15 @@ describe("discovery hides listings in markets that are not live", () => {
         }),
         placeId,
       ],
+      get_explore_place_sections: [
+        rpc("get_explore_place_sections", {
+          p_user_lat: LAT,
+          p_user_lng: LNG,
+          p_radius_km: 5,
+          p_around_km: 5,
+        }),
+        placeId,
+      ],
       search_places: [
         rpc("search_places", {
           p_query: word,
