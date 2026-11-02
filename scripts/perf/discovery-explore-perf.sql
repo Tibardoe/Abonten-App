@@ -196,6 +196,11 @@ select * from (values
    'select count(*) from public.get_explore_place_sections(5.65, 0.0, 20, 5)'),
   (41, 'place rows    · Kumasi, one call',
    'select count(*) from public.get_explore_place_sections(6.69, -1.62, 20, 5)'),
+  -- Kind 14 has no opening hours: "Open now" asks every place in range.
+  (42, 'place rows    · none open, three list calls',
+   'select (select count(*) from public.get_filtered_places(null, 14::smallint, null, null, 5.65, 0.0, 5, null, null, 20)) + (select count(*) from public.get_filtered_places(null, 14::smallint, null, true, 5.65, 0.0, 20, null, null, 10)) + (select count(*) from public.get_filtered_places(null, 14::smallint, 4, null, 5.65, 0.0, 20, null, null, 20))'),
+  (43, 'place rows    · none open, one call',
+   'select count(*) from public.get_explore_place_sections(5.65, 0.0, 20, 5, 14::smallint)'),
   (40, 'similar events · one category, 10 km',
    'select count(*) from (select * from public.get_similar_events(''Food & Drink'', extensions.st_setsrid(extensions.st_makepoint(0.0, 5.65), 4326)::extensions.geography, 10) order by starts_at limit 20) s'),
   (50, 'events in window · today, Accra 10 km',

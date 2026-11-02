@@ -26,7 +26,63 @@
 --       topRated   of the nearest rated at least p_top_rated_min (and the
 --                  reader's rating), the best rated first.
 --     "All places" keeps its own call (get_filtered_places): it pages on.
+--   * The places in range are found once, with their distance; each row
+--     then asks "open now" and the rating of them nearest first until it
+--     is full (_place_open_now, _place_rating), so a busy area costs a
+--     few checks, not one a place.
 --   * The cards are built by _place_cards for the chosen places only.
+
+-- "Open now" as get_filtered_places asks it (one index lookup a place, the
+-- rule of place_is_open_now): closed while a temporary status is set;
+-- today's hours on the place's own clock, or yesterday's that run past
+-- midnight. Used where the reader's "open now" filter narrows a row; the
+-- "Open now" row writes the same body out (it is asked far more often).
+create or replace function public._place_open_now(
+  p_place_id         uuid,
+  p_timezone         text,
+  p_temporary_status text
+)
+returns boolean
+language sql
+stable
+as $function$
+  select p_temporary_status is null
+     and exists (
+       select 1
+       from (select now() at time zone coalesce(nullif(p_timezone, ''), 'UTC') as at_local) l
+       join public.place_opening_hours h
+         on h.place_id = p_place_id
+        and h.day_of_week in (extract(dow from l.at_local)::smallint,
+                              ((extract(dow from l.at_local)::integer + 6) % 7)::smallint)
+       where not h.is_closed
+         and case
+               when h.day_of_week = extract(dow from l.at_local)::smallint then
+                 (h.close_time > h.open_time and l.at_local::time between h.open_time and h.close_time)
+                 or (h.close_time <= h.open_time and l.at_local::time >= h.open_time)
+               else h.close_time <= h.open_time and l.at_local::time < h.close_time
+             end)
+$function$;
+
+revoke all on function public._place_open_now(uuid, text, text) from public, anon, authenticated;
+grant execute on function public._place_open_now(uuid, text, text) to service_role;
+
+-- The rating a card shows: approved, visible reviews; 0 with none.
+create or replace function public._place_rating(p_place_id uuid)
+returns numeric
+language sql
+stable
+as $function$
+  select coalesce((
+    select avg(r.rating)::numeric
+    from public.place_review r
+    where r.place_id = p_place_id
+      and r.status = 'approved'
+      and r.moderation_state is distinct from 'hidden'
+      and r.moderation_state is distinct from 'removed'), 0)
+$function$;
+
+revoke all on function public._place_rating(uuid) from public, anon, authenticated;
+grant execute on function public._place_rating(uuid) to service_role;
 
 create or replace function public.get_explore_place_sections(
   p_user_lat       double precision default null,
@@ -72,8 +128,13 @@ begin
     v_point := st_setsrid(st_makepoint(p_user_lng, p_user_lat), 4326)::extensions.geography;
   end if;
 
+  -- The places in the area are found once, with their distance only. Each
+  -- row then walks them nearest first and asks its own questions (open
+  -- now, the rating) of each in turn until it is full, as
+  -- get_filtered_places does: in a busy area that is a few places, not
+  -- every place in range.
   with cand as materialized (
-    -- Every place in the area that the reader's filters let through, as
+    -- Every place in the area of the chosen category, as
     -- get_filtered_places finds them. Without a point (the address could
     -- not be placed) there is no distance and no area, as there.
     select p.id as place_id, p.temporary_status, p.timezone,
@@ -91,90 +152,81 @@ begin
       and (p_radius_km is null or v_point is null
            or st_dwithin(p.location, v_point, p_radius_km * 1000))
   ),
-  rated as materialized (
-    -- The rating a card shows (approved, visible reviews), 0 with none.
-    select c.place_id, c.km, coalesce(c.km, 0) as sort_km, c.near,
-           c.temporary_status, c.timezone, coalesce(r.rating, 0) as rating
-    from cand c
-    left join (
-      select pr.place_id, avg(pr.rating)::numeric as rating
-      from place_review pr
-      where pr.place_id in (select c2.place_id from cand c2)
-        and pr.status = 'approved'
-        and pr.moderation_state is distinct from 'hidden'
-        and pr.moderation_state is distinct from 'removed'
-      group by pr.place_id
-    ) r on r.place_id = c.place_id
-    where p_min_rating is null or coalesce(r.rating, 0) >= p_min_rating
-  ),
-  flagged as materialized (
-    -- "Open now" by the rule of place_is_open_now, written as in
-    -- get_filtered_places (one index lookup a place): closed while a
-    -- temporary status is set; today's hours on the place's own clock, or
-    -- yesterday's that run past midnight.
-    select r.*,
-           (r.temporary_status is null
-            and exists (
-              select 1
-              from (select now() at time zone coalesce(nullif(r.timezone, ''), 'UTC') as at_local) l
-              join place_opening_hours h
-                on h.place_id = r.place_id
-               and h.day_of_week in (extract(dow from l.at_local)::smallint,
-                                     ((extract(dow from l.at_local)::integer + 6) % 7)::smallint)
-              where not h.is_closed
-                and case
-                      when h.day_of_week = extract(dow from l.at_local)::smallint then
-                        (h.close_time > h.open_time and l.at_local::time between h.open_time and h.close_time)
-                        or (h.close_time <= h.open_time and l.at_local::time >= h.open_time)
-                      else h.close_time <= h.open_time and l.at_local::time < h.close_time
-                    end)) as open_now
-    from rated r
-  ),
-  base as (
-    select f.* from flagged f where p_open_now is not true or f.open_now
-  ),
   around as (
-    select b.place_id, b.sort_km
-    from base b
-    where b.near
-    order by b.sort_km asc, b.place_id asc
+    select o.place_id, o.km
+    from (
+      select c.* from cand c where c.near
+      order by coalesce(c.km, 0) asc, c.place_id asc
+      -- Keeps the order below the questions, so they are asked in order.
+      offset 0
+    ) o
+    where (p_min_rating is null or public._place_rating(o.place_id) >= p_min_rating)
+      and (p_open_now is not true or public._place_open_now(o.place_id, o.timezone, o.temporary_status))
     limit v_around
   ),
   opened as (
-    select b.place_id, b.sort_km
-    from base b
-    where b.open_now
-    order by b.sort_km asc, b.place_id asc
+    select o.place_id, o.km
+    from (
+      select c.* from cand c
+      order by coalesce(c.km, 0) asc, c.place_id asc
+      offset 0
+    ) o
+    -- The body of _place_open_now written out: this row asks every place
+    -- in range when few are open (at night), and a call a place cost three
+    -- times as much there. Change the two together.
+    where o.temporary_status is null
+      and exists (
+        select 1
+        from (select now() at time zone coalesce(nullif(o.timezone, ''), 'UTC') as at_local) l
+        join place_opening_hours h
+          on h.place_id = o.place_id
+         and h.day_of_week in (extract(dow from l.at_local)::smallint,
+                               ((extract(dow from l.at_local)::integer + 6) % 7)::smallint)
+        where not h.is_closed
+          and case
+                when h.day_of_week = extract(dow from l.at_local)::smallint then
+                  (h.close_time > h.open_time and l.at_local::time between h.open_time and h.close_time)
+                  or (h.close_time <= h.open_time and l.at_local::time >= h.open_time)
+                else h.close_time <= h.open_time and l.at_local::time < h.close_time
+              end)
+      and (p_min_rating is null or public._place_rating(o.place_id) >= p_min_rating)
     limit v_open
   ),
   top as (
-    select b.place_id, b.sort_km, b.rating
-    from base b
-    where b.rating >= v_top_min
-    order by b.sort_km asc, b.place_id asc
+    select o.place_id, o.km, o.rating
+    from (
+      select c.*, public._place_rating(c.place_id) as rating
+      from (
+        select c0.* from cand c0
+        order by coalesce(c0.km, 0) asc, c0.place_id asc
+        offset 0
+      ) c
+      offset 0
+    ) o
+    where o.rating >= v_top_min
+      and (p_open_now is not true or public._place_open_now(o.place_id, o.timezone, o.temporary_status))
     limit v_top
   ),
   placed as (
-    select x.place_id, 'aroundYou'::text as section,
-           row_number() over (order by x.sort_km, x.place_id) as pos from around x
+    select x.place_id, x.km, 'aroundYou'::text as section,
+           row_number() over (order by coalesce(x.km, 0), x.place_id) as pos from around x
     union all
-    select x.place_id, 'openNow',
-           row_number() over (order by x.sort_km, x.place_id) from opened x
+    select x.place_id, x.km, 'openNow',
+           row_number() over (order by coalesce(x.km, 0), x.place_id) from opened x
     union all
-    select x.place_id, 'topRated',
-           row_number() over (order by x.rating desc, x.sort_km, x.place_id) from top x
+    select x.place_id, x.km, 'topRated',
+           row_number() over (order by x.rating desc, coalesce(x.km, 0), x.place_id) from top x
   ),
   picked as (
-    select pl.place_id, jsonb_object_agg(pl.section, pl.pos) as in_sections
+    select pl.place_id, min(pl.km) as km, jsonb_object_agg(pl.section, pl.pos) as in_sections
     from placed pl
     group by pl.place_id
   )
-  select array_agg(pk.place_id order by f.sort_km, pk.place_id),
-         array_agg(f.km order by f.sort_km, pk.place_id),
-         array_agg(pk.in_sections order by f.sort_km, pk.place_id)
+  select array_agg(pk.place_id order by coalesce(pk.km, 0), pk.place_id),
+         array_agg(pk.km order by coalesce(pk.km, 0), pk.place_id),
+         array_agg(pk.in_sections order by coalesce(pk.km, 0), pk.place_id)
     into v_ids, v_km, v_in
-  from picked pk
-  join flagged f on f.place_id = pk.place_id;
+  from picked pk;
 
   return query
   select k.id, k.owner_id, k.name, k.slug, k.description, k.category_id,
@@ -213,6 +265,12 @@ begin
   if not (select p.prosecdef from pg_proc p where p.oid = to_regprocedure(v_fn)) then
     raise exception 'migration check: % must be SECURITY DEFINER', v_fn;
   end if;
+  foreach v_fn in array array['public._place_open_now(uuid, text, text)', 'public._place_rating(uuid)'] loop
+    if has_function_privilege('anon', v_fn, 'execute')
+       or has_function_privilege('authenticated', v_fn, 'execute') then
+      raise exception 'migration check: % must not be callable by the apps', v_fn;
+    end if;
+  end loop;
   -- Answers with nothing to place it, rather than failing.
   perform * from public.get_explore_place_sections(null, null, null, null);
 end

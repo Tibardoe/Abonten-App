@@ -92,7 +92,7 @@ A page is at most 1,000 rows. Every list returns one row more than asked when th
 
 **Dates first.** When a list has an end date, the rule also reads the two start-time indexes (`idx_event_starts_at_discoverable`, `idx_event_occurrence_starts_at`) for the events with a date that starts by then. That set is only a shortcut, never the rule, and the planner starts from it or from the area, whichever is smaller.
 
-**Open now.** `place_is_open_now` reads opening hours on the place's own clock and costs about 60 microseconds a place, almost all of it the call. `get_filtered_places` sorts the places in range by distance and then asks "open now" of each in order until the page is full, instead of asking every place in range, and asks it with the same rule written into the query (one index lookup, about 5 microseconds). The cards still show `place_is_open_now`; the integration suite checks the two agree for every kind of opening hours. Change both together.
+**Open now.** `place_is_open_now` reads opening hours on the place's own clock and costs about 60 microseconds a place, almost all of it the call. `get_filtered_places` sorts the places in range by distance and then asks "open now" of each in order until the page is full, instead of asking every place in range, and asks it with the same rule written into the query (one index lookup, about 5 microseconds). The cards still show `place_is_open_now`; the integration suite checks the two agree for every kind of opening hours. `get_explore_place_sections` has the same rule written out in its "Open now" row and in `_place_open_now` (the reader's "open now" filter on the other rows), both checked by the same test. Change them all together.
 
 ## 5. The Explore rows
 
@@ -117,7 +117,7 @@ The reader's filters apply to every row except `featured`. Paid placement is not
 | `openNow` | Places open now (the same check as the list), nearest first |
 | `topRated` | Of the nearest rated at least `p_top_rated_min` (4) or the reader's rating, the best rated first |
 
-The reader's category, rating and "open now" apply to every row. Featured places come from `get_active_place_promotions`, and "All places" keeps its own call because it pages on. `@abonten/core/explorePlaceSections` builds the arguments (`explorePlaceSectionArgs`) and lays the rows out (`splitExplorePlaceSections`).
+The reader's category, rating and "open now" apply to every row. Featured places come from `get_active_place_promotions`, and "All places" keeps its own call because it pages on. `@abonten/core/explorePlaceSections` builds the arguments (`explorePlaceSectionArgs`) and lays the rows out (`splitExplorePlaceSections`). Each row walks the places nearest first and asks "open now" and the rating (`_place_rating`) of each until it is full. On the test catalogue (20,000 places) the one call takes 52 ms where the three took 77 ms, 11 ms against 16 ms when nothing of the kind is open, and 3 ms in a small city (`scripts/perf/discovery-explore-perf.sql`, cases 38 to 43).
 
 When a row read fails, the website says it could not load them and offers to try again (`RefreshErrorRetry`), and the "All" list loads its first page itself: it never says there are no events or places here on a failed read.
 

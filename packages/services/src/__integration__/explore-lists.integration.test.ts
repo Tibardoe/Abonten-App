@@ -1110,8 +1110,46 @@ describe("place lists", () => {
     const openInList = new Set((listed.data ?? []).map((row) => row.id));
     expect((listed.data ?? []).every((row) => row.is_open)).toBe(true);
 
+    // The Explore rows ask it the same way (_place_open_now).
+    const rows = await reader.client.rpc("get_explore_place_sections", {
+      p_category_id: 5,
+      p_user_lat: LAT,
+      p_user_lng: LNG,
+      p_radius_km: 10,
+      p_open_now_size: 60,
+    });
+    expect(rows.error).toBeNull();
+    const openInRow = new Set(
+      ((rows.data ?? []) as { id: string; sections: Record<string, number> }[])
+        .filter((row) => typeof row.sections?.openNow === "number")
+        .map((row) => row.id),
+    );
+    // And the reader's "open now" filter on the other rows (_place_open_now).
+    const filtered = await reader.client.rpc("get_explore_place_sections", {
+      p_category_id: 5,
+      p_user_lat: LAT,
+      p_user_lng: LNG,
+      p_radius_km: 10,
+      p_around_km: 10,
+      p_around_size: 60,
+      p_open_now: true,
+    });
+    expect(filtered.error).toBeNull();
+    const openAround = new Set(
+      (
+        (filtered.data ?? []) as {
+          id: string;
+          sections: Record<string, number>;
+        }[]
+      )
+        .filter((row) => typeof row.sections?.aroundYou === "number")
+        .map((row) => row.id),
+    );
+
     const byFunction: Record<string, boolean> = {};
     const byList: Record<string, boolean> = {};
+    const byRow: Record<string, boolean> = {};
+    const byFilter: Record<string, boolean> = {};
     for (const place of created) {
       const { data, error } = await service.rpc("place_is_open_now", {
         p_place_id: place.id,
@@ -1119,8 +1157,12 @@ describe("place lists", () => {
       expect(error).toBeNull();
       byFunction[place.name] = data === true;
       byList[place.name] = openInList.has(place.id);
+      byRow[place.name] = openInRow.has(place.id);
+      byFilter[place.name] = openAround.has(place.id);
     }
     expect(byList).toEqual(byFunction);
+    expect(byRow).toEqual(byFunction);
+    expect(byFilter).toEqual(byFunction);
     // The two fixed answers, so the comparison is not of two empty lists.
     expect(byFunction["around the clock"]).toBe(true);
     expect(byFunction["no hours"]).toBe(false);
