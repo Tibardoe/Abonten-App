@@ -4,8 +4,8 @@ purpose: Describe what the website, the admin console and the app do when a requ
 audience: Engineering, operations, anyone reading an incident where "the site showed nothing"
 scope: Server Action calls from the browser (web and admin), cached reads (React Query on the web), page lookups (404 against 500), timed rebuilds (sitemap, Weekly), the proxy's session and account checks, the shell bootstrap request, navigation feedback, the offline notice, confirmation dialogs, and the native app's two provider-less screens. Not covered - payments (PROJECT.md §46.3), the native app's offline cache (mobile-offline-media-and-sync.md).
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-04
+version: 1.4
+lastReviewed: 2026-11-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -47,7 +47,7 @@ A query whose action answered `{ status: 500 }` used to cache that as its data. 
 - **Transient** (status 0, 408, 429, 500 and above): the read failed. It throws, React Query keeps the last good data and reports `isError`.
 - **Anything else** ("sign in", "not found", "not allowed", "invalid") is an answer and stays data.
 
-A `queryFn` that unwraps the envelope itself must call `answerOrThrow(response)` before it does. A server page that passes initial data to a client list passes `undefined`, not `[]`, when its own read failed (wallet, checkout basket, finances overview, payout accounts); the list then loads and reports the failure itself. The payouts page, which has no query, shows `RefreshErrorRetry`.
+A `queryFn` that unwraps the envelope itself must call `answerOrThrow(response)` before it does. A server page that passes initial data to a client list passes `undefined`, not `[]`, when its own read failed (wallet, checkout basket, finances overview, payout accounts); the list then loads and reports the failure itself. The payouts page, which has no query, shows `RefreshErrorRetry`. Explore does both (2026-11-02): when its rows fail it shows `RefreshErrorRetry` in their place, and "All events" / "All places" get no first page and load it themselves; "No events in this area" is said only when the reads that decide it answered.
 
 The native app applies the same rule per query (`apps/mobile/src/lib/envelope.ts`, where a 401 is transient too because the token is being refreshed).
 

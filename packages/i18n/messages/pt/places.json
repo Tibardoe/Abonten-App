@@ -31,6 +31,7 @@
   "anonymous": "Anónimo",
   "anythingTheOwnerShouldKnow": "Algo que o proprietário deva saber",
   "aroundYou": "À sua volta",
+  "couldNotLoadPlacesHere": "Não foi possível carregar os locais desta zona.",
   "at": "Em",
   "at2": "{date} às {time}",
   "away": "a {formatDistance}",

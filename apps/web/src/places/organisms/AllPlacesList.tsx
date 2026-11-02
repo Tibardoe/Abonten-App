@@ -16,7 +16,8 @@ export default function AllPlacesList({
   emptyState,
 }: {
   queryKey: unknown[];
-  initialPage: PaginatedResult<PlaceType>;
+  // Null when the server could not read it: the list asks again itself.
+  initialPage: PaginatedResult<PlaceType> | null;
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<PlaceType>>;
   emptyState: React.ReactNode;
 }) {

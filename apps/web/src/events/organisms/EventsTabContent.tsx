@@ -2,6 +2,7 @@ import { getExploreEventSections } from "@/actions/getExploreEventSections";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import AllEventsList from "@/app/[locale]/(pages)/events/location/[location]/AllEventsList";
+import RefreshErrorRetry from "@/components/molecules/RefreshErrorRetry";
 import ViewToggle from "@/components/molecules/ViewToggle";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
@@ -122,13 +123,21 @@ export default async function EventsTabContent({
     ]);
 
   const sections = sectionsResult.data;
+  // A read that failed is not "no events here": the rows say they could not
+  // be loaded, and "All Events" fetches its first page again in the browser.
+  const rowsFailed = sectionsResult.status !== 200;
+  const listFailed = allEventsInitialPage.status !== 200;
   const areaHasEvents = anyEventHere
     ? anyEventHere.data.length > 0
     : allEventsInitialPage.data.length > 0 ||
       sections.aroundYou.length > 0 ||
       sections.featured.length > 0;
+  // Only reads that answered can say the area is empty.
+  const emptinessKnown = anyEventHere
+    ? anyEventHere.status === 200
+    : !rowsFailed && !listFailed;
 
-  if (!areaHasEvents) {
+  if (!areaHasEvents && emptinessKnown) {
     return <NoEventsInLocation location={location} />;
   }
 
@@ -188,42 +197,48 @@ export default async function EventsTabContent({
         selectedCategory={eventCategory}
       />
 
-      <FeaturedEventsCarousel events={featuredEvents} />
+      {rowsFailed ? (
+        <RefreshErrorRetry message={t("couldNotLoadEventsHere")} />
+      ) : (
+        <>
+          <FeaturedEventsCarousel events={featuredEvents} />
 
-      <EventsSlider
-        heading={t("aroundYou2")}
-        events={sections.aroundYou}
-        urlPath={`location/${location}/explore/around-you`}
-        hideWhenEmpty
-      />
+          <EventsSlider
+            heading={t("aroundYou2")}
+            events={sections.aroundYou}
+            urlPath={`location/${location}/explore/around-you`}
+            hideWhenEmpty
+          />
 
-      <EventsSlider
-        heading={t("fromTopRatedOrganizers")}
-        events={sections.topRatedOrganizers}
-        urlPath={`location/${location}/explore/top-rated-organizers`}
-        hideWhenEmpty
-      />
+          <EventsSlider
+            heading={t("fromTopRatedOrganizers")}
+            events={sections.topRatedOrganizers}
+            urlPath={`location/${location}/explore/top-rated-organizers`}
+            hideWhenEmpty
+          />
 
-      <EventsSlider
-        heading={t("happeningToday2")}
-        events={sections.happeningToday}
-        urlPath={`location/${location}/explore/happening-today`}
-        hideWhenEmpty
-      />
+          <EventsSlider
+            heading={t("happeningToday2")}
+            events={sections.happeningToday}
+            urlPath={`location/${location}/explore/happening-today`}
+            hideWhenEmpty
+          />
 
-      <EventsSlider
-        heading={t("happeningThisWeek2")}
-        events={sections.happeningThisWeek}
-        urlPath={`location/${location}/explore/happening-this-week`}
-        hideWhenEmpty
-      />
+          <EventsSlider
+            heading={t("happeningThisWeek2")}
+            events={sections.happeningThisWeek}
+            urlPath={`location/${location}/explore/happening-this-week`}
+            hideWhenEmpty
+          />
 
-      <EventsSlider
-        heading={t("happeningThisMonth2")}
-        events={sections.happeningThisMonth}
-        urlPath={`location/${location}/explore/happening-this-month`}
-        hideWhenEmpty
-      />
+          <EventsSlider
+            heading={t("happeningThisMonth2")}
+            events={sections.happeningThisMonth}
+            urlPath={`location/${location}/explore/happening-this-month`}
+            hideWhenEmpty
+          />
+        </>
+      )}
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
@@ -232,7 +247,9 @@ export default async function EventsTabContent({
         </div>
 
         {view === "map" ? (
-          (allEventsInitialPage.data ?? []).length > 0 ? (
+          listFailed ? (
+            <RefreshErrorRetry message={t("couldNotLoadEventsHere")} />
+          ) : (allEventsInitialPage.data ?? []).length > 0 ? (
             <EventsMapView
               events={allEventsInitialPage.data}
               location={location}
@@ -258,7 +275,7 @@ export default async function EventsTabContent({
               endDate ?? null,
               minRating ?? null,
             ]}
-            initialPage={allEventsInitialPage}
+            initialPage={listFailed ? null : allEventsInitialPage}
             fetchPage={fetchAllEventsPage}
             emptyState={noMatchingEventsState}
           />

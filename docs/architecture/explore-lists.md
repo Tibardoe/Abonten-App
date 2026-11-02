@@ -2,10 +2,10 @@
 title: Explore lists
 purpose: Explain how the lists of events and places on Explore are built (which listings are on, what each filter means, how a page and the Explore rows are chosen), what the apps send, and how to add a filter or a list without creating a second rule.
 audience: Engineering
-scope: public._explore_event_candidates, _event_cards, _place_cards, get_filtered_events, get_nearby_events, get_explore_event_sections, get_similar_events, get_place_events, get_events_in_window, get_filtered_places, get_nearby_places; @abonten/core exploreSections, exploreFilters and eventAvailability; the web Explore pages and the mobile Explore screens. Not covered - unified search and recommendations (discovery-search-and-recommendations.md) and how typed text is compared (search-languages.md).
+scope: public._explore_event_candidates, _event_cards, _place_cards, get_filtered_events, get_nearby_events, get_explore_event_sections, get_explore_place_sections, get_similar_events, get_place_events, get_events_in_window, get_filtered_places, get_nearby_places; @abonten/core exploreSections, explorePlaceSections, exploreFilters and eventAvailability; the web Explore pages and the mobile Explore screens. Not covered - unified search and recommendations (discovery-search-and-recommendations.md) and how typed text is compared (search-languages.md).
 status: Approved
-version: 1.0
-lastReviewed: 2026-10-03
+version: 1.1
+lastReviewed: 2026-11-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Explore lists
 
-Migration: `supabase/migrations/20261002180000_explore_lists_one_rule.sql`. Columns were only added to the list functions, never renamed or removed, so app versions already installed keep working.
+Migrations: `supabase/migrations/20261002180000_explore_lists_one_rule.sql`; the place rows in one call, `20261102150000_explore_place_sections.sql`. Columns were only added to the list functions, never renamed or removed, so app versions already installed keep working.
 
 ## 1. What was wrong
 
@@ -82,7 +82,8 @@ The three helpers are for the list functions only. `anon` and `authenticated` ca
 | `get_similar_events` | The same category near an event, without that event | Soonest |
 | `get_place_events` | The events at a place | Soonest |
 | `get_events_in_window` | The website's "See all" of a time row | Soonest date inside the window |
-| `get_filtered_places` | "All places", each place row, "Similar places" | Nearest, then id |
+| `get_explore_place_sections` | The Places tab's rows, in one call | Each row its own |
+| `get_filtered_places` | "All places", "Similar places" | Nearest, then id |
 | `get_nearby_places` | Places near a point | Nearest, then id |
 
 A page is at most 1,000 rows. Every list returns one row more than asked when there is a next page.
@@ -91,7 +92,7 @@ A page is at most 1,000 rows. Every list returns one row more than asked when th
 
 **Dates first.** When a list has an end date, the rule also reads the two start-time indexes (`idx_event_starts_at_discoverable`, `idx_event_occurrence_starts_at`) for the events with a date that starts by then. That set is only a shortcut, never the rule, and the planner starts from it or from the area, whichever is smaller.
 
-**Open now.** `place_is_open_now` reads opening hours on the place's own clock and costs about 60 microseconds a place, almost all of it the call. `get_filtered_places` sorts the places in range by distance and then asks "open now" of each in order until the page is full, instead of asking every place in range, and asks it with the same rule written into the query (one index lookup, about 5 microseconds). The cards still show `place_is_open_now`; the integration suite checks the two agree for every kind of opening hours. Change both together.
+**Open now.** `place_is_open_now` reads opening hours on the place's own clock and costs about 60 microseconds a place, almost all of it the call. `get_filtered_places` sorts the places in range by distance and then asks "open now" of each in order until the page is full, instead of asking every place in range, and asks it with the same rule written into the query (one index lookup, about 5 microseconds). The cards still show `place_is_open_now`; the integration suite checks the two agree for every kind of opening hours. `get_explore_place_sections` has the same rule written out in its "Open now" row and in `_place_open_now` (the reader's "open now" filter on the other rows), both checked by the same test. Change them all together.
 
 ## 5. The Explore rows
 
@@ -107,6 +108,18 @@ A page is at most 1,000 rows. Every list returns one row more than asked when th
 | `featured` | Events with an active promotion (or the staff-set `featured` flag) and a date still ahead |
 
 The reader's filters apply to every row except `featured`. Paid placement is not a search result.
+
+`get_explore_place_sections` does the same for the Places tab (until 2026-11-02 it was three `get_filtered_places` calls, each finding every place in range again). It finds the places in range once, by the rule of `get_filtered_places`, and returns each once with `sections`:
+
+| Row | What is in it |
+|---|---|
+| `aroundYou` | Places within `p_around_km` (5 km), nearest first |
+| `openNow` | Places open now (the same check as the list), nearest first |
+| `topRated` | Of the nearest rated at least `p_top_rated_min` (4) or the reader's rating, the best rated first |
+
+The reader's category, rating and "open now" apply to every row. Featured places come from `get_active_place_promotions`, and "All places" keeps its own call because it pages on. `@abonten/core/explorePlaceSections` builds the arguments (`explorePlaceSectionArgs`) and lays the rows out (`splitExplorePlaceSections`). Each row walks the places nearest first and asks "open now" and the rating (`_place_rating`) of each until it is full. On the test catalogue (20,000 places) the one call takes 52 ms where the three took 77 ms, 11 ms against 16 ms when nothing of the kind is open, and 3 ms in a small city (`scripts/perf/discovery-explore-perf.sql`, cases 38 to 43).
+
+When a row read fails, the website says it could not load them and offers to try again (`RefreshErrorRetry`), and the "All" list loads its first page itself: it never says there are no events or places here on a failed read.
 
 **The time rows do not repeat each other.** Each leaves out the events the time rows before it show, so a busy area does not show the same cards three times. A row that is full passes the rest of its stretch to the next one. The list behind a row ("See all") is the whole stretch: "this week" there starts with what is on today. A time row asked for by itself (`p_sections`) is whole too.
 

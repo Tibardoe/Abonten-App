@@ -31,6 +31,7 @@
   "anonymous": "Anonym",
   "anythingTheOwnerShouldKnow": "Alles, was der Inhaber wissen sollte",
   "aroundYou": "In deiner Nähe",
+  "couldNotLoadPlacesHere": "Die Orte hier konnten nicht geladen werden.",
   "at": "Bei",
   "at2": "{date} um {time}",
   "away": "{formatDistance} entfernt",

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-02 — Explore when the database is slow
+
+- Explore's place rows (Around you, Open now, Top rated) come from one call, `get_explore_place_sections` (migration `20261102150000_explore_place_sections`), instead of three `get_filtered_places` calls; a failed read of the rows or of the first page of "All events" / "All places" says it could not load and offers to try again instead of "no events / no places here": `architecture/explore-lists.md` 1.1, `architecture/web-resilience.md` 1.4, PROJECT.md §70, CLAUDE.md quick facts.
+
 ## 2026-10-30 — Pilot check-ins
 
 - 2026-10-31: a ticket refunded together with others shows its own share (a GH₵80 part for two tickets reads GH₵40 on each), `refundStatus.ticketRefundState` with the part's tickets in `TICKET_*_SELECT`.

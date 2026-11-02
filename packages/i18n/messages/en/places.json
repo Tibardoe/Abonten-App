@@ -31,6 +31,7 @@
   "anonymous": "Anonymous",
   "anythingTheOwnerShouldKnow": "Anything the owner should know",
   "aroundYou": "Around You",
+  "couldNotLoadPlacesHere": "We couldn't load the places here.",
   "at": "At",
   "at2": "{date} at {time}",
   "away": "{formatDistance} away",

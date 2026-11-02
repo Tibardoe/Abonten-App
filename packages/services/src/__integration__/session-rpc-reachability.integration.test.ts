@@ -172,6 +172,12 @@ describe("reads the apps make with a person's own session", () => {
           p_open_now: true,
           p_min_rating: 1,
         }),
+        get_explore_place_sections: client.rpc("get_explore_place_sections", {
+          p_user_lat: here.lat,
+          p_user_lng: here.lng,
+          p_open_now: true,
+          p_min_rating: 1,
+        }),
       };
       for (const [name, call] of Object.entries(calls)) {
         const { error } = await call;

@@ -31,6 +31,7 @@
   "anonymous": "Anonyme",
   "anythingTheOwnerShouldKnow": "Ce que le propriétaire doit savoir",
   "aroundYou": "Autour de vous",
+  "couldNotLoadPlacesHere": "Nous n'avons pas pu charger les lieux de cette zone.",
   "at": "À",
   "at2": "{date} à {time}",
   "away": "à {formatDistance}",

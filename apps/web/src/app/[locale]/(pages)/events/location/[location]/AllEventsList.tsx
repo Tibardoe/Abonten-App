@@ -12,7 +12,8 @@ export default function AllEventsList({
   emptyState,
 }: {
   queryKey: unknown[];
-  initialPage: PaginatedResult<UserPostType>;
+  // Null when the server could not read it: the list asks again itself.
+  initialPage: PaginatedResult<UserPostType> | null;
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<UserPostType>>;
   emptyState: React.ReactNode;
 }) {

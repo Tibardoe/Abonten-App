@@ -16651,6 +16651,48 @@ export type Database = {
           website_url: string
         }[]
       }
+      get_explore_place_sections: {
+        Args: {
+          p_around_km?: number
+          p_around_size?: number
+          p_category_id?: number
+          p_min_rating?: number
+          p_open_now?: boolean
+          p_open_now_size?: number
+          p_radius_km?: number
+          p_top_rated_min?: number
+          p_top_rated_size?: number
+          p_user_lat?: number
+          p_user_lng?: number
+        }
+        Returns: {
+          address: Json
+          avg_rating: number
+          category_id: number
+          category_name: string
+          category_slug: string
+          claimed: boolean
+          cover_public_id: string
+          cover_version: string
+          created_at: string
+          description: string
+          distance_km: number
+          id: string
+          is_open: boolean
+          location: unknown
+          name: string
+          owner_id: string
+          phone: string
+          review_count: number
+          sections: Json
+          slug: string
+          status: string
+          temporary_status: string
+          verified: boolean
+          website_url: string
+          whatsapp: string
+        }[]
+      }
       get_filtered_events: {
         Args: {
           p_cursor_distance_km?: number
