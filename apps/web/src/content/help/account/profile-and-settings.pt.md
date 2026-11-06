@@ -2,7 +2,7 @@
 title: O seu perfil e as suas definições
 summary: Editar o seu perfil e a sua fotografia, mudar o número de telefone ou o e-mail, escolher o idioma e a aparência.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-06
 status: Draft
 owner: Abonten Hub
 ---
@@ -35,6 +35,8 @@ Em ambos os casos, a sua sessão mantém-se iniciada.
 **Definições › Aparência**: claro, escuro ou o do sistema.
 
 ## Contas bloqueadas
+
+Para bloquear alguém, abra o perfil dessa pessoa: no site escolha **Bloquear** ao lado de **Denunciar**; na aplicação toque em **⋯** no topo e depois em **Bloquear**. Também pode bloquear alguém a partir de uma das suas avaliações ou de uma conversa. Essa pessoa deixa de lhe poder enviar mensagens, as avaliações, os Spotlights e os comentários dela ficam ocultos para si, e se um de vós segue o outro, deixa de seguir. Não é avisada.
 
 **Definições › Contas bloqueadas** mostra as pessoas que bloqueou e permite desbloqueá-las.
 

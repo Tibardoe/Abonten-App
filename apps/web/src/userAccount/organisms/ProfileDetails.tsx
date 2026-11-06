@@ -7,6 +7,7 @@ import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
 import { formatRating } from "@abonten/core/i18n/format";
 import Link from "next/link";
 import { MdOutlineSettings } from "react-icons/md";
+import ProfileBlockButton from "../molecules/ProfileBlockButton";
 import ProfileFollowerCount from "../molecules/ProfileFollowerCount";
 import ProfileHighlightsSection from "../molecules/ProfileHighlightsSection";
 import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
@@ -207,6 +208,11 @@ export default async function ProfileDetails({
                   targetId={userId}
                   targetLabel={handle}
                   className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+                />
+                <ProfileBlockButton
+                  userId={userId}
+                  name={`@${handle}`}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-destructive disabled:opacity-60"
                 />
               </>
             )}

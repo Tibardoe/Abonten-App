@@ -2,7 +2,7 @@
 title: Dein Profil und deine Einstellungen
 summary: Profil und Profilbild bearbeiten, Telefonnummer oder E-Mail-Adresse ändern, Sprache und Erscheinungsbild wählen.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-06
 status: Draft
 owner: Abonten Hub
 ---
@@ -35,6 +35,8 @@ In beiden Fällen bleibst du angemeldet.
 **Einstellungen › Erscheinungsbild**: hell, dunkel oder wie das System.
 
 ## Blockierte Konten
+
+Um jemanden zu blockieren, öffne das Profil der Person: Auf der Website wählst du **Blockieren** neben **Melden**; in der App tippst du oben auf **⋯** und dann auf **Blockieren**. Du kannst jemanden auch über eine seiner Bewertungen oder aus einer Unterhaltung blockieren. Die Person kann dir nicht schreiben, ihre Bewertungen, Spotlights und Kommentare werden dir nicht angezeigt, und wenn ihr einander folgt, endet das. Sie wird nicht informiert.
 
 **Einstellungen › Blockierte Konten** listet die Personen, die du blockiert hast, und lässt dich die Blockierung aufheben.
 

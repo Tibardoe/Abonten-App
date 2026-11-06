@@ -2,7 +2,7 @@
 title: Your profile and settings
 summary: Edit your profile and avatar, change your phone number or email, pick a language and appearance.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-06
 status: Draft
 owner: Abonten Hub
 ---
@@ -35,6 +35,8 @@ Both flows work without signing you out.
 **Settings › Switch appearance**: light, dark or follow the system.
 
 ## Blocked accounts
+
+To block someone, open their profile: on the website choose **Block** beside **Report**; in the app tap **⋯** at the top, then **Block**. You can also block someone from one of their reviews or from a conversation. They can't message you, their reviews, Spotlights and comments are hidden from you, and any follow between you ends. They are not told.
 
 **Settings › Blocked accounts** lists the people you have blocked and lets you unblock them.
 
