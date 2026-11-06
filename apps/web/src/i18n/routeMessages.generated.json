@@ -849,6 +849,17 @@
         "somethingWentWrongPleaseTryAgain",
         "verified"
       ],
+      "profile": [
+        "blockConfirm",
+        "blockUser",
+        "blockUserExplained",
+        "blockUserQuestion",
+        "couldNotBlockUser",
+        "couldNotUnblockUser",
+        "unblockUser",
+        "userBlocked",
+        "userUnblocked"
+      ],
       "spotlight": [
         "couldnTLoadSpotlights",
         "couldnTUpdateThisFollow",
@@ -5160,6 +5171,17 @@
         "notifyMeAboutNewPostsFrom",
         "notifying",
         "youLlHearWhenPostsSomething"
+      ],
+      "profile": [
+        "blockConfirm",
+        "blockUser",
+        "blockUserExplained",
+        "blockUserQuestion",
+        "couldNotBlockUser",
+        "couldNotUnblockUser",
+        "unblockUser",
+        "userBlocked",
+        "userUnblocked"
       ],
       "spotlight": [
         "couldnTUpdateThisFollow",

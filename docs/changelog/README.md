@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-06 — Block from a profile
+
+- Block / Unblock and Report on a person's profile (web beside Report; app header ⋯): help `account/profile-and-settings` (five languages), `architecture/reviews-and-account-setup.md` 1.1, PROJECT.md §71.
+
 ## 2026-11-02 — Explore when the database is slow
 
 - Explore's place rows (Around you, Open now, Top rated) come from one call, `get_explore_place_sections` (migration `20261102150000_explore_place_sections`), instead of three `get_filtered_places` calls; a failed read of the rows or of the first page of "All events" / "All places" says it could not load and offers to try again instead of "no events / no places here": `architecture/explore-lists.md` 1.1, `architecture/web-resilience.md` 1.4, PROJECT.md §70, CLAUDE.md quick facts.

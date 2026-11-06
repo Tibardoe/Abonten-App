@@ -6,6 +6,10 @@ import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { CreateActionSheet } from "@/components/profile/CreateActionSheet";
 import { ListingKindMenu } from "@/components/profile/ListingKindMenu";
+import {
+  type ProfileAction,
+  ProfileActionsSheet,
+} from "@/components/profile/ProfileActionsSheet";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileReviewRow } from "@/components/profile/ProfileRows";
 import { ProfileTabBar, type Rect } from "@/components/profile/ProfileTabBar";
@@ -17,6 +21,7 @@ import {
   useSavedSpotlights,
 } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
+import { useBlockedAccounts } from "@/features/profile/useBlockedAccounts";
 import {
   useProfileEvents,
   useProfileFavoriteEvents,
@@ -26,6 +31,7 @@ import {
   useProfileReviews,
 } from "@/features/profile/useProfileTabs";
 import { usePublicProfile } from "@/features/profile/usePublicProfile";
+import { useSetUserBlock } from "@/features/reviews/useReviews";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { useQueryView } from "@/lib/useQueryView";
 import {
@@ -49,11 +55,13 @@ import {
   ScreenError,
   SegmentedTabs,
   Spinner,
+  useModalHandoff,
+  useToast,
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, View } from "react-native";
+import { Alert, FlatList, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -108,6 +116,78 @@ export default function UserProfileScreen() {
   const [reviewSub, setReviewSub] = useState<ReviewSub>("event");
   const [createOpen, setCreateOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Report and block live behind the header's ⋯. The block state is the
+  // Settings › Blocked accounts list, so the two always agree.
+  const toast = useToast();
+  const handoff = useModalHandoff();
+  const blockedAccounts = useBlockedAccounts();
+  const setBlock = useSetUserBlock();
+  const personName = profile?.username ? `@${profile.username}` : t("thisUser");
+  const isBlocked = !!blockedAccounts.data?.some(
+    (a) => a.userId === profile?.user_id,
+  );
+  const changeBlock = useCallback(
+    (block: boolean) => {
+      if (!profile) return;
+      setBlock.mutate(
+        { userId: profile.user_id, block },
+        {
+          onSuccess: () =>
+            toast.success(
+              block
+                ? t("userBlocked", { name: personName })
+                : t("userUnblocked", { name: personName }),
+            ),
+          onError: () =>
+            toast.error(
+              block
+                ? t("couldNotBlockUser", { name: personName })
+                : t("couldNotUnblockUser", { name: personName }),
+            ),
+        },
+      );
+    },
+    [profile, setBlock, toast, t, personName],
+  );
+  const onProfileAction = (action: ProfileAction) => {
+    handoff.after(() => {
+      if (action === "report") setReportOpen(true);
+      else if (action === "unblock") changeBlock(false);
+      else
+        Alert.alert(
+          t("blockUserQuestion", { name: personName }),
+          t("blockUserExplained"),
+          [
+            { text: t("cancel"), style: "cancel" },
+            {
+              text: t("blockConfirm"),
+              style: "destructive",
+              onPress: () => changeBlock(true),
+            },
+          ],
+        );
+    });
+    setMenuOpen(false);
+  };
+  const profileActions: { action: ProfileAction; label: string }[] = [
+    { action: "report", label: t("reportUser", { name: personName }) },
+    // Without the list the row cannot say which way it goes.
+    ...(blockedAccounts.data
+      ? [
+          isBlocked
+            ? {
+                action: "unblock" as const,
+                label: t("unblockUser", { name: personName }),
+              }
+            : {
+                action: "block" as const,
+                label: t("blockUser", { name: personName }),
+              },
+        ]
+      : []),
+  ];
 
   // A quick content cross-fade on every tab / sub-tab change: the list data
   // swaps instantly (React Query serves each tab from cache — no refetch),
@@ -173,11 +253,16 @@ export default function UserProfileScreen() {
             accessibilityLabel={t("settings")}
             onPress={() => router.push("/(app)/settings")}
           />
-        ) : session ? (
+        ) : session && profile ? (
           <HeaderIconButton
-            name="flag-outline"
-            accessibilityLabel={t("reportThisUser")}
-            onPress={() => setReportOpen(true)}
+            name="ellipsis-horizontal"
+            accessibilityLabel={t("moreOptions")}
+            onPress={() => {
+              // A block made on another device (or the website) shows
+              // here too: the row's label follows the fresh list.
+              void blockedAccounts.refetch();
+              setMenuOpen(true);
+            }}
           />
         ) : undefined
       }
@@ -477,6 +562,17 @@ export default function UserProfileScreen() {
       <CreateActionSheet
         open={createOpen}
         onClose={() => setCreateOpen(false)}
+      />
+
+      <ProfileActionsSheet
+        open={menuOpen}
+        onClose={() => {
+          handoff.cancel();
+          setMenuOpen(false);
+        }}
+        onDismiss={handoff.onDismiss}
+        actions={profileActions}
+        onAction={onProfileAction}
       />
 
       <ReportSheet

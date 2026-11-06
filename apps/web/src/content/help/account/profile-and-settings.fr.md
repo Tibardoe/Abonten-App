@@ -2,7 +2,7 @@
 title: Votre profil et vos paramètres
 summary: Modifier votre profil et votre photo, changer votre numéro de téléphone ou votre adresse e-mail, choisir une langue et une apparence.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-06
 status: Draft
 owner: Abonten Hub
 ---
@@ -35,6 +35,8 @@ Dans les deux cas, vous restez connecté.
 **Paramètres › Apparence** : clair, sombre ou selon le système.
 
 ## Comptes bloqués
+
+Pour bloquer quelqu'un, ouvrez son profil : sur le site web, choisissez **Bloquer** à côté de **Signaler** ; dans l'application, touchez **⋯** en haut, puis **Bloquer**. Vous pouvez aussi bloquer quelqu'un depuis l'un de ses avis ou depuis une conversation. Cette personne ne peut plus vous écrire, ses avis, ses Spotlights et ses commentaires vous sont masqués, et tout abonnement entre vous prend fin. Elle n'en est pas informée.
 
 **Paramètres › Comptes bloqués** liste les personnes que vous avez bloquées et vous permet de les débloquer.
 

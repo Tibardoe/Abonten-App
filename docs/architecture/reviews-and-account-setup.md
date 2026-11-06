@@ -4,8 +4,8 @@ purpose: How event and place reviews are listed, summarised, filtered, voted on,
 audience: Engineering, operations, security reviewers
 scope: event_review / place_review read path (review_list, review_summary), helpful votes, the edited stamp, account-wide blocks (user_block_set), account setup completion (@abonten/core/profileCompletion) and its reminder (account_setup_prompt_state), the web /events/<code>/reviews and /places/<slug>/reviews pages, the mobile Reviews, Account setup and Blocked accounts screens, and the contextual email prompt at checkout. Not covered - review creation eligibility (unchanged, see PROJECT.md §27.7 / enforce_event_review_eligibility) and organizer replies (reviewResponseCore).
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-23
+version: 1.1
+lastReviewed: 2026-11-06
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -73,7 +73,7 @@ Web keys: `["reviews", kind, id, …]`. The pages are statically rendered, so th
 
 `conversation_block` rows with no conversation already meant "everywhere": `send_message` refuses them in both directions and `content_users_blocked()` hides Spotlights, Stories and comments and refuses follows and engagement. Until now nothing let a person create one. `user_block_set(blocked_id, block)` (auth.uid()-scoped definer) does, and also ends any organizer follow between the two people. Reviews by people you blocked leave `review_list` for you; the public rating is unchanged.
 
-Entry points: a review's ⋯ menu (web + app). Management: Settings › Blocked accounts (`/settings/blocked`, app `settings/blocked`), which reads the caller's own rows (`conversation_block_own_select`). Messaging's per-conversation block is unchanged.
+Entry points: a review's ⋯ menu (web + app), and since 2026-11-06 the person's profile: web **Block @name** beside Report (`ProfileBlockButton`), app header **⋯** → Report / Block (`ProfileActionsSheet`; it refetches the blocked list when opened, so a block made elsewhere shows). Pilot testers could not find a way to block someone they had no review from. Management: Settings › Blocked accounts (`/settings/blocked`, app `settings/blocked`), which reads the caller's own rows (`conversation_block_own_select`). Messaging's per-conversation block is unchanged.
 
 ## 3. Account setup
 

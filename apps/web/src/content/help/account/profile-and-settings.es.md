@@ -2,7 +2,7 @@
 title: Tu perfil y tus ajustes
 summary: Edita tu perfil y tu foto, cambia tu número de teléfono o tu correo y elige idioma y apariencia.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-06
 status: Draft
 owner: Abonten Hub
 ---
@@ -35,6 +35,8 @@ En ambos casos no se cierra tu sesión.
 **Ajustes › Apariencia**: claro, oscuro o el del sistema.
 
 ## Cuentas bloqueadas
+
+Para bloquear a alguien, abre su perfil: en el sitio web elige **Bloquear** junto a **Denunciar**; en la aplicación toca **⋯** arriba y luego **Bloquear**. También puedes bloquear a alguien desde una de sus reseñas o desde una conversación. No podrá escribirte, sus reseñas, Spotlights y comentarios se te ocultan, y si uno de los dos sigue al otro, deja de seguirlo. No se le avisa.
 
 **Ajustes › Cuentas bloqueadas** muestra las personas que has bloqueado y te permite desbloquearlas.
 
