@@ -396,6 +396,7 @@
         "couldnTLoadYourNotificationSettings",
         "couldnTSaveThatPleaseTry",
         "couldnTSaveYourPreferences",
+        "couldnTSignOutYourOtherDevices",
         "couldnTTurnTheseAlertsOff",
         "couldnTUnblockTryAgain",
         "countryDefault",
@@ -463,6 +464,11 @@
         "setsWhichCountrySPaymentOptions",
         "showPriceEstimatesIn",
         "signInToChooseYourRegion",
+        "signOutOfEveryOtherDevice",
+        "signOutOfOtherDevices",
+        "signOutOtherDevicesBody",
+        "signOutOthers",
+        "signingOut",
         "similarEvents",
         "similarEventsAndPlaces",
         "similarPlaces",
@@ -490,6 +496,7 @@
         "youReAllSet",
         "yourAccountHasNoEmailAddress",
         "yourAccountHasNoEmailAddress2",
+        "yourOtherDevicesAreSignedOut",
         "yourProfileIsCompleteAndYou"
       ]
     },

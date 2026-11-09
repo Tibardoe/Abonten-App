@@ -2,7 +2,7 @@
 title: Your profile and settings
 summary: Edit your profile and avatar, change your phone number or email, pick a language and appearance.
 order: 1
-lastUpdated: 2026-11-06
+lastUpdated: 2026-11-09
 status: Draft
 owner: Abonten Hub
 ---
@@ -25,6 +25,12 @@ Your profile (web: `/user/<username>`; app: Account › your name) shows your av
 - **Email** — add or change your address. We email a 6-digit code to the **new** address; enter it to confirm. A phone-only account that adds a verified email can then also sign in with Google or an email code.
 
 Both flows work without signing you out.
+
+## Signing in on several devices
+
+You stay signed in on each phone, tablet and browser until you sign out there. Signing out on one device does not sign you out anywhere else.
+
+**Settings › Security › Sign out of other devices** signs you out everywhere except the device you are using, and those devices stop getting your notifications. Use it if you lose a phone, sell it, or signed in on someone else's.
 
 ## Language
 

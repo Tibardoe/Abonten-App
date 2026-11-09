@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import { logger } from "@abonten/core/logger";
 import { otpMessage } from "@abonten/core/otpMessages";
 import { verifyPendingOtp } from "@abonten/services/profile/phoneOtpSendCore";
@@ -10,14 +9,15 @@ import {
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { coreT, tr } from "../i18n/requestLocale";
 import { adoptHomeCountryFromPhone } from "../markets/localePreferencesCore";
+import { deriveSigningKey, hmacBase64Url } from "../security/signing";
 
 // Transport-neutral core of phone sign-in verification, shared by the web
 // Server Action (src/actions/verifyPhoneSignIn.ts, cookie session) and the
 // mobile HTTP route (src/app/api/mobile/auth/phone/verify, token body).
 //
 // Everything here is identical regardless of caller: confirm the code with the provider that sent it,
-// then find-or-create the Supabase user for the phone number, then hand back
-// a one-time password the caller consumes with signInWithPassword. The two
+// then find-or-create the Supabase user for the phone number, then sign in
+// with the account's server-only password (signInVerifiedPhoneUser). The two
 // callers differ ONLY in how they turn that password into a live session
 // (SSR cookie client vs plain supabase-js returning the tokens) and in when
 // they fire the new-user profile-completion notification — both kept exactly
@@ -152,32 +152,58 @@ export async function findOrCreateUserByPhone(
 }
 
 /**
- * Since Supabase has no public "mint a session for this user id" admin
- * endpoint (generateLink is email-only), the caller sets a random one-time
- * password via the Admin API and immediately consumes it via
- * signInWithPassword — so the resulting session is issued by Supabase's own
- * token endpoint, not a forged token.
- *
- * Deliberately NOT rotated again after sign-in: changing a user's password
- * via the Admin API revokes their existing sessions immediately (confirmed
- * live), so an extra rotate-right-after step silently invalidates the
- * session on the same request that created it. The password is simply left
- * as this random, never-transmitted value until the next phone sign-in
- * overwrites it.
+ * The password phone sign-in uses for this account: derived from a server
+ * secret (the service-role key, through `deriveSigningKey`), never sent to
+ * a device, never shown to anyone. A holder of the service-role key could
+ * sign in as anyone anyway, so it adds no new secret to protect.
  */
-export async function issueOneTimePassword(
+export function phoneSignInPassword(userId: string): string {
+  return hmacBase64Url(deriveSigningKey("phone-sign-in-password"), userId);
+}
+
+type SignInAttempt = { error: { code?: string; message: string } | null };
+
+function isWrongPassword(error: { code?: string; message: string }): boolean {
+  return (
+    error.code === "invalid_credentials" ||
+    /invalid login credentials/i.test(error.message)
+  );
+}
+
+/**
+ * Turns a phone the provider has just confirmed into a session. Supabase has
+ * no "mint a session for this user id" admin endpoint (generateLink is
+ * email-only), so the session comes from Supabase's own token endpoint
+ * through a password only the server knows: `attempt` signs in with it (the
+ * web through its cookie client, the app's API on a session-less client).
+ *
+ * Setting a password through the Admin API ends every session the account
+ * has (confirmed live). It used to be set to a new random value on every
+ * phone sign-in, so signing in on the website or a second phone signed the
+ * person out of the app everywhere else. Now the password is the same every
+ * time and is only set when signing in with it fails — the account's first
+ * phone sign-in under this rule, or after the service-role key changed —
+ * which ends the other sessions that one time only.
+ */
+export async function signInVerifiedPhoneUser<R extends SignInAttempt>(
   userId: string,
-): Promise<{ ok: true; secret: string } | { ok: false; message: string }> {
-  const service = getSupabaseServiceClient();
-  const secret = randomBytes(32).toString("hex");
+  attempt: (password: string) => Promise<R>,
+): Promise<{ ok: true; result: R } | { ok: false; message: string }> {
+  const password = phoneSignInPassword(userId);
 
-  const { error } = await service.auth.admin.updateUserById(userId, {
-    password: secret,
-  });
-
-  if (error) {
-    return { ok: false, message: error.message };
+  const first = await attempt(password);
+  if (!first.error) return { ok: true, result: first };
+  if (!isWrongPassword(first.error)) {
+    return { ok: false, message: first.error.message };
   }
 
-  return { ok: true, secret };
+  const service = getSupabaseServiceClient();
+  const { error } = await service.auth.admin.updateUserById(userId, {
+    password,
+  });
+  if (error) return { ok: false, message: error.message };
+
+  const second = await attempt(password);
+  if (second.error) return { ok: false, message: second.error.message };
+  return { ok: true, result: second };
 }

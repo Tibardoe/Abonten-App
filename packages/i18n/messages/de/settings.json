@@ -247,5 +247,12 @@
   "yourProfileFavouritesAndSavedPayment": "Dein Profil, deine Favoriten und deine gespeicherten Zahlungsdaten werden entfernt und du wirst überall abgemeldet. Gekaufte Tickets und Zahlungsbelege werden für die Buchhaltung aufbewahrt. Orte, die dir gehören, bleiben eingetragen, ohne Inhaber.",
   "yourProfileIsCompleteAndYou": "Dein Profil ist vollständig und du hast zwei Möglichkeiten, dich anzumelden.",
   "yourSettings": "deine Einstellungen",
-  "promotionWhen": "{state, select, scheduled {Beginnt am {date}} other {Endet am {date}}}"
+  "promotionWhen": "{state, select, scheduled {Beginnt am {date}} other {Endet am {date}}}",
+  "signOutOfOtherDevices": "Von anderen Geräten abmelden",
+  "signOutOtherDevicesBody": "Hier bleibst du angemeldet. Alle anderen Telefone, Tablets und Browser, die mit deinem Konto angemeldet sind, werden abgemeldet und erhalten deine Benachrichtigungen nicht mehr.",
+  "signOutOfEveryOtherDevice": "Von allen anderen Geräten abmelden?",
+  "signOutOthers": "Andere abmelden",
+  "signingOut": "Abmeldung…",
+  "yourOtherDevicesAreSignedOut": "Deine anderen Geräte sind abgemeldet.",
+  "couldnTSignOutYourOtherDevices": "Deine anderen Geräte konnten nicht abgemeldet werden"
 }

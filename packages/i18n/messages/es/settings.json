@@ -247,5 +247,12 @@
   "yourProfileFavouritesAndSavedPayment": "Tu perfil, tus favoritos y tus datos de pago guardados se eliminan y se cierra tu sesión en todas partes. Las entradas que compraste y los registros de pago se conservan por contabilidad. Los lugares que son tuyos siguen publicados, sin propietario.",
   "yourProfileIsCompleteAndYou": "Tu perfil está completo y tienes dos formas de iniciar sesión.",
   "yourSettings": "tus ajustes",
-  "promotionWhen": "{state, select, scheduled {Empieza el {date}} other {Termina el {date}}}"
+  "promotionWhen": "{state, select, scheduled {Empieza el {date}} other {Termina el {date}}}",
+  "signOutOfOtherDevices": "Cerrar sesión en otros dispositivos",
+  "signOutOtherDevicesBody": "Aquí sigues con la sesión iniciada. Se cierra la sesión en todos los demás teléfonos, tabletas y navegadores conectados a tu cuenta, y dejan de recibir tus notificaciones.",
+  "signOutOfEveryOtherDevice": "¿Cerrar sesión en todos los demás dispositivos?",
+  "signOutOthers": "Cerrar las demás sesiones",
+  "signingOut": "Cerrando sesión…",
+  "yourOtherDevicesAreSignedOut": "Se cerró la sesión en tus otros dispositivos.",
+  "couldnTSignOutYourOtherDevices": "No se pudo cerrar la sesión en tus otros dispositivos"
 }

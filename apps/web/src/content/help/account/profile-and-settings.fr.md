@@ -2,7 +2,7 @@
 title: Votre profil et vos paramètres
 summary: Modifier votre profil et votre photo, changer votre numéro de téléphone ou votre adresse e-mail, choisir une langue et une apparence.
 order: 1
-lastUpdated: 2026-11-06
+lastUpdated: 2026-11-09
 status: Draft
 owner: Abonten Hub
 ---
@@ -25,6 +25,12 @@ Votre profil (site web : `/user/<nom d'utilisateur>` ; application : Compte › 
 - **E-mail** : ajoutez ou changez votre adresse. Nous envoyons un code à 6 chiffres à la **nouvelle** adresse ; saisissez-le pour confirmer. Un compte créé avec un téléphone qui ajoute une adresse e-mail vérifiée peut ensuite aussi se connecter avec Google ou avec un code par e-mail.
 
 Dans les deux cas, vous restez connecté.
+
+## Être connecté sur plusieurs appareils
+
+Vous restez connecté sur chaque téléphone, tablette et navigateur jusqu'à ce que vous vous y déconnectiez. Vous déconnecter sur un appareil ne vous déconnecte nulle part ailleurs.
+
+**Paramètres › Sécurité › Se déconnecter des autres appareils** vous déconnecte partout sauf sur l'appareil que vous utilisez, et ces appareils ne reçoivent plus vos notifications. Utilisez-le si vous perdez ou vendez un téléphone, ou si vous vous êtes connecté sur celui de quelqu'un d'autre.
 
 ## Langue
 

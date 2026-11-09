@@ -62,6 +62,20 @@ async function currentSubscription(): Promise<PushSubscription | null> {
 }
 
 /**
+ * This browser's push endpoint, or null when it has none. "Sign out of other
+ * devices" keeps it, so this browser goes on getting notifications. Never
+ * throws.
+ */
+export async function currentWebPushEndpoint(): Promise<string | null> {
+  if (!supported()) return null;
+  try {
+    return (await currentSubscription())?.endpoint ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Before signing out: stop pushes for this person on this browser, so the
  * next person to use it never sees their notices. Never throws, and gives up
  * after two seconds so sign-out is never held up.

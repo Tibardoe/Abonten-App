@@ -9,18 +9,18 @@ import {
 } from "@abonten/services/i18n/requestLocale";
 import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import {
-  issueOneTimePassword,
+  signInVerifiedPhoneUser,
   verifyPhoneOtpAndResolveUser,
 } from "@abonten/services/profile/phoneAuthCore";
 
 // POST /api/mobile/auth/phone/verify  { "phoneE164": "+233...", "code": "123456" }
 //
 // Mobile equivalent of the verifyPhoneSignIn Server Action. Runs the exact
-// same core (Hubtel verify -> find-or-create user -> one-time password), then
-// — instead of writing SSR cookies — consumes the one-time password on a
-// session-less supabase-js client and returns the resulting Supabase session
-// tokens in the body for expo-secure-store. Same session-minting technique,
-// same security properties; only the transport differs.
+// same core (Hubtel verify -> find-or-create user -> sign-in password), then
+// — instead of writing SSR cookies — signs in on a session-less supabase-js
+// client and returns the resulting Supabase session tokens in the body for
+// expo-secure-store. Same session-minting technique, same security
+// properties; only the transport differs.
 export async function POST(req: Request) {
   bindLocaleFromRequest(req);
   try {
@@ -45,26 +45,18 @@ export async function POST(req: Request) {
       return apiJson({ status: resolved.status, message: resolved.message });
     }
 
-    const password = await issueOneTimePassword(resolved.userId);
-
-    if (!password.ok) {
-      logger.error(
-        `mobile phone verify: one-time password failed: ${password.message}`,
-      );
-      return apiJson({
-        status: 500,
-        message: tr("somethingWentWrongSigningYouIn"),
-      });
-    }
-
     const supabase = createAnonClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      phone: phoneE164,
-      password: password.secret,
-    });
+    const signedIn = await signInVerifiedPhoneUser(
+      resolved.userId,
+      (password) =>
+        supabase.auth.signInWithPassword({ phone: phoneE164, password }),
+    );
+    const data = signedIn.ok ? signedIn.result.data : null;
 
-    if (error || !data.session) {
-      logger.error(`mobile phone verify: sign-in failed: ${error?.message}`);
+    if (!data?.session) {
+      logger.error(
+        `mobile phone verify: sign-in failed: ${signedIn.ok ? "no session" : signedIn.message}`,
+      );
       return apiJson({
         status: 500,
         message: tr("somethingWentWrongSigningYouIn"),

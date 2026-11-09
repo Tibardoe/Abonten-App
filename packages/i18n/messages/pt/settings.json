@@ -247,5 +247,12 @@
   "yourProfileFavouritesAndSavedPayment": "O seu perfil, os favoritos e os dados de pagamento guardados são removidos e a sessão é terminada em todo o lado. Os bilhetes que comprou e os registos de pagamento são mantidos para efeitos de contabilidade. Os locais que lhe pertencem continuam listados, sem proprietário.",
   "yourProfileIsCompleteAndYou": "O seu perfil está completo e tem duas formas de iniciar sessão.",
   "yourSettings": "as suas definições",
-  "promotionWhen": "{state, select, scheduled {Começa a {date}} other {Termina a {date}}}"
+  "promotionWhen": "{state, select, scheduled {Começa a {date}} other {Termina a {date}}}",
+  "signOutOfOtherDevices": "Terminar sessão noutros dispositivos",
+  "signOutOtherDevicesBody": "Aqui continua com a sessão iniciada. A sessão é terminada em todos os outros telemóveis, tablets e navegadores com a sua conta, que deixam de receber as suas notificações.",
+  "signOutOfEveryOtherDevice": "Terminar sessão em todos os outros dispositivos?",
+  "signOutOthers": "Terminar as outras sessões",
+  "signingOut": "A terminar sessão…",
+  "yourOtherDevicesAreSignedOut": "A sessão foi terminada nos seus outros dispositivos.",
+  "couldnTSignOutYourOtherDevices": "Não foi possível terminar a sessão nos seus outros dispositivos"
 }

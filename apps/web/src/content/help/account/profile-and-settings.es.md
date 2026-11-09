@@ -2,7 +2,7 @@
 title: Tu perfil y tus ajustes
 summary: Edita tu perfil y tu foto, cambia tu número de teléfono o tu correo y elige idioma y apariencia.
 order: 1
-lastUpdated: 2026-11-06
+lastUpdated: 2026-11-09
 status: Draft
 owner: Abonten Hub
 ---
@@ -25,6 +25,12 @@ Tu perfil (web: `/user/<nombre de usuario>`; aplicación: Cuenta › tu nombre) 
 - **Correo electrónico**: añade o cambia tu dirección. Enviamos un código de 6 cifras a la dirección **nueva**; escríbelo para confirmar. Una cuenta creada solo con teléfono que añade un correo verificado puede después iniciar sesión también con Google o con un código por correo.
 
 En ambos casos no se cierra tu sesión.
+
+## Sesión iniciada en varios dispositivos
+
+Sigues con la sesión iniciada en cada teléfono, tableta y navegador hasta que la cierres allí. Cerrar sesión en un dispositivo no la cierra en ningún otro.
+
+**Ajustes › Seguridad › Cerrar sesión en otros dispositivos** cierra tu sesión en todas partes excepto en el dispositivo que estás usando, y esos dispositivos dejan de recibir tus notificaciones. Úsalo si pierdes o vendes un teléfono, o si iniciaste sesión en el de otra persona.
 
 ## Idioma
 

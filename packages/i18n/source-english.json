@@ -7384,7 +7384,14 @@
     "yourProfileFavouritesAndSavedPayment": "95e2d26f",
     "yourProfileIsCompleteAndYou": "614fbbc8",
     "yourSettings": "d43b9fab",
-    "promotionWhen": "b1bffdae"
+    "promotionWhen": "b1bffdae",
+    "signOutOfOtherDevices": "8356b72f",
+    "signOutOtherDevicesBody": "1ba4ed1f",
+    "signOutOfEveryOtherDevice": "00cd96c4",
+    "signOutOthers": "cab31c18",
+    "signingOut": "3ca85ca6",
+    "yourOtherDevicesAreSignedOut": "43473230",
+    "couldnTSignOutYourOtherDevices": "6ffcacb6"
   },
   "spotlight": {
     "aShortVideoOrPhotoAbout": "c40e6593",
