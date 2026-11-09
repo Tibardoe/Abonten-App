@@ -1297,6 +1297,14 @@ export function createApiClient(options: ApiClientOptions) {
           auth: true,
         });
       },
+      /** Settings › Security: sign out of every other device. This phone
+       *  stays signed in and keeps its notifications (`keepDeviceToken`). */
+      signOutOthers(keepDeviceToken: string | null) {
+        return request<ApiEnvelope<undefined>>(
+          "/api/mobile/devices/sign-out-others",
+          { method: "POST", body: { keepDeviceToken }, auth: true },
+        );
+      },
     },
 
     organizer: {

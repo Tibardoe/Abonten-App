@@ -2,7 +2,7 @@
 title: O seu perfil e as suas definições
 summary: Editar o seu perfil e a sua fotografia, mudar o número de telefone ou o e-mail, escolher o idioma e a aparência.
 order: 1
-lastUpdated: 2026-11-06
+lastUpdated: 2026-11-09
 status: Draft
 owner: Abonten Hub
 ---
@@ -25,6 +25,12 @@ O seu perfil (website: `/user/<nome de utilizador>`; aplicação: Conta › o se
 - **E-mail**: adicione ou altere o seu endereço. Enviamos um código de 6 dígitos para o **novo** endereço; introduza-o para confirmar. Uma conta só com telefone que acrescente um e-mail verificado pode depois iniciar sessão também com o Google ou com um código por e-mail.
 
 Em ambos os casos, a sua sessão mantém-se iniciada.
+
+## Sessão iniciada em vários dispositivos
+
+Continua com a sessão iniciada em cada telemóvel, tablet e navegador até a terminar lá. Terminar sessão num dispositivo não a termina em mais nenhum.
+
+**Definições › Segurança › Terminar sessão noutros dispositivos** termina a sua sessão em todo o lado exceto no dispositivo que está a usar, e esses dispositivos deixam de receber as suas notificações. Use-o se perder ou vender um telemóvel, ou se iniciou sessão no de outra pessoa.
 
 ## Idioma
 

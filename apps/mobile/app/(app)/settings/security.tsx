@@ -3,7 +3,10 @@ import { EmailVerificationForm } from "@/components/account/EmailVerificationFor
 import { PhoneVerificationForm } from "@/components/account/PhoneVerificationForm";
 import { AppHeader } from "@/components/app/AppHeader";
 import { useHomeDialCode } from "@/features/markets/MarketProvider";
-import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
+import {
+  currentPushToken,
+  unregisterPushToken,
+} from "@/features/notifications/usePushRegistration";
 import { api } from "@/lib/api";
 import { maskEmail } from "@abonten/core/emailOtp";
 import {
@@ -101,6 +104,40 @@ export default function Security() {
       toast.error(t("networkError"), { description: t("pleaseTryAgain") });
     } finally {
       setDeleteBusy(false);
+    }
+  }
+
+  // ---- other devices -----------------------------------------------------
+  // Signing out is per device, so this is how someone ends the session on a
+  // phone they lost or sold. This phone stays signed in.
+  const [othersBusy, setOthersBusy] = useState(false);
+
+  function confirmSignOutOthers() {
+    Alert.alert(t("signOutOfEveryOtherDevice"), t("signOutOtherDevicesBody"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("signOutOthers"),
+        style: "destructive",
+        onPress: runSignOutOthers,
+      },
+    ]);
+  }
+
+  async function runSignOutOthers() {
+    setOthersBusy(true);
+    try {
+      const res = await api.devices.signOutOthers(await currentPushToken());
+      if (res.status === 200) {
+        toast.success(t("yourOtherDevicesAreSignedOut"));
+      } else {
+        toast.error(t("couldnTSignOutYourOtherDevices"), {
+          description: res.message ?? t("pleaseTryAgain"),
+        });
+      }
+    } catch {
+      toast.error(t("networkError"), { description: t("pleaseTryAgain") });
+    } finally {
+      setOthersBusy(false);
     }
   }
 
@@ -237,6 +274,20 @@ export default function Security() {
 
         <Divider />
         <AppText variant="caption">{t("emailAndPhoneChangesAreEach")}</AppText>
+
+        {/* Other devices */}
+        <Card padded className="mt-4">
+          <View className="gap-1 py-1">
+            <AppText variant="bodyStrong">{t("signOutOfOtherDevices")}</AppText>
+            <AppText variant="caption">{t("signOutOtherDevicesBody")}</AppText>
+          </View>
+          <Button
+            title={othersBusy ? t("signingOut") : t("signOutOfOtherDevices")}
+            variant="outline"
+            disabled={othersBusy}
+            onPress={confirmSignOutOthers}
+          />
+        </Card>
 
         {/* Danger zone */}
         <Card padded className="mt-4 border-destructive/40">

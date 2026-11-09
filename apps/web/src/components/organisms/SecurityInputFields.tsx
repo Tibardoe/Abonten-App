@@ -26,6 +26,7 @@ import MaskIcon from "../atoms/MaskIcon";
 import OtpInput from "../molecules/OtpInput";
 import PhoneInput from "../molecules/PhoneInput";
 import ResendOtpButton from "../molecules/ResendOtpButton";
+import SignOutOtherDevices from "../molecules/SignOutOtherDevices";
 import { Button } from "../ui/button";
 
 type Props = {
@@ -142,7 +143,7 @@ export default function SecurityInputFields({
       // The account is gone server-side (sessions revoked); drop the local
       // session too and leave the signed-in area instead of staying on a
       // settings page that can no longer load anything.
-      await supabase.auth.signOut().catch(() => {});
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
       window.location.assign("/");
     } else {
       toast.error(response.message);
@@ -553,6 +554,8 @@ export default function SecurityInputFields({
               </form>
             )}
           </div>
+
+          <SignOutOtherDevices />
         </div>
       )}
 

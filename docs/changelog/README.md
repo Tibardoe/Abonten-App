@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-09 — Staying signed in
+
+- Sign-out ends that device's session only, Settings › Security gains **Sign out of other devices** (help `account/profile-and-settings`, five languages), phone sign-in no longer signs the person out on their other devices, and the app's saved session survives being killed mid-save: `security/application-security.md` 1.4, `deployment/mobile-eas.md` 1.9 (App Review reviewers no longer bump each other), `privacy/data-inventory.md` 1.4, `architecture/feature-inventory.md` 1.8, `mobile/03-phase-3-api.md`, PROJECT.md §73, CLAUDE.md quick facts.
+
 ## 2026-11-09 — App return links
 
 - PROJECT.md §72: the app no longer shows "Unmatched Route" after Google sign-in or a promotion payment on Android, has its own not-found page, and goes Home after deleting the account.

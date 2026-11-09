@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.8
-lastReviewed: 2026-10-04
+version: 1.9
+lastReviewed: 2026-11-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -61,8 +61,8 @@ App Review (TestFlight external testing and the App Store) needs a demo account 
 - **Scope** — only a sign-in routes there (`routeOtpForPhone(…, { purpose: "sign-in" })`); a phone change or a Field Ops owner's consent for the same number goes to the market's provider as usual. The usual limits still hold: five guesses a code, ten codes a day for the number. Each request and check is logged (`app_review_code_requested` / `app_review_code_checked`, never the code).
 - **App Store Connect** — TestFlight › Test Information › Beta App Review Information (and the App Store version's App Review Information): "Sign-in required" on, user name = the number, password = the code, and notes saying to choose "Continue with phone", pick Ghana (+233) and enter the six-digit code. While production Paystack runs on test keys the notes also give Paystack's public test card, and must change when live keys go in. `asc testflight review edit` sets these from a terminal.
 - **Rotation** — change the code in Vercel and in App Store Connect together. Remove both settings when no review is pending if you prefer; a pending review then fails to sign in.
-- A phone sign-in on a second device signs the first out (every phone sign-in sets a new one-time password), so two reviewers at once can bump each other. Reviewers act in production: remove any test listing they create.
-- **Every sign-in spends one of the number's codes** (five an hour, ten a day), and a reviewer who meets the limit sees "Too many codes" — so staff should not sign in to the demo account casually while a review is pending, and each staff sign-in also signs out a reviewer.
+- Since 2026-11-09 a phone sign-in on a second device no longer signs the first out (the account's sign-in password stays the same), so two reviewers at once do not bump each other, and signing out ends that device's session only. Reviewers act in production: remove any test listing they create.
+- **Every sign-in spends one of the number's codes** (five an hour, ten a day), and a reviewer who meets the limit sees "Too many codes" — so staff should not sign in to the demo account casually while a review is pending.
 - **Sample content (2026-09-29):** production had no upcoming events, so the demo account (named "Abonten Events") organizes eight sample events in Accra, Kumasi and Cape Coast (10 October – 21 November 2026; five free, three paid) with original typographic flyers, each description ending "This is a sample event while Abonten gets ready to launch." It also holds one free ticket (Accra Tech Meetup). **Remove the sample events before switching Paystack to live keys** ([../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md)) and before public launch.
 
 ## After an update

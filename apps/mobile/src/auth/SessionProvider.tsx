@@ -98,7 +98,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       session,
       initializing,
       signOut: async () => {
-        await supabase.auth.signOut();
+        // This phone only. The default ("global") ends every session the
+        // account has, so signing out on one device (or on a test phone
+        // sharing the account) signed the person out of all the others.
+        await supabase.auth.signOut({ scope: "local" });
       },
     }),
     [session, initializing],

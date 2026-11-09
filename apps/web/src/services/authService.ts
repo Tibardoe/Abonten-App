@@ -38,7 +38,9 @@ export const fetchAuthenticatedUser = async () => {
     return data.user;
   } catch (error) {
     logger.error("User profile verification failed:", error);
-    await supabase.auth.signOut(); // Prevent partial auth state
+    // Prevent partial auth state — in this browser only; the person's
+    // other devices are not part of the problem.
+    await supabase.auth.signOut({ scope: "local" });
     throw error;
   }
 };
@@ -75,8 +77,11 @@ export const linkGoogleIdentity = async (next?: string | null) => {
 // credentials and the Supabase service-role key must never be readable
 // from the browser bundle.
 
+// Signs out of this browser only. The default ("global") ended every session
+// of the account, so signing out of the website also signed the person out
+// of the app on their phone.
 export const signOut = async () => {
   await releaseWebPushOnSignOut();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
   window.location.href = "/";
 };

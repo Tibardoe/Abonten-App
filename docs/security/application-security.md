@@ -4,8 +4,8 @@ purpose: Document the application-layer controls as implemented — authenticati
 audience: Engineering, security reviewers
 scope: apps/web, apps/admin, apps/mobile, packages/services
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-02
+version: 1.4
+lastReviewed: 2026-11-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -19,7 +19,7 @@ complianceReviewRequired: no
 | Path | Mechanism | Notes |
 |---|---|---|
 | Google | Supabase Auth OAuth (PKCE); web callback `apps/web/src/app/[locale]/(pages)/auth/callback/route.ts`; mobile native → `supabase.auth` | Redirect URLs must be allow-listed in Supabase |
-| Phone OTP | `requestPhoneVerification` → Hubtel (server-only, `hubtelOtpClient.ts`); state in `phone_otp_state` (5-min TTL, 5 attempts spent atomically by `phone_otp_take_attempt`); `verifyPhoneSignIn` → `phoneAuthCore.verifyPhoneOtpAndResolveUser` → find-or-create `auth.users` by phone (`get_auth_user_id_by_phone`, service-role only) → one-time password minted and immediately rotated → `signInWithPassword` on the SSR cookie client (web) / tokens returned to the app | The client never sees Hubtel's request id/prefix; every send is claimed before the provider call by `phone_otp_claim_send` under a lock: one code a minute per number across purposes, 5 an hour and 10 a day per number, 10 an hour per address, recorded in `phone_otp_send_log` (production gate 2026-09-25) |
+| Phone OTP | `requestPhoneVerification` → Hubtel (server-only, `hubtelOtpClient.ts`); state in `phone_otp_state` (5-min TTL, 5 attempts spent atomically by `phone_otp_take_attempt`); `verifyPhoneSignIn` → `phoneAuthCore.verifyPhoneOtpAndResolveUser` → find-or-create `auth.users` by phone (`get_auth_user_id_by_phone`, service-role only) → `signInVerifiedPhoneUser`: `signInWithPassword` with the account's server-derived password (`phoneSignInPassword`, from the service-role key; never sent to a device), set through the Admin API only when it does not work yet, because setting a password ends all the account's sessions → on the SSR cookie client (web) / tokens returned to the app | The client never sees Hubtel's request id/prefix; every send is claimed before the provider call by `phone_otp_claim_send` under a lock: one code a minute per number across purposes, 5 an hour and 10 a day per number, 10 an hour per address, recorded in `phone_otp_send_log` (production gate 2026-09-25) |
 | Email OTP | Supabase `signInWithOtp` (6 digits) with app-level per-email and per-IP send caps (`emailAuthCore.ts`, `consume_rate_limit`); enumeration-safe copy | Verify is client-direct on mobile |
 | Admin | Google only + `ADMIN_EMAIL_ALLOWLIST` + `admin_user.status='active'` + roles; step-up token (`stepUpToken.ts`, HMAC, user-bound, 10 min) | No phone/email path in the console |
 
@@ -28,8 +28,9 @@ Account linking relies on Supabase semantics (same verified email → same accou
 ## Sessions
 
 - **Web:** Supabase SSR cookies refreshed in `apps/web/src/proxy.ts` → `config/supabase/middleware.ts` (`updateSession`). Public-path allowlist; everything else redirects to sign-in. Suspended/banned → `/account-restricted`. `/api/mobile/**`, `/api/observability/**`, `/api/notifications/**`, `/api/paystack/webhook` are excluded from the cookie middleware.
-- **Mobile:** tokens in `expo-secure-store` (chunked); `Authorization: Bearer` to `/api/mobile/**`; `getMobileAuth` (`api/mobile/_lib/authedClient.ts`) validates via `auth.getUser()`, checks `status_id`, returns an **anon-key** client carrying the token so RLS applies. Install id header `x-abonten-install-id` recorded as a fraud signal only.
-- **Revocation:** suspend/ban → `auth.admin.signOut(user, 'global')`; sign-out on a device removes its push token.
+- **Mobile:** tokens in `expo-secure-store` (chunked, written through a journal so an app killed mid-save keeps the whole old or new session: `@abonten/core/storage/chunkedStore`); `Authorization: Bearer` to `/api/mobile/**`; `getMobileAuth` (`api/mobile/_lib/authedClient.ts`) validates via `auth.getUser()`, checks `status_id`, returns an **anon-key** client carrying the token so RLS applies. Install id header `x-abonten-install-id` recorded as a fraud signal only.
+- **Sign-out** ends that device's session only (`signOut({ scope: "local" })` in the app, the website and the admin console), like WhatsApp or TikTok: a person stays signed in on every device until they sign out there. Until 2026-11-09 the default `global` scope signed them out everywhere (PROJECT.md §73). **Settings › Security › Sign out of other devices** ends every other session of the account (`signOutOtherDevicesCore`, logout scope `others` with the person's own token) and deletes the other devices' push registrations, keeping the asking device's.
+- **Revocation:** suspend/ban → `auth.admin.signOut(user, 'global')`; account deletion; sign-out on a device removes its push token.
 
 ## Authorization
 

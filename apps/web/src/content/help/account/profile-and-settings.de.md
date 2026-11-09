@@ -2,7 +2,7 @@
 title: Dein Profil und deine Einstellungen
 summary: Profil und Profilbild bearbeiten, Telefonnummer oder E-Mail-Adresse ändern, Sprache und Erscheinungsbild wählen.
 order: 1
-lastUpdated: 2026-11-06
+lastUpdated: 2026-11-09
 status: Draft
 owner: Abonten Hub
 ---
@@ -25,6 +25,12 @@ Dein Profil (Website: `/user/<Benutzername>`; App: Konto › dein Name) zeigt Pr
 - **E-Mail** – füge deine Adresse hinzu oder ändere sie. Wir schicken einen 6-stelligen Code an die **neue** Adresse; gib ihn zur Bestätigung ein. Ein reines Telefonkonto, das eine bestätigte E-Mail-Adresse hinzufügt, kann sich danach auch mit Google oder einem E-Mail-Code anmelden.
 
 In beiden Fällen bleibst du angemeldet.
+
+## Auf mehreren Geräten angemeldet
+
+Du bleibst auf jedem Telefon, Tablet und Browser angemeldet, bis du dich dort abmeldest. Wenn du dich auf einem Gerät abmeldest, bleibst du überall sonst angemeldet.
+
+**Einstellungen › Sicherheit › Von anderen Geräten abmelden** meldet dich überall ab außer auf dem Gerät, das du gerade benutzt, und diese Geräte erhalten deine Benachrichtigungen nicht mehr. Nutze es, wenn du ein Telefon verlierst oder verkaufst oder dich auf dem Gerät einer anderen Person angemeldet hast.
 
 ## Sprache
 

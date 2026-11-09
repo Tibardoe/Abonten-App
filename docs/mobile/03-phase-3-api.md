@@ -59,10 +59,14 @@ the existing cookie route `src/app/api/user-profile/route.tsx`
 - `verifyPhoneOtpAndResolveUser(phoneE164, code)` — format check, pending-OTP
   lookup, attempt budget, Hubtel verify, consume code, find-or-create the
   Supabase user.
-- `issueOneTimePassword(userId)` — admin one-time password (kept the "not
-  rotated after sign-in" property; rotating revokes the just-made session).
+- `signInVerifiedPhoneUser(userId, attempt)` — signs in with the account's
+  server-derived password (`phoneSignInPassword`, from the service-role key)
+  and sets it through the Admin API only when that fails, because setting a
+  password ends every session of the account. Until 2026-11-09 a new random
+  password was set on every phone sign-in, which signed the person out on
+  every other device (PROJECT.md §73).
 
-`verifyPhoneSignIn.ts` (web) calls the core then does the SSR
+`verifyPhoneSignIn.ts` (web) calls the core with the SSR
 `signInWithPassword` that writes auth cookies — signature and behaviour
 unchanged. `POST /api/mobile/auth/phone/verify` calls the same core then
 does a **session-less** `signInWithPassword` and returns

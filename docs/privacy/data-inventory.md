@@ -4,8 +4,8 @@ purpose: Record every category of personal data Abonten processes, where it is s
 audience: Privacy reviewer, engineering, support leads
 scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems), and the pilot's tester list kept in Google Workspace
 status: Review required
-version: 1.3
-lastReviewed: 2026-10-18
+version: 1.4
+lastReviewed: 2026-11-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -20,7 +20,7 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 
 | Data | Tables / stores | Purpose | Who can read it | Notes |
 |---|---|---|---|---|
-| Auth identity: email, phone (E.164), Google identity, sign-in timestamps, one-time-password hash for phone sign-in | `auth.users` (Supabase Auth) | Sign-in, account recovery | The user (via session); admin console with `users.view_pii`; service role | Phone sign-in mints a one-time password server-side and rotates it (`phoneAuthCore.ts`) |
+| Auth identity: email, phone (E.164), Google identity, sign-in timestamps, password hash for phone sign-in | `auth.users` (Supabase Auth) | Sign-in, account recovery | The user (via session); admin console with `users.view_pii`; service role | Phone sign-in uses a password derived on the server for each account, never sent to a device (`phoneAuthCore.ts`) |
 | Profile: username (citext), full name, bio, website, avatar (Cloudinary public id + version), status (Active/Suspended/Banned), `is_admin`, profile-completion flag | `user_info`, `user_status`, `user_image_history`, view `user_profile_details` | Public profile, moderation | **Public SELECT** on `user_info` (`user_info_public_select`); status and `is_admin` changes only by staff (trigger-guarded) | Username and avatar are public by design |
 | Phone-verification state: purpose, phone, Hubtel request id, attempts | `phone_otp_state`, `phone_otp_send_log` (IP, timestamps) | Verify phone ownership, rate limit sends | Service role only | Hubtel holds the code; Abonten never sees it |
 | Device push tokens (Expo), platform | `device_token` | Push notifications | Owner; service role | Pruned when Expo reports the device unregistered (send ticket or receipt) |

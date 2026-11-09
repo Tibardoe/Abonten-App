@@ -173,6 +173,20 @@ export function usePushRegistration() {
 }
 
 /** Best-effort: drop this device's token before signing out. */
+/**
+ * The push token this phone registered, or null when it has none (no
+ * permission, never registered). "Sign out of other devices" keeps it, so
+ * this phone goes on getting notifications. Never throws.
+ */
+export async function currentPushToken(): Promise<string | null> {
+  try {
+    if (Platform.OS !== "ios" && Platform.OS !== "android") return null;
+    return await SecureStore.getItemAsync(LAST_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export async function unregisterPushToken(): Promise<void> {
   try {
     if (Platform.OS !== "ios" && Platform.OS !== "android") return;

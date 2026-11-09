@@ -247,5 +247,12 @@
   "yourProfileFavouritesAndSavedPayment": "Your profile, favourites and saved payment details are removed and you are signed out everywhere. Tickets you bought and payment records are kept for accounting. Places you own stay listed, unclaimed.",
   "yourProfileIsCompleteAndYou": "Your profile is complete and you have two ways to sign in.",
   "yourSettings": "your settings",
-  "promotionWhen": "{state, select, scheduled {Starts {date}} other {Ends {date}}}"
+  "promotionWhen": "{state, select, scheduled {Starts {date}} other {Ends {date}}}",
+  "signOutOfOtherDevices": "Sign out of other devices",
+  "signOutOtherDevicesBody": "You stay signed in here. Every other phone, tablet and browser signed in to your account is signed out and stops getting your notifications.",
+  "signOutOfEveryOtherDevice": "Sign out of every other device?",
+  "signOutOthers": "Sign out others",
+  "signingOut": "Signing out…",
+  "yourOtherDevicesAreSignedOut": "Your other devices are signed out.",
+  "couldnTSignOutYourOtherDevices": "Couldn't sign out your other devices"
 }

@@ -247,5 +247,12 @@
   "yourProfileFavouritesAndSavedPayment": "Votre profil, vos favoris et vos informations de paiement enregistrées sont supprimés et vous êtes déconnecté partout. Les billets que vous avez achetés et les justificatifs de paiement sont conservés pour la comptabilité. Les lieux qui vous appartiennent restent référencés, sans propriétaire.",
   "yourProfileIsCompleteAndYou": "Votre profil est complet et vous avez deux moyens de vous connecter.",
   "yourSettings": "vos paramètres",
-  "promotionWhen": "{state, select, scheduled {Commence le {date}} other {Se termine le {date}}}"
+  "promotionWhen": "{state, select, scheduled {Commence le {date}} other {Se termine le {date}}}",
+  "signOutOfOtherDevices": "Se déconnecter des autres appareils",
+  "signOutOtherDevicesBody": "Vous restez connecté ici. Tous les autres téléphones, tablettes et navigateurs connectés à votre compte sont déconnectés et ne reçoivent plus vos notifications.",
+  "signOutOfEveryOtherDevice": "Se déconnecter de tous les autres appareils ?",
+  "signOutOthers": "Déconnecter les autres",
+  "signingOut": "Déconnexion…",
+  "yourOtherDevicesAreSignedOut": "Vos autres appareils sont déconnectés.",
+  "couldnTSignOutYourOtherDevices": "Impossible de déconnecter vos autres appareils"
 }

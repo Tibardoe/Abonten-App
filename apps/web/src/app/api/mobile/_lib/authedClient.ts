@@ -28,7 +28,7 @@ type MobileAuth =
     }
   | { supabase: null; user: null; response: NextResponse };
 
-function bearerFrom(req: Request): string | null {
+export function bearerFrom(req: Request): string | null {
   const header =
     req.headers.get("authorization") ?? req.headers.get("Authorization");
   if (!header) return null;

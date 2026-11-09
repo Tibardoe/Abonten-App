@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 export async function signOut() {
   const supabase = await createSsrClient();
-  await supabase.auth.signOut();
+  // The console only. Staff use the same account in the app and on the
+  // website, and the default ("global") signed them out there too.
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/auth/signin");
 }
