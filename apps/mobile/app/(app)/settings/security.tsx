@@ -15,6 +15,7 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 
@@ -43,6 +44,7 @@ export default function Security() {
   const t = useTranslations("settings");
 
   const toast = useToast();
+  const router = useRouter();
   const { session, signOut } = useSession();
   const user = session?.user;
   const google = (user?.identities ?? []).some((i) => i.provider === "google");
@@ -91,6 +93,10 @@ export default function Security() {
       }
       await unregisterPushToken();
       await signOut();
+      // Signed out on a screen that needs a session: the app used to stay
+      // on Settings until the next tap. Home, and say what happened.
+      router.replace("/(app)/(tabs)");
+      if (res.message) toast.success(res.message);
     } catch {
       toast.error(t("networkError"), { description: t("pleaseTryAgain") });
     } finally {
