@@ -33,6 +33,7 @@ async function resolvePlace(seg: string): Promise<string | null> {
 
 export async function redirectSystemPath({
   path,
+  initial,
 }: {
   path: string;
   initial: boolean;
@@ -47,6 +48,20 @@ export async function redirectSystemPath({
       ...(url.protocol === "abonten:" && url.host ? [url.host] : []),
       ...url.pathname.split("/").filter(Boolean),
     ];
+    // Links a browser page hands back to the screen that opened it: Google
+    // sign-in (auth/callback) and a promotion's payment page
+    // (promotion/<checkout>). Android also delivers them to the app, and
+    // with no screen of that name the person saw "Unmatched Route" over a
+    // sign-in or payment that had worked (pilot, 2026-11-05). The waiting
+    // screen reads them itself, so they open nothing; when the app was
+    // closed in the meantime, they open Home.
+    if (
+      (parts[0] === "auth" && parts[1] === "callback") ||
+      parts[0] === "promotion"
+    ) {
+      return initial ? "/(app)/(tabs)" : "";
+    }
+
     // A shared link can carry the sharer's referral code (?ref=). Remembered
     // for this event's checkout; never delays the navigation.
     const ref = url.searchParams.get("ref");

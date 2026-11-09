@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-09 — App return links
+
+- PROJECT.md §72: the app no longer shows "Unmatched Route" after Google sign-in or a promotion payment on Android, has its own not-found page, and goes Home after deleting the account.
+
 ## 2026-11-06 — Block from a profile
 
 - Block / Unblock and Report on a person's profile (web beside Report; app header ⋯): help `account/profile-and-settings` (five languages), `architecture/reviews-and-account-setup.md` 1.1, PROJECT.md §71.
