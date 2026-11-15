@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ListPayoutsResult,
@@ -32,7 +33,11 @@ async function getOrganizerPayouts(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
-  return listPayoutsCore(supabase, user.id, offset, limit);
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "payout.view");
+  if (actor.error) return actor.error;
+
+  return listPayoutsCore(supabase, actor.accountId, offset, limit);
 }
 
 export default withActionLocale(getOrganizerPayouts);

@@ -5,6 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarketContext } from "@/hooks/useMarketContext";
+import { useActingContext } from "@/teams/useActingContext";
 import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
 import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatMoney } from "@abonten/core/formatMoney";
@@ -45,11 +46,15 @@ export default function FinancesOverview({
 
   const queryClient = useQueryClient();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  // Managing as a team: Owners and Finance ask for payouts.
+  const acting = useActingContext();
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY,
     queryFn: async () => {
       const response = answerOrThrow(await getOrganizerFinanceOverview());
+      // A refusal (a team role without money) is not a balance of zero.
+      if (response.status === 403) throw new Error(response.message);
       return response.status === 200 ? response.data : [];
     },
     initialData: initialOverview,
@@ -106,7 +111,7 @@ export default function FinancesOverview({
           </p>
         </div>
 
-        {primary.available_balance > 0 && (
+        {primary.available_balance > 0 && acting.can("payout.request") && (
           <Button
             type="button"
             onClick={() => setIsWithdrawOpen(true)}

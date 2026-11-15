@@ -244,6 +244,7 @@
     "aPostNeedsAtLeastOneMedia": "Una publicación necesita al menos un elemento multimedia",
     "aPriceCanTHaveMoreThan": "Un precio en {0} no puede tener más de {1} decimales",
     "aReasonIsRequired": "Se necesita un motivo",
+    "aRefundForThisPaymentIsBeing": "Se está pidiendo un reembolso de este pago",
     "aRejectionNeedsAReason": "Un rechazo necesita un motivo",
     "aReservationNeedsAFutureExpiry": "Una reserva necesita un vencimiento futuro",
     "aReversalNeedsAReason": "Una reversión necesita un motivo",
@@ -346,6 +347,7 @@
     "noEventFound": "¡No se encontró ningún evento!",
     "noPendingAdjustmentRequestWithThatId": "No hay ninguna solicitud de ajuste pendiente con ese identificador",
     "notARebateRule": "No es una regla de reembolso: {0}",
+    "notAllowedForThisAccount": "No permitido para esta cuenta",
     "notAuthenticated": "No autenticado",
     "notAuthorized": "No autorizado",
     "notAuthorizedCallerIsNotAnAdmin": "No autorizado: quien llama no es administrador",
@@ -386,6 +388,7 @@
     "payingWithCreditIsnTAvailable": "Pagar con crédito no está disponible",
     "paymentAmountDoesNotMatchTheCampaign": "El importe del pago no coincide con el presupuesto de la campaña",
     "paymentNotVerifiedForThisCheckout": "Pago no verificado para esta compra",
+    "payoutAccountTooNew": "Cuenta de cobro demasiado reciente",
     "payoutAmountExceedsAvailableBalance": "El importe del retiro supera el saldo disponible",
     "payoutIsAlready": "El pago ya está en estado {0}",
     "payoutItemNotFound": "Partida de pago no encontrada",
@@ -400,6 +403,7 @@
     "ratingFilterMustBe1To5": "El filtro de valoración debe ser de 1 a 5",
     "recordTheTransferReference": "Registra la referencia de la transferencia",
     "refundAmountMustBePositive": "El importe del reembolso debe ser positivo",
+    "refundNotFound": "Reembolso no encontrado",
     "refundOfExceedsTheRefundablePesewas": "El reembolso de {0} supera los {1} pesewas reembolsables",
     "releaseAmountIsOutside0": "El importe liberado {0} está fuera de 0..{1}",
     "repliesAreNotAvailableForThisStory": "Las respuestas no están disponibles para esta Story.",
@@ -475,6 +479,7 @@
     "thisItemIsAlreadyPaid": "Esta partida ya está pagada",
     "thisMessageWasDeleted": "Este mensaje se eliminó.",
     "thisOnboardingIsNotFlagged": "Esta incorporación no está marcada",
+    "thisPaymentIsRefundedAsAWhole": "Este pago se reembolsa entero",
     "thisPayoutIsHeldForReviewCredit": "Este pago está retenido para revisión (ventas financiadas con crédito). Resuelve primero la revisión.",
     "thisPayoutIsNotHeldForReview": "Este pago no está retenido para revisión",
     "thisReviewIsNoLongerAvailable": "Esta reseña ya no está disponible.",
@@ -489,10 +494,12 @@
     "ticketOfTypeNotFound": "Entrada de tipo {0} no encontrada",
     "ticketPriceHasChangedPleaseReviewYour": "El precio de la entrada ha cambiado. Revisa tu pedido.",
     "ticketQuantitiesTotalWhichExceedsTheEvent": "Las cantidades de entradas suman {0}, lo que supera el aforo del evento, que es de {1}.",
+    "transactionNotFound": "Transacción no encontrada",
     "unknownCurrency": "Moneda desconocida {0}",
     "unknownCurrencyForMarket": "Moneda desconocida {0} para el mercado {1}",
     "unknownMarketTransition": "Transición de mercado desconocida {0}",
     "unknownModerationAction": "Acción de moderación desconocida: {0}",
+    "unknownRefundOutcome": "Resultado de reembolso desconocido",
     "unknownReviewOrder": "Orden de reseñas desconocido",
     "unknownReviewSubject": "Tema de reseña desconocido",
     "unknownRole": "Rol desconocido: {0}",
@@ -549,12 +556,7 @@
     "youHaveStartedALotOfConversations": "Has iniciado muchas conversaciones últimamente. Inténtalo de nuevo más tarde.",
     "yourAccountHasBeenRestricted": "Tu cuenta ha sido restringida.",
     "yourCreditBalanceIsNegative": "Tu saldo de crédito es negativo",
-    "yourCreditIsOnHold": "Tu crédito está retenido",
-    "aRefundForThisPaymentIsBeing": "Se está pidiendo un reembolso de este pago",
-    "refundNotFound": "Reembolso no encontrado",
-    "thisPaymentIsRefundedAsAWhole": "Este pago se reembolsa entero",
-    "transactionNotFound": "Transacción no encontrada",
-    "unknownRefundOutcome": "Resultado de reembolso desconocido"
+    "yourCreditIsOnHold": "Tu crédito está retenido"
   },
   "defaultPaymentMethodUpdated": "Método de pago predeterminado actualizado",
   "defaultPayoutAccountUpdated": "Cuenta de cobro predeterminada actualizada",
@@ -1331,7 +1333,8 @@
       "place_claims": "Verifica tu identidad antes de que se pueda aprobar tu reclamación. Ve a Ajustes › Verificación de identidad.",
       "verified_badges": "Verifica tu identidad antes de obtener una insignia de Verificado. Ve a Ajustes › Verificación de identidad.",
       "paid_events": "Verifica tu identidad antes de vender entradas. Ve a Ajustes › Verificación de identidad, o haz que el evento sea gratuito."
-    }
+    },
+    "teamOwnerRequired": "Una persona propietaria del equipo tiene que verificar antes su identidad, en Ajustes › Verificación de identidad."
   },
   "thisTicketWasPaidForTogether": "Esta entrada se pagó junto con {count, plural, one {# entrada más} other {# entradas más}}. Un reembolso cubre todo el pago, así que cancélalas juntas.",
   "aTicketFromThisPaymentWasChecked": "Una entrada de este pago ya se escaneó en el acceso, así que esta entrada ya no se puede cancelar con reembolso.",
@@ -1392,5 +1395,7 @@
   "teamCannotText": "Aún no podemos enviar SMS a ese número. Invítale por su nombre de usuario.",
   "teamTextLimit": "Tu equipo ha enviado el máximo de SMS de invitación de hoy. Prueba mañana o invita por nombre de usuario.",
   "teamSmsInvite": "{team} te invita a ayudar a gestionarlo en Abonten. Regístrate con este número para aceptar: {link}",
-  "teamRoleCannot": "Tu rol en este equipo no cubre esto."
+  "teamRoleCannot": "Tu rol en este equipo no cubre esto.",
+  "teamPayoutSignInAgain": "Por tu seguridad, vuelve a iniciar sesión antes de cambiar la cuenta de cobro del equipo y luego regresa aquí.",
+  "teamPayoutAccountTooNew": "Esta cuenta de cobro se añadió hace menos de 48 horas. Podrás pedir un cobro a ella cuando hayan pasado 48 horas."
 }

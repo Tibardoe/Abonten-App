@@ -24,6 +24,10 @@ export function ManagingAsCard() {
           selected={!current}
           onPress={() => switchTo(null)}
         />
+        {current && !teams.some((team) => team.id === current.teamId) ? (
+          // The remembered team, until the list arrives from the server.
+          <Chip label={current.name ?? ""} selected />
+        ) : null}
         {teams.map((team) => (
           <Chip
             key={team.id}

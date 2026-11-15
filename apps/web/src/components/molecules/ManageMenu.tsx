@@ -63,12 +63,17 @@ export default function ManageMenu({
   const switchTeam = useSwitchActingTeam();
   const team = acting.current;
   const showOrganizer = team
-    ? acting.can("events.manage", "attendees.view", "checkin.scan")
+    ? acting.can(
+        "events.manage",
+        "attendees.view",
+        "checkin.scan",
+        "money.view",
+      )
     : isOrganizer;
   const showPlaces = team
     ? acting.can("places.manage", "bookings.manage", "visit.show")
     : isPlaceOwner;
-  const showMoney = !team && isOrganizer;
+  const showMoney = team ? acting.can("money.view") : isOrganizer;
   const showDrafts = !team || acting.can("events.manage", "places.manage");
 
   const isDashboardActive = pathname.startsWith("/manage/dashboard");

@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -27,6 +28,9 @@ export async function GET(
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, "money.view");
+  if (actor.error) return apiJson(actor.error);
 
   try {
     const { eventId } = await params;
@@ -48,7 +52,7 @@ export async function GET(
     );
     const result = await fetchEventInsights(
       auth.supabase,
-      auth.user.id,
+      actor.accountId,
       eventId,
       start?.toISOString() ?? null,
       end?.toISOString() ?? null,

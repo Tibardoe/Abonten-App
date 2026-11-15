@@ -4,7 +4,10 @@ import { createClient } from "@/config/supabase/server";
 import type { TeamCapability } from "@abonten/core/teams/roles";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
-import { resolveActingAccount } from "@abonten/services/teams/actingAccount";
+import {
+  listActingTeams,
+  resolveActingAccount,
+} from "@abonten/services/teams/actingAccount";
 import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { TeamRoleCode } from "@abonten/types/teamType";
@@ -46,6 +49,8 @@ export type Actor = {
 export async function actingFor(
   personId: string,
   capability: TeamCapability | readonly TeamCapability[],
+  /** `all`: the role must cover every capability in the list. */
+  options: { all?: boolean } = {},
 ): Promise<
   | { error: null; accountId: string; role: TeamRoleCode | null }
   | { error: { status: 403; message: string } }
@@ -57,6 +62,7 @@ export async function actingFor(
     personId,
     teamId,
     capability,
+    options,
   );
   // One answer for every "you can't act for this team here" (gone, paused,
   // role): the action's own envelope types already carry a 403.
@@ -97,4 +103,23 @@ export async function requireActor(
   );
   if (!resolved.ok) return { error: resolved.error };
   return { error: null, supabase, svc, ...resolved.actor };
+}
+
+/**
+ * Who a listing belongs to, among the accounts the person can manage as:
+ * their own, one of their teams, or neither. A manage page that refuses
+ * because the person is managing as someone else offers to switch.
+ */
+export async function managingTargetFor(
+  personId: string,
+  ownerId: string,
+): Promise<
+  { kind: "own" } | { kind: "team"; teamId: string; name: string } | null
+> {
+  if (ownerId === personId) return { kind: "own" };
+  const teams = await listActingTeams(getSupabaseServiceClient(), personId);
+  const team = teams.find((t) => t.id === ownerId);
+  return team
+    ? { kind: "team", teamId: team.id, name: team.name ?? team.username ?? "" }
+    : null;
 }

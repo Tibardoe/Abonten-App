@@ -56,6 +56,8 @@ function tabsFor(role: TeamRoleCode | null): Tab[] {
   if (teamRoleCan(role, "events.manage")) tabs.push("details");
   if (teamRoleCan(role, "attendees.view")) tabs.push("attendees");
   else if (teamRoleCan(role, "checkin.scan")) tabs.push("checkin");
+  // Sales and earnings: Owners and Finance (stage 3).
+  if (teamRoleCan(role, "money.view")) tabs.push("insights");
   return tabs;
 }
 

@@ -4,7 +4,12 @@ import getEventHasConfirmedParticipation from "@/actions/getEventHasConfirmedPar
 import { getEventPromotionTiers } from "@/actions/getEventPromotionTiers";
 import { createClient } from "@/config/supabase/server";
 import ManageEventView from "@/events/organisms/ManageEventView";
-import { actingFor } from "@/utils/teamActor";
+import SwitchToTeamPrompt from "@/teams/molecules/SwitchToTeamPrompt";
+import {
+  actingFor,
+  managingTargetFor,
+  readActingTeamId,
+} from "@/utils/teamActor";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
@@ -93,8 +98,23 @@ export default async function page({
     "events.manage",
     "attendees.view",
     "checkin.scan",
+    "money.view",
   ]);
   if (actor.error || event.organizer_id !== actor.accountId) {
+    // Opened while managing as another account (a notice about a team's
+    // event, say): offer to switch when it is the person's or a team's.
+    const target = await managingTargetFor(user.id, event.organizer_id);
+    const managing = actor.error
+      ? await readActingTeamId()
+      : actor.accountId === user.id
+        ? null
+        : actor.accountId;
+    if (
+      target &&
+      (target.kind === "team" ? target.teamId : null) !== managing
+    ) {
+      return <SwitchToTeamPrompt target={target} />;
+    }
     return (
       <p className="p-8 text-center text-muted-foreground">
         {t("youReNotAuthorizedToManage")}

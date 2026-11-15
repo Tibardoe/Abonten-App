@@ -1,4 +1,5 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useActingContext } from "@/teams/useActingContext";
 import { getEventShareUrl } from "@abonten/core/shareUrl";
 import { useTranslations } from "next-intl";
 import AddToFavoriteButton from "../atoms/AddToFavoriteButton";
@@ -47,7 +48,17 @@ export default function EventCardMenuModal({
   // component independently calling supabase.auth.getUser().
   const { data: userData } = useCurrentUser();
 
-  const isOrganizer = userData?.id === organizerId;
+  // Managing as a team, the event's actions are the team's, as far as the
+  // person's role there covers them; otherwise they are the person's own.
+  const acting = useActingContext(!!userData);
+  const team = acting.current;
+  const isOrganizer = team
+    ? team.id === organizerId
+    : userData?.id === organizerId;
+  const canEdit = acting.can("events.manage");
+  const canPromo = acting.can("promo.manage");
+  // Cancelling refunds buyers: the event and refunds both (Owners).
+  const canCancel = acting.can("events.manage") && acting.can("refunds.issue");
   const isCancelled = eventStatus === "canceled";
 
   return (
@@ -64,9 +75,9 @@ export default function EventCardMenuModal({
       {isOrganizer && (
         <>
           <DropdownMenuSeparator />
-          <EditEventButton eventId={eventId} asMenuItem />
+          {canEdit ? <EditEventButton eventId={eventId} asMenuItem /> : null}
 
-          {!isCancelled && (
+          {canPromo && !isCancelled && (
             <ManagePromoCodesButton
               eventId={eventId}
               asMenuItem
@@ -78,20 +89,24 @@ export default function EventCardMenuModal({
             <p className="px-2 py-1.5 text-sm text-muted-foreground">
               {t("thisEventHasBeenCancelled")}
             </p>
-          ) : (
+          ) : canCancel ? (
             <CancelButton
               eventId={eventId}
               asMenuItem
               onRequestClose={onRequestClose}
             />
-          )}
+          ) : null}
 
-          <DropdownMenuSeparator />
-          <DeleteEventButton
-            eventId={eventId}
-            asMenuItem
-            onRequestClose={onRequestClose}
-          />
+          {canEdit ? (
+            <>
+              <DropdownMenuSeparator />
+              <DeleteEventButton
+                eventId={eventId}
+                asMenuItem
+                onRequestClose={onRequestClose}
+              />
+            </>
+          ) : null}
         </>
       )}
     </DropdownMenuContent>

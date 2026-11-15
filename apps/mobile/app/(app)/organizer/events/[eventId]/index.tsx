@@ -481,6 +481,9 @@ function EventInsightsScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
+  // Managing as a team: the links follow the person's role; promotion,
+  // reviews and the promoter commission stay with personal events for now.
+  const { current, can } = useActingTeams();
 
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("all");
@@ -520,7 +523,7 @@ function EventInsightsScreen() {
         ) : null}
       </View>
 
-      {eventId ? (
+      {eventId && can("events.manage") ? (
         <View className="flex-row gap-2">
           <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
             <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
@@ -529,7 +532,7 @@ function EventInsightsScreen() {
               </AppText>
             </Pressable>
           </Link>
-          {IN_APP_PROMOTION_PURCHASES ? (
+          {IN_APP_PROMOTION_PURCHASES && !current ? (
             <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
               <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
                 <AppText className="text-sm font-semibold text-primary">
@@ -543,37 +546,37 @@ function EventInsightsScreen() {
 
       {eventId ? (
         <View className="gap-2">
-          <Link href={`/(app)/organizer/events/${eventId}/attendees`} asChild>
-            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-base text-foreground">
-                {t("attendeesCheckIn")}
-              </AppText>
-              <AppText className="text-muted-foreground">›</AppText>
-            </Pressable>
-          </Link>
-          <Link href={`/(app)/organizer/events/${eventId}/promo-codes`} asChild>
-            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-base text-foreground">
-                {t("managePromoCodes")}
-              </AppText>
-              <AppText className="text-muted-foreground">›</AppText>
-            </Pressable>
-          </Link>
-          <Link href={`/(app)/organizer/events/${eventId}/reviews`} asChild>
-            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-base text-foreground">
-                {t("reviewsReplies")}
-              </AppText>
-              <AppText className="text-muted-foreground">›</AppText>
-            </Pressable>
-          </Link>
+          {can("attendees.view", "checkin.scan") ? (
+            <TeamNavRow
+              href={`/(app)/organizer/events/${eventId}/attendees`}
+              label={t("attendeesCheckIn")}
+            />
+          ) : null}
+          {can("promo.manage") ? (
+            <TeamNavRow
+              href={`/(app)/organizer/events/${eventId}/promo-codes`}
+              label={t("managePromoCodes")}
+            />
+          ) : null}
+          {current ? null : (
+            <TeamNavRow
+              href={`/(app)/organizer/events/${eventId}/reviews`}
+              label={t("reviewsReplies")}
+            />
+          )}
         </View>
       ) : null}
 
-      {eventId ? <PromoterCommissionSection eventId={eventId} /> : null}
+      {eventId && !current ? (
+        <PromoterCommissionSection eventId={eventId} />
+      ) : null}
 
-      {eventId ? <EventTicketPlansSection eventId={eventId} /> : null}
-      {eventId ? <EventTicketTransfersSection eventId={eventId} /> : null}
+      {eventId && can("events.manage") ? (
+        <EventTicketPlansSection eventId={eventId} />
+      ) : null}
+      {eventId && can("events.manage") ? (
+        <EventTicketTransfersSection eventId={eventId} />
+      ) : null}
 
       <View className="flex-row flex-wrap gap-2">
         {PERIODS.map((p) => (
@@ -710,6 +713,11 @@ function TeamEventPanel() {
 }
 
 export default function EventManageScreen() {
-  const { current } = useActingTeams();
-  return current ? <TeamEventPanel /> : <EventInsightsScreen />;
+  const { current, can } = useActingTeams();
+  // Owners and Finance see the event's figures; other roles its panel.
+  return current && !can("money.view") ? (
+    <TeamEventPanel />
+  ) : (
+    <EventInsightsScreen />
+  );
 }

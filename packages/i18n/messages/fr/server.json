@@ -244,6 +244,7 @@
     "aPostNeedsAtLeastOneMedia": "Une publication nécessite au moins un média",
     "aPriceCanTHaveMoreThan": "Un prix en {0} ne peut pas avoir plus de {1} décimales",
     "aReasonIsRequired": "Un motif est obligatoire",
+    "aRefundForThisPaymentIsBeing": "Un remboursement de ce paiement est en cours de demande",
     "aRejectionNeedsAReason": "Un rejet nécessite un motif",
     "aReservationNeedsAFutureExpiry": "Une réservation nécessite une expiration future",
     "aReversalNeedsAReason": "Une annulation nécessite un motif",
@@ -346,6 +347,7 @@
     "noEventFound": "Aucun événement trouvé !",
     "noPendingAdjustmentRequestWithThatId": "Aucune demande d'ajustement en attente avec cet identifiant",
     "notARebateRule": "Ce n'est pas une règle de remise : {0}",
+    "notAllowedForThisAccount": "Non autorisé pour ce compte",
     "notAuthenticated": "Non authentifié",
     "notAuthorized": "Non autorisé",
     "notAuthorizedCallerIsNotAnAdmin": "Non autorisé : l'appelant n'est pas administrateur",
@@ -386,6 +388,7 @@
     "payingWithCreditIsnTAvailable": "Le paiement par crédit n'est pas disponible",
     "paymentAmountDoesNotMatchTheCampaign": "Le montant du paiement ne correspond pas au budget de la campagne",
     "paymentNotVerifiedForThisCheckout": "Paiement non vérifié pour cette commande",
+    "payoutAccountTooNew": "Compte de versement trop récent",
     "payoutAmountExceedsAvailableBalance": "Le montant du versement dépasse le solde disponible",
     "payoutIsAlready": "Le versement est déjà à l'état {0}",
     "payoutItemNotFound": "Ligne de versement introuvable",
@@ -400,6 +403,7 @@
     "ratingFilterMustBe1To5": "Le filtre de note doit être compris entre 1 et 5",
     "recordTheTransferReference": "Enregistrez la référence du virement",
     "refundAmountMustBePositive": "Le montant du remboursement doit être positif",
+    "refundNotFound": "Remboursement introuvable",
     "refundOfExceedsTheRefundablePesewas": "Le remboursement de {0} dépasse les {1} pesewas remboursables",
     "releaseAmountIsOutside0": "Le montant libéré {0} est en dehors de 0..{1}",
     "repliesAreNotAvailableForThisStory": "Les réponses ne sont pas disponibles pour cette Story.",
@@ -475,6 +479,7 @@
     "thisItemIsAlreadyPaid": "Cette ligne est déjà payée",
     "thisMessageWasDeleted": "Ce message a été supprimé.",
     "thisOnboardingIsNotFlagged": "Cette intégration n'est pas signalée",
+    "thisPaymentIsRefundedAsAWhole": "Ce paiement est remboursé en une seule fois",
     "thisPayoutIsHeldForReviewCredit": "Ce versement est retenu pour examen (ventes financées par du crédit). Levez d'abord l'examen.",
     "thisPayoutIsNotHeldForReview": "Ce versement n'est pas retenu pour examen",
     "thisReviewIsNoLongerAvailable": "Cet avis n'est plus disponible.",
@@ -489,10 +494,12 @@
     "ticketOfTypeNotFound": "Billet de type {0} introuvable",
     "ticketPriceHasChangedPleaseReviewYour": "Le prix du billet a changé. Veuillez vérifier votre commande.",
     "ticketQuantitiesTotalWhichExceedsTheEvent": "Les quantités de billets totalisent {0}, ce qui dépasse la capacité de l'événement, fixée à {1}.",
+    "transactionNotFound": "Transaction introuvable",
     "unknownCurrency": "Devise inconnue {0}",
     "unknownCurrencyForMarket": "Devise inconnue {0} pour le marché {1}",
     "unknownMarketTransition": "Transition de marché inconnue {0}",
     "unknownModerationAction": "Action de modération inconnue : {0}",
+    "unknownRefundOutcome": "Résultat de remboursement inconnu",
     "unknownReviewOrder": "Ordre des avis inconnu",
     "unknownReviewSubject": "Sujet d'avis inconnu",
     "unknownRole": "Rôle inconnu : {0}",
@@ -549,12 +556,7 @@
     "youHaveStartedALotOfConversations": "Vous avez démarré beaucoup de conversations récemment. Veuillez réessayer plus tard.",
     "yourAccountHasBeenRestricted": "Votre compte a été restreint.",
     "yourCreditBalanceIsNegative": "Votre solde de crédit est négatif",
-    "yourCreditIsOnHold": "Votre crédit est suspendu",
-    "aRefundForThisPaymentIsBeing": "Un remboursement de ce paiement est en cours de demande",
-    "refundNotFound": "Remboursement introuvable",
-    "thisPaymentIsRefundedAsAWhole": "Ce paiement est remboursé en une seule fois",
-    "transactionNotFound": "Transaction introuvable",
-    "unknownRefundOutcome": "Résultat de remboursement inconnu"
+    "yourCreditIsOnHold": "Votre crédit est suspendu"
   },
   "defaultPaymentMethodUpdated": "Moyen de paiement par défaut mis à jour",
   "defaultPayoutAccountUpdated": "Compte de versement par défaut mis à jour",
@@ -1331,7 +1333,8 @@
       "place_claims": "Faites vérifier votre identité avant que votre réclamation puisse être approuvée. Rendez-vous dans Paramètres › Vérification d'identité.",
       "verified_badges": "Faites vérifier votre identité avant d'obtenir un badge Vérifié. Rendez-vous dans Paramètres › Vérification d'identité.",
       "paid_events": "Faites vérifier votre identité avant de vendre des billets. Rendez-vous dans Paramètres › Vérification d'identité, ou rendez l'événement gratuit."
-    }
+    },
+    "teamOwnerRequired": "Un propriétaire de l'équipe doit d'abord faire vérifier son identité, dans Paramètres › Vérification d'identité."
   },
   "thisTicketWasPaidForTogether": "Ce billet a été payé en même temps que {count, plural, one {# autre billet} other {# autres billets}}. Un remboursement couvre tout le paiement, annulez-les donc ensemble.",
   "aTicketFromThisPaymentWasChecked": "Un billet de ce paiement a déjà été scanné à l'entrée, ce billet ne peut donc plus être annulé pour un remboursement.",
@@ -1392,5 +1395,7 @@
   "teamCannotText": "Nous ne pouvons pas encore envoyer de SMS à ce numéro. Invitez la personne par son nom d'utilisateur.",
   "teamTextLimit": "Votre équipe a envoyé le nombre maximal de SMS d'invitation pour aujourd'hui. Réessayez demain ou invitez par nom d'utilisateur.",
   "teamSmsInvite": "{team} vous invite à l'aider à gérer son compte sur Abonten. Inscrivez-vous avec ce numéro pour accepter : {link}",
-  "teamRoleCannot": "Votre rôle dans cette équipe ne couvre pas cette action."
+  "teamRoleCannot": "Votre rôle dans cette équipe ne couvre pas cette action.",
+  "teamPayoutSignInAgain": "Pour votre sécurité, reconnectez-vous avant de changer le compte de versement de l'équipe, puis revenez ici.",
+  "teamPayoutAccountTooNew": "Ce compte de versement a été ajouté il y a moins de 48 heures. Vous pourrez y demander un versement une fois les 48 heures passées."
 }

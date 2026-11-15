@@ -13,6 +13,7 @@ describe("team roles", () => {
     expect(teamRoleCapabilities("owner")).toEqual([...TEAM_CAPABILITIES]);
     expect(teamRoleCapabilities("finance")).toEqual([
       "payout.view",
+      "payout.request",
       "money.view",
       "refunds.issue",
     ]);

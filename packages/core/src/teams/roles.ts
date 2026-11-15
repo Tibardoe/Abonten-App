@@ -22,6 +22,8 @@ export const TEAM_CAPABILITIES = [
   "payout.manage",
   /** See the payout account and payouts. */
   "payout.view",
+  /** Ask for a payout to the team's payout account. */
+  "payout.request",
   /** Earnings, balances and money reports. */
   "money.view",
   /** Refund buyers. */
@@ -46,7 +48,7 @@ export type TeamCapability = (typeof TEAM_CAPABILITIES)[number];
 
 const ROLE_CAPABILITIES: Record<TeamRole, readonly TeamCapability[]> = {
   owner: TEAM_CAPABILITIES,
-  finance: ["money.view", "refunds.issue", "payout.view"],
+  finance: ["money.view", "refunds.issue", "payout.view", "payout.request"],
   manager: [
     "events.manage",
     "places.manage",

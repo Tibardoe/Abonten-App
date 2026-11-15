@@ -7,7 +7,12 @@ import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { createClient } from "@/config/supabase/server";
 import ManagePlaceView from "@/places/organisms/ManagePlaceView";
-import { actingFor } from "@/utils/teamActor";
+import SwitchToTeamPrompt from "@/teams/molecules/SwitchToTeamPrompt";
+import {
+  actingFor,
+  managingTargetFor,
+  readActingTeamId,
+} from "@/utils/teamActor";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 import type { Metadata } from "next";
@@ -96,6 +101,20 @@ export default async function page({
     "visit.show",
   ]);
   if (actor.error || place.owner_id !== actor.accountId) {
+    // Opened while managing as another account (a notice about a team's
+    // place, say): offer to switch when it is the person's or a team's.
+    const target = await managingTargetFor(user.id, place.owner_id);
+    const managing = actor.error
+      ? await readActingTeamId()
+      : actor.accountId === user.id
+        ? null
+        : actor.accountId;
+    if (
+      target &&
+      (target.kind === "team" ? target.teamId : null) !== managing
+    ) {
+      return <SwitchToTeamPrompt target={target} />;
+    }
     return (
       <p className="p-8 text-center text-muted-foreground">
         {t("youReNotAuthorizedToManage2")}

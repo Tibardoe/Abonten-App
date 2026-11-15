@@ -1,6 +1,7 @@
 import PageHeader from "@/components/molecules/PageHeader";
 import FinancesDesktopSidebar from "@/finances/organisms/FinancesDesktopSidebar";
 import FinancesMobileTabs from "@/finances/organisms/FinancesMobileTabs";
+import TeamMoneyGate from "@/finances/organisms/TeamMoneyGate";
 import SegmentMessages from "@/i18n/SegmentMessages";
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
@@ -40,7 +41,9 @@ export default function FinancesLayout({
             <FinancesDesktopSidebar />
           </div>
 
-          <div className="flex-1 min-w-0">{children}</div>
+          <div className="flex-1 min-w-0">
+            <TeamMoneyGate>{children}</TeamMoneyGate>
+          </div>
         </section>
       </div>
     </SegmentMessages>

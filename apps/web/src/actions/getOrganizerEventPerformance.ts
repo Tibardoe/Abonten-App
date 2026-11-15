@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { requestTimeZone } from "@/utils/requestTimeZone";
+import { actingFor } from "@/utils/teamActor";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerEventPerformance } from "@abonten/services/organizer/organizerDashboardQuery";
@@ -25,12 +26,17 @@ async function getOrganizerEventPerformance(
     return { status: 401 as const, message: tr("userNotLoggedIn") };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "money.view");
+  if (actor.error) return actor.error;
+
   return fetchOrganizerEventPerformance(
     supabase,
     period,
     sort,
     limit,
     await requestTimeZone(),
+    actor.accountId,
   );
 }
 

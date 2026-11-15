@@ -15,6 +15,7 @@ import type {
 } from "@abonten/types/eventAnalytics";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { accountArg } from "../teams/accountArg";
 
 // Post-auth query bodies for the organizer Dashboard's widget sections
 // (Sales Over Time · Event Performance · Upcoming Events · Needs Attention ·
@@ -49,6 +50,7 @@ export async function fetchOrganizerSalesTimeline(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
   timeZone?: string,
+  accountId?: string | null,
 ): Promise<SalesTimelineResult> {
   const { start, end, bucket } = getDashboardPeriodRange(
     period,
@@ -62,6 +64,7 @@ export async function fetchOrganizerSalesTimeline(
     p_bucket: bucket,
     // Buckets start at the viewer's local hour / midnight / month.
     p_timezone: timeZone ?? null,
+    ...accountArg(accountId),
     // Same generated-type gap as the other RPCs in this file: no DEFAULT
     // NULL declared even though the function accepts an open-ended range.
   } as unknown as Database["public"]["Functions"]["get_organizer_sales_timeline"]["Args"]);
@@ -80,6 +83,7 @@ export async function fetchOrganizerEventPerformance(
   sort: "revenue" | "tickets" = "revenue",
   limit = 10,
   timeZone?: string,
+  accountId?: string | null,
 ): Promise<DashboardListResult<OrganizerEventPerformanceRow>> {
   const { start, end } = getDashboardPeriodRange(period, new Date(), timeZone);
 
@@ -90,6 +94,7 @@ export async function fetchOrganizerEventPerformance(
       p_end: end ? end.toISOString() : null,
       p_sort: sort,
       p_limit: limit,
+      ...accountArg(accountId),
     } as unknown as Database["public"]["Functions"]["get_organizer_event_performance"]["Args"],
   );
 
@@ -104,9 +109,11 @@ export async function fetchOrganizerEventPerformance(
 export async function fetchOrganizerUpcomingEvents(
   supabase: SupabaseClient<Database>,
   limit = 5,
+  accountId?: string | null,
 ): Promise<DashboardListResult<OrganizerUpcomingEventRow>> {
   const { data, error } = await supabase.rpc("get_organizer_upcoming_events", {
     p_limit: limit,
+    ...accountArg(accountId),
   });
 
   if (error) {
@@ -120,9 +127,11 @@ export async function fetchOrganizerUpcomingEvents(
 export async function fetchOrganizerNeedsAttention(
   supabase: SupabaseClient<Database>,
   daysSoon = 7,
+  accountId?: string | null,
 ): Promise<DashboardListResult<OrganizerAttentionRow>> {
   const { data, error } = await supabase.rpc("get_organizer_needs_attention", {
     p_days_soon: daysSoon,
+    ...accountArg(accountId),
   });
 
   if (error) {
@@ -136,9 +145,11 @@ export async function fetchOrganizerNeedsAttention(
 export async function fetchOrganizerRecentActivity(
   supabase: SupabaseClient<Database>,
   limit = 8,
+  accountId?: string | null,
 ): Promise<DashboardListResult<OrganizerActivityRow>> {
   const { data, error } = await supabase.rpc("get_organizer_recent_activity", {
     p_limit: limit,
+    ...accountArg(accountId),
   });
 
   if (error) {
@@ -207,6 +218,8 @@ export async function fetchOrganizerDashboard(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
   timeZone?: string,
+  /** A team the person acts for; omitted = their own account. */
+  accountId?: string | null,
 ): Promise<OrganizerDashboardResult> {
   const { start, end, prevStart, prevEnd, bucket } = getDashboardPeriodRange(
     period,
@@ -221,6 +234,7 @@ export async function fetchOrganizerDashboard(
     p_prev_end: prevEnd ? prevEnd.toISOString() : null,
     p_bucket: bucket,
     p_timezone: timeZone ?? null,
+    ...accountArg(accountId),
   });
 
   if (error) {
@@ -264,14 +278,22 @@ export async function fetchOrganizerDashboardWidgets(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
   timeZone?: string,
+  accountId?: string | null,
 ): Promise<OrganizerDashboardWidgetsResult> {
   const [timeline, performance, upcoming, attention, activity] =
     await Promise.all([
-      fetchOrganizerSalesTimeline(supabase, period, timeZone),
-      fetchOrganizerEventPerformance(supabase, period, "revenue", 10, timeZone),
-      fetchOrganizerUpcomingEvents(supabase, 5),
-      fetchOrganizerNeedsAttention(supabase, 7),
-      fetchOrganizerRecentActivity(supabase, 8),
+      fetchOrganizerSalesTimeline(supabase, period, timeZone, accountId),
+      fetchOrganizerEventPerformance(
+        supabase,
+        period,
+        "revenue",
+        10,
+        timeZone,
+        accountId,
+      ),
+      fetchOrganizerUpcomingEvents(supabase, 5, accountId),
+      fetchOrganizerNeedsAttention(supabase, 7, accountId),
+      fetchOrganizerRecentActivity(supabase, 8, accountId),
     ]);
 
   if (

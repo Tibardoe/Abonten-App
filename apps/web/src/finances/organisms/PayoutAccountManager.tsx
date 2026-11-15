@@ -6,6 +6,7 @@ import setDefaultPayoutAccount from "@/actions/setDefaultPayoutAccount";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
+import { useActingContext } from "@/teams/useActingContext";
 import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +38,10 @@ export default function PayoutAccountManager({
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  // Managing as a team: an Owner changes the payout account (Finance sees it).
+  const acting = useActingContext();
+  const tt = useTranslations("teams");
+  const canManage = acting.can("payout.manage");
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: PAYOUT_ACCOUNTS_QUERY_KEY,
@@ -118,22 +123,36 @@ export default function PayoutAccountManager({
             <PayoutAccountCard
               key={account.id}
               account={account}
-              onSetDefault={() => setDefaultMutation.mutate(account.id)}
-              onRemove={() => setPendingRemoveId(account.id)}
+              onSetDefault={
+                canManage
+                  ? () => setDefaultMutation.mutate(account.id)
+                  : undefined
+              }
+              onRemove={
+                canManage ? () => setPendingRemoveId(account.id) : undefined
+              }
               removing={removingId === account.id}
             />
           ))}
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setIsAddOpen(true)}
-        className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-      >
-        <IoMdAddCircle className="text-primary text-2xl" />
-        {t("addPayoutAccount")}
-      </button>
+      {acting.current && canManage ? (
+        <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+          {tt("teamPayoutAccountRules")}
+        </p>
+      ) : null}
+
+      {canManage ? (
+        <button
+          type="button"
+          onClick={() => setIsAddOpen(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+        >
+          <IoMdAddCircle className="text-primary text-2xl" />
+          {t("addPayoutAccount")}
+        </button>
+      ) : null}
 
       {isAddOpen && (
         <AddPayoutAccountPopup

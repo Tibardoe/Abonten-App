@@ -9,6 +9,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from "@/features/notifications/useNotifications";
+import { manageAsNoticeTeam } from "@/features/teams/noticeTeam";
 import { useQueryView } from "@/lib/useQueryView";
 import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, ListFooter, Refresher } from "@abonten/ui-native";
@@ -74,7 +75,9 @@ export default function Notifications() {
     (item: NotificationType) => {
       if (!item.read_at) markOne.mutate(item.id);
       const href = notificationTarget(item);
-      if (href) router.push(href);
+      if (!href) return;
+      // A notice about a team opens managing as the team.
+      void manageAsNoticeTeam(item.data).then(() => router.push(href));
     },
     [markOne, router],
   );
