@@ -6,6 +6,8 @@ import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete
 import { useToast } from "@/hooks/useToast";
 import {
   getBufferedNow,
+  sameDateEntries,
+  sameDateRange,
   validateSingleDateRange,
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
@@ -239,11 +241,11 @@ export function useEventEditForm({
       const bufferedNow = getBufferedNow();
 
       if (dateType === "single") {
-        const result = validateSingleDateRange(
-          tc,
-          singleDateRange,
-          bufferedNow,
-        );
+        // Dates left as they were need no notice (an event starting soon,
+        // or running, can still have its words fixed); new dates do.
+        const result = sameDateRange(singleDateRange, initialRange)
+          ? ({ ok: true } as const)
+          : validateSingleDateRange(tc, singleDateRange, bufferedNow);
         if (!result.ok) {
           toast.error(result.message);
           return;
@@ -254,7 +256,9 @@ export function useEventEditForm({
           ends_at: toWallClockString(singleDateRange.to as Date),
         };
       } else if (dateType === "specific") {
-        const result = validateSpecificDates(tc, multipleDates, bufferedNow);
+        const result = sameDateEntries(multipleDates, initialEntries)
+          ? ({ ok: true } as const)
+          : validateSpecificDates(tc, multipleDates, bufferedNow);
         if (!result.ok) {
           toast.error(result.message);
           return;

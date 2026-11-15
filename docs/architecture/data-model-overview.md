@@ -37,7 +37,7 @@ The schema is defined only by `supabase/migrations/`. There are **no Postgres en
 
 ## Partitioning
 
-`review` (monthly partitions through 2026-12 + default, maintained by `ensure_future_review_partitions`), `favorite` (p1–p4), `payment_method` (p0–p3), `user_image_history` (0–3), `wallet` (p0–p3, unused), `event_media` (p0–p3, unused), `story`, `event_share`, `media_audit` (default partitions).
+`review` (monthly partitions through 2026-12 + default, maintained by `ensure_future_review_partitions`, which switches row security on for each one it makes), `favorite` (p1–p4), `payment_method` (p0–p3), `user_image_history` (0–3), `wallet` (p0–p3, unused), `event_media` (p0–p3, unused), `story`, `event_share`, `media_audit` (default partitions).
 
 ## Storage buckets
 

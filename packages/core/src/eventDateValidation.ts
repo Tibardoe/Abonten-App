@@ -102,3 +102,35 @@ export function validateSpecificDates(
 
   return { ok: true };
 }
+
+// An edit that keeps the event's dates needs no notice: the rule above is
+// for dates being chosen now. Without this an organizer could not fix a
+// typo in the description of an event starting within five hours, or of
+// one already running. Compared to the minute, the precision of the pickers.
+const minute = (value: Date | null | undefined): number | null =>
+  value ? Math.floor(new Date(value).getTime() / 60_000) : null;
+
+/** Whether two ranges name the same start and end minute. */
+export function sameDateRange(
+  next: DateRangeInput | undefined,
+  initial: DateRangeInput | undefined,
+): boolean {
+  if (!next || !initial) return false;
+  const a = [minute(next.from), minute(next.to)];
+  const b = [minute(initial.from), minute(initial.to)];
+  return a[0] !== null && a[0] === b[0] && a[1] !== null && a[1] === b[1];
+}
+
+/** Whether two lists of dates name the same minutes, in any order. */
+export function sameDateEntries(
+  next: DateEntry[] | undefined,
+  initial: DateEntry[] | undefined,
+): boolean {
+  if (!next || !initial || next.length !== initial.length) return false;
+  const key = (entries: DateEntry[]) =>
+    entries
+      .map((e) => `${minute(e.start)}-${minute(e.end)}`)
+      .sort()
+      .join(",");
+  return key(next) === key(initial);
+}
