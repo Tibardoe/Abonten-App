@@ -225,7 +225,13 @@
         "youHavenTAddedAPayout",
         "yourWithdrawalWillMoveToProcessing"
       ],
-      "teams": ["teamPayoutAccountRules"],
+      "teams": [
+        "listingBelongsToTeam",
+        "listingIsYours",
+        "manageAsTeam",
+        "teamPayoutAccountRules",
+        "useOwnAccount"
+      ],
       "validation": "*",
       "wallet": [
         "changeNumber",
