@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Store,
   Users,
+  UsersRound,
   Wallet,
   X,
 } from "lucide-react";
@@ -124,6 +125,12 @@ const ITEMS: Item[] = [
     label: "Ticket transfers",
     icon: Send,
     permission: "transfers.view",
+  },
+  {
+    href: "/teams",
+    label: "Teams",
+    icon: UsersRound,
+    permission: "teams.view",
   },
   {
     href: "/rewards",

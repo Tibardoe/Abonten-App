@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/app/AppHeader";
 import { useIdentityOverview } from "@/features/identity/useIdentity";
+import { useTeamsOverview } from "@/features/teams/useTeams";
 import { HELP_URL, LEGAL_URLS, openExternalLink } from "@/lib/legalLinks";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -46,6 +47,12 @@ const ITEMS: {
     route: "/(app)/settings/identity",
     icon: "id-card-outline",
     labelKey: "nav.identity",
+  },
+  {
+    key: "teams",
+    route: "/(app)/settings/teams",
+    icon: "people-outline",
+    labelKey: "nav.teams",
   },
   {
     key: "blocked",
@@ -96,7 +103,21 @@ export default function SettingsHub() {
   const t = useTranslations("settings");
   // Shown only while identity checks are open to this account.
   const { program: identity } = useIdentityOverview({ staleTime: 5 * 60_000 });
-  const items = ITEMS.filter((i) => i.key !== "identity" || identity.enabled);
+  // Teams shows while the programme is open to the person, and always for
+  // someone in a team or with an invitation waiting.
+  const teamsQuery = useTeamsOverview({ staleTime: 5 * 60_000 });
+  const teams =
+    teamsQuery.data?.status === 200 ? teamsQuery.data.data : undefined;
+  const showTeams =
+    !!teams &&
+    (teams.program.enabled ||
+      teams.teams.length > 0 ||
+      teams.invites.length > 0);
+  const items = ITEMS.filter(
+    (i) =>
+      (i.key !== "identity" || identity.enabled) &&
+      (i.key !== "teams" || showTeams),
+  );
 
   return (
     <View className="flex-1 bg-background">

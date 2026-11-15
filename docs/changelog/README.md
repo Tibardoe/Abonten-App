@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-15 — Team accounts, stage 1
+
+- New: `architecture/team-accounts.md` 1.0, `admin/teams.md` 1.0 (Part 2 of the Tickets, entry and teams plan, stage 1: teams, members, roles, invitations, activity; switched off). Permissions `teams.view` / `teams.configure` (`architecture/roles-and-permissions.md`, `admin/settings-and-rbac.md`); job `team-invites-expire` (`operations/scheduled-jobs.md`); env var `TEAMS_KILL_SWITCH` (`security/secrets-and-environment.md`, `deployment/rollback-and-recovery.md`); `privacy/data-inventory.md` (teams); `architecture/feature-inventory.md`; `documentation-coverage-matrix.md`; the plan's state and X5's current state; PROJECT.md §75, CLAUDE.md quick facts.
+
 ## 2026-11-15 — Send a ticket to a friend
 
 - A paid ticket someone sent you no longer offers "Request refund"/"Cancel" (it says send it back instead), and the app's toasts show long explanations in full: `architecture/ticket-transfers.md` 1.1.

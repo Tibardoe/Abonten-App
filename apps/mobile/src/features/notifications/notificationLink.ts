@@ -132,6 +132,10 @@ function targetFromData(
       // A ticket sent to or by the reader: My Tickets shows the offers
       // waiting for them at the top, and the sender's ticket in the list.
       return "/(app)/tickets";
+    case "team":
+      // An invitation, a new member, a removal or a new role: the Teams
+      // screen shows invitations at the top and every team the reader runs.
+      return "/(app)/settings/teams";
     case "safety":
       // A trusted contact opens the alert they were told about (their own
       // link); the person opens their Safety screen.

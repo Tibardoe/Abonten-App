@@ -74,6 +74,8 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `plans.configure` | Pay small small switches, audience and rules — in `STEP_UP_PERMISSIONS` | finance_admin, operations |
 | `transfers.view` | Admin › Ticket transfers: the settings and every offer (a number shows only its last four digits) | finance_admin, operations, support_admin |
 | `transfers.configure` | Ticket transfer switches, audience and rules — in `STEP_UP_PERMISSIONS` | finance_admin, operations |
+| `teams.view` | Admin › Teams: the settings, every team with its Owners and member count, one team's members and activity | operations, support_admin, moderator |
+| `teams.configure` | Team account switches, audience and limits — in `STEP_UP_PERMISSIONS` | operations |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

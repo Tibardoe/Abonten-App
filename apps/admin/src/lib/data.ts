@@ -143,6 +143,11 @@ import {
   listSupportConversationsCore,
 } from "@abonten/services/admin/support/supportAdminCore";
 import {
+  getTeamAdminCore,
+  getTeamSettingsCore,
+  listTeamsAdminCore,
+} from "@abonten/services/admin/teams/teamsAdminCore";
+import {
   getTicketPlanAdminCore,
   getTicketPlanSettingsCore,
   listTicketPlansAdminCore,
@@ -1046,4 +1051,25 @@ export async function loadTicketTransfers(filter: {
     filter,
   );
   return { ctx, list };
+}
+
+/** Admin › Teams: the programme switches and limits. */
+export async function loadTeamSettings() {
+  const ctx = await requireAdmin();
+  const settings = await getTeamSettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
+}
+
+/** Admin › Teams: teams, newest first, or the ones matching a search. */
+export async function loadTeams(filter: { q?: string | null }) {
+  const ctx = await requireAdmin();
+  const list = await listTeamsAdminCore(getServiceClient(), ctx, filter);
+  return { ctx, list };
+}
+
+/** Admin › Teams › one team: members and activity. */
+export async function loadTeam(teamId: string) {
+  const ctx = await requireAdmin();
+  const team = await getTeamAdminCore(getServiceClient(), ctx, teamId);
+  return { ctx, team };
 }

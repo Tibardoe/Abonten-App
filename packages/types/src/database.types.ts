@@ -12722,6 +12722,335 @@ export type Database = {
         }
         Relationships: []
       }
+      team: {
+        Row: {
+          account_id: string
+          created_at: string
+          created_by: string | null
+          status: string
+          status_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          created_by?: string | null
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          created_by?: string | null
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      team_activity: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string
+          details: Json
+          id: number
+          subject_id: string | null
+          subject_kind: string | null
+          team_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: never
+          subject_id?: string | null
+          subject_kind?: string | null
+          team_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: never
+          subject_id?: string | null
+          subject_kind?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_activity_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_activity_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_activity_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team"
+            referencedColumns: ["account_id"]
+          },
+        ]
+      }
+      team_invite: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: string
+          status: string
+          team_id: string
+          text_sent_at: string | null
+          to_phone: string | null
+          to_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          expires_at: string
+          id?: string
+          invited_by?: string | null
+          role: string
+          status?: string
+          team_id: string
+          text_sent_at?: string | null
+          to_phone?: string | null
+          to_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          status?: string
+          team_id?: string
+          text_sent_at?: string | null
+          to_phone?: string | null
+          to_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invite_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_invite_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_invite_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "team_invite_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_invite_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      team_member: {
+        Row: {
+          added_by: string | null
+          ended_at: string | null
+          ended_by: string | null
+          joined_at: string
+          role: string
+          status: string
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          joined_at?: string
+          role: string
+          status?: string
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          joined_at?: string
+          role?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_member_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_member_ended_by_fkey"
+            columns: ["ended_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_member_ended_by_fkey"
+            columns: ["ended_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_member_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "team_member_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_member_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      team_program_setting: {
+        Row: {
+          audience: string
+          beta_user_ids: string[]
+          enabled: boolean
+          id: number
+          invite_hours: number
+          max_members: number
+          max_teams_created: number
+          texts_per_team_per_day: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          audience?: string
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          invite_hours?: number
+          max_members?: number
+          max_teams_created?: number
+          texts_per_team_per_day?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          audience?: string
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          invite_hours?: number
+          max_members?: number
+          max_teams_created?: number
+          texts_per_team_per_day?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       ticket: {
         Row: {
           created_at: string
@@ -13848,6 +14177,7 @@ export type Database = {
       }
       user_info: {
         Row: {
+          account_kind: string
           avatar_public_id: string | null
           avatar_version: string | null
           bio: string | null
@@ -13875,6 +14205,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          account_kind?: string
           avatar_public_id?: string | null
           avatar_version?: string | null
           bio?: string | null
@@ -13902,6 +14233,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          account_kind?: string
           avatar_public_id?: string | null
           avatar_version?: string | null
           bio?: string | null
@@ -15233,6 +15565,24 @@ export type Database = {
       }
       _search_trgm_thresholds: { Args: never; Returns: undefined }
       _search_web_tsquery: { Args: { p_norm: string }; Returns: unknown }
+      _team_active_owners: { Args: { p_team: string }; Returns: number }
+      _team_fail: { Args: { p_code: string }; Returns: undefined }
+      _team_log: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_details: Json
+          p_subject_id: string
+          p_subject_kind: string
+          p_team: string
+        }
+        Returns: undefined
+      }
+      _team_person_ok: { Args: { p_user: string }; Returns: boolean }
+      _team_require: {
+        Args: { p_capability: string; p_team: string; p_user: string }
+        Returns: string
+      }
       _ticket_plan_allocate_refund: {
         Args: { p_plan_id: string; p_total: number }
         Returns: undefined
@@ -15271,6 +15621,10 @@ export type Database = {
           dismiss_count: number
           dismissed_at: string
         }[]
+      }
+      acts_for: {
+        Args: { p_account: string; p_capability: string }
+        Returns: boolean
       }
       admin_clear_payout_review: {
         Args: { p_admin_id: string; p_note: string; p_payout_id: string }
@@ -18278,6 +18632,84 @@ export type Database = {
       storage_purge_finish: {
         Args: { p_detail?: string; p_ids: number[]; p_status: string }
         Returns: number
+      }
+      team_finalize_create: {
+        Args: {
+          p_account: string
+          p_creator: string
+          p_max_created: number
+          p_name: string
+          p_username: string
+        }
+        Returns: undefined
+      }
+      team_forget_member: {
+        Args: { p_reason: string; p_user: string }
+        Returns: undefined
+      }
+      team_invite_accept: {
+        Args: { p_invite: string; p_max_members: number; p_user: string }
+        Returns: {
+          invited_by: string | null
+          role: string
+          team_id: string
+        }[]
+      }
+      team_invite_cancel: {
+        Args: { p_by: string; p_invite: string }
+        Returns: {
+          team_id: string
+          to_user_id: string | null
+        }[]
+      }
+      team_invite_decline: {
+        Args: { p_invite: string; p_user: string }
+        Returns: {
+          invited_by: string | null
+          team_id: string
+        }[]
+      }
+      team_invite_expire_due: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      team_invite_send: {
+        // One of p_to_user / p_to_phone is null; the generator drops the
+        // `| null` (kept by hand, 2026-11-15).
+        Args: {
+          p_by: string
+          p_hours: number
+          p_max_members: number
+          p_role: string
+          p_team: string
+          p_to_phone: string | null
+          p_to_user: string | null
+        }
+        Returns: {
+          expires_at: string
+          invite_id: string
+          resolved_to_user_id: string | null
+        }[]
+      }
+      team_member_leave: {
+        Args: { p_team: string; p_user: string }
+        Returns: string
+      }
+      team_member_remove: {
+        Args: { p_by: string; p_team: string; p_user: string }
+        Returns: string
+      }
+      team_member_set_role: {
+        Args: { p_by: string; p_role: string; p_team: string; p_user: string }
+        Returns: string
+      }
+      team_rename: {
+        Args: { p_by: string; p_name: string; p_team: string }
+        Returns: undefined
+      }
+      team_role_can: {
+        Args: { p_capability: string; p_role: string }
+        Returns: boolean
       }
       ticket_plan_admin_part_refund: {
         Args: { p_action: string; p_note: string; p_payment_id: string }

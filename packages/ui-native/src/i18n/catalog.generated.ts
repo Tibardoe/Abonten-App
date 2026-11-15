@@ -31,6 +31,7 @@ import akSafety from "@abonten/i18n/messages/ak/safety.json";
 import akSearch from "@abonten/i18n/messages/ak/search.json";
 import akSettings from "@abonten/i18n/messages/ak/settings.json";
 import akSpotlight from "@abonten/i18n/messages/ak/spotlight.json";
+import akTeams from "@abonten/i18n/messages/ak/teams.json";
 import akTicketPlans from "@abonten/i18n/messages/ak/ticketPlans.json";
 import akTickets from "@abonten/i18n/messages/ak/tickets.json";
 import akTransactions from "@abonten/i18n/messages/ak/transactions.json";
@@ -67,6 +68,7 @@ import deSafety from "@abonten/i18n/messages/de/safety.json";
 import deSearch from "@abonten/i18n/messages/de/search.json";
 import deSettings from "@abonten/i18n/messages/de/settings.json";
 import deSpotlight from "@abonten/i18n/messages/de/spotlight.json";
+import deTeams from "@abonten/i18n/messages/de/teams.json";
 import deTicketPlans from "@abonten/i18n/messages/de/ticketPlans.json";
 import deTickets from "@abonten/i18n/messages/de/tickets.json";
 import deTransactions from "@abonten/i18n/messages/de/transactions.json";
@@ -103,6 +105,7 @@ import enSafety from "@abonten/i18n/messages/en/safety.json";
 import enSearch from "@abonten/i18n/messages/en/search.json";
 import enSettings from "@abonten/i18n/messages/en/settings.json";
 import enSpotlight from "@abonten/i18n/messages/en/spotlight.json";
+import enTeams from "@abonten/i18n/messages/en/teams.json";
 import enTicketPlans from "@abonten/i18n/messages/en/ticketPlans.json";
 import enTickets from "@abonten/i18n/messages/en/tickets.json";
 import enTransactions from "@abonten/i18n/messages/en/transactions.json";
@@ -139,6 +142,7 @@ import esSafety from "@abonten/i18n/messages/es/safety.json";
 import esSearch from "@abonten/i18n/messages/es/search.json";
 import esSettings from "@abonten/i18n/messages/es/settings.json";
 import esSpotlight from "@abonten/i18n/messages/es/spotlight.json";
+import esTeams from "@abonten/i18n/messages/es/teams.json";
 import esTicketPlans from "@abonten/i18n/messages/es/ticketPlans.json";
 import esTickets from "@abonten/i18n/messages/es/tickets.json";
 import esTransactions from "@abonten/i18n/messages/es/transactions.json";
@@ -175,6 +179,7 @@ import frSafety from "@abonten/i18n/messages/fr/safety.json";
 import frSearch from "@abonten/i18n/messages/fr/search.json";
 import frSettings from "@abonten/i18n/messages/fr/settings.json";
 import frSpotlight from "@abonten/i18n/messages/fr/spotlight.json";
+import frTeams from "@abonten/i18n/messages/fr/teams.json";
 import frTicketPlans from "@abonten/i18n/messages/fr/ticketPlans.json";
 import frTickets from "@abonten/i18n/messages/fr/tickets.json";
 import frTransactions from "@abonten/i18n/messages/fr/transactions.json";
@@ -211,6 +216,7 @@ import ptSafety from "@abonten/i18n/messages/pt/safety.json";
 import ptSearch from "@abonten/i18n/messages/pt/search.json";
 import ptSettings from "@abonten/i18n/messages/pt/settings.json";
 import ptSpotlight from "@abonten/i18n/messages/pt/spotlight.json";
+import ptTeams from "@abonten/i18n/messages/pt/teams.json";
 import ptTicketPlans from "@abonten/i18n/messages/pt/ticketPlans.json";
 import ptTickets from "@abonten/i18n/messages/pt/tickets.json";
 import ptTransactions from "@abonten/i18n/messages/pt/transactions.json";
@@ -254,6 +260,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     search: enSearch,
     settings: enSettings,
     spotlight: enSpotlight,
+    teams: enTeams,
     ticketPlans: enTicketPlans,
     tickets: enTickets,
     transactions: enTransactions,
@@ -292,6 +299,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     search: akSearch,
     settings: akSettings,
     spotlight: akSpotlight,
+    teams: akTeams,
     ticketPlans: akTicketPlans,
     tickets: akTickets,
     transactions: akTransactions,
@@ -330,6 +338,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     search: deSearch,
     settings: deSettings,
     spotlight: deSpotlight,
+    teams: deTeams,
     ticketPlans: deTicketPlans,
     tickets: deTickets,
     transactions: deTransactions,
@@ -368,6 +377,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     search: esSearch,
     settings: esSettings,
     spotlight: esSpotlight,
+    teams: esTeams,
     ticketPlans: esTicketPlans,
     tickets: esTickets,
     transactions: esTransactions,
@@ -406,6 +416,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     search: frSearch,
     settings: frSettings,
     spotlight: frSpotlight,
+    teams: frTeams,
     ticketPlans: frTicketPlans,
     tickets: frTickets,
     transactions: frTransactions,
@@ -444,6 +455,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     search: ptSearch,
     settings: ptSettings,
     spotlight: ptSpotlight,
+    teams: ptTeams,
     ticketPlans: ptTicketPlans,
     tickets: ptTickets,
     transactions: ptTransactions,

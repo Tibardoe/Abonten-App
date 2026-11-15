@@ -33,7 +33,9 @@ export type NotificationEntityKind =
   | "identity"
   | "ticket_plan"
   /** A ticket sent to or by the reader (Send a ticket to a friend). */
-  | "ticket_transfer";
+  | "ticket_transfer"
+  /** A team the reader runs or is invited to (team accounts). */
+  | "team";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -77,6 +79,10 @@ export type NotificationData = {
   planId?: string;
   /** With kind "ticket_transfer": the offer. */
   transferId?: string;
+  /** With kind "team": the team, and the invitation or member it is about. */
+  teamId?: string;
+  inviteId?: string;
+  memberId?: string;
 };
 
 export type NotificationType = {
