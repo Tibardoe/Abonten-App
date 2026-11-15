@@ -83,6 +83,16 @@ const DEFAULT_DURATION: Record<ToastTone, number> = {
   info: 3200,
 };
 
+// Long words take long to read: a server's two-sentence explanation ("This
+// ticket was sent to you… send it back to them") was gone before it could be
+// read, and cut at two lines. About 50 ms a character, never past 12 s.
+function readingDuration(tone: ToastTone, text: string): number {
+  return Math.max(
+    DEFAULT_DURATION[tone],
+    Math.min(12_000, 1_500 + text.length * 50),
+  );
+}
+
 let nextId = 1;
 
 const NOOP_TOAST: ToastApi = {
@@ -123,7 +133,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
       timer.current = setTimeout(
         () => setToast((t) => (t?.id === record.id ? null : t)),
-        options?.duration ?? DEFAULT_DURATION[tone],
+        options?.duration ??
+          readingDuration(tone, `${message} ${options?.description ?? ""}`),
       );
     },
     [],
@@ -287,13 +298,13 @@ function ToastHost({
 
           <View style={{ flex: 1 }}>
             <AppText
-              numberOfLines={2}
+              numberOfLines={4}
               className="text-[14px] font-semibold text-popover-foreground"
             >
               {shown.message}
             </AppText>
             {shown.description ? (
-              <AppText variant="caption" numberOfLines={2} className="mt-0.5">
+              <AppText variant="caption" numberOfLines={5} className="mt-0.5">
                 {shown.description}
               </AppText>
             ) : null}

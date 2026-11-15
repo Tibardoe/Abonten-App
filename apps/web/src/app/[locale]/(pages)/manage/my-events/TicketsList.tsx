@@ -18,6 +18,7 @@ import {
   ticketRefundState,
 } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { isTicketPaidBySomeoneElse } from "@abonten/core/ticketTransfers/paidBySomeoneElse";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { useLocale, useTranslations } from "next-intl";
@@ -43,6 +44,7 @@ function TicketCard({
   const locale = useLocale();
   const t = useTranslations("manage");
   const tc = useTranslations("core");
+  const tt = useTranslations("tickets");
 
   // The ticket's own refund when its payment is refunded ticket by
   // ticket, else its payment's (refundStatus.ticketRefundState).
@@ -63,6 +65,8 @@ function TicketCard({
   // TICKET_REFUND_SELECT both select event:event_id(*, ...)), so no extra
   // query is needed to tell them apart.
   const cancelledByOrganizer = event.event.status === "canceled";
+  // Paid by someone else and sent here: its refund is theirs (send it back).
+  const sentToHolder = isTicketPaidBySomeoneElse(event);
   // Shared source of truth for the event's lifecycle -- an "active" ticket
   // for an event that has already ended (or been cancelled) must not keep
   // reading as "Active" in the list.
@@ -164,7 +168,8 @@ function TicketCard({
 
           {event.status === "active" &&
             !cancelledByOrganizer &&
-            !eventEnded && (
+            !eventEnded &&
+            !sentToHolder && (
               <CancelUserTicketBtn
                 ticketId={event.id}
                 transactionId={event.transaction_id}
@@ -173,6 +178,15 @@ function TicketCard({
               />
             )}
         </div>
+
+        {sentToHolder &&
+          event.status === "active" &&
+          !cancelledByOrganizer &&
+          !eventEnded && (
+            <p className="text-xs text-muted-foreground">
+              {tt("sentToYouNoRefund")}
+            </p>
+          )}
 
         <TicketSendControl
           ticketId={event.id}

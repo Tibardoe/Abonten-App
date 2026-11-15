@@ -25,6 +25,8 @@ export type TicketType = {
 export type UserTicketType = {
   id: string;
   user_id: string;
+  /** Who the ticket was first issued to: for a paid ticket, the payer. */
+  issued_to?: string | null;
   transaction_id: string | null;
   transaction: {
     status: string;

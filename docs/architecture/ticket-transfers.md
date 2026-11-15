@@ -55,7 +55,7 @@ Everything is service-role only: the three tables have RLS on with no client gra
 **The refund of a ticket goes to whoever paid, never to its holder**: refunds follow the transaction. Three guards were added so a transfer can never pay back a ticket someone still holds:
 
 - `ticketsOfPayment`, `areAllTicketsForTransactionCancelled` and `markCheckoutCancelledIfAllTicketsCancelled` now read with the service role. They used the buyer's client, which cannot see a ticket the buyer sent on, so a payment refunded only as a whole (Abonten Credit, Pay small small) could have been refunded in full while a friend still held one of its tickets.
-- A holder cannot cancel a ticket someone else paid for: `cancelUserTicketCore` and the quote answer 409 `ticketTransferCancelSendBack` ("send it back to them"). Cancelling it would put the seat back with nothing returned to the payer. "Cancel all my tickets for this event" leaves such tickets out.
+- A holder cannot cancel a ticket someone else paid for: `cancelUserTicketCore` and the quote answer 409 `ticketTransferCancelSendBack` ("send it back to them"). Cancelling it would put the seat back with nothing returned to the payer. "Cancel all my tickets for this event" leaves such tickets out. The website and the app do not offer the cancel at all on such a ticket (`@abonten/core/ticketTransfers/paidBySomeoneElse`: a paid ticket whose `issued_to`, the payer, is not its holder) and say "send it back" instead.
 - A payment refunded only as a whole cannot be cancelled while one of its tickets is with someone else (409 `ticketTransferPaidTogetherSent`); the organizer can still refund it.
 
 Organizer and staff refunds are unchanged: they cancel the payment's tickets wherever they are and refund the payer.
