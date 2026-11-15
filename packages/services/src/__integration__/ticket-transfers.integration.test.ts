@@ -19,6 +19,18 @@ vi.mock("../tickets/saveEventQrCodeToCloudinary", () => ({
 vi.mock("../media/assetReferences", () => ({
   destroyAssetIfUnused: async () => ({ result: "ok" }),
 }));
+// The invite text to a number with no account: nothing leaves the machine,
+// and a test chooses whether the provider takes it.
+const sms = vi.hoisted(() => ({ accept: false, sent: 0 }));
+vi.mock("../sms/hubtelSms", () => ({
+  sendHubtelSms: async () => {
+    if (!sms.accept) {
+      return { ok: false, reason: "unreachable", detail: "test" };
+    }
+    sms.sent += 1;
+    return { ok: true, messageId: null };
+  },
+}));
 
 import { isValidNewTicketCode } from "@abonten/core/ticketTransfers/ticketCode";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
@@ -464,6 +476,124 @@ describe("ticket transfers", () => {
     );
     expect(res.status).toBe(409);
     await setEventTicketTransferSettingCore(svc, organizer.id, eventId, true);
+  });
+
+  it("switching sending off closes the offers still waiting, and both sides are told", async () => {
+    const ticket = await issue(alice, { paidBy: alice });
+    const sent = await sendTicketCore(
+      svc,
+      alice.id,
+      {
+        ticketId: ticket.id,
+        target: { kind: "username", username: username(bob) },
+      },
+      noText,
+    );
+    expect(sent.status).toBe(200);
+    if (sent.status !== 200) return;
+
+    expect(
+      (
+        await setEventTicketTransferSettingCore(
+          svc,
+          organizer.id,
+          eventId,
+          false,
+        )
+      ).status,
+    ).toBe(200);
+    const { data: row } = await service
+      .from("ticket_transfer")
+      .select("status, cancel_reason")
+      .eq("id", sent.data.id)
+      .single();
+    expect(row).toEqual({
+      status: "cancelled",
+      cancel_reason: "organizer_off",
+    });
+    expect(
+      (await acceptTicketTransferCore(svc, bob.id, sent.data.id)).status,
+    ).toBe(409);
+    const { data: held } = await service
+      .from("ticket")
+      .select("user_id")
+      .eq("id", ticket.id)
+      .single();
+    expect(held?.user_id).toBe(alice.id);
+
+    const { data: notices } = await service
+      .from("notification")
+      .select("user_id, type")
+      .in("type", [
+        "ticket_transfer_stopped_sender",
+        "ticket_transfer_stopped_receiver",
+      ])
+      .in("user_id", [alice.id, bob.id]);
+    expect(notices).toEqual(
+      expect.arrayContaining([
+        { user_id: alice.id, type: "ticket_transfer_stopped_sender" },
+        { user_id: bob.id, type: "ticket_transfer_stopped_receiver" },
+      ]),
+    );
+
+    // An offer that slipped in some other way still cannot be accepted
+    // while sending is off.
+    const { data: raw } = await service
+      .from("ticket_transfer")
+      .insert({
+        ticket_id: ticket.id,
+        event_id: eventId,
+        from_user_id: alice.id,
+        to_user_id: bob.id,
+        from_code: ticket.code,
+        expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+      })
+      .select("id")
+      .single();
+    const late = await acceptTicketTransferCore(svc, bob.id, raw?.id ?? "");
+    expect(late.status).toBe(409);
+    await service
+      .from("ticket_transfer")
+      .delete()
+      .eq("id", raw?.id ?? "");
+    await setEventTicketTransferSettingCore(svc, organizer.id, eventId, true);
+  });
+
+  it("the sender sees when the invite text to a number did not go", async () => {
+    const number = () =>
+      `+23320${Math.floor(1_000_000 + Math.random() * 8_999_999)}`;
+    const canText = { canTextNumber: async () => true };
+
+    sms.accept = false;
+    const first = await issue(alice, { paidBy: alice });
+    const failed = await sendTicketCore(
+      svc,
+      alice.id,
+      { ticketId: first.id, target: { kind: "phone", phone: number() } },
+      canText,
+    );
+    expect(failed.status).toBe(200);
+    if (failed.status !== 200) return;
+    expect(failed.data.to).toBeNull();
+    expect(failed.data.toPhoneTexted).toBe(false);
+
+    sms.accept = true;
+    const second = await issue(alice, { paidBy: alice });
+    const texted = await sendTicketCore(
+      svc,
+      alice.id,
+      { ticketId: second.id, target: { kind: "phone", phone: number() } },
+      canText,
+    );
+    sms.accept = false;
+    expect(texted.status).toBe(200);
+    if (texted.status !== 200) return;
+    expect(texted.data.toPhoneTexted).toBe(true);
+    expect(sms.sent).toBe(1);
+
+    for (const id of [failed.data.id, texted.data.id]) {
+      await cancelTicketTransferCore(svc, alice.id, id);
+    }
   });
 
   it("someone who blocked the sender cannot be sent a ticket", async () => {

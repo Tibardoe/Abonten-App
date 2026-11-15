@@ -1,5 +1,6 @@
 import { formatDateTime } from "@abonten/core/i18n/format";
 import { personName } from "@abonten/core/personName";
+import { ticketSendBlockMessageKey } from "@abonten/core/ticketTransfers/sendBlock";
 import type {
   SendTicketTarget,
   TicketTransferRecipient,
@@ -21,6 +22,7 @@ import {
   useAnswerTicketTransfer,
   useFindTicketRecipient,
   useSendTicket,
+  useTicketTransferState,
   useTicketTransfers,
 } from "./useTicketTransfers";
 
@@ -48,6 +50,10 @@ export function TicketSendPanel({
   const [open, setOpen] = useState(false);
 
   const overview = data?.status === 200 ? data.data : undefined;
+  const state = useTicketTransferState(
+    ticketId,
+    live && !!overview?.program.enabled,
+  );
   const pending =
     overview?.outgoing.find((o) => o.ticketId === ticketId) ?? null;
 
@@ -83,6 +89,11 @@ export function TicketSendPanel({
             date: formatDateTime(pending.expiresAt, locale),
           })}
         </AppText>
+        {pending.toPhoneTexted === false ? (
+          <AppText variant="caption" tone="warning">
+            {t("notTextedHint")}
+          </AppText>
+        ) : null}
         <Button
           title={t("takeBack")}
           variant="outline"
@@ -96,6 +107,23 @@ export function TicketSendPanel({
   }
 
   if (!live || !overview?.program.enabled) return null;
+
+  // The organizer may have switched sending off, or the ticket may have
+  // moved the most times allowed: say so instead of a button that fails.
+  const blockKey =
+    state.data?.status === 200
+      ? ticketSendBlockMessageKey(state.data.data?.block ?? null)
+      : null;
+  if (blockKey) {
+    return (
+      <View className="w-full flex-row items-center gap-2 rounded-xl border border-border bg-card p-4">
+        <Icon name="paper-plane-outline" size={18} tone="muted" />
+        <AppText variant="meta" className="flex-1">
+          {t(blockKey)}
+        </AppText>
+      </View>
+    );
+  }
 
   return (
     <>

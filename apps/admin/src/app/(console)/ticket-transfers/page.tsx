@@ -25,6 +25,7 @@ const ENDED: Record<string, string> = {
   sender: "the sender took it back",
   ticket_changed: "the ticket was checked in or cancelled",
   restricted: "an account was restricted",
+  organizer_off: "the organizer turned sending off",
 };
 
 export default async function TicketTransfersPage({

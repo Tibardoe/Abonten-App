@@ -952,6 +952,14 @@
     "ticket_transfer_expired": {
       "title": "Tu entrada para {title} sigue siendo tuya",
       "body": "Nadie la aceptó a tiempo, así que sigue en tus entradas."
+    },
+    "ticket_transfer_stopped_sender": {
+      "title": "Tu entrada para {title} sigue siendo tuya",
+      "body": "El organizador ha desactivado el envío de entradas para este evento, así que tu oferta se ha cerrado."
+    },
+    "ticket_transfer_stopped_receiver": {
+      "title": "La entrada de {actor} ya no se puede enviar",
+      "body": "El organizador de {title} ha desactivado el envío de entradas, así que la oferta se ha cerrado."
     }
   },
   "openStatus": {

@@ -26,6 +26,7 @@ import {
   noticeTransferCancelled,
   noticeTransferDeclined,
   noticeTransferReceived,
+  noticeTransferStoppedByOrganizer,
   textTransferInvite,
 } from "./ticketTransferNotices";
 import {
@@ -70,7 +71,7 @@ function toPerson(row: PersonRow): TicketTransferPerson {
   };
 }
 
-/** "+233 24 *** 4567": enough to recognise a number, not to read it out. */
+/** "+233 ** *** 4567": enough to recognise a number, not to read it out. */
 export function maskPhone(e164: string): string {
   const international = formatPhoneInternational(e164);
   const digits = international.replace(/\D/g, "");
@@ -170,12 +171,13 @@ type TransferRow = {
   to_user_id: string | null;
   to_phone: string | null;
   status: string;
+  text_sent_at: string | null;
   created_at: string;
   expires_at: string;
 };
 
 const TRANSFER_SELECT =
-  "id, ticket_id, event_id, from_user_id, to_user_id, to_phone, status, created_at, expires_at";
+  "id, ticket_id, event_id, from_user_id, to_user_id, to_phone, status, text_sent_at, created_at, expires_at";
 
 async function people(
   svc: ServiceRoleClient,
@@ -203,6 +205,8 @@ function toOutgoing(
     status: row.status as TicketTransferStatus,
     to: row.to_user_id ? (persons.get(row.to_user_id) ?? null) : null,
     toPhoneMasked: row.to_phone ? maskPhone(row.to_phone) : null,
+    toPhoneTexted:
+      row.to_user_id || !row.to_phone ? null : row.text_sent_at !== null,
     createdAt: row.created_at,
     expiresAt: row.expires_at,
   };
@@ -700,15 +704,16 @@ export async function setEventTicketTransferSettingCore(
   const owns = await ownsEvent(svc, userId, eventId);
   if (owns === null) return { status: 500, message: tr("somethingWentWrong") };
   if (!owns) return { status: 404, message: tr("eventNotFound") };
-  const { error } = await svc.from("event_ticket_transfer_setting").upsert(
-    {
-      event_id: eventId,
-      enabled,
-      updated_at: new Date().toISOString(),
-      updated_by: userId,
-    },
-    { onConflict: "event_id" },
-  );
+  // Turning it off also closes the offers still waiting, in the same
+  // transaction; their tickets stay with the people holding them.
+  const { data, error } = await svc.rpc("ticket_transfer_set_event_setting", {
+    p_event_id: eventId,
+    p_enabled: enabled,
+    p_user_id: userId,
+  });
   if (error) return failFromDb(error, "setEventTicketTransferSettingCore");
+  for (const row of data ?? []) {
+    await noticeTransferStoppedByOrganizer(row.transfer_id);
+  }
   return { status: 200, data: { enabled } };
 }

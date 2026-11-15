@@ -4,7 +4,7 @@ purpose: How to look up where a sent ticket went, answer the common support ques
 audience: Support, operations
 scope: Admin › Ticket transfers, the transfers.view / transfers.configure permissions, the TICKET_TRANSFERS_KILL_SWITCH deploy flag and the ticket-transfers-expire job
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-11-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -32,8 +32,8 @@ Search by the ticket's id or its code as the person reads it (old or new code, s
 - **"I sent it to the wrong person."** Before they accept, the sender takes it back from the ticket. After they accept, the move is final: only the receiver can send it back. Staff do not move an accepted ticket, unless the receiver's account was taken over (escalate to operations; there is no button for this yet).
 - **"I bought a ticket from someone and it never came."** Abonten never sees money paid between people and cannot refund it. If the seller's account is reported for scams, handle it as a report.
 - **"I want a refund for a ticket someone sent me."** The refund belongs to whoever paid. The holder sends it back to them, and they cancel it.
-- **"My friend never got the text."** Texts go only to numbers Abonten can text (Ghana today), at most the daily number per sender. The friend can sign up with that number anyway and find the ticket on the tickets page within the hours set; otherwise send to their username.
-- **"The event is sold out and I can't send my ticket."** Check the event: the organizer may have switched sending off, the ticket may have moved the most times allowed, or it was already checked in.
+- **"My friend never got the text."** Texts go only to numbers Abonten can text (Ghana today), at most the daily number per sender. The friend can sign up with that number anyway and find the ticket on the tickets page within the hours set; otherwise send to their username. When the text did not go, the sender's ticket says so ("We couldn't text this number").
+- **"The event is sold out and I can't send my ticket."** Check the event: the organizer may have switched sending off (which also closes offers still waiting, shown here as "the organizer turned sending off"), the ticket may have moved the most times allowed, or it was already checked in.
 
 ## Switching it on
 

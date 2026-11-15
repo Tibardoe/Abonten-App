@@ -952,6 +952,14 @@
     "ticket_transfer_expired": {
       "title": "Your ticket for {title} is still yours",
       "body": "Nobody accepted it in time, so it stayed in your tickets."
+    },
+    "ticket_transfer_stopped_sender": {
+      "title": "Your ticket for {title} is still yours",
+      "body": "The organizer turned off sending tickets for this event, so your offer was closed."
+    },
+    "ticket_transfer_stopped_receiver": {
+      "title": "The ticket from {actor} can't be sent any more",
+      "body": "The organizer of {title} turned off sending tickets, so the offer was closed."
     }
   },
   "openStatus": {

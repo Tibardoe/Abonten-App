@@ -57,6 +57,11 @@ export default function TicketTransferOrganizerCard({
         <p className="mt-1 text-sm text-muted-foreground">
           {t("organizerCardBody")}
         </p>
+        {setting.enabled && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("organizerOffClosesOffers")}
+          </p>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm font-medium">

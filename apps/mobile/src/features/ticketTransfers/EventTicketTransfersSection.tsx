@@ -53,6 +53,9 @@ export function EventTicketTransfersSection({ eventId }: { eventId: string }) {
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <Overline>{t("organizerCardTitle")}</Overline>
       <AppText variant="small">{t("organizerCardBody")}</AppText>
+      {setting.enabled ? (
+        <AppText variant="small">{t("organizerOffClosesOffers")}</AppText>
+      ) : null}
       <AppText variant="bodyStrong">
         {setting.enabled ? t("organizerSendingOn") : t("organizerSendingOff")}
       </AppText>
