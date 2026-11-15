@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { TICKET_MODE } from "@/events/ticketMode";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type PostEventCoreResult,
@@ -33,6 +34,12 @@ export const postEvent = withActionLocale(async function postEvent(
     return { status: 401, message: tr("userNotAuthenticated") };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "events.manage");
+
+  if (actor.error) return actor.error;
+
   const { selectedFile, existingFlyer } = formData;
 
   // A continued draft whose flyer wasn't replaced already has an uploaded
@@ -61,7 +68,7 @@ export const postEvent = withActionLocale(async function postEvent(
     return { status: 400, message: tr("anEventFlyerIsRequired") };
   }
 
-  return postEventCore(supabase, user.id, {
+  return postEventCore(supabase, actor.accountId, {
     title: formData.title,
     description: formData.description,
     category: formData.category,

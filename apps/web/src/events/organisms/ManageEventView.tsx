@@ -1,5 +1,6 @@
 "use client";
 
+import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
@@ -7,10 +8,13 @@ import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotion
 import PaySmallSmallCard from "@/ticketPlans/molecules/PaySmallSmallCard";
 import TicketTransferOrganizerCard from "@/ticketTransfers/molecules/TicketTransferOrganizerCard";
 import type { EventStatus } from "@abonten/core/eventStatus";
+import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { ManagedEvent } from "@abonten/types/managedEventType";
+import type { TeamRoleCode } from "@abonten/types/teamType";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import ManageEventAttendeesSection from "./ManageEventAttendeesSection";
 
 type ManageEventViewProps = {
   event: ManagedEvent;
@@ -26,15 +30,34 @@ type ManageEventViewProps = {
   currentPromotion: { ends_at: string; tier_label: string | null } | null;
   derivedStatus: EventStatus | null;
   soldOut: boolean;
+  /** The person's role when managing as a team; null for their own event. */
+  teamRole: TeamRoleCode | null;
 };
 
-type Tab = "details" | "promotion" | "insights";
+const TEAM_TABS: { id: Tab; label: string }[] = [
+  { id: "attendees", label: "tabs.attendees" },
+  { id: "checkin", label: "tabs.checkin" },
+];
+
+type Tab = "details" | "promotion" | "insights" | "attendees" | "checkin";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "tabs.details" },
   { id: "promotion", label: "tabs.promotion" },
   { id: "insights", label: "tabs.insights" },
 ];
+
+// Managing as a team (stage 2): what the role covers. Money (promotion,
+// insights) follows in stage 3, so a team sees details, its attendees and
+// check-in only.
+function tabsFor(role: TeamRoleCode | null): Tab[] {
+  if (!role) return ["details", "promotion", "insights"];
+  const tabs: Tab[] = [];
+  if (teamRoleCan(role, "events.manage")) tabs.push("details");
+  if (teamRoleCan(role, "attendees.view")) tabs.push("attendees");
+  else if (teamRoleCan(role, "checkin.scan")) tabs.push("checkin");
+  return tabs;
+}
 
 // Top-level management view for a single event, tabbed across Details,
 // Promotion and Insights — the direct mirror of ManagePlaceView.tsx (same
@@ -48,16 +71,18 @@ export default function ManageEventView({
   currentPromotion,
   derivedStatus,
   soldOut,
+  teamRole,
 }: ManageEventViewProps) {
   const t = useTranslations("events");
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const requestedTab = searchParams.get("tab");
+  const allowed = tabsFor(teamRole);
+  const requestedTab = searchParams.get("tab") as Tab | null;
   const initialTab: Tab =
-    requestedTab === "promotion" || requestedTab === "insights"
+    requestedTab && allowed.includes(requestedTab)
       ? requestedTab
-      : "details";
+      : (allowed[0] ?? "details");
 
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
@@ -74,20 +99,22 @@ export default function ManageEventView({
       </div>
 
       <div className="flex gap-2 overflow-x-auto border-b border-border pb-px md:justify-center">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`shrink-0 px-3 py-2 text-sm border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? "border-primary text-foreground font-medium"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t(tab.label)}
-          </button>
-        ))}
+        {[...TABS, ...TEAM_TABS]
+          .filter((tab) => allowed.includes(tab.id))
+          .map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`shrink-0 px-3 py-2 text-sm border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? "border-primary text-foreground font-medium"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t(tab.label)}
+            </button>
+          ))}
       </div>
 
       <div className="w-full md:w-[70%] md:mx-auto">
@@ -118,6 +145,12 @@ export default function ManageEventView({
         {activeTab === "insights" && (
           <ManageEventInsightsSection eventId={event.id} />
         )}
+
+        {activeTab === "attendees" && (
+          <ManageEventAttendeesSection eventId={event.id} />
+        )}
+
+        {activeTab === "checkin" && <CheckInByCodeCard eventId={event.id} />}
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
 import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
+import { TeamNavRow } from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatCount } from "@abonten/core/i18n/format";
@@ -15,7 +17,7 @@ import {
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
@@ -48,7 +50,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function PlaceManageScreen() {
+function PlaceInsightsScreen() {
   const { locale } = useLocale();
   const t = useTranslations("manage");
 
@@ -250,4 +252,69 @@ export default function PlaceManageScreen() {
       ) : null}
     </ScrollView>
   );
+}
+
+// Managing as a team (docs/architecture/team-accounts.md, stage 2): what the
+// role covers for this place. Figures, reviews, verification and promotion
+// stay with the person's own places until the team's money and messages
+// arrive.
+function TeamPlacePanel() {
+  const t = useTranslations("manage");
+  const tt = useTranslations("teams");
+  const { placeId, name } = useLocalSearchParams<{
+    placeId: string;
+    name?: string;
+  }>();
+  const id = placeId ?? "";
+  const { can } = useActingTeams();
+  const program = useRewardsProgram();
+  const visitsOn = !!(program.data?.enabled && program.data.placeVisits);
+
+  return (
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="gap-5 p-4 pb-16"
+    >
+      <Stack.Screen options={{ title: t("managePlace") }} />
+      {name ? <AppText variant="screenTitle">{name}</AppText> : null}
+
+      <View className="gap-2">
+        {can("places.manage") ? (
+          <>
+            <TeamNavRow
+              href={`/(app)/organizer/places/${id}/edit`}
+              label={t("editPlace")}
+            />
+            <TeamNavRow
+              href={`/(app)/organizer/places/${id}/photos`}
+              label={t("managePhotos")}
+            />
+          </>
+        ) : null}
+        {can("bookings.manage") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/places/${id}/bookings`}
+            label={t("bookings")}
+          />
+        ) : null}
+        {visitsOn && can("visit.show") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/places/${id}/check-in`}
+            label={t("visitorCheckInCode")}
+          />
+        ) : null}
+        <TeamNavRow
+          href={`/(app)/place/${id}`}
+          label={t("viewPublicPlacePage")}
+        />
+      </View>
+
+      <AppText variant="meta">{tt("laterAsTeam")}</AppText>
+    </ScrollView>
+  );
+}
+
+export default function PlaceManageScreen() {
+  const { current } = useActingTeams();
+  return current ? <TeamPlacePanel /> : <PlaceInsightsScreen />;
 }

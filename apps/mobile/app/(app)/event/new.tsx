@@ -13,6 +13,7 @@ import { FormSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
 import { useVenuePlaces } from "@/features/events/useVenuePlaces";
+import { PublishingAsBanner } from "@/features/teams/ManagingAs";
 import {
   AppText,
   Hero,
@@ -190,6 +191,7 @@ export default function CreateEventScreen() {
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4"
       >
+        <PublishingAsBanner />
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
             <StepDots

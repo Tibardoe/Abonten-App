@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchPlaceBookingsPage } from "@abonten/services/places/placeBookingsReviewsCore";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -41,6 +42,13 @@ export const getPlaceBookings = withActionLocale(
       };
     }
 
-    return fetchPlaceBookingsPage(supabase, user.id, placeId, options);
+    // Managing as a team: the chosen team, if the person's role covers this.
+
+    const actor = await actingFor(user.id, "bookings.manage");
+
+    if (actor.error)
+      return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
+
+    return fetchPlaceBookingsPage(supabase, actor.accountId, placeId, options);
   },
 );

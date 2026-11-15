@@ -1,17 +1,19 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { DoorCheckIn } from "@/components/organizer/DoorCheckIn";
 import { TicketScannerSheet } from "@/components/organizer/TicketScannerSheet";
 import {
   flattenAttendees,
   useAttendees,
   useCheckInTicket,
 } from "@/features/organizer/useAttendees";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type { AttendanceRow } from "@abonten/api-client";
 import { personName } from "@abonten/core/personName";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
@@ -139,7 +141,7 @@ function AttendeeRow({
   );
 }
 
-export default function EventAttendeesScreen() {
+function AttendeeListScreen() {
   const t = useTranslations("manage");
 
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -214,4 +216,20 @@ export default function EventAttendeesScreen() {
       />
     </View>
   );
+}
+
+export default function EventAttendeesScreen() {
+  const tt = useTranslations("teams");
+  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { current, can } = useActingTeams();
+  // Door staff for a team: scanning, not the list of who is coming.
+  if (current && !can("attendees.view")) {
+    return (
+      <>
+        <Stack.Screen options={{ title: tt("checkInTitle") }} />
+        <DoorCheckIn eventId={eventId ?? ""} />
+      </>
+    );
+  }
+  return <AttendeeListScreen />;
 }

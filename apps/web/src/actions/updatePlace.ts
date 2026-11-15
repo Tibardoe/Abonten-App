@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type UpdatePlaceCoreResult,
@@ -54,6 +55,12 @@ export const updatePlace = withActionLocale(async function updatePlace(
     };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "places.manage");
+
+  if (actor.error) return actor.error;
+
   let coverPublicId: string | null | undefined;
   let coverVersion: string | null | undefined;
 
@@ -73,7 +80,7 @@ export const updatePlace = withActionLocale(async function updatePlace(
     coverVersion = String(coverUpload.version);
   }
 
-  return updatePlaceCore(supabase, user.id, {
+  return updatePlaceCore(supabase, actor.accountId, {
     placeId: formData.placeId,
     name: formData.name,
     description: formData.description,

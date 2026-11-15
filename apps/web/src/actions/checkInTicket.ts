@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type CheckInTicketCoreResult,
@@ -28,9 +29,15 @@ export default withActionLocale(async function checkInTicket(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "checkin.scan");
+
+  if (actor.error) return actor.error;
+
   const result = await checkInTicketCore(
     supabase,
-    user.id,
+    actor.accountId,
     ticketId,
     checkedIn,
     expectedEventId,

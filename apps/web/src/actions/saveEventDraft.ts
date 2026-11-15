@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type SaveEventDraftCoreResult,
@@ -31,7 +32,7 @@ export const saveEventDraft = withActionLocale(async function saveEventDraft({
   expectedUpdatedAt,
   flyerFile,
 }: SaveEventDraftInput): Promise<
-  SaveEventDraftCoreResult | { status: 401 | 500; message: string }
+  SaveEventDraftCoreResult | { status: 401 | 403 | 500; message: string }
 > {
   const supabase = await createClient();
 
@@ -53,6 +54,10 @@ export const saveEventDraft = withActionLocale(async function saveEventDraft({
     };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "events.manage");
+  if (actor.error) return actor.error;
+
   let flyerPublicId: string | undefined;
   let flyerVersion: string | undefined;
 
@@ -69,7 +74,7 @@ export const saveEventDraft = withActionLocale(async function saveEventDraft({
     flyerVersion = String(upload.version);
   }
 
-  return saveEventDraftCore(supabase, user.id, {
+  return saveEventDraftCore(supabase, actor.accountId, {
     draftId,
     payload,
     expectedUpdatedAt,

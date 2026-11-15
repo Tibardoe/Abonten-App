@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -15,6 +16,13 @@ export async function GET(req: Request) {
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the named team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, [
+    "events.manage",
+    "attendees.view",
+    "checkin.scan",
+  ]);
+  if (actor.error) return apiJson(actor.error);
 
   try {
     const { searchParams } = new URL(req.url);
@@ -22,13 +30,17 @@ export async function GET(req: Request) {
     const pageSizeParam = searchParams.get("pageSize");
     const pageSize = pageSizeParam ? Number(pageSizeParam) : undefined;
 
-    const result = await fetchOrganizerEventsPage(auth.supabase, auth.user.id, {
-      cursor,
-      pageSize:
-        pageSize && Number.isFinite(pageSize) && pageSize > 0
-          ? pageSize
-          : undefined,
-    });
+    const result = await fetchOrganizerEventsPage(
+      auth.supabase,
+      actor.accountId,
+      {
+        cursor,
+        pageSize:
+          pageSize && Number.isFinite(pageSize) && pageSize > 0
+            ? pageSize
+            : undefined,
+      },
+    );
 
     return apiJson(result);
   } catch (error) {

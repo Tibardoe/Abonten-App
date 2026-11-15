@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { getEventHasConfirmedParticipationCore } from "@abonten/services/events/getEventHasConfirmedParticipationCore";
 import { tr } from "@abonten/services/i18n/requestLocale";
 
@@ -35,6 +36,16 @@ export default withActionLocale(
       };
     }
 
-    return getEventHasConfirmedParticipationCore(supabase, user.id, eventId);
+    // Managing as a team: the chosen team, if the person's role covers this.
+
+    const actor = await actingFor(user.id, "events.manage");
+
+    if (actor.error) return actor.error;
+
+    return getEventHasConfirmedParticipationCore(
+      supabase,
+      actor.accountId,
+      eventId,
+    );
   },
 );

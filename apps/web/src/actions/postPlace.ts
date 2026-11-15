@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { userFacingError } from "@abonten/core/userFacingError";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
@@ -31,6 +32,12 @@ export const postPlace = withActionLocale(async function postPlace(
   if (!user) {
     return { status: 401, message: tr("userNotAuthenticated") };
   }
+
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "places.manage");
+
+  if (actor.error) return actor.error;
 
   const { selectedFile, existingCoverPhoto } = formData;
 
@@ -64,7 +71,7 @@ export const postPlace = withActionLocale(async function postPlace(
     return { status: 400, message: tr("aCoverPhotoIsRequired") };
   }
 
-  return postPlaceCore(supabase, user.id, {
+  return postPlaceCore(supabase, actor.accountId, {
     name: formData.name,
     categoryId: formData.categoryId,
     description: formData.description,

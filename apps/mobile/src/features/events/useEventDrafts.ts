@@ -15,9 +15,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const KEY = ["mobile", "organizer", "event-drafts"] as const;
 
-export function useEventDrafts() {
+export function useEventDrafts(enabled = true) {
   return useQuery({
     queryKey: [...KEY],
+    enabled,
     queryFn: async () => settleEnvelope(await api.organizer.eventDrafts()),
     staleTime: 15_000,
   });

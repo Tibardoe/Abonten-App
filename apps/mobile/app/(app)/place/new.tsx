@@ -10,6 +10,7 @@ import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { FormSkeleton } from "@/components/skeletons";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
+import { PublishingAsBanner } from "@/features/teams/ManagingAs";
 import {
   AppText,
   Hero,
@@ -159,6 +160,7 @@ export default function CreatePlaceScreen() {
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4"
       >
+        <PublishingAsBanner />
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
             <StepDots step={w.step} total={STEPS.length} />

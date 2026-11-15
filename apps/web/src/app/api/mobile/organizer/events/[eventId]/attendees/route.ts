@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -18,6 +19,9 @@ export async function GET(
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the named team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, "attendees.view");
+  if (actor.error) return apiJson(actor.error);
 
   try {
     const { eventId } = await params;
@@ -28,7 +32,7 @@ export async function GET(
 
     const result = await fetchEventAttendanceListPage(
       auth.supabase,
-      auth.user.id,
+      actor.accountId,
       eventId,
       {
         cursor,

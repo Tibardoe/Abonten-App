@@ -1391,5 +1391,6 @@
   "teamPhoneInvalid": "Introduce un número de teléfono válido.",
   "teamCannotText": "Aún no podemos enviar SMS a ese número. Invítale por su nombre de usuario.",
   "teamTextLimit": "Tu equipo ha enviado el máximo de SMS de invitación de hoy. Prueba mañana o invita por nombre de usuario.",
-  "teamSmsInvite": "{team} te invita a ayudar a gestionarlo en Abonten. Regístrate con este número para aceptar: {link}"
+  "teamSmsInvite": "{team} te invita a ayudar a gestionarlo en Abonten. Regístrate con este número para aceptar: {link}",
+  "teamRoleCannot": "Tu rol en este equipo no cubre esto."
 }

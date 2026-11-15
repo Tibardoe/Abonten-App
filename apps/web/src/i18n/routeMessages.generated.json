@@ -108,7 +108,8 @@
       "viewProfile"
     ],
     "places": ["event", "place"],
-    "rewards": ["rewards"]
+    "rewards": ["rewards"],
+    "teams": ["couldNotDo", "managingAs", "role", "yourAccount"]
   },
   "segments": {
     "(finances)": {
@@ -509,7 +510,6 @@
         "change",
         "comingSoon",
         "continue",
-        "couldNotDo",
         "create",
         "createBody",
         "createTitle",
@@ -555,7 +555,6 @@
         "rename",
         "renamedToast",
         "retry",
-        "role",
         "roleChangedToast",
         "roleHelp",
         "roleLabel",
@@ -2926,6 +2925,8 @@
         "stop",
         "submit",
         "submitting",
+        "tabs.attendees",
+        "tabs.checkin",
         "tabs.details",
         "tabs.insights",
         "tabs.promotion",
@@ -3143,6 +3144,7 @@
         "tabs.reviews",
         "tabs.services",
         "tabs.verification",
+        "tabs.visit",
         "text",
         "thisPlaceIsCurrentlyFeatured",
         "titleOptional",
@@ -3341,6 +3343,14 @@
         "youHavenTPostedAStory",
         "yourSpotlightIsLive",
         "yourStoryIsLive"
+      ],
+      "teams": [
+        "checkIn",
+        "checkInBody",
+        "checkInTitle",
+        "checkedIn",
+        "codePlaceholder",
+        "ticketCodeLabel"
       ],
       "ticketPlans": [
         "couldNotSave",

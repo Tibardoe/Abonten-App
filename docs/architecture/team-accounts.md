@@ -1,11 +1,11 @@
 ---
 title: Team accounts — organizers and places run by several people
-purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stage 1 of Part 2 of the Tickets, entry and teams plan.
+purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 and 2 of Part 2 of the Tickets, entry and teams plan.
 audience: Engineering, operations, support and legal reviewers
-scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can() and acts_for(), the team_* functions, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
+scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for() and acting_accounts(), the team_* functions, the access rules on events and places, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
 status: Review required
-version: 1.0
-lastReviewed: 2026-11-15
+version: 1.1
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Team accounts
 
-**State (2026-11-15): stage 1 built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
+**State (2026-11-16): stages 1 and 2 built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
 
 ## 1. The model: a team is its own account
 
@@ -24,9 +24,9 @@ An organizer or a place can be run by a team: one public profile (handle, follow
 - **Members sign in as themselves and act for the team.** Every action will check the member's role first, and anything not opened up for a role stays closed, so a mistake fails safe. Each action records the member who took it (`team_activity`).
 - `account_kind` is one of the columns only the server may change (`protect_user_info_privileged_columns`).
 
-Stages: **1 (this document)** — teams, members, invitations, roles, activity, Admin › Teams. **2** — running events and places as a team (Manager, Door staff, Front desk), attendee lists, check-in, notices by role, "make this a team". **3** — money: the team's payout account (Owner only, fresh sign-in, the first payout to a new account held 48 hours, every Owner told), Finance, the ID check for Owners and Finance (X5), rebates to the team's balance. **4** — messages and content: the team inbox, review replies, Spotlight and Stories, customers seeing only the team's name (X7). **5** — trust and edge cases: the business check and the two team badges, a renamed team with the business badge going back to review (X42), disputes, bans, expired IDs.
+Stages: **1** — teams, members, invitations, roles, activity, Admin › Teams. **2** — running events and places as a team (Manager, Door staff, Front desk), attendee lists, check-in (§4a). Notices by role move to stage 3; "make this a team" (turning a person's existing listings into a team's) follows stage 4, because a converted account needs its money and messages to work as a team. **3** — money: the team's payout account (Owner only, fresh sign-in, the first payout to a new account held 48 hours, every Owner told), Finance, the ID check for Owners and Finance (X5), rebates to the team's balance. **4** — messages and content: the team inbox, review replies, Spotlight and Stories, customers seeing only the team's name (X7). **5** — trust and edge cases: the business check and the two team badges, a renamed team with the business badge going back to review (X42), disputes, bans, expired IDs.
 
-In stage 1 a team cannot run anything yet: the screens say so ("coming soon").
+Since stage 2 a team's members run its events and places within their role (§4a); money, messages and reviews as a team are still "coming soon".
 
 ## 2. Roles (X5)
 
@@ -68,6 +68,22 @@ Everything is service-role only: the five tables have RLS on with no client gran
 
 Notices (`@abonten/core/notifications/notices`, words in the recipient's language): `team_invite_received`, `team_invite_accepted`, `team_member_removed`, `team_role_changed`. `data.kind = 'team'`; the app opens Settings › Teams, the website `/settings/teams`.
 
+## 4a. Acting for a team (stage 2)
+
+**Who a request is for.** A signed-in person acts for themselves, or for one team chosen under **Managing as**: the website's Manage menu (cookie `abn_team`, which only selects) or the app's Organizer screen (header `x-abonten-team`, sent on signed-in requests, remembered per account on the phone in SecureStore and forgotten on sign-out). Every organizer and place request that can act for an account calls `resolveActingAccount` (`@abonten/services/teams/actingAccount`; web `actingFor()` in `apps/web/src/utils/teamActor.ts`, app routes `mobileActingFor()` in `api/mobile/_lib/actor.ts`) with the capability it needs. It re-checks, every time: the kill switch, that the person is an active member of the active team, that their role covers the capability, and that the person's own account is not restricted. The account it returns is the one the request reads and writes as (`event.organizer_id`, `place.owner_id`, the upload folder of a flyer or place photo); the person stays the one signed in. A request that does not name a capability (anything not converted yet) acts for the person, so an unconverted screen can never act for a team.
+
+**What the database lets each role do.** `public.acting_accounts(caps text[])` is the signed-in person's own id plus every active team they are an active member of in a role covering one of `caps`. Each access rule on the event and place tables that compared an owner column with `auth.uid()` now asks whether the owner is one of those accounts, wrapped in a `SELECT` so it runs once per statement and never once per row (migration `20261116100000_team_accounts_events_places`, 42 rules on `event`, `event_occurrence`, `event_media`, `ticket_type`, `promo_code`, `promo_code_usage`, `ticket`, `attendance`, `event_analytics_event`, `place`, `place_photo`, `place_service`, `place_opening_hours`, `place_booking`, `place_analytics_event`). Signed-out visitors read public listings through the same rules, so `anon` may call it too and gets an empty list. The promo-code guard, the booking guard and `get_event_attendee_contacts` follow the same capabilities.
+
+| Role | Can, for the team | Cannot |
+|---|---|---|
+| Owner | Everything below | Money (stage 3) |
+| Manager | Publish and edit events, ticket types and dates, promo codes, the attendee list, check-in; edit places, photos, services and hours; bookings | Money, messages, reviews, verification, promotion; the visit QR (Front desk and Owners) |
+| Door staff | Check a ticket in by scanning or typing its code (only that event's tickets) | See who is coming |
+| Front desk | Answer a place's booking requests; show the visit QR | Change the place |
+| Finance, Content and messages | Nothing yet (stages 3 and 4) | |
+
+**Screens.** Website: the Manage menu lists the person's teams with their role; a team's event page shows the tabs the role covers (details, attendees, or check-in by code), a team's place page the same (details, photos, hours, services, bookings, visit QR). App: Organizer starts with a **Managing as** card; with a team chosen it shows the team's events and places as far as the role covers, an event or a place opens a panel of what the role can do, Door staff get a scan-or-type check-in screen instead of the attendee list, and the publish screens say "Publishing as …" with a way back to the person's own account. Sales figures, payouts, cancelling an event (it refunds buyers), promotion, reviews and verification stay on the person's own account until stages 3 and 4.
+
 ## 5. Who sees what
 
 - **Members** see the team, every member's public name, photo, role and whether they passed the ID check.
@@ -95,8 +111,9 @@ Limits in the settings row: `max_teams_created` (5), `max_members` (50), `invite
 | App routes | `apps/web/src/app/api/mobile/teams/**` (shared plumbing `_lib/teamRoute.ts`); client `api.teams.*` |
 | App | `apps/mobile/app/(app)/settings/teams.tsx`, `apps/mobile/app/(app)/settings/team/[id].tsx`, `apps/mobile/src/features/teams/*` |
 | Admin | `apps/admin/src/app/(console)/teams/*`; handbook [admin/teams.md](../admin/teams.md) |
-| Tests | `packages/services/src/__integration__/teams.integration.test.ts` |
+| Acting (stage 2) | Migration `supabase/migrations/20261116100000_team_accounts_events_places.sql`; `packages/services/src/teams/actingAccount.ts`; web `apps/web/src/utils/teamActor.ts`, `actions/teams/{setActingTeam,getActingContext}.ts`, `teams/useActingContext.ts`, the Manage menu; app routes `api/mobile/_lib/actor.ts`, `GET /api/mobile/teams/acting`; app `src/features/teams/{actingTeam.ts,ManagingAs.tsx}`, `src/components/organizer/DoorCheckIn.tsx` |
+| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts` |
 
 ## 8. Not yet (later stages)
 
-Acting for a team anywhere (events, places, check-in, money, messages, content), "make this a team", the team account switcher, the ID check requirement, the team's payout account and its 48-hour hold, the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.
+Acting for a team on money, messages, reviews and content; notices to members by role; "make this a team"; the ID check requirement (a team's paid events are not yet held to the identity requirement — it is checked against the team account in stage 3), the team's payout account and its 48-hour hold, the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.

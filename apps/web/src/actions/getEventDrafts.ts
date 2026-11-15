@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { fetchEventDraftsList } from "@abonten/services/events/eventDraftCore";
 import { tr } from "@abonten/services/i18n/requestLocale";
 
@@ -29,7 +30,11 @@ export const getEventDrafts = withActionLocale(async function getEventDrafts() {
     };
   }
 
-  const result = await fetchEventDraftsList(supabase, user.id);
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "events.manage");
+  if (actor.error) return { ...actor.error, data: [] };
+
+  const result = await fetchEventDraftsList(supabase, actor.accountId);
 
   if (result.status !== 200) {
     return { status: 500 as const, message: result.message, data: result.data };

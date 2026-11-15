@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -20,9 +21,12 @@ export async function GET(req: Request) {
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the named team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, "places.manage");
+  if (actor.error) return apiJson(actor.error);
 
   try {
-    const result = await fetchPlaceDraftsList(auth.supabase, auth.user.id);
+    const result = await fetchPlaceDraftsList(auth.supabase, actor.accountId);
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /organizer/place-drafts failed", error);
@@ -37,6 +41,9 @@ export async function POST(req: Request) {
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the named team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, "places.manage");
+  if (actor.error) return apiJson(actor.error);
 
   try {
     const body = (await req.json().catch(() => null)) as {
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const result = await savePlaceDraftCore(auth.supabase, auth.user.id, {
+    const result = await savePlaceDraftCore(auth.supabase, actor.accountId, {
       draftId: typeof body.draftId === "string" ? body.draftId : undefined,
       payload: body.payload as PlaceDraftPayload,
       expectedUpdatedAt:

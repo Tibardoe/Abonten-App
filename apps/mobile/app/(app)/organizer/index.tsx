@@ -8,6 +8,8 @@ import {
   useOrganizerOverview,
 } from "@/features/organizer/useOrganizer";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
+import { ManagingAsCard, TeamNavRow } from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type {
   OrganizerDashboardPeriod,
@@ -163,7 +165,7 @@ function NavRow({ href, label }: { href: string; label: string }) {
   );
 }
 
-export default function OrganizerDashboard() {
+function PersonalDashboard() {
   const { locale } = useLocale();
   const t = useTranslations("manage");
 
@@ -259,6 +261,8 @@ export default function OrganizerDashboard() {
         />
       }
     >
+      <ManagingAsCard />
+
       <View className="flex-row flex-wrap gap-2">
         {PERIODS.map((p) => (
           <Chip
@@ -408,4 +412,70 @@ export default function OrganizerDashboard() {
       </View>
     </ScrollView>
   );
+}
+
+// Managing as a team (docs/architecture/team-accounts.md, stage 2): the
+// team's events and places, as far as the person's role covers them. The
+// sales figures, payouts and verification stay on the person's own account
+// until the team's money arrives (stage 3).
+function TeamHub() {
+  const t = useTranslations("manage");
+  const tt = useTranslations("teams");
+  const { can } = useActingTeams();
+  const canEvents = can("events.manage");
+  const canPlaces = can("places.manage");
+  const draftsQuery = useEventDrafts(canEvents);
+  const draftCount =
+    draftsQuery.data?.status === 200 ? draftsQuery.data.data.length : 0;
+  const placeDraftsQuery = usePlaceDrafts(canPlaces);
+  const placeDraftCount =
+    placeDraftsQuery.data?.status === 200
+      ? placeDraftsQuery.data.data.length
+      : 0;
+
+  return (
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="gap-5 p-4 pb-12"
+    >
+      <ManagingAsCard />
+
+      <View className="gap-2">
+        {canEvents ? (
+          <Link href="/(app)/event/new" asChild>
+            <Pressable className="items-center rounded-xl bg-primary px-4 py-3 active:opacity-90">
+              <AppText className="text-base font-semibold text-primary-foreground">
+                {t("createEvent")}
+              </AppText>
+            </Pressable>
+          </Link>
+        ) : null}
+        {can("events.manage", "attendees.view", "checkin.scan") ? (
+          <TeamNavRow href="/(app)/organizer/events" label={t("myEvents2")} />
+        ) : null}
+        {canEvents && draftCount > 0 ? (
+          <TeamNavRow
+            href="/(app)/organizer/event-drafts"
+            label={t("eventDrafts2", { draftCount: draftCount })}
+          />
+        ) : null}
+        {can("places.manage", "bookings.manage", "visit.show") ? (
+          <TeamNavRow href="/(app)/organizer/places" label={t("myPlaces2")} />
+        ) : null}
+        {canPlaces && placeDraftCount > 0 ? (
+          <TeamNavRow
+            href="/(app)/organizer/place-drafts"
+            label={t("placeDrafts2", { placeDraftCount: placeDraftCount })}
+          />
+        ) : null}
+      </View>
+
+      <AppText variant="meta">{tt("laterAsTeam")}</AppText>
+    </ScrollView>
+  );
+}
+
+export default function OrganizerDashboard() {
+  const { current } = useActingTeams();
+  return current ? <TeamHub /> : <PersonalDashboard />;
 }

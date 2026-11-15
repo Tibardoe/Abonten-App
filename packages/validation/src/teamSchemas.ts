@@ -66,6 +66,9 @@ export const teamInviteeSchema = z.object({
 
 export const teamInviteIdSchema = z.object({ inviteId: uuid });
 
+/** "Managing as": a team id, or null for the person's own account. */
+export const actingTeamSchema = z.object({ teamId: uuid.nullable() });
+
 export const answerTeamInviteSchema = z.object({
   inviteId: uuid,
   action: z.enum(["accept", "decline"]),

@@ -4354,3 +4354,13 @@ Branch `feat/team-accounts-stage1-2026-11-15`, migration `20261115190000_team_ac
 - **Not yet**: acting for a team anywhere (events, places, check-in, money, messages), "make this a team", the account switcher, the ID check requirement, the team payout account and its 48-hour hold, badges, staff dispute tools — stages 2–5.
 - **Switches**: `team_program_setting` (off, audience `staff`, limits) and `TEAMS_KILL_SWITCH` (no new team, invitation or accepting; leaving and removing keep working).
 - **Checked**: `teams.integration.test.ts` (11 tests), role matrix unit tests, typecheck of every workspace, the repo checks.
+
+### 75.1 Stage 2: running events and places as a team (2026-11-16)
+
+Branch `feat/team-accounts-stage2-2026-11-15`, migration `20261116100000_team_accounts_events_places`. **Ships off** with the programme.
+
+- **Who a request is for**: `resolveActingAccount` (`@abonten/services/teams/actingAccount`) — the person, or the team chosen under "Managing as" (web cookie `abn_team`, app header `x-abonten-team`) when they are an active member of the active team in a role covering the request's capability; re-checked on every request. Web `actingFor()` (`apps/web/src/utils/teamActor.ts`) and app routes `mobileActingFor()` (`api/mobile/_lib/actor.ts`) wrap it; 39 Server Actions, the two manage pages and 36 `/api/mobile` routes for events, drafts, ticket types, promo codes, attendees, check-in, places, photos, services, hours, bookings, the visit QR, uploads and publishing use it. Anything not converted acts for the person.
+- **Database**: `public.acting_accounts(caps)` (the person plus the teams whose role covers one of `caps`) replaces `= auth.uid()` in 42 access rules on the event and place tables, wrapped in a `SELECT` so it runs once per statement; the promo-code and booking guards and `get_event_attendee_contacts` follow the same capabilities.
+- **Screens**: web Manage menu "Managing as" + role-aware event/place pages (door staff check in by code; front desk bookings + visit QR). App: "Managing as" card on Organizer (remembered per account in SecureStore, forgotten on sign-out), team panels for an event and a place, a scan-or-type check-in screen for door staff, "Publishing as …" on the publish screens.
+- **Not yet**: money (sales figures, payouts, cancelling with refunds, rebates, the identity requirement for a team's paid events), notices by role, messages, reviews, promotion, verification as a team; "make this a team" follows stage 4.
+- **Checked**: `teams-acting.integration.test.ts` (5 tests: manager edits, door staff check in without the list, front desk answers bookings but cannot edit the place, the resolver's refusals, signed-out reads), the full integration suite, typecheck, the repo checks.

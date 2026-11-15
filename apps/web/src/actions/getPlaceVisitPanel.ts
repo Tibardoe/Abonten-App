@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getPlaceVisitPanelCore } from "@abonten/services/places/placeVisitCore";
 import type { PlaceVisitPanel } from "@abonten/types/rewards";
@@ -25,10 +26,13 @@ export const getPlaceVisitPanel = withActionLocale(
     if (typeof placeId !== "string") {
       return { status: 400, message: tr("placeIsRequired") };
     }
+    // Managing as a team: the front desk shows the team's place's code.
+    const actor = await actingFor(user.id, "visit.show");
+    if (actor.error) return actor.error;
 
     return getPlaceVisitPanelCore(
       supabase,
-      user.id,
+      actor.accountId,
       placeId,
       process.env.NEXT_PUBLIC_BASE_URL || undefined,
     );
