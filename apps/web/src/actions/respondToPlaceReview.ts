@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { respondToPlaceReviewCore } from "@abonten/services/reviews/reviewResponseCore";
 
@@ -28,11 +29,14 @@ export const respondToPlaceReview = withActionLocale(
       };
     }
 
+    // Managing as a team that answers reviews: its reply.
+    const actor = await actingFor(user.id, "reviews.reply");
     const result = await respondToPlaceReviewCore(
       supabase,
       user.id,
       reviewId,
       response,
+      actor.error ? null : actor.accountId,
     );
 
     if (result.status === 200 && result.data?.placeSlug) {

@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -41,11 +42,13 @@ export async function POST(
       });
     }
 
+    const actor = await mobileActingFor(req, auth.user.id, "reviews.reply");
     const result = await respondToPlaceReviewCore(
       auth.supabase,
       auth.user.id,
       reviewId,
       response,
+      actor.error ? null : actor.accountId,
     );
 
     return fromActionResult(result);
@@ -79,10 +82,12 @@ export async function DELETE(
       });
     }
 
+    const actor = await mobileActingFor(req, auth.user.id, "reviews.reply");
     const result = await deletePlaceReviewResponseCore(
       auth.supabase,
       auth.user.id,
       reviewId,
+      actor.error ? null : actor.accountId,
     );
 
     return fromActionResult(result);

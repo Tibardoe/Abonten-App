@@ -103,7 +103,9 @@ export async function deliverSentMessage(
   // Best-effort notification fan-out — never blocks or fails the send.
   notifyOtherParticipants(supabase, {
     conversationId: args.conversationId,
-    senderId: userId,
+    // The account the message went out as (a team, when a member answered
+    // for it), so the team itself is never told of its own reply.
+    senderId: message.sender_id ?? userId,
     message,
     body: args.notificationBody,
   }).catch((e) => logger.error(`sendMessageCore: notify failed: ${e}`));

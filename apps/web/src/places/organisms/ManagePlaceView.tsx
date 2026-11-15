@@ -123,6 +123,7 @@ function tabsFor(role: TeamRoleCode | null): Tab[] {
     tabs.push("details", "photos", "hours", "services");
   }
   if (teamRoleCan(role, "bookings.manage")) tabs.push("bookings");
+  if (teamRoleCan(role, "reviews.reply")) tabs.push("reviews");
   if (teamRoleCan(role, "visit.show")) tabs.push("visit");
   return tabs;
 }

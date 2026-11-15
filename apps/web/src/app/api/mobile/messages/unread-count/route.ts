@@ -1,3 +1,4 @@
+import { mobileTeamInboxAccount } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -15,7 +16,11 @@ export async function GET(req: Request) {
   if (auth.response) return auth.response;
 
   try {
-    const result = await getUnreadMessageCount(auth.supabase, auth.user.id);
+    const result = await getUnreadMessageCount(
+      auth.supabase,
+      auth.user.id,
+      await mobileTeamInboxAccount(req, auth.user.id),
+    );
     return apiJson({
       status: result.status,
       message: result.message,

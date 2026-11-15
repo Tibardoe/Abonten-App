@@ -108,6 +108,14 @@ export const useLeaveTeam = () =>
 
 /** Everything the organizer screens show or fetch for an account. */
 const ORGANIZER_KEY = ["mobile", "organizer"] as const;
+/** The inbox follows "Managing as" too (a team's, for those who answer it). */
+const MESSAGING_KEY = ["mobile", "messaging"] as const;
+
+/** Forgets what was read for the previous account. */
+export function resetAccountQueries(qc: ReturnType<typeof useQueryClient>) {
+  void qc.resetQueries({ queryKey: ORGANIZER_KEY });
+  void qc.resetQueries({ queryKey: MESSAGING_KEY });
+}
 
 /**
  * "Managing as": the teams the person may manage as, the one chosen, and
@@ -133,7 +141,7 @@ export function useActingTeams() {
     if (!userId || !choice || !loaded) return;
     if (!fresh) {
       chooseActingTeam(userId, null);
-      void qc.resetQueries({ queryKey: ORGANIZER_KEY });
+      resetAccountQueries(qc);
     } else if (fresh.role !== choice.role || fresh.name !== choice.name) {
       chooseActingTeam(userId, {
         teamId: fresh.id,
@@ -166,7 +174,7 @@ export function useSwitchActingTeam() {
     (choice: ActingChoice | null) => {
       if (!userId) return;
       chooseActingTeam(userId, choice);
-      void qc.resetQueries({ queryKey: ORGANIZER_KEY });
+      resetAccountQueries(qc);
     },
     [userId, qc],
   );

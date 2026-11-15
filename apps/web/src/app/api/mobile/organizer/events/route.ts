@@ -22,6 +22,7 @@ export async function GET(req: Request) {
     "attendees.view",
     "checkin.scan",
     "money.view",
+    "reviews.reply",
   ]);
   if (actor.error) return apiJson(actor.error);
 

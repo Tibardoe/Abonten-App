@@ -4374,3 +4374,12 @@ Branch `feat/team-accounts-stage3-2026-11-16`, migration `20261116120000_team_ac
 - **Surfaces**: website Manage menu money for Owners/Finance, event Insights tab, payout account changes for Owners, Withdraw for Owners/Finance, Cancel for Owners, notice clicks switch to the team, manage pages offer to switch; app dashboard and event insights for Owners/Finance, the same gates, notice taps switch to the team.
 - **Not yet**: messages, reviews, promotion purchases and credit, Spotlight as a team (stage 4); emails to a team; "make this a team".
 - **Checked**: `teams-money.integration.test.ts` (6 tests), the acting suite, the full integration suite, typecheck, the repo checks.
+
+### 75.3 Stage 4: messages and review replies (2026-11-16)
+
+Branch `feat/team-accounts-stage4-2026-11-16`, migration `20261116140000_team_accounts_messages_reviews`. **Ships off**.
+
+- **Messages**: `messaging_actor(conversation)` (the person, or the team they answer for with `messages.reply`) in every messaging function; `p_account` on `list_conversations` / `get_unread_conversation_count`; `is_conversation_participant` counts the teams a person answers for (read rules, realtime, attachments); the `inbox:<team>` channel for those members; replies go out as the team (X7) and `message_team_sender` (server-only) keeps who wrote them. The website and app inbox show the team's while managing as it (banner, realtime on the team's channel), the person's own otherwise.
+- **Reviews**: replies by `reviews.reply` members (update rules + column guards); web reply controls and the place Reviews tab, app panels.
+- **Own team**: nobody reviews, or messages as a customer, a team they belong to (`is_team_member`).
+- **Checked**: `teams-messages.integration.test.ts` (4 tests) and the messaging, review and story-reply suites (85 tests).

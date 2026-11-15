@@ -99,6 +99,7 @@ export default async function page({
     "places.manage",
     "bookings.manage",
     "visit.show",
+    "reviews.reply",
   ]);
   if (actor.error || place.owner_id !== actor.accountId) {
     // Opened while managing as another account (a notice about a team's

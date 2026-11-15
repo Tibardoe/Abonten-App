@@ -75,6 +75,7 @@
   "sending": "Wird gesendet…",
   "subjectTeam": "dieses Team",
   "subjectTeams": "deine Teams",
+  "teamInbox": "Team-Postfach: {team}",
   "teamPayoutAccountRules": "Das Auszahlungskonto des Teams zu ändern erfordert eine frische Anmeldung, und alle Inhaber werden benachrichtigt. Auszahlungen können 48 Stunden nach dem Hinzufügen auf ein neues Konto gehen.",
   "ticketCodeLabel": "Ticketcode",
   "title": "Teams",

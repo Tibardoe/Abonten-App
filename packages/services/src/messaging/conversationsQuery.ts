@@ -11,6 +11,7 @@ import type {
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { accountArg } from "../teams/accountArg";
 
 // Read side of the inbox, shared by the web actions and the
 // /api/mobile/messages routes. All three functions run on the caller's own
@@ -51,6 +52,8 @@ export async function fetchConversationsPage(
     search?: string | null;
     type?: ConversationListItem["type"] | null;
     muted?: boolean | null;
+    /** A team whose inbox the person answers (team accounts, stage 4). */
+    accountId?: string | null;
   },
 ): Promise<{
   status: number;
@@ -76,6 +79,7 @@ export async function fetchConversationsPage(
     p_search: search,
     p_type: type,
     p_muted: muted,
+    ...accountArg(options?.accountId),
   } as Database["public"]["Functions"]["list_conversations"]["Args"]);
 
   if (error) {
@@ -111,8 +115,13 @@ export async function fetchConversationsPage(
 export async function getUnreadMessageCount(
   supabase: SupabaseClient<Database>,
   _userId: string,
+  /** A team whose inbox the person answers (team accounts, stage 4). */
+  accountId?: string | null,
 ): Promise<{ status: 200 | 500; count: number; message?: string }> {
-  const { data, error } = await supabase.rpc("get_unread_conversation_count");
+  const { data, error } = await supabase.rpc(
+    "get_unread_conversation_count",
+    accountArg(accountId),
+  );
 
   if (error) {
     logger.error(`getUnreadMessageCount failed: ${error.message}`);
@@ -173,7 +182,13 @@ export async function getConversationContext(
   }
 
   const participants = (participantRows ?? []) as ConversationParticipantRow[];
-  const mine = participants.find((p) => p.user_id === userId);
+  // The person speaks as themselves, or as the team taking part that they
+  // answer for (team accounts, stage 4): the database says which.
+  const { data: actor } = await supabase.rpc("messaging_actor", {
+    p_conversation_id: conversationId,
+  });
+  const speaker = (actor as string | null) ?? userId;
+  const mine = participants.find((p) => p.user_id === speaker);
   if (!mine) {
     return { status: 404, message: tr("conversationNotFound") };
   }
@@ -198,7 +213,7 @@ export async function getConversationContext(
   const { data: blocks } = await supabase
     .from("conversation_block")
     .select("blocked_id")
-    .eq("blocker_id", userId);
+    .eq("blocker_id", speaker);
   const blockedIds = ((blocks ?? []) as { blocked_id: string }[]).map(
     (b) => b.blocked_id,
   );

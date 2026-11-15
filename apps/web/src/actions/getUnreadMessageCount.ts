@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { teamInboxAccount } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getUnreadMessageCount as getUnreadMessageCountQuery } from "@abonten/services/messaging/conversationsQuery";
 
@@ -26,6 +27,10 @@ export const getUnreadMessageCount = withActionLocale(
       };
     }
 
-    return getUnreadMessageCountQuery(supabase, user.id);
+    return getUnreadMessageCountQuery(
+      supabase,
+      user.id,
+      await teamInboxAccount(user.id),
+    );
   },
 );

@@ -71,7 +71,12 @@ export default function ManageMenu({
       )
     : isOrganizer;
   const showPlaces = team
-    ? acting.can("places.manage", "bookings.manage", "visit.show")
+    ? acting.can(
+        "places.manage",
+        "bookings.manage",
+        "visit.show",
+        "reviews.reply",
+      )
     : isPlaceOwner;
   const showMoney = team ? acting.can("money.view") : isOrganizer;
   const showDrafts = !team || acting.can("events.manage", "places.manage");

@@ -7097,6 +7097,27 @@ export type Database = {
           },
         ]
       }
+      message_team_sender: {
+        Row: {
+          created_at: string
+          member_id: string | null
+          message_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          member_id?: string | null
+          message_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          member_id?: string | null
+          message_id?: string
+          team_id?: string
+        }
+        Relationships: []
+      }
       message_reaction: {
         Row: {
           conversation_id: string
@@ -17722,7 +17743,10 @@ export type Database = {
         Args: { p_transaction_id: string }
         Returns: number
       }
-      get_unread_conversation_count: { Args: never; Returns: number }
+      get_unread_conversation_count: {
+        Args: { p_account?: string }
+        Returns: number
+      }
       get_user_rating: {
         Args: { p_reviewed_id: string }
         Returns: {
@@ -17895,6 +17919,7 @@ export type Database = {
       }
       list_conversations: {
         Args: {
+          p_account?: string
           p_cursor_id?: string
           p_cursor_ts?: string
           p_filter?: string
@@ -18719,6 +18744,11 @@ export type Database = {
       acting_account_for: {
         Args: { p_account: string; p_caps: string[] }
         Returns: string
+      }
+      messaging_actor: { Args: { p_conversation_id: string }; Returns: string }
+      is_team_member: {
+        Args: { p_team_id: string; p_user_id: string }
+        Returns: boolean
       }
       team_role_can: {
         Args: { p_capability: string; p_role: string }

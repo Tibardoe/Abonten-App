@@ -75,6 +75,7 @@
   "sending": "Envoi…",
   "subjectTeam": "cette équipe",
   "subjectTeams": "vos équipes",
+  "teamInbox": "Boîte de l'équipe : {team}",
   "teamPayoutAccountRules": "Changer le compte de versement de l'équipe demande une connexion récente, et chaque propriétaire est prévenu. Les versements peuvent aller sur un nouveau compte 48 heures après son ajout.",
   "ticketCodeLabel": "Code du billet",
   "title": "Équipes",

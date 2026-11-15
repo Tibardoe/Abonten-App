@@ -75,6 +75,7 @@
   "sending": "A enviar…",
   "subjectTeam": "esta equipa",
   "subjectTeams": "as suas equipas",
+  "teamInbox": "Caixa da equipa: {team}",
   "teamPayoutAccountRules": "Mudar a conta de pagamento da equipa pede um início de sessão recente, e todos os proprietários são avisados. Os pagamentos podem ir para uma conta nova 48 horas depois de ser adicionada.",
   "ticketCodeLabel": "Código do bilhete",
   "title": "Equipas",

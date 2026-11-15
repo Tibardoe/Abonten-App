@@ -4,6 +4,7 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useActingContext } from "@/teams/useActingContext";
 import { formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
@@ -68,8 +69,14 @@ export default function ReviewsPreview({
         ? t("peopleWhoAttendedCanReview")
         : t("beTheFirstToShare"),
   };
+  const acting = useActingContext(!!viewerId);
   const isOrganizer =
-    subject.kind === "event" && !!viewerId && viewerId === subject.ownerId;
+    subject.kind === "event" &&
+    !!viewerId &&
+    (viewerId === subject.ownerId ||
+      // Managing as the team that runs the event, in a role that answers
+      // reviews (team accounts, stage 4).
+      (acting.current?.id === subject.ownerId && acting.can("reviews.reply")));
 
   return (
     <section

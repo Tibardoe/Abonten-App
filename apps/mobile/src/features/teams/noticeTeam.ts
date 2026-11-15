@@ -24,7 +24,10 @@ export async function manageAsNoticeTeam(
       name: team.name,
       role: team.role,
     });
-    await queryClient.resetQueries({ queryKey: ["mobile", "organizer"] });
+    await Promise.all([
+      queryClient.resetQueries({ queryKey: ["mobile", "organizer"] }),
+      queryClient.resetQueries({ queryKey: ["mobile", "messaging"] }),
+    ]);
   } catch {
     // Opens as the person; the screen says what they can do there.
   }

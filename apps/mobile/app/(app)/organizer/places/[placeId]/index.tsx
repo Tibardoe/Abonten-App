@@ -297,6 +297,12 @@ function TeamPlacePanel() {
             label={t("bookings")}
           />
         ) : null}
+        {can("reviews.reply") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/places/${id}/reviews`}
+            label={t("reviews")}
+          />
+        ) : null}
         {visitsOn && can("visit.show") ? (
           <TeamNavRow
             href={`/(app)/organizer/places/${id}/check-in`}

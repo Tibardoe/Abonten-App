@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { teamInboxAccount } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchConversationsPage } from "@abonten/services/messaging/conversationsQuery";
 import type {
@@ -42,6 +43,10 @@ export const getConversations = withActionLocale(
       };
     }
 
-    return fetchConversationsPage(supabase, user.id, options);
+    // Managing as a team that the person answers messages for: its inbox.
+    return fetchConversationsPage(supabase, user.id, {
+      ...options,
+      accountId: await teamInboxAccount(user.id),
+    });
   },
 );

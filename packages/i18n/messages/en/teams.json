@@ -75,6 +75,7 @@
   "sending": "Sending…",
   "subjectTeam": "this team",
   "subjectTeams": "your teams",
+  "teamInbox": "Team inbox: {team}",
   "teamPayoutAccountRules": "Changing the team's payout account needs a recent sign-in, and every Owner is told. Payouts can go to a new account 48 hours after it was added.",
   "ticketCodeLabel": "Ticket code",
   "title": "Teams",

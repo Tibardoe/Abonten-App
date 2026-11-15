@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { teamInboxAccount } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { getContentProgramCore } from "@abonten/services/content/contentProgram";
 import { getMyFieldOpsCore } from "@abonten/services/fieldOps/member/myFieldOpsQuery";
@@ -241,7 +242,11 @@ export default withActionLocale(async function getShellBootstrap(
           "unreadMessages",
           degraded,
           async () => {
-            const res = await getUnreadMessageCount(supabase, userId);
+            const res = await getUnreadMessageCount(
+              supabase,
+              userId,
+              await teamInboxAccount(userId),
+            );
             return res.status === 200 ? res.count : 0;
           },
           0,

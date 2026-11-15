@@ -1,3 +1,4 @@
+import { mobileTeamInboxAccount } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -46,6 +47,8 @@ export async function GET(req: Request) {
     });
 
     const result = await fetchConversationsPage(auth.supabase, auth.user.id, {
+      // Managing as a team that the person answers messages for: its inbox.
+      accountId: await mobileTeamInboxAccount(req, auth.user.id),
       filter: filter.success ? filter.data : "active",
       roleScope,
       cursor,
