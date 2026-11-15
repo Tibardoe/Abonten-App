@@ -15,9 +15,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const KEY = ["mobile", "organizer", "place-drafts"] as const;
 
-export function usePlaceDrafts() {
+export function usePlaceDrafts(enabled = true) {
   return useQuery({
     queryKey: [...KEY],
+    enabled,
     queryFn: async () => settleEnvelope(await api.organizer.placeDrafts()),
     staleTime: 15_000,
   });

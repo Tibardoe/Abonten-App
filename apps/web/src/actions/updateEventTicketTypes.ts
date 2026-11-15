@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { TICKET_MODE } from "@/events/ticketMode";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import {
   type UpdateEventTicketTypesCoreResult,
   updateEventTicketTypesCore,
@@ -31,7 +32,7 @@ export type UpdateEventTicketTypesInput = {
 export default withActionLocale(async function updateEventTicketTypes(
   input: UpdateEventTicketTypesInput,
 ): Promise<
-  UpdateEventTicketTypesCoreResult | { status: 401; message: string }
+  UpdateEventTicketTypesCoreResult | { status: 401 | 403; message: string }
 > {
   const supabase = await createClient();
 
@@ -44,7 +45,13 @@ export default withActionLocale(async function updateEventTicketTypes(
     return { status: 401, message: tr("userNotAuthenticated") };
   }
 
-  return updateEventTicketTypesCore(supabase, user.id, {
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "events.manage");
+
+  if (actor.error) return actor.error;
+
+  return updateEventTicketTypesCore(supabase, actor.accountId, {
     eventId: input.eventId,
     currency: input.currency,
     freeEvent: input.freeEvents === TICKET_MODE.free,

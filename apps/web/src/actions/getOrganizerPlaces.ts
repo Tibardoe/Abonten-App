@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerPlacesPage } from "@abonten/services/organizer/organizerReadQuery";
@@ -57,7 +58,18 @@ export default withActionLocale(async function getOrganizerPlaces(options?: {
       };
     }
 
-    ownerId = user.id;
+    // Managing as a team: the chosen team, if the person's role covers this.
+
+    const actor = await actingFor(user.id, [
+      "places.manage",
+      "bookings.manage",
+      "visit.show",
+    ]);
+
+    if (actor.error)
+      return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
+
+    ownerId = actor.accountId;
   }
 
   return fetchOrganizerPlacesPage(supabase, ownerId, {

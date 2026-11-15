@@ -7,6 +7,7 @@ import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { createClient } from "@/config/supabase/server";
 import ManagePlaceView from "@/places/organisms/ManagePlaceView";
+import { actingFor } from "@/utils/teamActor";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 import type { Metadata } from "next";
@@ -87,7 +88,14 @@ export default async function page({
     );
   }
 
-  if (place.owner_id !== user.id) {
+  // Managing as a team: the place must be the team's, and the person's
+  // role decides which tabs they get (ManagePlaceView).
+  const actor = await actingFor(user.id, [
+    "places.manage",
+    "bookings.manage",
+    "visit.show",
+  ]);
+  if (actor.error || place.owner_id !== actor.accountId) {
     return (
       <p className="p-8 text-center text-muted-foreground">
         {t("youReNotAuthorizedToManage2")}
@@ -203,6 +211,7 @@ export default async function page({
       promotionTiers={promotionTiers}
       currentPromotion={currentPromotion}
       verification={verification}
+      teamRole={actor.role}
       setup={{
         photoCount: photos?.length ?? 0,
         hasOpeningHours: (openingHours?.length ?? 0) > 0,

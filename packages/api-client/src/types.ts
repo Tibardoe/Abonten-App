@@ -71,6 +71,7 @@ import type {
   RewardsProgram,
 } from "@abonten/types/rewards";
 import type {
+  ActingTeams,
   InviteTarget,
   TeamDetail,
   TeamInviteSent,
@@ -2282,6 +2283,7 @@ export type EventTicketTransferSettingResult = ApiEnvelope<{
 
 // Team accounts (docs/architecture/team-accounts.md).
 export type TeamsOverviewResult = ApiEnvelope<TeamsOverview>;
+export type ActingTeamsResult = ApiEnvelope<ActingTeams>;
 export type CreateTeamBody = { name: string; username: string };
 export type CreateTeamResult = ApiEnvelope<TeamSummary>;
 export type TeamDetailResult = ApiEnvelope<TeamDetail>;

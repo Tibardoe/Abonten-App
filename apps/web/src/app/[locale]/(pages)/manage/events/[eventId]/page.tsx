@@ -4,6 +4,7 @@ import getEventHasConfirmedParticipation from "@/actions/getEventHasConfirmedPar
 import { getEventPromotionTiers } from "@/actions/getEventPromotionTiers";
 import { createClient } from "@/config/supabase/server";
 import ManageEventView from "@/events/organisms/ManageEventView";
+import { actingFor } from "@/utils/teamActor";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
@@ -86,7 +87,14 @@ export default async function page({
     );
   }
 
-  if (event.organizer_id !== user.id) {
+  // Managing as a team: the event must be the team's, and the person's
+  // role decides which tabs they get (ManageEventView).
+  const actor = await actingFor(user.id, [
+    "events.manage",
+    "attendees.view",
+    "checkin.scan",
+  ]);
+  if (actor.error || event.organizer_id !== actor.accountId) {
     return (
       <p className="p-8 text-center text-muted-foreground">
         {t("youReNotAuthorizedToManage")}
@@ -168,6 +176,7 @@ export default async function page({
       currentPromotion={currentPromotion}
       derivedStatus={derivedStatus}
       soldOut={soldOut}
+      teamRole={actor.role}
     />
   );
 }

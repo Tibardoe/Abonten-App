@@ -3,6 +3,7 @@ import {
   flattenOrganizerEvents,
   useOrganizerEvents,
 } from "@/features/organizer/useOrganizer";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type { UserPostType } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -32,6 +33,9 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
   const t = useTranslations("manage");
 
   const router = useRouter();
+  // Cancelling refunds buyers: a team does that once its money arrives
+  // (stage 3), so it stays with the person's own events for now.
+  const { current } = useActingTeams();
   const flyer =
     event.flyer_public_id && event.flyer_version
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
@@ -46,7 +50,12 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
       <Pressable
         accessibilityRole="button"
         className="flex-row gap-3 active:opacity-90"
-        onPress={() => router.push(`/(app)/organizer/events/${event.id}`)}
+        onPress={() =>
+          router.push({
+            pathname: "/(app)/organizer/events/[eventId]",
+            params: { eventId: event.id, title: event.title ?? "" },
+          })
+        }
       >
         {flyer ? (
           <Image
@@ -87,7 +96,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
         </View>
       </Pressable>
 
-      {CANCELLABLE.has(status) ? (
+      {!current && CANCELLABLE.has(status) ? (
         <Link
           href={`/(app)/organizer/cancel-event?eventId=${event.id}&title=${encodeURIComponent(
             event.title ?? "",

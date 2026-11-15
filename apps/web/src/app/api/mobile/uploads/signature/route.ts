@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -43,8 +44,22 @@ export async function POST(req: Request) {
       });
     }
 
+    // A flyer or a place photo goes in the folder of the account the
+    // listing belongs to: the team's when managing as one (the write then
+    // checks the folder against that account), the person's otherwise.
+    let folderOwner = auth.user.id;
+    if (body.kind === "event_flyer" || body.kind === "place_photo") {
+      const actor = await mobileActingFor(
+        req,
+        auth.user.id,
+        body.kind === "event_flyer" ? "events.manage" : "places.manage",
+      );
+      if (actor.error) return apiJson(actor.error);
+      folderOwner = actor.accountId;
+    }
+
     return apiJson(
-      await buildCloudinaryUploadSignature(auth.user.id, body.kind),
+      await buildCloudinaryUploadSignature(folderOwner, body.kind),
     );
   } catch (error) {
     logger.error("mobile POST /uploads/signature failed", error);

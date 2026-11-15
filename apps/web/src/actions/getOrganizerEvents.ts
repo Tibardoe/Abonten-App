@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerEventsPage } from "@abonten/services/organizer/organizerReadQuery";
@@ -30,5 +31,16 @@ export default withActionLocale(async function getOrganizerEvents(options?: {
     };
   }
 
-  return fetchOrganizerEventsPage(supabase, user.id, options);
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, [
+    "events.manage",
+    "attendees.view",
+    "checkin.scan",
+  ]);
+
+  if (actor.error)
+    return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
+
+  return fetchOrganizerEventsPage(supabase, actor.accountId, options);
 });

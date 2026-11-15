@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { actingFor } from "@/utils/teamActor";
 import {
   type UpdateEventCoreResult,
   updateEventCore,
@@ -53,6 +54,12 @@ export const updateEvent = withActionLocale(async function updateEvent(
     return { status: 401, message: tr("userNotAuthenticated") };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "events.manage");
+
+  if (actor.error) return actor.error;
+
   let flyerPublicId: string | undefined;
   let flyerVersion: string | undefined;
 
@@ -72,7 +79,7 @@ export const updateEvent = withActionLocale(async function updateEvent(
     flyerVersion = String(flyerUpload.version);
   }
 
-  const result = await updateEventCore(supabase, user.id, {
+  const result = await updateEventCore(supabase, actor.accountId, {
     eventId: formData.eventId,
     title: formData.title,
     description: formData.description,

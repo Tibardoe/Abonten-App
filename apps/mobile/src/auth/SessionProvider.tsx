@@ -1,5 +1,9 @@
 import { readStoredSession, takeStaleTokenUsed } from "@/auth/storedSession";
 import { clearSafetyStorage } from "@/features/safety/safetyStore";
+import {
+  forgetActingTeam,
+  restoreActingTeam,
+} from "@/features/teams/actingTeam";
 import { deleteQueryCacheFiles } from "@/lib/queryCacheFiles";
 import { queryClient } from "@/lib/queryClient";
 import { supabase } from "@/lib/supabase";
@@ -49,6 +53,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
       if (cancelled) return;
       lastUserId = restored?.user.id ?? lastUserId;
+      // The team this account was managing as on this phone, if any.
+      if (restored) void restoreActingTeam(restored.user.id);
       setSession(restored);
       setInitializing(false);
     });
@@ -59,6 +65,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (event === "INITIAL_SESSION" && !next) return;
       const previousUserId = lastUserId;
       lastUserId = next?.user.id ?? null;
+      if (next && next.user.id !== previousUserId) {
+        void restoreActingTeam(next.user.id);
+      }
       setSession(next);
       // First working token after running on the stored (expired) one:
       // whatever was fetched in between went out without a valid token
@@ -84,6 +93,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         deleteQueryCacheFiles("anon");
         // Safety's offline copy of the trusted contacts goes too.
         if (previousUserId) void clearSafetyStorage(previousUserId);
+        // And the team this account was managing as.
+        forgetActingTeam(previousUserId);
       }
     });
 

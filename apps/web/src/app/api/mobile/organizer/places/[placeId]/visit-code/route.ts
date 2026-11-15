@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -17,11 +18,14 @@ export async function GET(
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the named team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, "visit.show");
+  if (actor.error) return apiJson(actor.error);
 
   try {
     const { placeId } = await params;
     return fromActionResult(
-      await getPlaceVisitPanelCore(auth.supabase, auth.user.id, placeId),
+      await getPlaceVisitPanelCore(auth.supabase, actor.accountId, placeId),
     );
   } catch (error) {
     logger.error(

@@ -1391,5 +1391,6 @@
   "teamPhoneInvalid": "Introduza um número de telefone válido.",
   "teamCannotText": "Ainda não conseguimos enviar SMS para esse número. Convide a pessoa pelo nome de utilizador.",
   "teamTextLimit": "A sua equipa já enviou o número máximo de SMS de convite de hoje. Tente amanhã ou convide pelo nome de utilizador.",
-  "teamSmsInvite": "{team} convidou-o para ajudar a geri-la na Abonten. Registe-se com este número para aceitar: {link}"
+  "teamSmsInvite": "{team} convidou-o para ajudar a geri-la na Abonten. Registe-se com este número para aceitar: {link}",
+  "teamRoleCannot": "A sua função nesta equipa não abrange isto."
 }

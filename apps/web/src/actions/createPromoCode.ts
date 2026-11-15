@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type CreatePromoCodeCoreResult,
@@ -33,5 +34,11 @@ export const createPromoCode = withActionLocale(async function createPromoCode(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
-  return createPromoCodeCore(supabase, user.id, input);
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "promo.manage");
+
+  if (actor.error) return actor.error;
+
+  return createPromoCodeCore(supabase, actor.accountId, input);
 });

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { userFacingError } from "@abonten/core/userFacingError";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
@@ -30,7 +31,7 @@ export const savePlaceDraft = withActionLocale(async function savePlaceDraft({
   expectedUpdatedAt,
   coverFile,
 }: SavePlaceDraftInput): Promise<
-  SavePlaceDraftCoreResult | { status: 401 | 500; message: string }
+  SavePlaceDraftCoreResult | { status: 401 | 403 | 500; message: string }
 > {
   const supabase = await createClient();
 
@@ -52,6 +53,10 @@ export const savePlaceDraft = withActionLocale(async function savePlaceDraft({
     };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "places.manage");
+  if (actor.error) return actor.error;
+
   let coverPublicId: string | undefined;
   let coverVersion: string | undefined;
 
@@ -68,7 +73,7 @@ export const savePlaceDraft = withActionLocale(async function savePlaceDraft({
     coverVersion = String(upload.version);
   }
 
-  return savePlaceDraftCore(supabase, user.id, {
+  return savePlaceDraftCore(supabase, actor.accountId, {
     draftId,
     payload,
     expectedUpdatedAt,

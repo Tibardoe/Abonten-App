@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts, stage 2
+
+- Members run a team's events and places within their role (Manager, Door staff, Front desk; Owner all of these), chosen under "Managing as" on the website and in the app: `architecture/team-accounts.md` 1.1 (§4a, code map, later stages), `admin/teams.md` 1.1. Migration `20261116100000_team_accounts_events_places` (`acting_accounts()` and 42 access rules), route `GET /api/mobile/teams/acting`, header `x-abonten-team`; PROJECT.md §75, CLAUDE.md quick facts.
+
 ## 2026-11-15 — Team accounts, stage 1
 
 - New: `architecture/team-accounts.md` 1.0, `admin/teams.md` 1.0 (Part 2 of the Tickets, entry and teams plan, stage 1: teams, members, roles, invitations, activity; switched off). Permissions `teams.view` / `teams.configure` (`architecture/roles-and-permissions.md`, `admin/settings-and-rbac.md`); job `team-invites-expire` (`operations/scheduled-jobs.md`); env var `TEAMS_KILL_SWITCH` (`security/secrets-and-environment.md`, `deployment/rollback-and-recovery.md`); `privacy/data-inventory.md` (teams); `architecture/feature-inventory.md`; `documentation-coverage-matrix.md`; the plan's state and X5's current state; PROJECT.md §75, CLAUDE.md quick facts.

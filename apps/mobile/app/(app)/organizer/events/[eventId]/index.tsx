@@ -1,6 +1,8 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useEventInsights } from "@/features/organizer/useEventInsights";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
+import { TeamNavRow } from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { EventTicketPlansSection } from "@/features/ticketPlans/EventTicketPlansSection";
 import { EventTicketTransfersSection } from "@/features/ticketTransfers/EventTicketTransfersSection";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
@@ -23,7 +25,7 @@ import {
   useLocale,
   useTranslations,
 } from "@abonten/ui-native/i18n";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
@@ -475,7 +477,7 @@ function ReturningSection({
   );
 }
 
-export default function EventInsightsScreen() {
+function EventInsightsScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
@@ -642,4 +644,72 @@ export default function EventInsightsScreen() {
       ) : null}
     </ScrollView>
   );
+}
+
+// Managing as a team (docs/architecture/team-accounts.md, stage 2): what the
+// role covers for this event. Sales figures, promotion and reviews stay with
+// the person's own events until the team's money and messages arrive.
+function TeamEventPanel() {
+  const t = useTranslations("manage");
+  const tt = useTranslations("teams");
+  const { eventId, title } = useLocalSearchParams<{
+    eventId: string;
+    title?: string;
+  }>();
+  const id = eventId ?? "";
+  const { can } = useActingTeams();
+
+  return (
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="gap-5 p-4 pb-16"
+    >
+      <Stack.Screen options={{ title: t("manageEvent") }} />
+      {title ? <AppText variant="screenTitle">{title}</AppText> : null}
+
+      <View className="gap-2">
+        {can("events.manage") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/edit`}
+            label={t("editEvent")}
+          />
+        ) : null}
+        {can("attendees.view") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/attendees`}
+            label={t("attendeesCheckIn")}
+          />
+        ) : can("checkin.scan") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/attendees`}
+            label={tt("checkInTitle")}
+          />
+        ) : null}
+        {can("promo.manage") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/promo-codes`}
+            label={t("managePromoCodes")}
+          />
+        ) : null}
+        <TeamNavRow
+          href={`/(app)/event/${id}`}
+          label={t("viewPublicEventPage")}
+        />
+      </View>
+
+      {id && can("events.manage") ? (
+        <>
+          <EventTicketPlansSection eventId={id} />
+          <EventTicketTransfersSection eventId={id} />
+        </>
+      ) : null}
+
+      <AppText variant="meta">{tt("laterAsTeam")}</AppText>
+    </ScrollView>
+  );
+}
+
+export default function EventManageScreen() {
+  const { current } = useActingTeams();
+  return current ? <TeamEventPanel /> : <EventInsightsScreen />;
 }

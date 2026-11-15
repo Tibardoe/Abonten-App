@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
 import { tr } from "@abonten/services/i18n/requestLocale";
@@ -19,11 +20,17 @@ export const deleteEvent = withActionLocale(async function deleteEvent(
     return { status: 401, message: tr("userNotLoggedIn2") };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.user.id, "events.manage");
+
+  if (actor.error) return actor.error;
+
   const { data: event, error: fetchError } = await supabase
     .from("event")
     .select("flyer_public_id")
     .eq("id", eventId)
-    .eq("organizer_id", user.user.id)
+    .eq("organizer_id", actor.accountId)
     .single();
 
   if (fetchError || !event) {
@@ -48,7 +55,7 @@ export const deleteEvent = withActionLocale(async function deleteEvent(
     .from("event")
     .delete()
     .eq("id", eventId)
-    .eq("organizer_id", user.user.id); // make sure you delete the correct favorite
+    .eq("organizer_id", actor.accountId); // make sure you delete the correct favorite
 
   if (deleteError) {
     return {

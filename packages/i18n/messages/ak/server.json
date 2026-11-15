@@ -1391,5 +1391,6 @@
   "teamPhoneInvalid": "Enter a valid phone number.",
   "teamCannotText": "We can't text that number yet. Invite them by username.",
   "teamTextLimit": "Your team has sent the most invitation texts for today. Try tomorrow, or invite by username.",
-  "teamSmsInvite": "{team} invited you to help run it on Abonten. Sign up with this number to accept: {link}"
+  "teamSmsInvite": "{team} invited you to help run it on Abonten. Sign up with this number to accept: {link}",
+  "teamRoleCannot": "Your role in this team doesn't cover this."
 }

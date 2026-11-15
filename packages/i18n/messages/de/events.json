@@ -297,7 +297,9 @@
   "tabs": {
     "details": "Details",
     "insights": "Statistiken",
-    "promotion": "Promotion"
+    "promotion": "Promotion",
+    "attendees": "Gäste",
+    "checkin": "Einlass"
   },
   "tapTheDayYourEventHappens": "Tippe auf den Tag deines Events",
   "tapTheFirstDayThenThe": "Tippe auf den ersten Tag, dann auf den letzten",

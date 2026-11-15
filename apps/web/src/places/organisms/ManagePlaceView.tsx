@@ -17,6 +17,7 @@ import {
   readPlaceTemporaryStatus,
   readSocialLinks,
 } from "@abonten/core/placeJson";
+import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
@@ -25,6 +26,7 @@ import type {
 import type { ManagedPlaceRow } from "@abonten/types/placeRows";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 import type { PlaceReviewListItem } from "@abonten/types/reviewType";
+import type { TeamRoleCode } from "@abonten/types/teamType";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { IoAddOutline } from "react-icons/io5";
@@ -81,6 +83,8 @@ type ManagePlaceViewProps = {
     hasContact: boolean;
     serviceCount: number;
   };
+  /** The person's role when managing as a team; null for their own place. */
+  teamRole: TeamRoleCode | null;
 };
 
 type Tab =
@@ -92,7 +96,8 @@ type Tab =
   | "reviews"
   | "insights"
   | "promotion"
-  | "verification";
+  | "verification"
+  | "visit";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "tabs.details" },
@@ -104,7 +109,23 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "insights", label: "tabs.insights" },
   { id: "promotion", label: "tabs.promotion" },
   { id: "verification", label: "tabs.verification" },
+  { id: "visit", label: "tabs.visit" },
 ];
+
+// Managing as a team (stage 2): what the role covers. Reviews, money
+// (insights, promotion) and verification follow in later stages.
+function tabsFor(role: TeamRoleCode | null): Tab[] {
+  if (!role) {
+    return TABS.map((tab) => tab.id).filter((id) => id !== "visit");
+  }
+  const tabs: Tab[] = [];
+  if (teamRoleCan(role, "places.manage")) {
+    tabs.push("details", "photos", "hours", "services");
+  }
+  if (teamRoleCan(role, "bookings.manage")) tabs.push("bookings");
+  if (teamRoleCan(role, "visit.show")) tabs.push("visit");
+  return tabs;
+}
 
 // Top-level management view for a single place, tabbed across the sections
 // the milestone spec calls for. Each section owns its own save action;
@@ -126,6 +147,7 @@ export default function ManagePlaceView({
   currentPromotion,
   verification,
   setup,
+  teamRole,
 }: ManagePlaceViewProps) {
   const t = useTranslations("places");
   const toast = useToast();
@@ -136,7 +158,8 @@ export default function ManagePlaceView({
   // ?tab=bookings).
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const requested = searchParams.get("tab");
-    return TABS.find((tab) => tab.id === requested)?.id ?? "details";
+    const allowed = tabsFor(teamRole);
+    return allowed.find((id) => id === requested) ?? allowed[0] ?? "details";
   });
   const [showEventModal, setShowEventModal] = useState(false);
 
@@ -165,14 +188,16 @@ export default function ManagePlaceView({
           <p className="text-sm text-muted-foreground">{placeAddress}</p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm hover:bg-primary/90 transition-colors shrink-0"
-        >
-          <IoAddOutline className="text-lg" />
-          {t("addUpcomingEvent")}
-        </button>
+        {!teamRole || teamRoleCan(teamRole, "events.manage") ? (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm hover:bg-primary/90 transition-colors shrink-0"
+          >
+            <IoAddOutline className="text-lg" />
+            {t("addUpcomingEvent")}
+          </button>
+        ) : null}
 
         <input
           ref={fileInputRef}
@@ -183,20 +208,22 @@ export default function ManagePlaceView({
         />
       </div>
 
-      <PlaceSetupChecklist
-        setup={computePlaceSetup({
-          ...setup,
-          verificationStatus:
-            verification?.approved?.status ??
-            verification?.openCase?.status ??
-            null,
-          verificationAvailable: !!verification?.program.placeRequestsEnabled,
-        })}
-        onGoToTab={(tab) => setActiveTab(tab as Tab)}
-      />
+      {!teamRole ? (
+        <PlaceSetupChecklist
+          setup={computePlaceSetup({
+            ...setup,
+            verificationStatus:
+              verification?.approved?.status ??
+              verification?.openCase?.status ??
+              null,
+            verificationAvailable: !!verification?.program.placeRequestsEnabled,
+          })}
+          onGoToTab={(tab) => setActiveTab(tab as Tab)}
+        />
+      ) : null}
 
       <div className="flex gap-2 overflow-x-auto border-b border-border pb-px md:justify-center">
-        {TABS.map((tab) => (
+        {TABS.filter((tab) => tabsFor(teamRole).includes(tab.id)).map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -283,6 +310,10 @@ export default function ManagePlaceView({
             tiers={promotionTiers}
             currentPromotion={currentPromotion}
           />
+        )}
+
+        {activeTab === "visit" && (
+          <PlaceVisitQrCard placeId={place.id} placeName={place.name} />
         )}
 
         {activeTab === "verification" && (

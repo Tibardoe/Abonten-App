@@ -132,3 +132,16 @@ export type TeamAdminRow = {
   owners: TeamPerson[];
   memberCount: number;
 };
+
+/** A team the person may manage as (the "Managing as" choice). */
+export type ActingTeam = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatarPublicId: string | null;
+  avatarVersion: string | null;
+  role: TeamRoleCode;
+};
+
+/** The teams a person may manage as, and whether teams are switched on. */
+export type ActingTeams = { teams: ActingTeam[]; programEnabled: boolean };

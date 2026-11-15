@@ -1,4 +1,5 @@
 import { markStaleTokenUsed, readStoredSession } from "@/auth/storedSession";
+import { getActingTeamId } from "@/features/teams/actingTeam";
 import { createApiClient } from "@abonten/api-client";
 import { withDeadline } from "@abonten/core/http/fetchWithTimeout";
 import { getCurrentLocale } from "@abonten/ui-native/i18n";
@@ -89,6 +90,8 @@ export const api = createApiClient({
   metricSampleRate: __DEV__ ? 0 : 0.1,
   // The server words its messages in the language the app is showing.
   getLocale: getCurrentLocale,
+  // The team chosen under "Managing as" (features/teams/actingTeam.ts).
+  getActingTeam: getActingTeamId,
   // Rewards fraud signal only (see installId.ts).
   getInstallId,
   platform: Platform.OS === "ios" ? "ios" : "android",

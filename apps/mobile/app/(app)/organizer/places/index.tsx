@@ -3,6 +3,7 @@ import {
   flattenOrganizerPlaces,
   useOrganizerPlaces,
 } from "@/features/organizer/useOrganizerPlaces";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type { OrganizerPlaceRow } from "@abonten/api-client";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
@@ -41,7 +42,12 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
     <Pressable
       accessibilityRole="button"
       className="flex-row gap-3 rounded-xl border border-border bg-card p-3 active:opacity-90"
-      onPress={() => router.push(`/(app)/organizer/places/${place.id}`)}
+      onPress={() =>
+        router.push({
+          pathname: "/(app)/organizer/places/[placeId]",
+          params: { placeId: place.id, name: place.name ?? "" },
+        })
+      }
     >
       {cover ? (
         <Image
@@ -80,6 +86,7 @@ export default function OrganizerPlacesScreen() {
   const t = useTranslations("manage");
 
   const q = useOrganizerPlaces();
+  const { can } = useActingTeams();
   const places = flattenOrganizerPlaces(q.data?.pages);
   // "No places yet" is only ever said for an answer the server gave;
   // loading, offline and failed are told apart.
@@ -99,13 +106,15 @@ export default function OrganizerPlacesScreen() {
       ListHeaderComponent={
         <View className="mb-1 flex-row items-center justify-between">
           <AppText variant="screenTitle">{t("myPlaces2")}</AppText>
-          <Link href="/(app)/place/new" asChild>
-            <Pressable className="rounded-lg bg-primary px-3 py-1.5 active:opacity-90">
-              <AppText className="text-sm font-semibold text-primary-foreground">
-                {t("addPlace")}
-              </AppText>
-            </Pressable>
-          </Link>
+          {can("places.manage") ? (
+            <Link href="/(app)/place/new" asChild>
+              <Pressable className="rounded-lg bg-primary px-3 py-1.5 active:opacity-90">
+                <AppText className="text-sm font-semibold text-primary-foreground">
+                  {t("addPlace")}
+                </AppText>
+              </Pressable>
+            </Link>
+          ) : null}
         </View>
       }
       onEndReached={onEndReached}

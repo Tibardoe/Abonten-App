@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type AttendanceRow,
@@ -33,5 +34,17 @@ export default withActionLocale(async function getAttendanceList(
     };
   }
 
-  return fetchEventAttendanceListPage(supabase, user.id, eventId, options);
+  // Managing as a team: the chosen team, if the person's role covers this.
+
+  const actor = await actingFor(user.id, "attendees.view");
+
+  if (actor.error)
+    return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
+
+  return fetchEventAttendanceListPage(
+    supabase,
+    actor.accountId,
+    eventId,
+    options,
+  );
 });

@@ -36,6 +36,7 @@ import type {
 import type {
   AcceptTicketTransferResult,
   AcknowledgeSafetyBody,
+  ActingTeamsResult,
   AddSafetyContactBody,
   AnswerTeamInviteResult,
   BalanceOverviewResult,
@@ -379,6 +380,13 @@ export type ApiClientOptions = {
    * in it. Without it the server falls back to Accept-Language, then English.
    */
   getLocale?: () => string | null | undefined;
+  /**
+   * The team the person is managing as (organizer screens' "Managing as"),
+   * sent as `x-abonten-team` on signed-in requests. It only selects: the
+   * server re-checks the membership and the role every time, and routes
+   * that do not act for an account ignore it.
+   */
+  getActingTeam?: () => string | null | undefined;
 };
 
 // The internal telemetry sink. Referenced here as a literal so the
@@ -466,6 +474,8 @@ export function createApiClient(options: ApiClientOptions) {
     if (init.auth) {
       const token = (await options.getAccessToken?.()) ?? null;
       if (token) headers.Authorization = `Bearer ${token}`;
+      const team = options.getActingTeam?.();
+      if (token && team) headers["x-abonten-team"] = team;
     }
 
     const installId = (await options.getInstallId?.()) ?? null;
@@ -2893,6 +2903,13 @@ export function createApiClient(options: ApiClientOptions) {
      * or invite; teams that exist stay visible to their members either way.
      */
     teams: {
+      /** The teams the caller may manage as ("Managing as"). */
+      acting() {
+        return request<ActingTeamsResult>("/api/mobile/teams/acting", {
+          method: "GET",
+          auth: true,
+        });
+      },
       /** The caller's teams, the invitations waiting for them, the switch. */
       overview() {
         return request<TeamsOverviewResult>("/api/mobile/teams", {

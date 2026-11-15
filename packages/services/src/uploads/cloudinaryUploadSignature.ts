@@ -128,7 +128,7 @@ export type CloudinarySignatureData = {
 // on `status` exactly as before.
 export type UploadSignatureResult =
   | { status: 200; data: CloudinarySignatureData; message?: undefined }
-  | { status: 401 | 429; message: string; data?: undefined };
+  | { status: 401 | 403 | 429; message: string; data?: undefined };
 
 export function isUploadSignatureKind(
   value: unknown,

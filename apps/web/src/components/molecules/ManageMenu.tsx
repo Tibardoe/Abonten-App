@@ -5,10 +5,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useContentProgram } from "@/spotlight/hooks/useContentProgram";
+import {
+  useActingContext,
+  useSwitchActingTeam,
+} from "@/teams/useActingContext";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -49,7 +54,22 @@ export default function ManageMenu({
   onNavigate,
 }: ManageMenuProps) {
   const t = useTranslations("navigation");
+  const tt = useTranslations("teams");
   const pathname = usePathname();
+  // "Managing as": the person's own account or one of their teams. With a
+  // team chosen, the menu offers only what the person's role covers there;
+  // money, Spotlight and the dashboard follow in later stages.
+  const acting = useActingContext();
+  const switchTeam = useSwitchActingTeam();
+  const team = acting.current;
+  const showOrganizer = team
+    ? acting.can("events.manage", "attendees.view", "checkin.scan")
+    : isOrganizer;
+  const showPlaces = team
+    ? acting.can("places.manage", "bookings.manage", "visit.show")
+    : isPlaceOwner;
+  const showMoney = !team && isOrganizer;
+  const showDrafts = !team || acting.can("events.manage", "places.manage");
 
   const isDashboardActive = pathname.startsWith("/manage/dashboard");
   const isFinancesActive = pathname.startsWith("/finances");
@@ -61,7 +81,9 @@ export default function ManageMenu({
   const isSpotlightActive = pathname.startsWith("/manage/spotlight");
   const { program } = useContentProgram();
   const showSpotlight =
-    program.canPublish && (program.spotlightPosting || program.storiesPosting);
+    !team &&
+    program.canPublish &&
+    (program.spotlightPosting || program.storiesPosting);
 
   const isManageActive =
     isDashboardActive ||
@@ -88,11 +110,48 @@ export default function ManageMenu({
         >
           <MdOutlineManageHistory className="text-2xl" />
           {t("manage")}
+          {team ? (
+            <span className="max-w-32 truncate text-xs text-muted-foreground">
+              · {team.name ?? team.username}
+            </span>
+          ) : null}
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-52">
-        {isOrganizer && (
+      <DropdownMenuContent align="start" className="w-60">
+        {acting.teams.length > 0 ? (
+          <>
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              {tt("managingAs")}
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              className={itemClass(!team)}
+              onSelect={() => void switchTeam(null)}
+            >
+              {tt("yourAccount")}
+            </DropdownMenuItem>
+            {acting.teams.map((option) => (
+              <DropdownMenuItem
+                key={option.id}
+                className={cn(
+                  itemClass(team?.id === option.id),
+                  "justify-between",
+                )}
+                onSelect={() => void switchTeam(option.id)}
+              >
+                <span className="truncate">
+                  {option.name ?? option.username}
+                </span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {tt("role", { role: option.role })}
+                </span>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+          </>
+        ) : null}
+
+        {showMoney && (
           <>
             <DropdownMenuItem asChild>
               <Link
@@ -118,9 +177,9 @@ export default function ManageMenu({
           </>
         )}
 
-        {(isOrganizer || isPlaceOwner) && <DropdownMenuSeparator />}
+        {showMoney && <DropdownMenuSeparator />}
 
-        {isOrganizer && (
+        {showOrganizer && (
           <DropdownMenuItem asChild>
             <Link
               href="/manage/events"
@@ -146,7 +205,7 @@ export default function ManageMenu({
           </DropdownMenuItem>
         )}
 
-        {isPlaceOwner && (
+        {showPlaces && (
           <DropdownMenuItem asChild>
             <Link
               href="/manage/places"
@@ -172,16 +231,18 @@ export default function ManageMenu({
           </Link>
         </DropdownMenuItem>
 
-        <DropdownMenuItem asChild>
-          <Link
-            href="/manage/drafts"
-            onClick={onNavigate}
-            className={itemClass(isDraftsActive)}
-          >
-            <MdOutlineDrafts className="text-lg" />
-            {t("drafts")}
-          </Link>
-        </DropdownMenuItem>
+        {showDrafts ? (
+          <DropdownMenuItem asChild>
+            <Link
+              href="/manage/drafts"
+              onClick={onNavigate}
+              className={itemClass(isDraftsActive)}
+            >
+              <MdOutlineDrafts className="text-lg" />
+              {t("drafts")}
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
 
         <DropdownMenuItem asChild>
           <Link
