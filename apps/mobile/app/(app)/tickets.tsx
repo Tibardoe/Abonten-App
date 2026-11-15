@@ -5,6 +5,7 @@ import { PendingCheckoutsSection } from "@/components/checkout/PendingCheckoutsS
 import { EventsToReviewList } from "@/components/reviews/EventsToReviewList";
 import { ReviewedEventsList } from "@/components/reviews/ReviewedEventsList";
 import { TicketListSkeleton } from "@/components/skeletons";
+import { TicketOffersSection } from "@/features/ticketTransfers/TicketOffersSection";
 import {
   type TicketFilter,
   useMyTickets,
@@ -77,7 +78,12 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
         <TicketCard ticket={item} showRefundInfo={tab === "refunds"} />
       )}
       ListHeaderComponent={
-        tab === "active" ? <PendingCheckoutsSection /> : null
+        tab === "active" ? (
+          <>
+            <TicketOffersSection />
+            <PendingCheckoutsSection />
+          </>
+        ) : null
       }
       contentContainerClassName="gap-3 px-4 pb-16 pt-3"
       onEndReached={onEndReached}

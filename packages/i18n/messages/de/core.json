@@ -932,6 +932,26 @@
     "ticket_plan_refund_problem": {
       "title": "Deine Erstattung für {title} verzögert sich",
       "body": "Ein Teil konnte nicht gesendet werden. Unser Team kümmert sich darum und meldet sich bei dir."
+    },
+    "ticket_transfer_received": {
+      "title": "{actor} hat dir ein Ticket geschickt",
+      "body": "Nimm dein Ticket für {title} an, bevor das Angebot abläuft."
+    },
+    "ticket_transfer_accepted": {
+      "title": "{actor} hat dein Ticket angenommen",
+      "body": "Dein Ticket für {title} ist jetzt im Konto von {actor}."
+    },
+    "ticket_transfer_declined": {
+      "title": "{actor} hat dein Ticket nicht angenommen",
+      "body": "Dein Ticket für {title} gehört weiterhin dir."
+    },
+    "ticket_transfer_cancelled": {
+      "title": "{actor} hat das Ticket zurückgenommen",
+      "body": "Das Ticket für {title} ist wieder bei {actor}."
+    },
+    "ticket_transfer_expired": {
+      "title": "Dein Ticket für {title} gehört weiterhin dir",
+      "body": "Niemand hat es rechtzeitig angenommen, deshalb ist es in deinen Tickets geblieben."
     }
   },
   "openStatus": {

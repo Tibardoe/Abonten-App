@@ -932,6 +932,26 @@
     "ticket_plan_refund_problem": {
       "title": "Votre remboursement pour {title} est retardé",
       "body": "Une partie n'a pas pu être envoyée. Notre équipe s'en occupe et vous contactera."
+    },
+    "ticket_transfer_received": {
+      "title": "{actor} vous a envoyé un billet",
+      "body": "Acceptez votre billet pour {title} avant la fin de l'offre."
+    },
+    "ticket_transfer_accepted": {
+      "title": "{actor} a accepté votre billet",
+      "body": "Votre billet pour {title} est maintenant sur le compte de {actor}."
+    },
+    "ticket_transfer_declined": {
+      "title": "{actor} n'a pas accepté votre billet",
+      "body": "Votre billet pour {title} est toujours à vous."
+    },
+    "ticket_transfer_cancelled": {
+      "title": "{actor} a repris le billet",
+      "body": "Le billet pour {title} est revenu à {actor}."
+    },
+    "ticket_transfer_expired": {
+      "title": "Votre billet pour {title} est toujours à vous",
+      "body": "Personne ne l'a accepté à temps, il est donc resté dans vos billets."
     }
   },
   "openStatus": {

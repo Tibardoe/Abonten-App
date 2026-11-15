@@ -21,6 +21,7 @@ import {
   Newspaper,
   PiggyBank,
   ScrollText,
+  Send,
   Settings,
   ShieldAlert,
   ShieldBan,
@@ -117,6 +118,12 @@ const ITEMS: Item[] = [
     label: "Pay small small",
     icon: PiggyBank,
     permission: "plans.view",
+  },
+  {
+    href: "/ticket-transfers",
+    label: "Ticket transfers",
+    icon: Send,
+    permission: "transfers.view",
   },
   {
     href: "/rewards",

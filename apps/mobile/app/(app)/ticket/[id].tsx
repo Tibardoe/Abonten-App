@@ -4,6 +4,8 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useDirections } from "@/features/directions/DirectionsSheet";
 import { TicketSafetyButton } from "@/features/safety/TicketSafetyButton";
+import { TicketCodeRow } from "@/features/ticketTransfers/TicketCodeRow";
+import { TicketSendPanel } from "@/features/ticketTransfers/TicketSendPanel";
 import { useCancelTicketFlow } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
@@ -228,11 +230,7 @@ export default function TicketDetailScreen() {
               label={t("seat", { seat_number: ticket.seat_number })}
             />
           ) : null}
-          <Row
-            icon="barcode-outline"
-            label={t("ticketReference")}
-            sub={ticket.ticket_code}
-          />
+          <TicketCodeRow code={ticket.ticket_code} />
           {used && ticket.used_at ? (
             <Row
               icon="checkmark-done-circle-outline"
@@ -266,12 +264,17 @@ export default function TicketDetailScreen() {
             </View>
           )}
           <AppText variant="caption">{t("showThisAtEntry")}</AppText>
-          <AppText variant="meta" className="tracking-[3px]">
-            {ticket.ticket_code}
-          </AppText>
         </View>
 
         <View className="w-full gap-3">
+          <TicketSendPanel
+            ticketId={ticket.id}
+            eventTitle={ticket.event.title}
+            live={
+              ticket.status === "active" && !eventEnded && !cancelledByOrganizer
+            }
+          />
+
           <Button
             title={
               receipt.isGenerating

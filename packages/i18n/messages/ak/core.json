@@ -932,6 +932,26 @@
     "ticket_plan_refund_problem": {
       "title": "Your refund for {title} is delayed",
       "body": "Part of it couldn't be sent. Our team is looking into it and will contact you."
+    },
+    "ticket_transfer_received": {
+      "title": "{actor} sent you a ticket",
+      "body": "Accept your ticket for {title} before the offer runs out."
+    },
+    "ticket_transfer_accepted": {
+      "title": "{actor} accepted your ticket",
+      "body": "Your ticket for {title} is now in the account of {actor}."
+    },
+    "ticket_transfer_declined": {
+      "title": "{actor} didn't accept your ticket",
+      "body": "Your ticket for {title} is still yours."
+    },
+    "ticket_transfer_cancelled": {
+      "title": "{actor} took back the ticket",
+      "body": "The ticket for {title} went back to {actor}."
+    },
+    "ticket_transfer_expired": {
+      "title": "Your ticket for {title} is still yours",
+      "body": "Nobody accepted it in time, so it stayed in your tickets."
     }
   },
   "openStatus": {

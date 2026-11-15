@@ -932,6 +932,26 @@
     "ticket_plan_refund_problem": {
       "title": "O seu reembolso para {title} está atrasado",
       "body": "Não foi possível enviar uma parte. A nossa equipa está a tratar do assunto e vai contactá-lo."
+    },
+    "ticket_transfer_received": {
+      "title": "{actor} enviou-lhe um bilhete",
+      "body": "Aceite o seu bilhete para {title} antes de a oferta expirar."
+    },
+    "ticket_transfer_accepted": {
+      "title": "{actor} aceitou o seu bilhete",
+      "body": "O seu bilhete para {title} está agora na conta de {actor}."
+    },
+    "ticket_transfer_declined": {
+      "title": "{actor} não aceitou o seu bilhete",
+      "body": "O seu bilhete para {title} continua a ser seu."
+    },
+    "ticket_transfer_cancelled": {
+      "title": "{actor} retirou o bilhete",
+      "body": "O bilhete para {title} voltou para {actor}."
+    },
+    "ticket_transfer_expired": {
+      "title": "O seu bilhete para {title} continua a ser seu",
+      "body": "Ninguém o aceitou a tempo, por isso ficou nos seus bilhetes."
     }
   },
   "openStatus": {

@@ -1,6 +1,7 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
 import { useToast } from "@/hooks/useToast";
+import TicketCodeReveal from "@/ticketTransfers/molecules/TicketCodeReveal";
 import { loadTicketPdfFontInBrowser } from "@/utils/ticketPdfFont";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
@@ -146,12 +147,7 @@ export default function TicketModal({
                 </span>
               </p>
 
-              <p className="text-sm text-muted-foreground mb-2">
-                {t("ticketCode")}
-                <span className="font-mono text-foreground">
-                  {event.ticket_code}
-                </span>
-              </p>
+              <TicketCodeReveal code={event.ticket_code} />
 
               <p className="text-sm text-muted-foreground mb-4">
                 {t("location2", {

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-15 — Send a ticket to a friend
+
+- New: `architecture/ticket-transfers.md` 1.0, `admin/ticket-transfers.md` 1.0, `specifications/tickets-entry-and-teams.md` 1.0 (the approved plan, Parts 1–7). Registers: decisions X1–X45 (Decided 2026-11-15), legal N1–N9 (Open). Permissions `transfers.view` / `transfers.configure` (`architecture/roles-and-permissions.md`, `admin/settings-and-rbac.md`); job `ticket-transfers-expire` (`operations/scheduled-jobs.md`); env var `TICKET_TRANSFERS_KILL_SWITCH` (`security/secrets-and-environment.md`, `deployment/rollback-and-recovery.md`); `privacy/data-inventory.md` (ticket offers); `architecture/feature-inventory.md`; help `customers/sending-tickets` (five languages, not listed while the programme is off); PROJECT.md §74, CLAUDE.md quick facts.
+
 ## 2026-11-09 — Staying signed in
 
 - Sign-out ends that device's session only, Settings › Security gains **Sign out of other devices** (help `account/profile-and-settings`, five languages), phone sign-in no longer signs the person out on their other devices, and the app's saved session survives being killed mid-save: `security/application-security.md` 1.4, `deployment/mobile-eas.md` 1.9 (App Review reviewers no longer bump each other), `privacy/data-inventory.md` 1.4, `architecture/feature-inventory.md` 1.8, `mobile/03-phase-3-api.md`, PROJECT.md §73, CLAUDE.md quick facts.

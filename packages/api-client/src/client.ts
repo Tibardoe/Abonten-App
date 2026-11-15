@@ -26,16 +26,19 @@ import type {
   SearchResults,
   SearchSuggestionsResponse,
 } from "@abonten/types/searchType";
+import type { SendTicketTarget } from "@abonten/types/ticketTransferType";
 import type {
   WeeklyEditionResult,
   WeeklyProgram,
   WeeklyTeaser,
 } from "@abonten/types/weeklyType";
 import type {
+  AcceptTicketTransferResult,
   AcknowledgeSafetyBody,
   AddSafetyContactBody,
   BalanceOverviewResult,
   EventTicketPlanSettingResult,
+  EventTicketTransferSettingResult,
   IdentityOverviewResult,
   PayTicketPlanPartBody,
   PayTicketPlanPartResult,
@@ -47,6 +50,8 @@ import type {
   SafetyProgramResult,
   SafetySessionResult,
   SafetyViewResult,
+  SendTicketBody,
+  SendTicketResult,
   StartIdentityVerificationBody,
   StartIdentityVerificationResponse,
   StartSafetySessionBody,
@@ -56,6 +61,10 @@ import type {
   TicketPlanOfferResult,
   TicketPlanResult,
   TicketPlansResult,
+  TicketTransferAnswerResult,
+  TicketTransferRecipientResult,
+  TicketTransferStateResult,
+  TicketTransfersResult,
   UpdateSafetyContactBody,
   UpdateSafetySessionBody,
 } from "./types";
@@ -1601,6 +1610,27 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "PUT", body: { enabled }, auth: true },
         );
       },
+      /**
+       * May guests send this event's tickets to friends (on unless the
+       * organizer switched it off), and is the programme open to them.
+       */
+      eventTicketTransfers(eventId: string) {
+        return request<EventTicketTransferSettingResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/ticket-transfers`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Off stops new offers; open ones can still be answered. */
+      setEventTicketTransfers(eventId: string, enabled: boolean) {
+        return request<EventTicketTransferSettingResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/ticket-transfers`,
+          { method: "PUT", body: { enabled }, auth: true },
+        );
+      },
       promoteEvent(eventId: string, tierId: number) {
         return request<PromoteEventResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/promote`,
@@ -2786,6 +2816,61 @@ export function createApiClient(options: ApiClientOptions) {
         return request<BalanceOverviewResult>(
           "/api/mobile/ticket-plans/balance",
           { method: "GET", auth: true },
+        );
+      },
+    },
+    /**
+     * Send a ticket to a friend (docs/architecture/ticket-transfers.md). An
+     * offer moves the ticket only when the receiver accepts; it then gets a
+     * new code. Ships switched off: `list().program.enabled` says whether
+     * the caller may send.
+     */
+    ticketTransfers: {
+      /** Offers to the caller, the caller's open offers, and the switch. */
+      list() {
+        return request<TicketTransfersResult>("/api/mobile/ticket-transfers", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /** Whether one of the caller's tickets can be sent, and its offer. */
+      state(ticketId: string) {
+        return request<TicketTransferStateResult>(
+          `/api/mobile/ticket-transfers/ticket/${encodeURIComponent(ticketId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Who a username or number points at, shown before sending. */
+      recipient(target: SendTicketTarget) {
+        return request<TicketTransferRecipientResult>(
+          "/api/mobile/ticket-transfers/recipient",
+          { method: "POST", body: { target }, auth: true },
+        );
+      },
+      send(body: SendTicketBody) {
+        return request<SendTicketResult>("/api/mobile/ticket-transfers", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      accept(transferId: string) {
+        return request<AcceptTicketTransferResult>(
+          `/api/mobile/ticket-transfers/${encodeURIComponent(transferId)}/accept`,
+          { method: "POST", auth: true, timeoutMs: 25_000 },
+        );
+      },
+      decline(transferId: string) {
+        return request<TicketTransferAnswerResult>(
+          `/api/mobile/ticket-transfers/${encodeURIComponent(transferId)}/decline`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** The sender takes back an offer nobody has accepted yet. */
+      cancel(transferId: string) {
+        return request<TicketTransferAnswerResult>(
+          `/api/mobile/ticket-transfers/${encodeURIComponent(transferId)}/cancel`,
+          { method: "POST", auth: true },
         );
       },
     },

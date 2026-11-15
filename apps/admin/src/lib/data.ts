@@ -148,6 +148,10 @@ import {
   listTicketPlansAdminCore,
 } from "@abonten/services/admin/ticketPlans/ticketPlansAdminCore";
 import {
+  getTicketTransferSettingsCore,
+  listTicketTransfersAdminCore,
+} from "@abonten/services/admin/ticketTransfers/ticketTransfersAdminCore";
+import {
   type ListUsersFilters,
   getUserDetailCore,
   listUsersCore,
@@ -1021,4 +1025,25 @@ export async function loadTicketPlanSettings() {
   const ctx = await requireAdmin();
   const settings = await getTicketPlanSettingsCore(getServiceClient(), ctx);
   return { ctx, settings };
+}
+
+/** Admin › Ticket transfers: the programme settings. */
+export async function loadTicketTransferSettings() {
+  const ctx = await requireAdmin();
+  const settings = await getTicketTransferSettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
+}
+
+/** Admin › Ticket transfers: offers, newest first, or one ticket's or person's. */
+export async function loadTicketTransfers(filter: {
+  userId?: string | null;
+  ticket?: string | null;
+}) {
+  const ctx = await requireAdmin();
+  const list = await listTicketTransfersAdminCore(
+    getServiceClient(),
+    ctx,
+    filter,
+  );
+  return { ctx, list };
 }

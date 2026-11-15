@@ -932,6 +932,26 @@
     "ticket_plan_refund_problem": {
       "title": "Tu reembolso para {title} se ha retrasado",
       "body": "No se ha podido enviar una parte. Nuestro equipo lo está revisando y se pondrá en contacto contigo."
+    },
+    "ticket_transfer_received": {
+      "title": "{actor} te ha enviado una entrada",
+      "body": "Acepta tu entrada para {title} antes de que caduque la oferta."
+    },
+    "ticket_transfer_accepted": {
+      "title": "{actor} ha aceptado tu entrada",
+      "body": "Tu entrada para {title} ya está en la cuenta de {actor}."
+    },
+    "ticket_transfer_declined": {
+      "title": "{actor} no ha aceptado tu entrada",
+      "body": "Tu entrada para {title} sigue siendo tuya."
+    },
+    "ticket_transfer_cancelled": {
+      "title": "{actor} ha retirado la entrada",
+      "body": "La entrada para {title} ha vuelto a {actor}."
+    },
+    "ticket_transfer_expired": {
+      "title": "Tu entrada para {title} sigue siendo tuya",
+      "body": "Nadie la aceptó a tiempo, así que sigue en tus entradas."
     }
   },
   "openStatus": {
