@@ -5,6 +5,7 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { isTicketPaidBySomeoneElse } from "@abonten/core/ticketTransfers/paidBySomeoneElse";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { AppText, Icon, TicketStatusBadge, useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
@@ -52,8 +53,13 @@ export function TicketCard({
     showRefundInfo && ticket.status === "cancelled" && !!txn;
   const refund = showRefundPanel ? ticketRefundState(ticket) : null;
 
+  // A paid ticket someone sent here is refunded to them: the holder sends
+  // it back instead (the ticket screen says so).
   const canCancel =
-    ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
+    ticket.status === "active" &&
+    !cancelledByOrganizer &&
+    !eventEnded &&
+    !isTicketPaidBySomeoneElse(ticket);
 
   function onCancel() {
     cancelFlow.start({ ...ticket, eventId: ticket.event.id }, (message) =>

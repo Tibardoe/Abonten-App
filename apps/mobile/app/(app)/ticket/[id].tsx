@@ -16,6 +16,7 @@ import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { isTicketPaidBySomeoneElse } from "@abonten/core/ticketTransfers/paidBySomeoneElse";
 import {
   AppText,
   Button,
@@ -129,8 +130,12 @@ export default function TicketDetailScreen() {
       ticket.event.occurrences,
     ) === "ended";
   const used = ticket.status === "used" || ticket.used_at != null;
-  const canCancel =
+  const live =
     ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
+  // A paid ticket someone sent here is refunded to them: say "send it back"
+  // instead of offering a cancel the server refuses.
+  const sentToHolder = isTicketPaidBySomeoneElse(ticket);
+  const canCancel = live && !sentToHolder;
 
   function onCancelTicket() {
     if (!ticket) return;
@@ -295,6 +300,12 @@ export default function TicketDetailScreen() {
           >
             <AppText variant="bodyStrong">{t("viewEvent")}</AppText>
           </Pressable>
+
+          {live && sentToHolder ? (
+            <AppText variant="meta" className="text-center">
+              {t("sentToYouNoRefund")}
+            </AppText>
+          ) : null}
 
           {canCancel ? (
             <Pressable

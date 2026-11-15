@@ -75,6 +75,7 @@
   "sendBlockedOrganizerOff": "L'organisateur a désactivé l'envoi de billets pour cet événement.",
   "sendBlockedTooManyMoves": "Ce billet a déjà été envoyé le nombre maximal de fois.",
   "sendBlockedRestricted": "Votre compte ne peut pas envoyer de billets pour le moment.",
+  "sentToYouNoRefund": "Ce billet vous a été envoyé, son remboursement revient donc à la personne qui a payé. Si vous ne pouvez pas y aller, renvoyez-le-lui.",
   "takeBack": "Le reprendre",
   "sendTicket": "Envoyer à un ami",
   "ticketCodeLabel": "Code du billet :",
