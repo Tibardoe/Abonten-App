@@ -67,6 +67,7 @@
   "retry": "Try again",
   "role": "{role, select, owner {Owner} finance {Finance} manager {Manager} content {Content and messages} door {Door staff} front_desk {Front desk} other {Member}}",
   "roleChangedToast": "Role changed.",
+  "roleDoesNotCover": "Your role in this team doesn't cover this. Switch to your own account to see yours.",
   "roleHelp": "{role, select, owner {Everything, including members and the payout account.} finance {Payouts, refunds and money reports.} manager {Events, the place page, promo codes and bookings.} content {Spotlight, Stories, messages and replies to reviews.} door {Scanning tickets at the door, nothing else.} front_desk {Booking requests and the visit QR.} other {}}",
   "roleLabel": "Role",
   "save": "Save",

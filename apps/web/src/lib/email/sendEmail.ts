@@ -43,9 +43,21 @@ export async function sendEmail(
   payload: CreateEmailOptions,
   options?: { idempotencyKey?: string },
 ): Promise<SendEmailResult> {
+  // Never mail an address on the reserved `.invalid` domain (a team
+  // account's placeholder): it cannot be delivered and would bounce.
+  const to = (Array.isArray(payload.to) ? payload.to : [payload.to]).filter(
+    (address) => !/\.invalid>?$/i.test(String(address).trim()),
+  );
+  if (to.length === 0) {
+    return {
+      data: null,
+      error: { name: "undeliverable", message: tr("resendReturnedNoId") },
+    };
+  }
+  const deliverable = { ...payload, to } as CreateEmailOptions;
   try {
     const result = await withDeadline(
-      getClient().emails.send(payload, options),
+      getClient().emails.send(deliverable, options),
       RESEND_SEND_TIMEOUT_MS,
       "Resend email send",
     );

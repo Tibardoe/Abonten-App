@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team notices pushed to members; no mail to a team's placeholder
+
+- A member's copy of a notice written to their team is queued for a push (migration `20261116130000_team_notice_push`); the delivery queue and `sendEmail` never send to a `.invalid` address (a team account's placeholder); app money screens tell a role without money so: `architecture/team-accounts.md` 1.2 (§4b, later stages).
+
 ## 2026-11-16 — Team accounts, stage 3 (money)
 
 - Owners and Finance see and move a team's money; the payout account is the Owners' (fresh sign-in, every Owner told), payouts to a new one wait 48 hours, cancelling an event is the Owners'; ID checks for Owners and Finance; notices to a team reach members by role: `architecture/team-accounts.md` 1.2 (§2, §4a, §4b, code map, later stages), `admin/teams.md` 1.2. Migration `20261116120000_team_accounts_money` (`acting_account_for()`, `p_account` on the organizer money functions, read rules, `payout.requested_by`, `trg_notification_fan_out_to_team`); notices `team_payout_*`; `privacy/data-inventory.md` (payout.requested_by, who reads a team's money); PROJECT.md §75.2, CLAUDE.md quick facts.
