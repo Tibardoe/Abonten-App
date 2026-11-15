@@ -225,6 +225,13 @@
         "youHavenTAddedAPayout",
         "yourWithdrawalWillMoveToProcessing"
       ],
+      "teams": [
+        "listingBelongsToTeam",
+        "listingIsYours",
+        "manageAsTeam",
+        "teamPayoutAccountRules",
+        "useOwnAccount"
+      ],
       "validation": "*",
       "wallet": [
         "changeNumber",
@@ -3350,7 +3357,11 @@
         "checkInTitle",
         "checkedIn",
         "codePlaceholder",
-        "ticketCodeLabel"
+        "listingBelongsToTeam",
+        "listingIsYours",
+        "manageAsTeam",
+        "ticketCodeLabel",
+        "useOwnAccount"
       ],
       "ticketPlans": [
         "couldNotSave",

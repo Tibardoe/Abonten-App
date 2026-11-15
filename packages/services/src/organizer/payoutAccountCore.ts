@@ -19,6 +19,11 @@ import {
   restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import type { ActingAccount } from "../teams/actingAccount";
+import {
+  guardTeamPayoutAccountChange,
+  recordTeamMoneyEvent,
+} from "../teams/teamMoney";
 
 // Post-auth bodies for an organizer's payout destinations + withdrawal
 // history, shared by the Server Actions (cookie session) and the mobile
@@ -31,7 +36,7 @@ const ACCOUNT_COLUMNS =
   "id, account_type, account_holder_name, provider, provider_code, account_number, country_code, currency, details, is_default, created_at";
 
 export type ListPayoutAccountsResult =
-  | { status: 401 | 500; message: string }
+  | { status: 401 | 403 | 500; message: string }
   | { status: 200; data: PayoutAccountRow[] };
 
 export type AddPayoutAccountResult =
@@ -39,12 +44,31 @@ export type AddPayoutAccountResult =
   | { status: 200; data: PayoutAccountRow };
 
 export type MutatePayoutAccountResult = {
-  status: 200 | 400 | 401 | 404 | 500;
+  status: 200 | 400 | 401 | 403 | 404 | 409 | 500;
   message: string;
 };
 
+/**
+ * Who changes the payout account, when it is a team's (stage 3): the
+ * member, their role, and when their session last signed in. Changing a
+ * team's payout account needs a fresh sign-in and, when required, an ID
+ * check; every Owner is told.
+ */
+export type PayoutAccountActor = ActingAccount & { signedInAt: number | null };
+
+/** "MTN MoMo •••• 1234": how a payout account is named in notices. */
+function payoutAccountLabel(row: {
+  provider: string | null;
+  account_number: string | null;
+}): string {
+  const tail = (row.account_number ?? "").replace(/\s+/g, "").slice(-4);
+  return [row.provider ?? "", tail ? `•••• ${tail}` : ""]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export type ListPayoutsResult =
-  | { status: 401 | 500; message: string }
+  | { status: 401 | 403 | 500; message: string }
   | { status: 200; data: OrganizerPayoutRow[] };
 
 export async function listPayoutAccountsCore(
@@ -71,7 +95,16 @@ export async function addPayoutAccountCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   input: unknown,
+  actor?: PayoutAccountActor | null,
 ): Promise<AddPayoutAccountResult> {
+  if (actor?.role) {
+    const blocked = await guardTeamPayoutAccountChange(
+      getSupabaseServiceClient(),
+      actor,
+      actor.signedInAt,
+    );
+    if (blocked) return blocked;
+  }
   // Payout destinations are written by the service only (the database
   // refuses client writes since 2026-09-25): the rail, country, currency
   // and number format below are the checks a direct write skipped.
@@ -199,7 +232,8 @@ export async function addPayoutAccountCore(
     // Earnings are sent to this number: it is the organizer's own verified
     // phone, or they typed the code texted to it (mobileMoneyNumberCheck).
     const confirmed = await confirmMobileMoneyNumber(
-      userId,
+      // A member's own verified number needs no code, as for a person.
+      actor?.personId ?? userId,
       phone.e164,
       data.code,
     );
@@ -248,17 +282,33 @@ export async function addPayoutAccountCore(
     return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  return { status: 200, data: inserted as PayoutAccountRow };
+  const row = inserted as PayoutAccountRow;
+  if (actor?.role) {
+    await recordTeamMoneyEvent(getSupabaseServiceClient(), actor, {
+      kind: "payout_account_added",
+      label: payoutAccountLabel(row),
+    });
+  }
+  return { status: 200, data: row };
 }
 
 export async function removePayoutAccountCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   payoutAccountId: string,
+  actor?: PayoutAccountActor | null,
 ): Promise<MutatePayoutAccountResult> {
+  if (actor?.role) {
+    const blocked = await guardTeamPayoutAccountChange(
+      getSupabaseServiceClient(),
+      actor,
+      actor.signedInAt,
+    );
+    if (blocked) return blocked;
+  }
   const { data: account, error: fetchError } = await supabase
     .from("payout_account")
-    .select("id, is_default")
+    .select("id, is_default, provider, account_number")
     .eq("id", payoutAccountId)
     .eq("organizer_id", userId)
     .eq("status", "active")
@@ -345,6 +395,12 @@ export async function removePayoutAccountCore(
     }
   }
 
+  if (actor?.role) {
+    await recordTeamMoneyEvent(getSupabaseServiceClient(), actor, {
+      kind: "payout_account_removed",
+      label: payoutAccountLabel(account),
+    });
+  }
   return { status: 200, message: tr("payoutAccountRemoved") };
 }
 
@@ -352,10 +408,19 @@ export async function setDefaultPayoutAccountCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   payoutAccountId: string,
+  actor?: PayoutAccountActor | null,
 ): Promise<MutatePayoutAccountResult> {
+  if (actor?.role) {
+    const blocked = await guardTeamPayoutAccountChange(
+      getSupabaseServiceClient(),
+      actor,
+      actor.signedInAt,
+    );
+    if (blocked) return blocked;
+  }
   const { data: account, error: fetchError } = await supabase
     .from("payout_account")
-    .select("id")
+    .select("id, provider, account_number")
     .eq("id", payoutAccountId)
     .eq("organizer_id", userId)
     .eq("status", "active")
@@ -394,6 +459,12 @@ export async function setDefaultPayoutAccountCore(
     return { status: 500, message: tr("somethingWentWrong") };
   }
 
+  if (actor?.role) {
+    await recordTeamMoneyEvent(getSupabaseServiceClient(), actor, {
+      kind: "payout_account_default",
+      label: payoutAccountLabel(account),
+    });
+  }
   return { status: 200, message: tr("defaultPayoutAccountUpdated") };
 }
 

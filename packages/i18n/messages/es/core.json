@@ -976,6 +976,22 @@
     "team_role_changed": {
       "title": "Tu rol en {team} cambió",
       "body": "Mira lo que puedes hacer ahora en Equipos."
+    },
+    "team_payout_account_added": {
+      "title": "{actor} añadió una cuenta de cobro para {team}",
+      "body": "{account}. Los cobros pueden ir a ella 48 horas después de añadirla. Si no lo esperabas, quítala en Finanzas."
+    },
+    "team_payout_account_removed": {
+      "title": "{actor} quitó una cuenta de cobro de {team}",
+      "body": "{account}. Consulta las cuentas de cobro del equipo en Finanzas."
+    },
+    "team_payout_account_default": {
+      "title": "{actor} cambió la cuenta de cobro principal de {team}",
+      "body": "Los cobros van ahora a {account}. Si no lo esperabas, revisa Finanzas."
+    },
+    "team_payout_requested": {
+      "title": "{actor} pidió un cobro para {team}",
+      "body": "{amount} a la cuenta de cobro del equipo."
     }
   },
   "openStatus": {

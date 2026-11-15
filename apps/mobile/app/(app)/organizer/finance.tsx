@@ -9,6 +9,7 @@ import {
   showPromotionCredit,
 } from "@/features/rewards/PromotionCreditCard";
 import { usePromotionCredit } from "@/features/rewards/useRewards";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type {
   OrganizerFinanceOverviewRow,
@@ -167,6 +168,9 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
 
 export default function OrganizerFinanceScreen() {
   const t = useTranslations("manage");
+  // Managing as a team: Owners and Finance ask for payouts; promotion
+  // credit stays the person's own.
+  const { current, can } = useActingTeams();
 
   const finance = useOrganizerFinance();
   const ledger = useOrganizerLedger();
@@ -228,12 +232,14 @@ export default function OrganizerFinanceScreen() {
         />
       )}
 
-      {showPromotionCredit(promotionCredit.data) ? (
+      {!current && showPromotionCredit(promotionCredit.data) ? (
         <PromotionCreditCard credit={promotionCredit.data} />
       ) : null}
 
       <View className="gap-2">
-        <NavRow href="/(app)/organizer/withdraw" label={t("withdraw")} />
+        {can("payout.request") ? (
+          <NavRow href="/(app)/organizer/withdraw" label={t("withdraw")} />
+        ) : null}
         <NavRow
           href="/(app)/organizer/payouts"
           label={t("withdrawalHistory")}

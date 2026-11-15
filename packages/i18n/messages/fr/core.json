@@ -976,6 +976,22 @@
     "team_role_changed": {
       "title": "Votre rôle dans {team} a changé",
       "body": "Voyez ce que vous pouvez faire maintenant dans Équipes."
+    },
+    "team_payout_account_added": {
+      "title": "{actor} a ajouté un compte de versement pour {team}",
+      "body": "{account}. Les versements peuvent y être envoyés 48 heures après son ajout. Si vous ne vous y attendiez pas, retirez-le dans Finances."
+    },
+    "team_payout_account_removed": {
+      "title": "{actor} a retiré un compte de versement de {team}",
+      "body": "{account}. Consultez les comptes de versement de l'équipe dans Finances."
+    },
+    "team_payout_account_default": {
+      "title": "{actor} a changé le compte de versement principal de {team}",
+      "body": "Les versements vont désormais sur {account}. Si vous ne vous y attendiez pas, vérifiez Finances."
+    },
+    "team_payout_requested": {
+      "title": "{actor} a demandé un versement pour {team}",
+      "body": "{amount} vers le compte de versement de l'équipe."
     }
   },
   "openStatus": {

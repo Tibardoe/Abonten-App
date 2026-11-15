@@ -4,6 +4,7 @@ import eventCancellationNotification from "@/actions/eventCancellationNotificati
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { actingFor } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import {
   type CancelEventResult,
@@ -35,6 +36,13 @@ export default withActionLocale(async function cancelEvent(
     return { status: 401, message: tr("userNotLoggedIn2") };
   }
 
+  // Managing as a team: cancelling refunds buyers, so the role must cover
+  // both the event and refunds (Owners).
+  const actor = await actingFor(user.id, ["events.manage", "refunds.issue"], {
+    all: true,
+  });
+  if (actor.error) return actor.error;
+
   const result = await cancelEventCore(
     supabase,
     eventId,
@@ -44,6 +52,9 @@ export default withActionLocale(async function cancelEvent(
           logger.error(`Failed sending event cancellation emails: ${error}`),
         ),
       ),
+    actor.role
+      ? { personId: user.id, accountId: actor.accountId, role: actor.role }
+      : null,
   );
 
   // Cancellation atomically cancels every ticket/attendance/checkout row

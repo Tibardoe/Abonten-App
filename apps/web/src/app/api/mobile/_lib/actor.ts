@@ -20,6 +20,8 @@ export async function mobileActingFor(
   req: Request,
   personId: string,
   capability: TeamCapability | readonly TeamCapability[],
+  /** `all`: the role must cover every capability in the list. */
+  options: { all?: boolean } = {},
 ): Promise<
   | { error: null; accountId: string; role: TeamRoleCode | null }
   | { error: { status: 403; message: string } }
@@ -33,6 +35,7 @@ export async function mobileActingFor(
     personId,
     header,
     capability,
+    options,
   );
   if (!resolved.ok) {
     return { error: { status: 403, message: resolved.error.message } };

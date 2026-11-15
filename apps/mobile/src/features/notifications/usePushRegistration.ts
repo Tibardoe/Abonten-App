@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { getActiveConversation } from "@/features/messaging/activeConversation";
 import { notificationTarget } from "@/features/notifications/notificationLink";
+import { manageAsNoticeTeam } from "@/features/teams/noticeTeam";
 import { api } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import type { NotificationData } from "@abonten/types/notificationType";
@@ -136,7 +137,9 @@ export function usePushRegistration() {
           link: payload?.link ?? null,
           data: payload ?? null,
         });
-        if (href) router.push(href);
+        if (!href) return;
+        // A notice about a team opens managing as the team.
+        void manageAsNoticeTeam(payload).then(() => router.push(href));
       },
     );
     return () => sub.remove();

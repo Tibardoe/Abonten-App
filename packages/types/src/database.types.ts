@@ -8251,6 +8251,7 @@ export type Database = {
           processed_at: string | null
           provider: string | null
           reference: string
+          requested_by: string | null
           requested_at: string
           review_details: Json | null
           review_note: string | null
@@ -8278,6 +8279,7 @@ export type Database = {
           processed_at?: string | null
           provider?: string | null
           reference: string
+          requested_by?: string | null
           requested_at?: string
           review_details?: Json | null
           review_note?: string | null
@@ -8305,6 +8307,7 @@ export type Database = {
           processed_at?: string | null
           provider?: string | null
           reference?: string
+          requested_by?: string | null
           requested_at?: string
           review_details?: Json | null
           review_note?: string | null
@@ -15776,7 +15779,7 @@ export type Database = {
       }
       calendar_zone: { Args: { p_zone: string }; Returns: string }
       cancel_event_and_release_tickets: {
-        Args: { p_event_id: string }
+        Args: { p_account?: string; p_event_id: string }
         Returns: {
           attendee_user_id: string
           event_title: string
@@ -17040,7 +17043,7 @@ export type Database = {
         }[]
       }
       get_event_cancellation_impact: {
-        Args: { p_event_id: string }
+        Args: { p_account?: string; p_event_id: string }
         Returns: {
           attendee_count: number
           free_ticket_count: number
@@ -17048,7 +17051,7 @@ export type Database = {
         }[]
       }
       get_event_date_analytics: {
-        Args: { p_end_date?: string; p_event_id: string; p_start_date?: string }
+        Args: { p_account?: string; p_end_date?: string; p_event_id: string; p_start_date?: string }
         Returns: {
           ends_at: string
           occurrence_id: string
@@ -17059,7 +17062,7 @@ export type Database = {
         }[]
       }
       get_event_overview_analytics: {
-        Args: { p_end_date?: string; p_event_id: string; p_start_date?: string }
+        Args: { p_account?: string; p_end_date?: string; p_event_id: string; p_start_date?: string }
         Returns: {
           capacity: number
           capacity_remaining: number
@@ -17077,7 +17080,7 @@ export type Database = {
         }[]
       }
       get_event_promo_analytics: {
-        Args: { p_end_date?: string; p_event_id: string; p_start_date?: string }
+        Args: { p_account?: string; p_end_date?: string; p_event_id: string; p_start_date?: string }
         Returns: {
           orders: number
           promo_code: string
@@ -17094,7 +17097,7 @@ export type Database = {
         }[]
       }
       get_event_refund_breakdown: {
-        Args: { p_event_id: string }
+        Args: { p_account?: string; p_event_id: string }
         Returns: {
           completed_refund_amount: number
           currency: string
@@ -17103,14 +17106,14 @@ export type Database = {
         }[]
       }
       get_event_returning_attendee_stats: {
-        Args: { p_end_date?: string; p_event_id: string; p_start_date?: string }
+        Args: { p_account?: string; p_end_date?: string; p_event_id: string; p_start_date?: string }
         Returns: {
           first_time_count: number
           returning_count: number
         }[]
       }
       get_event_sales_timeline: {
-        Args: { p_event_id: string }
+        Args: { p_account?: string; p_event_id: string }
         Returns: {
           gross: number
           orders: number
@@ -17131,7 +17134,7 @@ export type Database = {
         }[]
       }
       get_event_ticket_type_analytics: {
-        Args: { p_end_date?: string; p_event_id: string; p_start_date?: string }
+        Args: { p_account?: string; p_end_date?: string; p_event_id: string; p_start_date?: string }
         Returns: {
           cancelled: number
           currency: string
@@ -17467,6 +17470,7 @@ export type Database = {
       }
       get_organizer_dashboard: {
         Args: {
+          p_account?: string
           p_bucket: string
           // The four timestamps stay nullable: the function is not STRICT
           // (confirmed via pg_proc.proisstrict on 2026-09-12) and
@@ -17482,7 +17486,7 @@ export type Database = {
         Returns: Json
       }
       get_organizer_dashboard_overview: {
-        Args: { p_end: string; p_start: string }
+        Args: { p_account?: string; p_end: string; p_start: string }
         Returns: {
           active_events_count: number
           currency: string
@@ -17499,6 +17503,7 @@ export type Database = {
       }
       get_organizer_event_performance: {
         Args: {
+          p_account?: string
           p_end: string
           p_limit: number
           p_sort: string
@@ -17516,7 +17521,7 @@ export type Database = {
         }[]
       }
       get_organizer_finance_overview: {
-        Args: never
+        Args: { p_account?: string }
         Returns: {
           available_balance: number
           currency: string
@@ -17526,6 +17531,7 @@ export type Database = {
       }
       get_organizer_ledger_transactions: {
         Args: {
+          p_account?: string
           p_cursor_created_at: string
           p_cursor_id: string
           p_limit: number
@@ -17543,7 +17549,7 @@ export type Database = {
         }[]
       }
       get_organizer_needs_attention: {
-        Args: { p_days_soon?: number }
+        Args: { p_account?: string; p_days_soon?: number }
         Returns: {
           event_id: string
           event_title: string
@@ -17557,7 +17563,7 @@ export type Database = {
         }[]
       }
       get_organizer_pending_earnings: {
-        Args: never
+        Args: { p_account?: string }
         Returns: {
           amount: number
           currency: string
@@ -17566,7 +17572,7 @@ export type Database = {
         }[]
       }
       get_organizer_recent_activity: {
-        Args: { p_limit: number }
+        Args: { p_account?: string; p_limit: number }
         Returns: {
           activity_type: string
           detail: string
@@ -17576,7 +17582,7 @@ export type Database = {
         }[]
       }
       get_organizer_refund_breakdown: {
-        Args: never
+        Args: { p_account?: string }
         Returns: {
           completed_refund_amount: number
           currency: string
@@ -17586,6 +17592,7 @@ export type Database = {
       }
       get_organizer_sales_timeline: {
         Args: {
+          p_account?: string
           p_bucket: string
           p_currency?: string
           p_end: string
@@ -17599,7 +17606,7 @@ export type Database = {
         }[]
       }
       get_organizer_upcoming_events: {
-        Args: { p_limit: number }
+        Args: { p_account?: string; p_limit: number }
         Returns: {
           capacity: number
           event_id: string
@@ -18276,6 +18283,7 @@ export type Database = {
       }
       request_organizer_payout: {
         Args: {
+          p_account?: string
           p_amount: number
           p_currency: string
           p_payout_account_id: string
@@ -18706,6 +18714,11 @@ export type Database = {
       team_rename: {
         Args: { p_by: string; p_name: string; p_team: string }
         Returns: undefined
+      }
+      team_notice_capability: { Args: { p_type: string }; Returns: string }
+      acting_account_for: {
+        Args: { p_account: string; p_caps: string[] }
+        Returns: string
       }
       team_role_can: {
         Args: { p_capability: string; p_role: string }

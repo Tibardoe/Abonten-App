@@ -21,6 +21,7 @@ import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { accountArg } from "../teams/accountArg";
 
 // Post-auth query bodies for an organizer's own read-only surfaces
 // (dashboard overview, events list, finances). Shared by the Server Actions
@@ -46,6 +47,8 @@ export async function fetchOrganizerDashboardOverview(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
   timeZone?: string,
+  /** A team the person acts for; omitted = their own account. */
+  accountId?: string | null,
 ): Promise<OrganizerDashboardOverviewResult> {
   const { start, end, prevStart, prevEnd } = getDashboardPeriodRange(
     period,
@@ -57,11 +60,13 @@ export async function fetchOrganizerDashboardOverview(
     supabase.rpc("get_organizer_dashboard_overview", {
       p_start: start ? start.toISOString() : null,
       p_end: end ? end.toISOString() : null,
+      ...accountArg(accountId),
     } as unknown as Database["public"]["Functions"]["get_organizer_dashboard_overview"]["Args"]),
     prevStart && prevEnd
       ? supabase.rpc("get_organizer_dashboard_overview", {
           p_start: prevStart.toISOString(),
           p_end: prevEnd.toISOString(),
+          ...accountArg(accountId),
         })
       : Promise.resolve({ data: null, error: null }),
   ]);
@@ -85,13 +90,17 @@ export async function fetchOrganizerDashboardOverview(
 }
 
 export type OrganizerFinanceOverviewResult =
-  | { status: 401 | 500; message: string }
+  | { status: 401 | 403 | 500; message: string }
   | { status: 200; data: OrganizerFinanceOverviewRow[] };
 
 export async function fetchOrganizerFinanceOverview(
   supabase: SupabaseClient<Database>,
+  accountId?: string | null,
 ): Promise<OrganizerFinanceOverviewResult> {
-  const { data, error } = await supabase.rpc("get_organizer_finance_overview");
+  const { data, error } = await supabase.rpc(
+    "get_organizer_finance_overview",
+    accountArg(accountId),
+  );
 
   if (error) {
     logger.error(
@@ -275,7 +284,12 @@ export async function fetchEventAttendanceListPage(
 
 export async function fetchOrganizerLedgerPage(
   supabase: SupabaseClient<Database>,
-  options?: { cursor?: string | null; pageSize?: number },
+  options?: {
+    cursor?: string | null;
+    pageSize?: number;
+    /** A team the person acts for; omitted = their own account. */
+    accountId?: string | null;
+  },
 ): Promise<PaginatedResult<OrganizerLedgerTransactionRow>> {
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -286,6 +300,7 @@ export async function fetchOrganizerLedgerPage(
       p_cursor_created_at: cursor?.sortValue ?? null,
       p_cursor_id: cursor?.id ?? null,
       p_limit: pageSize + 1,
+      ...accountArg(options?.accountId),
     } as unknown as Database["public"]["Functions"]["get_organizer_ledger_transactions"]["Args"],
   );
 

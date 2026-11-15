@@ -35,10 +35,18 @@ export type NotificationEntityKind =
   /** A ticket sent to or by the reader (Send a ticket to a friend). */
   | "ticket_transfer"
   /** A team the reader runs or is invited to (team accounts). */
-  | "team";
+  | "team"
+  /** A team's payout account or payout: opens Finances managing as it. */
+  | "team_money";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
+  /**
+   * Set on a member's copy of a notice written to their team (stage 3): the
+   * team it is about, so opening it manages as the team.
+   */
+  team_id?: string;
+  team_name?: string;
   /** With kind "fieldops": the /field route to open (web + later Expo). */
   fieldOpsRoute?: string;
   /** With kind "verification": which subject's verification screen to open. */

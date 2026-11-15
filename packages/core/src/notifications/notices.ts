@@ -200,6 +200,11 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   team_invite_accepted: n("team_invite_accepted"),
   team_member_removed: n("team_member_removed"),
   team_role_changed: n("team_role_changed"),
+  // Team money (services, stage 3): to every Owner, through the team
+  team_payout_account_added: n("team_payout_account_added"),
+  team_payout_account_removed: n("team_payout_account_removed"),
+  team_payout_account_default: n("team_payout_account_default"),
+  team_payout_requested: n("team_payout_requested"),
   // SQL: rewards
   welcome_credit: n("welcome_credit"),
   referral_qualified: n("referral_qualified"),

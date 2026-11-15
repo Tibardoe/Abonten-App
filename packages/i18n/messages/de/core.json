@@ -976,6 +976,22 @@
     "team_role_changed": {
       "title": "Deine Rolle in {team} hat sich geändert",
       "body": "Unter Teams siehst du, was du jetzt tun kannst."
+    },
+    "team_payout_account_added": {
+      "title": "{actor} hat ein Auszahlungskonto für {team} hinzugefügt",
+      "body": "{account}. Auszahlungen können 48 Stunden nach dem Hinzufügen dorthin gehen. Wenn du das nicht erwartet hast, entferne es unter Finanzen."
+    },
+    "team_payout_account_removed": {
+      "title": "{actor} hat ein Auszahlungskonto von {team} entfernt",
+      "body": "{account}. Die Auszahlungskonten des Teams findest du unter Finanzen."
+    },
+    "team_payout_account_default": {
+      "title": "{actor} hat das Hauptauszahlungskonto von {team} geändert",
+      "body": "Auszahlungen gehen jetzt an {account}. Wenn du das nicht erwartet hast, sieh unter Finanzen nach."
+    },
+    "team_payout_requested": {
+      "title": "{actor} hat eine Auszahlung für {team} angefordert",
+      "body": "{amount} auf das Auszahlungskonto des Teams."
     }
   },
   "openStatus": {

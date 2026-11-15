@@ -244,6 +244,7 @@
     "aPostNeedsAtLeastOneMedia": "Ein Beitrag braucht mindestens ein Medienelement",
     "aPriceCanTHaveMoreThan": "Ein Preis in {0} darf höchstens {1} Nachkommastellen haben",
     "aReasonIsRequired": "Ein Grund ist erforderlich",
+    "aRefundForThisPaymentIsBeing": "Für diese Zahlung wird gerade eine Erstattung angefordert",
     "aRejectionNeedsAReason": "Eine Ablehnung braucht einen Grund",
     "aReservationNeedsAFutureExpiry": "Eine Reservierung braucht ein Ablaufdatum in der Zukunft",
     "aReversalNeedsAReason": "Eine Rücknahme braucht einen Grund",
@@ -346,6 +347,7 @@
     "noEventFound": "Kein Event gefunden!",
     "noPendingAdjustmentRequestWithThatId": "Keine ausstehende Anpassungsanfrage mit dieser ID",
     "notARebateRule": "Keine Rückvergütungsregel: {0}",
+    "notAllowedForThisAccount": "Für dieses Konto nicht erlaubt",
     "notAuthenticated": "Nicht authentifiziert",
     "notAuthorized": "Nicht autorisiert",
     "notAuthorizedCallerIsNotAnAdmin": "Nicht autorisiert: Der Aufrufer ist kein Admin",
@@ -386,6 +388,7 @@
     "payingWithCreditIsnTAvailable": "Bezahlen mit Guthaben ist nicht verfügbar",
     "paymentAmountDoesNotMatchTheCampaign": "Der Zahlungsbetrag stimmt nicht mit dem Kampagnenbudget überein",
     "paymentNotVerifiedForThisCheckout": "Zahlung für diesen Bezahlvorgang nicht bestätigt",
+    "payoutAccountTooNew": "Auszahlungskonto zu neu",
     "payoutAmountExceedsAvailableBalance": "Der Auszahlungsbetrag übersteigt das verfügbare Guthaben",
     "payoutIsAlready": "Die Auszahlung hat bereits den Status {0}",
     "payoutItemNotFound": "Auszahlungsposten nicht gefunden",
@@ -400,6 +403,7 @@
     "ratingFilterMustBe1To5": "Der Bewertungsfilter muss zwischen 1 und 5 liegen",
     "recordTheTransferReference": "Erfasse die Überweisungsreferenz",
     "refundAmountMustBePositive": "Der Erstattungsbetrag muss positiv sein",
+    "refundNotFound": "Erstattung nicht gefunden",
     "refundOfExceedsTheRefundablePesewas": "Die Erstattung von {0} übersteigt die erstattbaren {1} Pesewas",
     "releaseAmountIsOutside0": "Der Freigabebetrag {0} liegt außerhalb von 0..{1}",
     "repliesAreNotAvailableForThisStory": "Antworten sind für diese Story nicht verfügbar.",
@@ -475,6 +479,7 @@
     "thisItemIsAlreadyPaid": "Dieser Posten ist bereits bezahlt",
     "thisMessageWasDeleted": "Diese Nachricht wurde gelöscht.",
     "thisOnboardingIsNotFlagged": "Diese Aufnahme ist nicht markiert",
+    "thisPaymentIsRefundedAsAWhole": "Diese Zahlung wird nur als Ganzes erstattet",
     "thisPayoutIsHeldForReviewCredit": "Diese Auszahlung wird zur Prüfung zurückgehalten (durch Guthaben finanzierte Verkäufe). Schließe zuerst die Prüfung ab.",
     "thisPayoutIsNotHeldForReview": "Diese Auszahlung wird nicht zur Prüfung zurückgehalten",
     "thisReviewIsNoLongerAvailable": "Diese Bewertung ist nicht mehr verfügbar.",
@@ -489,10 +494,12 @@
     "ticketOfTypeNotFound": "Ticket vom Typ {0} nicht gefunden",
     "ticketPriceHasChangedPleaseReviewYour": "Der Ticketpreis hat sich geändert. Bitte prüfe deine Bestellung.",
     "ticketQuantitiesTotalWhichExceedsTheEvent": "Die Ticketmengen ergeben zusammen {0} und übersteigen damit die Eventkapazität von {1}.",
+    "transactionNotFound": "Transaktion nicht gefunden",
     "unknownCurrency": "Unbekannte Währung {0}",
     "unknownCurrencyForMarket": "Unbekannte Währung {0} für den Markt {1}",
     "unknownMarketTransition": "Unbekannter Marktübergang {0}",
     "unknownModerationAction": "Unbekannte Moderationsaktion: {0}",
+    "unknownRefundOutcome": "Unbekanntes Ergebnis der Erstattung",
     "unknownReviewOrder": "Unbekannte Bewertungsreihenfolge",
     "unknownReviewSubject": "Unbekannter Bewertungsgegenstand",
     "unknownRole": "Unbekannte Rolle: {0}",
@@ -549,12 +556,7 @@
     "youHaveStartedALotOfConversations": "Du hast in letzter Zeit sehr viele Unterhaltungen begonnen. Bitte versuche es später erneut.",
     "yourAccountHasBeenRestricted": "Dein Konto wurde eingeschränkt.",
     "yourCreditBalanceIsNegative": "Dein Guthaben ist negativ",
-    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt",
-    "aRefundForThisPaymentIsBeing": "Für diese Zahlung wird gerade eine Erstattung angefordert",
-    "refundNotFound": "Erstattung nicht gefunden",
-    "thisPaymentIsRefundedAsAWhole": "Diese Zahlung wird nur als Ganzes erstattet",
-    "transactionNotFound": "Transaktion nicht gefunden",
-    "unknownRefundOutcome": "Unbekanntes Ergebnis der Erstattung"
+    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt"
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1331,7 +1333,8 @@
       "place_claims": "Lass deine Identität prüfen, bevor dein Anspruch genehmigt werden kann. Geh zu Einstellungen › Identitätsprüfung.",
       "verified_badges": "Lass deine Identität prüfen, bevor du ein Verifiziert-Abzeichen bekommst. Geh zu Einstellungen › Identitätsprüfung.",
       "paid_events": "Lass deine Identität prüfen, bevor du Tickets verkaufst. Geh zu Einstellungen › Identitätsprüfung oder mach das Event kostenlos."
-    }
+    },
+    "teamOwnerRequired": "Eine Inhaberin oder ein Inhaber des Teams muss zuerst die Identität bestätigen, unter Einstellungen › Identitätsprüfung."
   },
   "thisTicketWasPaidForTogether": "Dieses Ticket wurde zusammen mit {count, plural, one {# weiteren Ticket} other {# weiteren Tickets}} bezahlt. Eine Erstattung gilt für die ganze Zahlung, storniere sie deshalb zusammen.",
   "aTicketFromThisPaymentWasChecked": "Ein Ticket dieser Zahlung wurde bereits beim Einlass gescannt, deshalb kann dieses Ticket nicht mehr gegen Erstattung storniert werden.",
@@ -1392,5 +1395,7 @@
   "teamCannotText": "An diese Nummer können wir noch keine SMS schicken. Lade die Person über ihren Benutzernamen ein.",
   "teamTextLimit": "Dein Team hat heute die Höchstzahl an Einladungs-SMS verschickt. Versuch es morgen oder lade über den Benutzernamen ein.",
   "teamSmsInvite": "{team} lädt dich ein, es auf Abonten mitzuführen. Registriere dich mit dieser Nummer, um anzunehmen: {link}",
-  "teamRoleCannot": "Deine Rolle in diesem Team deckt das nicht ab."
+  "teamRoleCannot": "Deine Rolle in diesem Team deckt das nicht ab.",
+  "teamPayoutSignInAgain": "Melde dich zu deiner Sicherheit erneut an, bevor du das Auszahlungskonto des Teams änderst, und komm dann hierher zurück.",
+  "teamPayoutAccountTooNew": "Dieses Auszahlungskonto wurde vor weniger als 48 Stunden hinzugefügt. Du kannst eine Auszahlung darauf anfordern, sobald 48 Stunden vergangen sind."
 }

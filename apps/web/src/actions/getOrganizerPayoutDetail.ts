@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import type { OrganizerPayoutDetail } from "@abonten/types/organizerFinance";
@@ -29,13 +30,17 @@ export default withActionLocale(async function getOrganizerPayoutDetail(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "payout.view");
+  if (actor.error) return actor.error;
+
   const { data, error } = await supabase
     .from("payout")
     .select(
       "id, amount, currency, status, reference, failure_reason, requested_at, processed_at, payout_account:payout_account_id(account_type, account_holder_name, provider, account_number)",
     )
     .eq("id", payoutId)
-    .eq("organizer_id", user.id)
+    .eq("organizer_id", actor.accountId)
     .maybeSingle();
 
   if (error) {

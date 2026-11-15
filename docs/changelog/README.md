@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts, stage 3 (money)
+
+- Owners and Finance see and move a team's money; the payout account is the Owners' (fresh sign-in, every Owner told), payouts to a new one wait 48 hours, cancelling an event is the Owners'; ID checks for Owners and Finance; notices to a team reach members by role: `architecture/team-accounts.md` 1.2 (§2, §4a, §4b, code map, later stages), `admin/teams.md` 1.2. Migration `20261116120000_team_accounts_money` (`acting_account_for()`, `p_account` on the organizer money functions, read rules, `payout.requested_by`, `trg_notification_fan_out_to_team`); notices `team_payout_*`; `privacy/data-inventory.md` (payout.requested_by, who reads a team's money); PROJECT.md §75.2, CLAUDE.md quick facts.
+
 ## 2026-11-16 — Review partitions and editing an event that starts soon
 
 - Every monthly partition of `review` has row security on, and the monthly job switches it on for each one it makes (migration `20261116110000_review_partitions_row_security`; `review_january_2027` had been made without it): `operations/scheduled-jobs.md` (job row added), `architecture/data-model-overview.md`.

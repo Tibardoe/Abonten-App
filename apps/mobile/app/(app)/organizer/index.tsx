@@ -168,6 +168,10 @@ function NavRow({ href, label }: { href: string; label: string }) {
 function PersonalDashboard() {
   const { locale } = useLocale();
   const t = useTranslations("manage");
+  const tt = useTranslations("teams");
+  // Managing as a team: the figures are the team's; the rows below follow
+  // the person's role there.
+  const { current, can } = useActingTeams();
 
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("30d");
   const widgetsQuery = useOrganizerDashboardWidgets(period);
@@ -208,10 +212,10 @@ function PersonalDashboard() {
       ? fallbackOverview
       : widgetsQuery,
   );
-  const draftsQuery = useEventDrafts();
+  const draftsQuery = useEventDrafts(can("events.manage"));
   const draftCount =
     draftsQuery.data?.status === 200 ? draftsQuery.data.data.length : 0;
-  const placeDraftsQuery = usePlaceDrafts();
+  const placeDraftsQuery = usePlaceDrafts(can("places.manage"));
   const placeDraftCount =
     placeDraftsQuery.data?.status === 200
       ? placeDraftsQuery.data.data.length
@@ -383,13 +387,15 @@ function PersonalDashboard() {
       )}
 
       <View className="gap-2">
-        <Link href="/(app)/event/new" asChild>
-          <Pressable className="items-center rounded-xl bg-primary px-4 py-3 active:opacity-90">
-            <AppText className="text-base font-semibold text-primary-foreground">
-              {t("createEvent")}
-            </AppText>
-          </Pressable>
-        </Link>
+        {can("events.manage") ? (
+          <Link href="/(app)/event/new" asChild>
+            <Pressable className="items-center rounded-xl bg-primary px-4 py-3 active:opacity-90">
+              <AppText className="text-base font-semibold text-primary-foreground">
+                {t("createEvent")}
+              </AppText>
+            </Pressable>
+          </Link>
+        ) : null}
         <NavRow href="/(app)/organizer/events" label={t("myEvents2")} />
         {draftCount > 0 ? (
           <NavRow
@@ -397,19 +403,25 @@ function PersonalDashboard() {
             label={t("eventDrafts2", { draftCount: draftCount })}
           />
         ) : null}
-        <NavRow href="/(app)/organizer/places" label={t("myPlaces2")} />
+        {can("places.manage", "bookings.manage", "visit.show") ? (
+          <NavRow href="/(app)/organizer/places" label={t("myPlaces2")} />
+        ) : null}
         {placeDraftCount > 0 ? (
           <NavRow
             href="/(app)/organizer/place-drafts"
             label={t("placeDrafts2", { placeDraftCount: placeDraftCount })}
           />
         ) : null}
-        <NavRow
-          href="/(app)/organizer/verification"
-          label={t("organizerVerification")}
-        />
+        {current ? null : (
+          <NavRow
+            href="/(app)/organizer/verification"
+            label={t("organizerVerification")}
+          />
+        )}
         <NavRow href="/(app)/organizer/finance" label={t("finances")} />
       </View>
+
+      {current ? <AppText variant="meta">{tt("laterAsTeam")}</AppText> : null}
     </ScrollView>
   );
 }
@@ -476,6 +488,7 @@ function TeamHub() {
 }
 
 export default function OrganizerDashboard() {
-  const { current } = useActingTeams();
-  return current ? <TeamHub /> : <PersonalDashboard />;
+  const { current, can } = useActingTeams();
+  // Owners and Finance see the team's figures; other roles its listings.
+  return current && !can("money.view") ? <TeamHub /> : <PersonalDashboard />;
 }

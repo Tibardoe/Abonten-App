@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import OrganizerDashboard from "@/components/organisms/OrganizerDashboard";
+import TeamMoneyGate from "@/finances/organisms/TeamMoneyGate";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -16,7 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function page() {
   return (
     <div className="flex flex-col gap-5">
-      <OrganizerDashboard />
+      {/* Managing as a team: the team's figures are its Owners' and Finance's. */}
+      <TeamMoneyGate>
+        <OrganizerDashboard />
+      </TeamMoneyGate>
     </div>
   );
 }

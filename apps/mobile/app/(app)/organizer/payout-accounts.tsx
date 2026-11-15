@@ -6,6 +6,7 @@ import {
   useRemovePayoutAccount,
   useSetDefaultPayoutAccount,
 } from "@/features/organizer/usePayouts";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { MomoCodeStep } from "@/features/wallet/MomoCodeStep";
 import { useMomoNetworks } from "@/features/wallet/usePaymentMethods";
 import { api } from "@/lib/api";
@@ -56,6 +57,7 @@ function accountTitle(
 
 export default function PayoutAccountsScreen() {
   const t = useTranslations("manage");
+  const tt = useTranslations("teams");
 
   const toast = useToast();
   const { markets, context } = useMarket();
@@ -70,6 +72,9 @@ export default function PayoutAccountsScreen() {
   // so instead of inviting the person to add an account they already have).
   const view = useQueryView(accountsQuery);
   const networks = useMomoNetworks();
+  // Managing as a team: only an Owner changes the payout account.
+  const { current, can } = useActingTeams();
+  const canManage = can("payout.manage");
   const add = useAddPayoutAccount();
   const remove = useRemovePayoutAccount();
   const setDefault = useSetDefaultPayoutAccount();
@@ -288,45 +293,53 @@ export default function PayoutAccountsScreen() {
                 ) : null}
               </View>
               <AppText variant="muted">{a.account_holder_name}</AppText>
-              <View className="flex-row gap-4">
-                {!a.is_default ? (
+              {canManage ? (
+                <View className="flex-row gap-4">
+                  {!a.is_default ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setDefault.mutate(a.id)}
+                      disabled={setDefault.isPending}
+                    >
+                      <AppText
+                        variant="small"
+                        tone="brand"
+                        className="font-semibold"
+                      >
+                        {t("makeDefault")}
+                      </AppText>
+                    </Pressable>
+                  ) : null}
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => setDefault.mutate(a.id)}
-                    disabled={setDefault.isPending}
+                    onPress={() => confirmRemove(a.id)}
+                    disabled={remove.isPending}
                   >
                     <AppText
                       variant="small"
-                      tone="brand"
+                      tone="error"
                       className="font-semibold"
                     >
-                      {t("makeDefault")}
+                      {t("remove")}
                     </AppText>
                   </Pressable>
-                ) : null}
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => confirmRemove(a.id)}
-                  disabled={remove.isPending}
-                >
-                  <AppText
-                    variant="small"
-                    tone="error"
-                    className="font-semibold"
-                  >
-                    {t("remove")}
-                  </AppText>
-                </Pressable>
-              </View>
+                </View>
+              ) : null}
             </View>
           ))
         )}
 
-        <Button
-          title={t("addPayoutAccount")}
-          leftIcon="add"
-          onPress={() => setStep("choose")}
-        />
+        {current && canManage ? (
+          <AppText variant="meta">{tt("teamPayoutAccountRules")}</AppText>
+        ) : null}
+
+        {canManage ? (
+          <Button
+            title={t("addPayoutAccount")}
+            leftIcon="add"
+            onPress={() => setStep("choose")}
+          />
+        ) : null}
       </KeyboardAwareScrollView>
 
       <Sheet

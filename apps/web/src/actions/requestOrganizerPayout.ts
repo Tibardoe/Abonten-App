@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type RequestOrganizerPayoutResult,
@@ -35,11 +36,17 @@ export default withActionLocale(async function requestOrganizerPayout(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
-  const result = await requestOrganizerPayoutCore(supabase, {
-    payoutAccountId,
-    amount,
-    currency,
-  });
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "payout.request");
+  if (actor.error) return actor.error;
+
+  const result = await requestOrganizerPayoutCore(
+    supabase,
+    { payoutAccountId, amount, currency },
+    actor.role
+      ? { personId: user.id, accountId: actor.accountId, role: actor.role }
+      : null,
+  );
 
   if (result.status === 200) {
     revalidateAppPath("/finances");

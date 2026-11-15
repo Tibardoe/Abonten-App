@@ -47,6 +47,8 @@ export async function resolveActingAccount(
   requestedAccountId: string | null | undefined,
   /** What the request does; a list means any one of them is enough. */
   capability: TeamCapability | readonly TeamCapability[],
+  /** `all`: the role must cover every capability in the list. */
+  options: { all?: boolean } = {},
 ): Promise<
   { ok: true; actor: ActingAccount } | { ok: false; error: ActingFailure }
 > {
@@ -79,7 +81,10 @@ export async function resolveActingAccount(
   }
   const role = row.role;
   const caps = typeof capability === "string" ? [capability] : capability;
-  if (!caps.some((c) => teamRoleCan(role, c))) {
+  const covered = options.all
+    ? caps.every((c) => teamRoleCan(role, c))
+    : caps.some((c) => teamRoleCan(role, c));
+  if (!covered) {
     return {
       ok: false,
       error: { status: 403, message: tr("teamRoleCannot") },

@@ -40,6 +40,11 @@ function subscribe(listener: () => void) {
 
 const read = () => state.choice;
 
+/** The account whose choice is loaded (null before a session). */
+export function actingUserId(): string | null {
+  return state.userId;
+}
+
 /** The chosen team's id, for the request header (null = own account). */
 export function getActingTeamId(): string | null {
   return state.choice?.teamId ?? null;

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import {
   type EventCancellationImpact,
   type EventCancellationImpactResult,
@@ -32,5 +33,15 @@ export default withActionLocale(async function getEventCancellationImpact(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
-  return getEventCancellationImpactCore(supabase, eventId);
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, ["events.manage", "refunds.issue"], {
+    all: true,
+  });
+  if (actor.error) return actor.error;
+
+  return getEventCancellationImpactCore(
+    supabase,
+    eventId,
+    actor.role ? actor.accountId : null,
+  );
 });

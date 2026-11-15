@@ -976,6 +976,22 @@
     "team_role_changed": {
       "title": "A sua função em {team} mudou",
       "body": "Veja o que pode fazer agora em Equipas."
+    },
+    "team_payout_account_added": {
+      "title": "{actor} adicionou uma conta de pagamento para {team}",
+      "body": "{account}. Os pagamentos podem ir para ela 48 horas depois de ser adicionada. Se não estava à espera disto, remova-a em Finanças."
+    },
+    "team_payout_account_removed": {
+      "title": "{actor} removeu uma conta de pagamento de {team}",
+      "body": "{account}. Veja as contas de pagamento da equipa em Finanças."
+    },
+    "team_payout_account_default": {
+      "title": "{actor} mudou a conta de pagamento principal de {team}",
+      "body": "Os pagamentos vão agora para {account}. Se não estava à espera disto, verifique Finanças."
+    },
+    "team_payout_requested": {
+      "title": "{actor} pediu um pagamento para {team}",
+      "body": "{amount} para a conta de pagamento da equipa."
     }
   },
   "openStatus": {

@@ -9,6 +9,7 @@ import type {
 } from "@abonten/types/eventAnalytics";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { accountArg } from "../teams/accountArg";
 
 // Post-auth query bodies for a single event's Insights surface (the
 // Details/Promotion/Insights management page's Insights tab). Shared by the
@@ -147,12 +148,14 @@ async function runOverview(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
+  accountId: string,
 ): Promise<EventOverviewAnalyticsResult> {
   const [{ data, error }, pageViews, appPageViews] = await Promise.all([
     supabase.rpc("get_event_overview_analytics", {
       p_event_id: eventId,
       p_start_date: startDate ?? undefined,
       p_end_date: endDate ?? undefined,
+      ...accountArg(accountId),
     }),
     countPageViews(supabase, eventId, startDate, endDate, false),
     countPageViews(supabase, eventId, startDate, endDate, true),
@@ -177,6 +180,7 @@ async function runTicketTypes(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
+  accountId: string,
 ): Promise<EventTicketTypeAnalyticsResult> {
   const { data, error } = await supabase.rpc(
     "get_event_ticket_type_analytics",
@@ -184,6 +188,7 @@ async function runTicketTypes(
       p_event_id: eventId,
       p_start_date: startDate ?? undefined,
       p_end_date: endDate ?? undefined,
+      ...accountArg(accountId),
     },
   );
   if (error) {
@@ -198,11 +203,13 @@ async function runPromos(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
+  accountId: string,
 ): Promise<EventPromoAnalyticsResult> {
   const { data, error } = await supabase.rpc("get_event_promo_analytics", {
     p_event_id: eventId,
     p_start_date: startDate ?? undefined,
     p_end_date: endDate ?? undefined,
+    ...accountArg(accountId),
   });
   if (error) {
     logger.error("Supabase error:", error.message);
@@ -216,6 +223,7 @@ async function runDates(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
+  accountId: string,
 ): Promise<EventDateAnalyticsResult> {
   // Single-date/range events never populate event_occurrence at all (see
   // postEventCore.ts), which is the common case — skip the RPC round trip
@@ -235,6 +243,7 @@ async function runDates(
     p_event_id: eventId,
     p_start_date: startDate ?? undefined,
     p_end_date: endDate ?? undefined,
+    ...accountArg(accountId),
   });
   if (error) {
     logger.error("Supabase error:", error.message);
@@ -248,6 +257,7 @@ async function runReturning(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
+  accountId: string,
 ): Promise<EventReturningAttendeeResult> {
   const { data, error } = await supabase.rpc(
     "get_event_returning_attendee_stats",
@@ -255,6 +265,7 @@ async function runReturning(
       p_event_id: eventId,
       p_start_date: startDate ?? undefined,
       p_end_date: endDate ?? undefined,
+      ...accountArg(accountId),
     },
   );
   if (error) {
@@ -273,6 +284,7 @@ async function runFinance(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
+  accountId: string,
 ): Promise<EventFinanceSummaryResult> {
   // pendingRefunds/completedRefunds/settled below come from get_event_refund_
   // breakdown/is_event_settled, which are lifetime/current-state facts (an
@@ -351,7 +363,10 @@ async function runFinance(
   // is a SECURITY DEFINER RPC scoped to this organizer's own ledger rows
   // that safely bridges that gap.
   const { data: refundBreakdownRows, error: refundBreakdownError } =
-    await supabase.rpc("get_event_refund_breakdown", { p_event_id: eventId });
+    await supabase.rpc("get_event_refund_breakdown", {
+      p_event_id: eventId,
+      ...accountArg(accountId),
+    });
 
   if (refundBreakdownError) {
     logger.error(
@@ -396,7 +411,7 @@ export async function fetchEventOverviewAnalytics(
   endDate?: DateBound,
 ): Promise<EventOverviewAnalyticsResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
-  return runOverview(supabase, eventId, startDate, endDate);
+  return runOverview(supabase, eventId, startDate, endDate, userId);
 }
 
 export async function fetchEventFinanceSummary(
@@ -407,7 +422,7 @@ export async function fetchEventFinanceSummary(
   endDate?: DateBound,
 ): Promise<EventFinanceSummaryResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
-  return runFinance(supabase, eventId, startDate, endDate);
+  return runFinance(supabase, eventId, startDate, endDate, userId);
 }
 
 export async function fetchEventTicketTypeAnalytics(
@@ -418,7 +433,7 @@ export async function fetchEventTicketTypeAnalytics(
   endDate?: DateBound,
 ): Promise<EventTicketTypeAnalyticsResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
-  return runTicketTypes(supabase, eventId, startDate, endDate);
+  return runTicketTypes(supabase, eventId, startDate, endDate, userId);
 }
 
 export async function fetchEventPromoAnalytics(
@@ -429,7 +444,7 @@ export async function fetchEventPromoAnalytics(
   endDate?: DateBound,
 ): Promise<EventPromoAnalyticsResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
-  return runPromos(supabase, eventId, startDate, endDate);
+  return runPromos(supabase, eventId, startDate, endDate, userId);
 }
 
 export async function fetchEventDateAnalytics(
@@ -440,7 +455,7 @@ export async function fetchEventDateAnalytics(
   endDate?: DateBound,
 ): Promise<EventDateAnalyticsResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
-  return runDates(supabase, eventId, startDate, endDate);
+  return runDates(supabase, eventId, startDate, endDate, userId);
 }
 
 export async function fetchEventReturningAttendeeStats(
@@ -451,7 +466,7 @@ export async function fetchEventReturningAttendeeStats(
   endDate?: DateBound,
 ): Promise<EventReturningAttendeeResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
-  return runReturning(supabase, eventId, startDate, endDate);
+  return runReturning(supabase, eventId, startDate, endDate, userId);
 }
 
 // --- aggregate (used by the mobile route) ---
@@ -470,12 +485,12 @@ export async function fetchEventInsights(
 
   const [overview, finance, ticketTypes, promos, dates, returning] =
     await Promise.all([
-      runOverview(supabase, eventId, startDate, endDate),
-      runFinance(supabase, eventId, startDate, endDate),
-      runTicketTypes(supabase, eventId, startDate, endDate),
-      runPromos(supabase, eventId, startDate, endDate),
-      runDates(supabase, eventId, startDate, endDate),
-      runReturning(supabase, eventId, startDate, endDate),
+      runOverview(supabase, eventId, startDate, endDate, userId),
+      runFinance(supabase, eventId, startDate, endDate, userId),
+      runTicketTypes(supabase, eventId, startDate, endDate, userId),
+      runPromos(supabase, eventId, startDate, endDate, userId),
+      runDates(supabase, eventId, startDate, endDate, userId),
+      runReturning(supabase, eventId, startDate, endDate, userId),
     ]);
 
   const firstFailure = [

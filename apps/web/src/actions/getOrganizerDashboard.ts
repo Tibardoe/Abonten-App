@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { requestTimeZone } from "@/utils/requestTimeZone";
+import { actingFor } from "@/utils/teamActor";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
@@ -23,7 +24,7 @@ import {
  */
 export default withActionLocale(async function getOrganizerDashboard(
   period: DashboardPeriod,
-): Promise<OrganizerDashboardResult | { status: 401; message: string }> {
+): Promise<OrganizerDashboardResult | { status: 401 | 403; message: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,5 +35,14 @@ export default withActionLocale(async function getOrganizerDashboard(
     return { status: 401, message: tr("userNotLoggedIn") };
   }
 
-  return fetchOrganizerDashboard(supabase, period, await requestTimeZone());
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await actingFor(user.id, "money.view");
+  if (actor.error) return actor.error;
+
+  return fetchOrganizerDashboard(
+    supabase,
+    period,
+    await requestTimeZone(),
+    actor.accountId,
+  );
 });

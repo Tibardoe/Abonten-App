@@ -4,6 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { accountArg } from "../teams/accountArg";
+import type { ActingAccount } from "../teams/actingAccount";
+import { recordTeamMoneyEvent } from "../teams/teamMoney";
 import { endTicketPlansForEvent } from "../ticketPlans/ticketPlanLifecycle";
 
 // Post-auth bodies of getEventCancellationImpact + cancelEvent, shared by
@@ -62,9 +65,14 @@ type RefundableTransactionRow = {
 export async function getEventCancellationImpactCore(
   supabase: SupabaseClient<Database>,
   eventId: string,
+  /** A team the person acts for; omitted = their own account. */
+  accountId?: string | null,
 ): Promise<EventCancellationImpactResult> {
   const { data, error } = await supabase
-    .rpc("get_event_cancellation_impact", { p_event_id: eventId })
+    .rpc("get_event_cancellation_impact", {
+      p_event_id: eventId,
+      ...accountArg(accountId),
+    })
     .maybeSingle();
 
   if (error) {
@@ -101,10 +109,15 @@ export async function cancelEventCore(
     eventTitle: string,
     attendees: CancelledAttendeeRefund[],
   ) => void,
+  /** The member cancelling, when it is a team's event (stage 3). */
+  actor?: ActingAccount | null,
 ): Promise<CancelEventResult> {
   const { data: refundable, error: rpcError } = await supabase.rpc(
     "cancel_event_and_release_tickets",
-    { p_event_id: eventId },
+    {
+      p_event_id: eventId,
+      ...accountArg(actor?.role ? actor.accountId : null),
+    },
   );
 
   if (rpcError) {
@@ -121,6 +134,9 @@ export async function cancelEventCore(
         status: 403,
         message: tr("notAuthorizedToCancelThisEvent"),
       };
+    }
+    if (rpcError.message?.includes("Not allowed for this account")) {
+      return { status: 403, message: tr("teamRoleCannot") };
     }
     if (rpcError.message?.includes("cannot be cancelled")) {
       return { status: 409, message: tr("thisEventCanTBeCancelled") };
@@ -171,6 +187,19 @@ export async function cancelEventCore(
     }));
 
     onRefundsInitiated(eventTitle, attendees);
+  }
+
+  if (actor?.role) {
+    const { data: cancelled } = await serviceClient
+      .from("event")
+      .select("title")
+      .eq("id", eventId)
+      .maybeSingle();
+    await recordTeamMoneyEvent(serviceClient, actor, {
+      kind: "event_cancelled",
+      eventId,
+      title: cancelled?.title ?? "",
+    });
   }
 
   const message =

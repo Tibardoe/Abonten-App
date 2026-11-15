@@ -33,9 +33,10 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
   const t = useTranslations("manage");
 
   const router = useRouter();
-  // Cancelling refunds buyers: a team does that once its money arrives
-  // (stage 3), so it stays with the person's own events for now.
-  const { current } = useActingTeams();
+  // Cancelling refunds buyers: for a team, the role must cover the event
+  // and refunds (Owners).
+  const { can } = useActingTeams();
+  const canCancel = can("events.manage") && can("refunds.issue");
   const flyer =
     event.flyer_public_id && event.flyer_version
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
@@ -96,7 +97,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
         </View>
       </Pressable>
 
-      {!current && CANCELLABLE.has(status) ? (
+      {canCancel && CANCELLABLE.has(status) ? (
         <Link
           href={`/(app)/organizer/cancel-event?eventId=${event.id}&title=${encodeURIComponent(
             event.title ?? "",

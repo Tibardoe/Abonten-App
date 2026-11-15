@@ -756,6 +756,9 @@ export async function requireVerifiedIdentity(
   purpose: IdentityPurpose,
 ): Promise<IdentityEnvelope<never> | null> {
   try {
+    // A team has no identity of its own: its Owners' count (X5).
+    const owners = await teamOwnerIds(svc, userId);
+    if (owners) return await requireTeamIdentity(svc, owners, purpose);
     const { program } = await resolveIdentityAccess(svc, userId);
     if (!program.requiredFor.includes(purpose)) return null;
     const person = await loadPerson(svc, userId);
@@ -767,6 +770,48 @@ export async function requireVerifiedIdentity(
     logger.error(`requireVerifiedIdentity(${purpose}): ${error}`);
     return err(503, "checkUnavailable");
   }
+}
+
+/** A team account's active Owners, or null when the account is a person. */
+async function teamOwnerIds(
+  svc: ServiceRoleClient,
+  accountId: string,
+): Promise<string[] | null> {
+  const { data: team } = await svc
+    .from("team")
+    .select("account_id")
+    .eq("account_id", accountId)
+    .maybeSingle();
+  if (!team) return null;
+  const { data, error } = await svc
+    .from("team_member")
+    .select("user_id")
+    .eq("team_id", accountId)
+    .eq("role", "owner")
+    .eq("status", "active");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => row.user_id as string);
+}
+
+/**
+ * A team meets a requirement when one of its Owners has a live identity
+ * check (X5: the roles that can move money are checked). The requirement
+ * applies when it applies to any of its Owners.
+ */
+async function requireTeamIdentity(
+  svc: ServiceRoleClient,
+  ownerIds: string[],
+  purpose: IdentityPurpose,
+): Promise<IdentityEnvelope<never> | null> {
+  let required = false;
+  for (const ownerId of ownerIds) {
+    const { program } = await resolveIdentityAccess(svc, ownerId);
+    if (!program.requiredFor.includes(purpose)) continue;
+    required = true;
+    const person = await loadPerson(svc, ownerId);
+    if (person && liveVerified(person)) return null;
+  }
+  return required ? err(409, "teamOwnerRequired") : null;
 }
 
 /** Whether a person's identity is live (for staff tools and badges). */

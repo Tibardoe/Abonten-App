@@ -976,6 +976,22 @@
     "team_role_changed": {
       "title": "Your role in {team} changed",
       "body": "See what you can do now in Teams."
+    },
+    "team_payout_account_added": {
+      "title": "{actor} added a payout account for {team}",
+      "body": "{account}. Payouts can go to it 48 hours after it was added. If you didn't expect this, remove it in Finances."
+    },
+    "team_payout_account_removed": {
+      "title": "{actor} removed a payout account from {team}",
+      "body": "{account}. See the team's payout accounts in Finances."
+    },
+    "team_payout_account_default": {
+      "title": "{actor} changed the main payout account of {team}",
+      "body": "Payouts now go to {account}. If you didn't expect this, check Finances."
+    },
+    "team_payout_requested": {
+      "title": "{actor} asked for a payout for {team}",
+      "body": "{amount} to the team's payout account."
     }
   },
   "openStatus": {

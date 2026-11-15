@@ -37,6 +37,7 @@ export default withActionLocale(async function getOrganizerEvents(options?: {
     "events.manage",
     "attendees.view",
     "checkin.scan",
+    "money.view",
   ]);
 
   if (actor.error)

@@ -2,12 +2,14 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
+import { accountArg } from "@abonten/services/teams/accountArg";
 import type { OrganizerRefundSummaryRow } from "@abonten/types/organizerFinance";
 
 type GetOrganizerRefundSummaryResult =
-  | { status: 401 | 500; message: string }
+  | { status: 401 | 403 | 500; message: string }
   | { status: 200; data: OrganizerRefundSummaryRow[] };
 
 /**
@@ -28,8 +30,13 @@ export default withActionLocale(
       return { status: 401, message: tr("userNotLoggedIn") };
     }
 
+    // Managing as a team: the chosen team, if the person's role covers this.
+    const actor = await actingFor(user.id, "money.view");
+    if (actor.error) return actor.error;
+
     const { data, error } = await supabase.rpc(
       "get_organizer_refund_breakdown",
+      accountArg(actor.accountId),
     );
 
     if (error) {

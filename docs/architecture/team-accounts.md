@@ -1,10 +1,10 @@
 ---
 title: Team accounts — organizers and places run by several people
-purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 and 2 of Part 2 of the Tickets, entry and teams plan.
+purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 to 3 of Part 2 of the Tickets, entry and teams plan.
 audience: Engineering, operations, support and legal reviewers
-scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for() and acting_accounts(), the team_* functions, the access rules on events and places, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
+scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for(), acting_accounts() and acting_account_for(), the team_* functions, the access rules on events, places and money, the organizer money functions, the team notice fan-out, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
 status: Review required
-version: 1.1
+version: 1.2
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Team accounts
 
-**State (2026-11-16): stages 1 and 2 built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
+**State (2026-11-16): stages 1 to 3 built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
 
 ## 1. The model: a team is its own account
 
@@ -24,16 +24,16 @@ An organizer or a place can be run by a team: one public profile (handle, follow
 - **Members sign in as themselves and act for the team.** Every action will check the member's role first, and anything not opened up for a role stays closed, so a mistake fails safe. Each action records the member who took it (`team_activity`).
 - `account_kind` is one of the columns only the server may change (`protect_user_info_privileged_columns`).
 
-Stages: **1** — teams, members, invitations, roles, activity, Admin › Teams. **2** — running events and places as a team (Manager, Door staff, Front desk), attendee lists, check-in (§4a). Notices by role move to stage 3; "make this a team" (turning a person's existing listings into a team's) follows stage 4, because a converted account needs its money and messages to work as a team. **3** — money: the team's payout account (Owner only, fresh sign-in, the first payout to a new account held 48 hours, every Owner told), Finance, the ID check for Owners and Finance (X5), rebates to the team's balance. **4** — messages and content: the team inbox, review replies, Spotlight and Stories, customers seeing only the team's name (X7). **5** — trust and edge cases: the business check and the two team badges, a renamed team with the business badge going back to review (X42), disputes, bans, expired IDs.
+Stages: **1** — teams, members, invitations, roles, activity, Admin › Teams. **2** — running events and places as a team (Manager, Door staff, Front desk), attendee lists, check-in (§4a). **3** — the team's money (§4b): Owners and Finance, the payout account and its 48-hour wait, ID checks, notices by role; "make this a team" (turning a person's existing listings into a team's) follows stage 4, because a converted account needs its money and messages to work as a team. **3** — money: the team's payout account (Owner only, fresh sign-in, the first payout to a new account held 48 hours, every Owner told), Finance, the ID check for Owners and Finance (X5), rebates to the team's balance. **4** — messages and content: the team inbox, review replies, Spotlight and Stories, customers seeing only the team's name (X7). **5** — trust and edge cases: the business check and the two team badges, a renamed team with the business badge going back to review (X42), disputes, bans, expired IDs.
 
-Since stage 2 a team's members run its events and places within their role (§4a); money, messages and reviews as a team are still "coming soon".
+Since stage 2 a team's members run its events and places within their role (§4a), and since stage 3 Owners and Finance its money (§4b); messages, reviews, promotion and Spotlight as a team are still "coming soon".
 
 ## 2. Roles (X5)
 
 | Role | Can (capabilities) | ID check |
 |---|---|---|
-| Owner | everything: `team.members`, `team.profile`, `payout.manage`, `payout.view`, `money.view`, `refunds.issue` and every capability below | yes |
-| Finance | `payout.view`, `money.view`, `refunds.issue` | yes |
+| Owner | everything: `team.members`, `team.profile`, `payout.manage`, `payout.view`, `payout.request`, `money.view`, `refunds.issue` and every capability below | yes |
+| Finance | `payout.view`, `payout.request` (since stage 3), `money.view`, `refunds.issue` | yes |
 | Manager | `events.manage`, `places.manage`, `promo.manage`, `bookings.manage`, `attendees.view`, `checkin.scan` | no |
 | Content and messages | `messages.reply`, `content.post`, `reviews.reply` | no |
 | Door staff | `checkin.scan` (scan results only, never the attendee list) | no |
@@ -76,13 +76,28 @@ Notices (`@abonten/core/notifications/notices`, words in the recipient's languag
 
 | Role | Can, for the team | Cannot |
 |---|---|---|
-| Owner | Everything below | Money (stage 3) |
+| Owner | Everything below, and the team's money (§4b) | |
 | Manager | Publish and edit events, ticket types and dates, promo codes, the attendee list, check-in; edit places, photos, services and hours; bookings | Money, messages, reviews, verification, promotion; the visit QR (Front desk and Owners) |
 | Door staff | Check a ticket in by scanning or typing its code (only that event's tickets) | See who is coming |
 | Front desk | Answer a place's booking requests; show the visit QR | Change the place |
-| Finance, Content and messages | Nothing yet (stages 3 and 4) | |
+| Finance | The team's money (§4b) | Events and places |
+| Content and messages | Nothing yet (stage 4) | |
 
 **Screens.** Website: the Manage menu lists the person's teams with their role; a team's event page shows the tabs the role covers (details, attendees, or check-in by code), a team's place page the same (details, photos, hours, services, bookings, visit QR). App: Organizer starts with a **Managing as** card; with a team chosen it shows the team's events and places as far as the role covers, an event or a place opens a panel of what the role can do, Door staff get a scan-or-type check-in screen instead of the attendee list, and the publish screens say "Publishing as …" with a way back to the person's own account. Sales figures, payouts, cancelling an event (it refunds buyers), promotion, reviews and verification stay on the person's own account until stages 3 and 4.
+
+## 4b. A team's money (stage 3)
+
+**Who sees and moves it.** Owners and Finance see the team's sales, earnings, balance, ledger and payouts and ask for payouts (`money.view`, `payout.view`, `payout.request`); only Owners change the payout account (`payout.manage`); cancelling an event refunds its buyers, so it needs a role that covers both `events.manage` and `refunds.issue` (Owners). Managers, Content, Door staff and Front desk see no money.
+
+**How the database checks it.** Every organizer money function (the dashboard and its parts, the finance overview, the ledger, pending earnings, refund breakdowns, the event analytics, `request_organizer_payout`, `get_event_cancellation_impact`, `cancel_event_and_release_tickets`; migration `20261116120000_team_accounts_money`) takes `p_account` (null = the signed-in person) and resolves it with `public.acting_account_for(p_account, caps)`: the person's own account, or the named team when their role covers every capability asked for; anything else is refused (`42501`, "Not allowed for this account"). The functions are `SECURITY DEFINER` now (the rows they read are the team's, not the caller's) and are not executable by `anon`. The read rules on `organizer_ledger_entry` (`money.view`), `payout` and `payout_account` (`payout.view`) use `acting_accounts`, and Finance may read the team's events, dates and ticket types (`money.view` added to those read rules). `payout.requested_by` records who asked.
+
+**The payout account (X6).** Changing a team's payout account (add, remove, make main) needs a sign-in in the last 15 minutes (`FRESH_SIGN_IN_MINUTES`; the newest `amr` timestamp of the verified access token) and, when ID checks are required, a live one for the Owner; every Owner is told (notices `team_payout_account_added` / `_removed` / `_default`) and the team's activity records it. A team's payout to a payout account added less than 48 hours ago is refused by `request_organizer_payout` ("Payout account too new"), so an Owner can stop a change they did not make before money moves. Every payout a member asks for is recorded and every Owner told (`team_payout_requested`).
+
+**ID checks (X5).** An Owner or Finance member asking for a payout or changing the payout account passes the payouts ID requirement themselves. A requirement on the team account itself (paid events, payout accounts) is met when one of its active Owners has a live check (`requireVerifiedIdentity` on a team; message `identity.teamOwnerRequired`). The requirement applies to a team when it applies to any of its Owners.
+
+**Notices by role.** A notice written to a team (a booking request, a review, a payout notice) is copied by the trigger `trg_notification_fan_out_to_team` to every active member whose role covers it (`public.team_notice_capability`: bookings → `bookings.manage`, reviews → `reviews.reply`, messages → `messages.reply`, Spotlight → `content.post`, refunds → `refunds.issue`, payouts → `payout.view`, credit and plans → `money.view`, anything else → Owners). Each copy carries `team_id` / `team_name`; opening it on the website or in the app switches "Managing as" to the team first, and a manage page opened while managing as another account offers to switch.
+
+**Screens.** Website: Dashboard and Finances in the Manage menu for Owners and Finance; the Insights tab on a team's event; add, remove and make-main on payout accounts for Owners only (with the 48-hour and sign-in rules shown); Withdraw for Owners and Finance; Cancel event for Owners. App: Owners and Finance get the dashboard and an event's insights for the team; Withdraw for Owners and Finance; payout account changes for Owners; Cancel event for Owners. Promotion credit, promotion purchases, reviews and the promoter commission stay with the person's own account for now.
 
 ## 5. Who sees what
 
@@ -112,8 +127,9 @@ Limits in the settings row: `max_teams_created` (5), `max_members` (50), `invite
 | App | `apps/mobile/app/(app)/settings/teams.tsx`, `apps/mobile/app/(app)/settings/team/[id].tsx`, `apps/mobile/src/features/teams/*` |
 | Admin | `apps/admin/src/app/(console)/teams/*`; handbook [admin/teams.md](../admin/teams.md) |
 | Acting (stage 2) | Migration `supabase/migrations/20261116100000_team_accounts_events_places.sql`; `packages/services/src/teams/actingAccount.ts`; web `apps/web/src/utils/teamActor.ts`, `actions/teams/{setActingTeam,getActingContext}.ts`, `teams/useActingContext.ts`, the Manage menu; app routes `api/mobile/_lib/actor.ts`, `GET /api/mobile/teams/acting`; app `src/features/teams/{actingTeam.ts,ManagingAs.tsx}`, `src/components/organizer/DoorCheckIn.tsx` |
-| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts` |
+| Money (stage 3) | Migration `supabase/migrations/20261116120000_team_accounts_money.sql`; `packages/services/src/teams/{teamMoney,accountArg}.ts`; the organizer money cores (`organizer/*Query.ts`, `payoutAccountCore`, `requestOrganizerPayoutCore`, `events/cancelEventCore`); identity `identityCore.requireVerifiedIdentity` (teams); website `teams/molecules/SwitchToTeamPrompt.tsx`, the Finances and event menus; app `src/features/teams/noticeTeam.ts`, the Organizer, event and Finances screens |
+| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts` |
 
 ## 8. Not yet (later stages)
 
-Acting for a team on money, messages, reviews and content; notices to members by role; "make this a team"; the ID check requirement (a team's paid events are not yet held to the identity requirement — it is checked against the team account in stage 3), the team's payout account and its 48-hour hold, the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.
+Acting for a team on messages, reviews, promotion purchases, promotion credit and Spotlight (stage 4); "make this a team" (after stage 4); emails to a team (they go to the team account, which has no inbox; the in-app notice reaches members); pushes for the notice types the push queue does not carry; the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.

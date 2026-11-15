@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -14,6 +15,9 @@ export async function POST(req: Request) {
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  // Managing as a team: the chosen team, if the person's role covers this.
+  const actor = await mobileActingFor(req, auth.user.id, "payout.request");
+  if (actor.error) return apiJson(actor.error);
 
   let body: {
     payoutAccountId?: unknown;
@@ -38,11 +42,21 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await requestOrganizerPayoutCore(auth.supabase, {
-      payoutAccountId: body.payoutAccountId,
-      amount: body.amount,
-      currency: body.currency,
-    });
+    const result = await requestOrganizerPayoutCore(
+      auth.supabase,
+      {
+        payoutAccountId: body.payoutAccountId,
+        amount: body.amount,
+        currency: body.currency,
+      },
+      actor.role
+        ? {
+            personId: auth.user.id,
+            accountId: actor.accountId,
+            role: actor.role,
+          }
+        : null,
+    );
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/payout failed", error);

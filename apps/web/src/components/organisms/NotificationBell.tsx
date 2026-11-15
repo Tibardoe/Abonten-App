@@ -3,6 +3,7 @@
 import { getUserNotifications } from "@/actions/getUserNotifications";
 import { markAllNotificationsRead } from "@/actions/markAllNotificationsRead";
 import { markNotificationRead } from "@/actions/markNotificationRead";
+import { setActingTeam } from "@/actions/teams/setActingTeam";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import {
   DropdownMenu,
@@ -219,7 +220,7 @@ export default function NotificationBell({
     },
   });
 
-  const handleRowClick = (notification: NotificationType) => {
+  const handleRowClick = async (notification: NotificationType) => {
     if (!notification.read_at && !pendingReadIds.has(notification.id)) {
       markReadMutation.mutate(notification.id);
     }
@@ -231,6 +232,12 @@ export default function NotificationBell({
     const href =
       notification.link ??
       (notification.data?.kind === "recommendation" ? "/for-you" : null);
+    // A notice about a team's listing or money opens managing as the team.
+    const teamId = notification.data?.team_id;
+    if (href && teamId) {
+      const switched = await setActingTeam({ teamId }).catch(actionUnreachable);
+      if (switched.status === 200) await queryClient.resetQueries();
+    }
     if (href) {
       router.push(href);
     }
@@ -309,7 +316,7 @@ export default function NotificationBell({
               >
                 <button
                   type="button"
-                  onClick={() => handleRowClick(notification)}
+                  onClick={() => void handleRowClick(notification)}
                   disabled={isMarking}
                   className={`flex w-full items-start gap-2 px-4 py-3 text-left text-sm hover:bg-accent transition-colors disabled:opacity-70 ${
                     isUnread ? "bg-primary/5" : ""
