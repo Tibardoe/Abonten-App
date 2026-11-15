@@ -199,7 +199,7 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | X2 | 1 | How many times one ticket can be passed on | `max_moves` | 3 | **Decided (2026-11-15, the founder approved the plan).** |
 | X3 | 1 | How long a sent ticket waits to be accepted | `accept_hours`, job `ticket-transfers-expire` | 48 hours, then it returns to the sender | **Decided (2026-11-15, the founder approved the plan).** |
 | X4 | 6 | Private resale between people | Not built | Allowed through sending; Abonten moves no money between private people; resale through Abonten is X26 and X28 | **Decided (2026-11-15, the founder approved the plan).** |
-| X5 | 2 | Which team roles need an ID check | Not built | Owner and Finance only | **Decided (2026-11-15, the founder approved the plan).** |
+| X5 | 2 | Which team roles need an ID check | Roles built (stage 1, `@abonten/core/teams/roles`, `team_role_can`); the check itself comes with stage 3 | Owner and Finance only | **Decided (2026-11-15, the founder approved the plan).** |
 | X6 | 2 | Hold on the first payout to a new payout account | Not built | 48 hours, with every Owner told | **Decided (2026-11-15, the founder approved the plan).** |
 | X7 | 2 | What customers see when a team member replies | Not built | The team's name only | **Decided (2026-11-15, the founder approved the plan).** |
 | X8 | 2 | Followers when an account becomes a team | Not built | All move to the team | **Decided (2026-11-15, the founder approved the plan).** |

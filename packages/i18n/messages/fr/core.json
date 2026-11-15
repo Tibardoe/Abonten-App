@@ -960,6 +960,22 @@
     "ticket_transfer_stopped_receiver": {
       "title": "Le billet de {actor} ne peut plus être envoyé",
       "body": "L'organisateur de {title} a désactivé l'envoi de billets, l'offre a donc été fermée."
+    },
+    "team_invite_received": {
+      "title": "{actor} vous invite dans son équipe",
+      "body": "Acceptez ou refusez l'invitation dans Équipes."
+    },
+    "team_invite_accepted": {
+      "title": "{actor} a rejoint {team}",
+      "body": "Cette personne peut désormais aider à gérer l'équipe avec le rôle que vous lui avez donné."
+    },
+    "team_member_removed": {
+      "title": "Vous avez été retiré de {team}",
+      "body": "Votre propre compte n'est pas touché."
+    },
+    "team_role_changed": {
+      "title": "Votre rôle dans {team} a changé",
+      "body": "Voyez ce que vous pouvez faire maintenant dans Équipes."
     }
   },
   "openStatus": {

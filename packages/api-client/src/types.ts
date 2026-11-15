@@ -71,6 +71,14 @@ import type {
   RewardsProgram,
 } from "@abonten/types/rewards";
 import type {
+  InviteTarget,
+  TeamDetail,
+  TeamInviteSent,
+  TeamRoleCode,
+  TeamSummary,
+  TeamsOverview,
+} from "@abonten/types/teamType";
+import type {
   IncomingTicketTransfer,
   OutgoingTicketTransfer,
   SendTicketTarget,
@@ -2271,6 +2279,22 @@ export type EventTicketTransferSettingResult = ApiEnvelope<{
   enabled: boolean;
   programEnabled?: boolean;
 }>;
+
+// Team accounts (docs/architecture/team-accounts.md).
+export type TeamsOverviewResult = ApiEnvelope<TeamsOverview>;
+export type CreateTeamBody = { name: string; username: string };
+export type CreateTeamResult = ApiEnvelope<TeamSummary>;
+export type TeamDetailResult = ApiEnvelope<TeamDetail>;
+export type RenameTeamResult = ApiEnvelope<{ name: string }>;
+export type TeamInviteeResult = ApiEnvelope<TicketTransferRecipient>;
+export type InviteTeamMemberBody = { role: TeamRoleCode; target: InviteTarget };
+export type InviteTeamMemberResult = ApiEnvelope<TeamInviteSent>;
+export type AnswerTeamInviteResult = ApiEnvelope<{
+  teamId: string;
+  joined: boolean;
+}>;
+export type TeamMemberRoleResult = ApiEnvelope<{ role: TeamRoleCode }>;
+export type TeamDoneResult = ApiEnvelope<Record<string, true>>;
 
 export type StartTicketPlanBody = {
   eventId: string;

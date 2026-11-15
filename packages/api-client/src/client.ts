@@ -26,6 +26,7 @@ import type {
   SearchResults,
   SearchSuggestionsResponse,
 } from "@abonten/types/searchType";
+import type { InviteTarget, TeamRoleCode } from "@abonten/types/teamType";
 import type { SendTicketTarget } from "@abonten/types/ticketTransferType";
 import type {
   WeeklyEditionResult,
@@ -36,12 +37,18 @@ import type {
   AcceptTicketTransferResult,
   AcknowledgeSafetyBody,
   AddSafetyContactBody,
+  AnswerTeamInviteResult,
   BalanceOverviewResult,
+  CreateTeamBody,
+  CreateTeamResult,
   EventTicketPlanSettingResult,
   EventTicketTransferSettingResult,
   IdentityOverviewResult,
+  InviteTeamMemberBody,
+  InviteTeamMemberResult,
   PayTicketPlanPartBody,
   PayTicketPlanPartResult,
+  RenameTeamResult,
   ResolveSafetySessionBody,
   SafetyContactResult,
   SafetyLocationBody,
@@ -58,6 +65,11 @@ import type {
   StartSafetySessionResponse,
   StartTicketPlanBody,
   StartTicketPlanResult,
+  TeamDetailResult,
+  TeamDoneResult,
+  TeamInviteeResult,
+  TeamMemberRoleResult,
+  TeamsOverviewResult,
   TicketPlanOfferResult,
   TicketPlanResult,
   TicketPlansResult,
@@ -2870,6 +2882,86 @@ export function createApiClient(options: ApiClientOptions) {
       cancel(transferId: string) {
         return request<TicketTransferAnswerResult>(
           `/api/mobile/ticket-transfers/${encodeURIComponent(transferId)}/cancel`,
+          { method: "POST", auth: true },
+        );
+      },
+    },
+    /**
+     * Team accounts (docs/architecture/team-accounts.md): an organizer or a
+     * place run by members with roles. Ships switched off:
+     * `overview().program.enabled` says whether the caller may make a team
+     * or invite; teams that exist stay visible to their members either way.
+     */
+    teams: {
+      /** The caller's teams, the invitations waiting for them, the switch. */
+      overview() {
+        return request<TeamsOverviewResult>("/api/mobile/teams", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      create(body: CreateTeamBody) {
+        return request<CreateTeamResult>("/api/mobile/teams", {
+          method: "POST",
+          body,
+          auth: true,
+          timeoutMs: 25_000,
+        });
+      },
+      get(teamId: string) {
+        return request<TeamDetailResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      rename(teamId: string, name: string) {
+        return request<RenameTeamResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}`,
+          { method: "PATCH", body: { name }, auth: true },
+        );
+      },
+      /** Who a username or number points at, shown before inviting. */
+      invitee(teamId: string, target: InviteTarget) {
+        return request<TeamInviteeResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/invitee`,
+          { method: "POST", body: { target }, auth: true },
+        );
+      },
+      invite(teamId: string, body: InviteTeamMemberBody) {
+        return request<InviteTeamMemberResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/invites`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** The invited person joins or says no. */
+      answerInvite(inviteId: string, action: "accept" | "decline") {
+        return request<AnswerTeamInviteResult>(
+          `/api/mobile/teams/invites/${encodeURIComponent(inviteId)}`,
+          { method: "POST", body: { action }, auth: true },
+        );
+      },
+      /** An Owner withdraws an invitation still waiting. */
+      cancelInvite(inviteId: string) {
+        return request<TeamDoneResult>(
+          `/api/mobile/teams/invites/${encodeURIComponent(inviteId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      setRole(teamId: string, userId: string, role: TeamRoleCode) {
+        return request<TeamMemberRoleResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(userId)}`,
+          { method: "PATCH", body: { role }, auth: true },
+        );
+      },
+      removeMember(teamId: string, userId: string) {
+        return request<TeamDoneResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(userId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      leave(teamId: string) {
+        return request<TeamDoneResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/leave`,
           { method: "POST", auth: true },
         );
       },

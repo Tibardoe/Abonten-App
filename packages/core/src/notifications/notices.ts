@@ -195,6 +195,11 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   ticket_transfer_expired: n("ticket_transfer_expired"),
   ticket_transfer_stopped_sender: n("ticket_transfer_stopped_sender"),
   ticket_transfer_stopped_receiver: n("ticket_transfer_stopped_receiver"),
+  // Team accounts (services)
+  team_invite_received: n("team_invite_received"),
+  team_invite_accepted: n("team_invite_accepted"),
+  team_member_removed: n("team_member_removed"),
+  team_role_changed: n("team_role_changed"),
   // SQL: rewards
   welcome_credit: n("welcome_credit"),
   referral_qualified: n("referral_qualified"),

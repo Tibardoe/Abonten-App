@@ -103,7 +103,8 @@
     "region": "Región y moneda",
     "security": "Seguridad",
     "switchAppearance": "Apariencia",
-    "identity": "Verificación de identidad"
+    "identity": "Verificación de identidad",
+    "teams": "Equipos"
   },
   "neededToPayForTicketsAnd": "Necesario para pagar entradas y promociones — tus entradas y recibos se te envían por correo. También puedes iniciar sesión con un código enviado allí.",
   "networkError": "Error de red",

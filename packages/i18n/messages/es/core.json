@@ -960,6 +960,22 @@
     "ticket_transfer_stopped_receiver": {
       "title": "La entrada de {actor} ya no se puede enviar",
       "body": "El organizador de {title} ha desactivado el envío de entradas, así que la oferta se ha cerrado."
+    },
+    "team_invite_received": {
+      "title": "{actor} te invitó a su equipo",
+      "body": "Acepta o rechaza la invitación en Equipos."
+    },
+    "team_invite_accepted": {
+      "title": "{actor} se unió a {team}",
+      "body": "Ya puede ayudar a gestionar el equipo con el rol que le diste."
+    },
+    "team_member_removed": {
+      "title": "Te quitaron de {team}",
+      "body": "Tu propia cuenta no se ve afectada."
+    },
+    "team_role_changed": {
+      "title": "Tu rol en {team} cambió",
+      "body": "Mira lo que puedes hacer ahora en Equipos."
     }
   },
   "openStatus": {

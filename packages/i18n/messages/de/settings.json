@@ -103,7 +103,8 @@
     "region": "Region und Währung",
     "security": "Sicherheit",
     "switchAppearance": "Erscheinungsbild",
-    "identity": "Identitätsprüfung"
+    "identity": "Identitätsprüfung",
+    "teams": "Teams"
   },
   "neededToPayForTicketsAnd": "Nötig, um Tickets und Promotions zu bezahlen — deine Tickets und Belege erhältst du per E-Mail. Du kannst dich auch mit einem Code anmelden, der dorthin gesendet wird.",
   "networkError": "Netzwerkfehler",

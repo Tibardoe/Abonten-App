@@ -103,7 +103,8 @@
     "region": "Region & currency",
     "security": "Bammɔ",
     "switchAppearance": "Sesa Sɛnea Ɛteɛ",
-    "identity": "Identity verification"
+    "identity": "Identity verification",
+    "teams": "Teams"
   },
   "neededToPayForTicketsAnd": "Needed to pay for tickets and promotions — your tickets and receipts are emailed to you. You can also sign in with a code sent there.",
   "networkError": "Network error",

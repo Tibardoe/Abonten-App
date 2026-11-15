@@ -960,6 +960,22 @@
     "ticket_transfer_stopped_receiver": {
       "title": "The ticket from {actor} can't be sent any more",
       "body": "The organizer of {title} turned off sending tickets, so the offer was closed."
+    },
+    "team_invite_received": {
+      "title": "{actor} invited you to their team",
+      "body": "Accept or decline the invitation in Teams."
+    },
+    "team_invite_accepted": {
+      "title": "{actor} joined {team}",
+      "body": "They can now help run the team in the role you gave them."
+    },
+    "team_member_removed": {
+      "title": "You were removed from {team}",
+      "body": "Your own account isn't affected."
+    },
+    "team_role_changed": {
+      "title": "Your role in {team} changed",
+      "body": "See what you can do now in Teams."
     }
   },
   "openStatus": {

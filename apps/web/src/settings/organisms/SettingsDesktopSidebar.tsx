@@ -1,12 +1,23 @@
 import { getIdentityProgram } from "@/actions/identity/getIdentityProgram";
+import { getTeamsOverview } from "@/actions/teams/getTeamsOverview";
 import { getTranslations } from "next-intl/server";
 import SettingsNavLinks from "../atoms/SettingsNavLinks";
 
 export default async function SettingsDesktopSideBar() {
-  const [t, identity] = await Promise.all([
+  const [t, identity, teams] = await Promise.all([
     getTranslations("settings"),
     getIdentityProgram(),
+    getTeamsOverview().catch(() => null),
   ]);
+  // Teams shows while the programme is open to the person, and always for
+  // someone who is in a team or has an invitation waiting.
+  const teamsData =
+    teams && teams.status === 200 && "data" in teams ? teams.data : null;
+  const showTeams =
+    !!teamsData &&
+    (teamsData.program.enabled ||
+      teamsData.teams.length > 0 ||
+      teamsData.invites.length > 0);
 
   return (
     <div className="flex flex-col gap-5 w-full md:min-w-fit">
@@ -44,6 +55,15 @@ export default async function SettingsDesktopSideBar() {
           imgUrl="/assets/images/security.svg"
           arrowUrl="/assets/images/arrowRight.svg"
           text={t("nav.identity")}
+        />
+      ) : null}
+
+      {showTeams ? (
+        <SettingsNavLinks
+          href="/settings/teams"
+          imgUrl="/assets/images/account.svg"
+          arrowUrl="/assets/images/arrowRight.svg"
+          text={t("nav.teams")}
         />
       ) : null}
 

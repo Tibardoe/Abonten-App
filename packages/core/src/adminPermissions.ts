@@ -108,6 +108,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "plans.configure",
   "transfers.view",
   "transfers.configure",
+  "teams.view",
+  "teams.configure",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -139,6 +141,7 @@ const MODERATOR: AdminPermissionKey[] = [
   "spotlight.view",
   "identity.view",
   "identity.review",
+  "teams.view",
 ];
 
 const FINANCE_ADMIN: AdminPermissionKey[] = [
@@ -201,6 +204,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "identity.view",
   "plans.view",
   "transfers.view",
+  "teams.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -358,6 +362,7 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "plans.manage",
   "plans.configure",
   "transfers.configure",
+  "teams.configure",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
