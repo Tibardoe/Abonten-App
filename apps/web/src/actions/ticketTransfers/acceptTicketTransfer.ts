@@ -1,13 +1,13 @@
 "use server";
 
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   parseDiscoveryInput,
   requireDiscoveryUser,
 } from "@/utils/discoveryAction";
 import { acceptTicketTransferCore } from "@abonten/services/ticketTransfers/ticketTransferCore";
 import { ticketTransferIdSchema } from "@abonten/validation/ticketTransferSchemas";
-import { revalidatePath } from "next/cache";
 
 /** Takes a ticket someone sent: it moves here with a new code. */
 export const acceptTicketTransfer = withActionLocale(
@@ -21,7 +21,7 @@ export const acceptTicketTransfer = withActionLocale(
       caller.userId,
       input.data.transferId,
     );
-    if (result.status === 200) revalidatePath("/manage/my-events");
+    if (result.status === 200) revalidateAppPath("/manage/my-events");
     return result;
   },
 );

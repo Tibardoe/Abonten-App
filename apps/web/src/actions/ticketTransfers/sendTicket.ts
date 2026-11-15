@@ -1,6 +1,7 @@
 "use server";
 
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   parseDiscoveryInput,
   requireDiscoveryUser,
@@ -8,7 +9,6 @@ import {
 import { canTextNumber } from "@abonten/services/safety/safetyPeople";
 import { sendTicketCore } from "@abonten/services/ticketTransfers/ticketTransferCore";
 import { sendTicketSchema } from "@abonten/validation/ticketTransferSchemas";
-import { revalidatePath } from "next/cache";
 
 /** Offers one of the person's tickets to an account or a phone number. */
 export const sendTicket = withActionLocale(async function sendTicket(
@@ -21,6 +21,6 @@ export const sendTicket = withActionLocale(async function sendTicket(
   const result = await sendTicketCore(caller.svc, caller.userId, input.data, {
     canTextNumber,
   });
-  if (result.status === 200) revalidatePath("/manage/my-events");
+  if (result.status === 200) revalidateAppPath("/manage/my-events");
   return result;
 });

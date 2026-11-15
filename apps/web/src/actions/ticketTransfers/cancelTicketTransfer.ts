@@ -1,13 +1,13 @@
 "use server";
 
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   parseDiscoveryInput,
   requireDiscoveryUser,
 } from "@/utils/discoveryAction";
 import { cancelTicketTransferCore } from "@abonten/services/ticketTransfers/ticketTransferCore";
 import { ticketTransferIdSchema } from "@abonten/validation/ticketTransferSchemas";
-import { revalidatePath } from "next/cache";
 
 /** Takes back an offer nobody has accepted yet. */
 export const cancelTicketTransfer = withActionLocale(
@@ -21,7 +21,7 @@ export const cancelTicketTransfer = withActionLocale(
       caller.userId,
       input.data.transferId,
     );
-    if (result.status === 200) revalidatePath("/manage/my-events");
+    if (result.status === 200) revalidateAppPath("/manage/my-events");
     return result;
   },
 );
