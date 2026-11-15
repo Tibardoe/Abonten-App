@@ -294,7 +294,10 @@ export async function deliverQueuedNotificationsCore(
           .maybeSingle(),
       ]);
       const email = authUser.data.user?.email;
-      if (!email) {
+      // A team account's address is a placeholder on the reserved
+      // `.invalid` domain (it has no inbox; its members get the notice in
+      // the app): never send to it, which would only bounce.
+      if (!email || /\.invalid$/i.test(email)) {
         await finish(ids, "skipped", "no_email");
         return;
       }

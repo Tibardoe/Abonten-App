@@ -67,6 +67,7 @@
   "retry": "Tentar novamente",
   "role": "{role, select, owner {Proprietário} finance {Finanças} manager {Gestão} content {Conteúdo e mensagens} door {Controlo de entrada} front_desk {Receção} other {Membro}}",
   "roleChangedToast": "Função alterada.",
+  "roleDoesNotCover": "A sua função nesta equipa não abrange isto. Mude para a sua própria conta para ver a sua.",
   "roleHelp": "{role, select, owner {Tudo, incluindo os membros e a conta de pagamentos.} finance {Pagamentos, reembolsos e relatórios de dinheiro.} manager {Eventos, a página do local, códigos promocionais e reservas.} content {Spotlight, Stories, mensagens e respostas a avaliações.} door {Ler bilhetes à entrada, nada mais.} front_desk {Pedidos de reserva e o QR de visita.} other {}}",
   "roleLabel": "Função",
   "save": "Guardar",

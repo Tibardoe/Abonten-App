@@ -276,5 +276,15 @@ describe("a team's money", () => {
     expect(new Set(data?.map((n) => n.user_id))).toEqual(
       new Set([owner.id, manager.id]),
     );
+    // Each copy is queued for a push (the team itself has no phone).
+    const { data: queued } = await service
+      .from("notification_delivery")
+      .select("user_id, channel, source")
+      .in("user_id", [owner.id, manager.id])
+      .eq("channel", "push")
+      .eq("source", "app");
+    expect(new Set(queued?.map((q) => q.user_id))).toEqual(
+      new Set([owner.id, manager.id]),
+    );
   });
 });

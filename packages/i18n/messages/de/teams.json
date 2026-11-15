@@ -67,6 +67,7 @@
   "retry": "Erneut versuchen",
   "role": "{role, select, owner {Inhaber} finance {Finanzen} manager {Verwaltung} content {Inhalte und Nachrichten} door {Einlass} front_desk {Empfang} other {Mitglied}}",
   "roleChangedToast": "Rolle geändert.",
+  "roleDoesNotCover": "Deine Rolle in diesem Team deckt das nicht ab. Wechsle zu deinem eigenen Konto, um deines zu sehen.",
   "roleHelp": "{role, select, owner {Alles, auch Mitglieder und das Auszahlungskonto.} finance {Auszahlungen, Erstattungen und Geldberichte.} manager {Events, die Seite des Ortes, Promo-Codes und Buchungen.} content {Spotlight, Stories, Nachrichten und Antworten auf Bewertungen.} door {Tickets am Einlass scannen, sonst nichts.} front_desk {Buchungsanfragen und der Besuchs-QR.} other {}}",
   "roleLabel": "Rolle",
   "save": "Speichern",

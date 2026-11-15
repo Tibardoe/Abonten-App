@@ -95,3 +95,30 @@ export function TeamNavRow({ href, label }: { href: string; label: string }) {
     </Link>
   );
 }
+
+/**
+ * A screen opened (from a link, say) while managing as a team whose role
+ * does not cover it: says so, instead of showing figures it could not read,
+ * and offers the person's own account.
+ */
+export function TeamRoleBlocked() {
+  const t = useTranslations("teams");
+  const switchTo = useSwitchActingTeam();
+  return (
+    <View className="flex-1 items-center justify-center gap-4 bg-background p-6">
+      <Icon name="lock-closed-outline" size={28} tone="muted" />
+      <AppText variant="muted" className="text-center">
+        {t("roleDoesNotCover")}
+      </AppText>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => switchTo(null)}
+        className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
+      >
+        <AppText className="font-semibold text-primary-foreground">
+          {t("useOwnAccount")}
+        </AppText>
+      </Pressable>
+    </View>
+  );
+}

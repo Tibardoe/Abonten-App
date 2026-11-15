@@ -9,6 +9,7 @@ import {
   showPromotionCredit,
 } from "@/features/rewards/PromotionCreditCard";
 import { usePromotionCredit } from "@/features/rewards/useRewards";
+import { TeamRoleBlocked } from "@/features/teams/ManagingAs";
 import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type {
@@ -166,7 +167,7 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
   );
 }
 
-export default function OrganizerFinanceScreen() {
+function OrganizerFinanceScreenBody() {
   const t = useTranslations("manage");
   // Managing as a team: Owners and Finance ask for payouts; promotion
   // credit stays the person's own.
@@ -307,4 +308,11 @@ export default function OrganizerFinanceScreen() {
       }
     />
   );
+}
+
+export default function OrganizerFinanceScreen() {
+  // Managing as a team: only the roles that cover the team's money.
+  const { current: team, can: teamCan } = useActingTeams();
+  if (team && !teamCan("money.view", "payout.view")) return <TeamRoleBlocked />;
+  return <OrganizerFinanceScreenBody />;
 }

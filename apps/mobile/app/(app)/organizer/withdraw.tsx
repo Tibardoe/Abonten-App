@@ -5,6 +5,8 @@ import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
+import { TeamRoleBlocked } from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
@@ -26,7 +28,7 @@ function fmt(currency: string, v: number): string {
   return formatMoney(currency, v, { locale: getCurrentLocale() });
 }
 
-export default function WithdrawScreen() {
+function WithdrawScreenBody() {
   const t = useTranslations("manage");
 
   const router = useRouter();
@@ -333,4 +335,11 @@ export default function WithdrawScreen() {
       </AppText>
     </KeyboardAwareScrollView>
   );
+}
+
+export default function WithdrawScreen() {
+  // Managing as a team: only the roles that cover the team's money.
+  const { current: team, can: teamCan } = useActingTeams();
+  if (team && !teamCan("payout.request")) return <TeamRoleBlocked />;
+  return <WithdrawScreenBody />;
 }

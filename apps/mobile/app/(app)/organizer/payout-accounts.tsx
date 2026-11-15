@@ -6,6 +6,7 @@ import {
   useRemovePayoutAccount,
   useSetDefaultPayoutAccount,
 } from "@/features/organizer/usePayouts";
+import { TeamRoleBlocked } from "@/features/teams/ManagingAs";
 import { useActingTeams } from "@/features/teams/useTeams";
 import { MomoCodeStep } from "@/features/wallet/MomoCodeStep";
 import { useMomoNetworks } from "@/features/wallet/usePaymentMethods";
@@ -55,7 +56,7 @@ function accountTitle(
   return `${a.provider ?? kind} · ${a.account_number}`;
 }
 
-export default function PayoutAccountsScreen() {
+function PayoutAccountsScreenBody() {
   const t = useTranslations("manage");
   const tt = useTranslations("teams");
 
@@ -488,4 +489,11 @@ export default function PayoutAccountsScreen() {
       </Sheet>
     </View>
   );
+}
+
+export default function PayoutAccountsScreen() {
+  // Managing as a team: only the roles that cover the team's money.
+  const { current: team, can: teamCan } = useActingTeams();
+  if (team && !teamCan("payout.view")) return <TeamRoleBlocked />;
+  return <PayoutAccountsScreenBody />;
 }

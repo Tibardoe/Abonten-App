@@ -1,5 +1,7 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { usePayouts } from "@/features/organizer/usePayouts";
+import { TeamRoleBlocked } from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type { OrganizerPayoutRow } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
@@ -27,7 +29,7 @@ function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
   );
 }
 
-export default function PayoutsScreen() {
+function PayoutsScreenBody() {
   const t = useTranslations("manage");
 
   const q = usePayouts();
@@ -61,4 +63,11 @@ export default function PayoutsScreen() {
       }
     />
   );
+}
+
+export default function PayoutsScreen() {
+  // Managing as a team: only the roles that cover the team's money.
+  const { current: team, can: teamCan } = useActingTeams();
+  if (team && !teamCan("payout.view")) return <TeamRoleBlocked />;
+  return <PayoutsScreenBody />;
 }
