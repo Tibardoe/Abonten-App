@@ -31,7 +31,9 @@ export type NotificationEntityKind =
   | "area"
   | "safety"
   | "identity"
-  | "ticket_plan";
+  | "ticket_plan"
+  /** A ticket sent to or by the reader (Send a ticket to a friend). */
+  | "ticket_transfer";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -73,6 +75,8 @@ export type NotificationData = {
   sessionId?: string;
   /** With kind "ticket_plan": the Pay small small plan. */
   planId?: string;
+  /** With kind "ticket_transfer": the offer. */
+  transferId?: string;
 };
 
 export type NotificationType = {

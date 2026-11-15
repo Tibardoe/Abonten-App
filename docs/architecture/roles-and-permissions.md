@@ -72,6 +72,8 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `plans.view` | Admin › Pay small small: plans, parts, refunds, money held and kept | finance_admin, operations, support_admin |
 | `plans.manage` | End a plan with its refund; retry a refused refund share or record it as refunded by hand — in `STEP_UP_PERMISSIONS` | finance_admin |
 | `plans.configure` | Pay small small switches, audience and rules — in `STEP_UP_PERMISSIONS` | finance_admin, operations |
+| `transfers.view` | Admin › Ticket transfers: the settings and every offer (a number shows only its last four digits) | finance_admin, operations, support_admin |
+| `transfers.configure` | Ticket transfer switches, audience and rules — in `STEP_UP_PERMISSIONS` | finance_admin, operations |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

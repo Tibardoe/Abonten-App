@@ -42,7 +42,7 @@ type PaymentRow = {
 };
 
 type Plan =
-  | { ok: false; status: 404 | 500; message: string }
+  | { ok: false; status: 404 | 409 | 500; message: string }
   | {
       ok: true;
       targets: CancelTarget[];
@@ -77,13 +77,6 @@ async function planEventCancel(
     };
   }
 
-  const targets: CancelTarget[] = tickets.map((t) => ({
-    id: t.id,
-    ticketTypeId: t.ticket_type_id,
-    checkoutId: t.ticket_checkout_id,
-    eventId,
-  }));
-
   const paymentIds = Array.from(
     new Set(
       tickets.map((t) => t.transaction_id).filter((id): id is string => !!id),
@@ -91,8 +84,9 @@ async function planEventCancel(
   );
   const payments: Extract<Plan, { ok: true }>["payments"] = [];
   let blocked: EventCancelQuote["blocked"] = null;
+  let rows: PaymentRow[] = [];
   if (paymentIds.length > 0) {
-    const { data: rows, error: paymentError } = await supabase
+    const { data, error: paymentError } = await supabase
       .from("transaction")
       .select("id, status, amount, credit_amount, currency, provider")
       .in("id", paymentIds)
@@ -101,8 +95,33 @@ async function planEventCancel(
       logger.error(`Failed reading payments: ${paymentError.message}`);
       return { ok: false, status: 500, message: tr("somethingWentWrong") };
     }
-    const ours = new Set(tickets.map((t) => t.id));
-    for (const payment of (rows ?? []) as PaymentRow[]) {
+    rows = (data ?? []) as PaymentRow[];
+  }
+
+  // A ticket someone else paid for was sent to the caller: its refund is
+  // theirs, so cancelling it here would put the seat back with nothing
+  // returned. Those are left out; the holder sends them back instead.
+  const ownPayments = new Set(rows.map((r) => r.id));
+  const mine = tickets.filter(
+    (t) => !t.transaction_id || ownPayments.has(t.transaction_id),
+  );
+  if (mine.length === 0) {
+    return {
+      ok: false,
+      status: 409,
+      message: tr("ticketTransferCancelSendBack"),
+    };
+  }
+  const targets: CancelTarget[] = mine.map((t) => ({
+    id: t.id,
+    ticketTypeId: t.ticket_type_id,
+    checkoutId: t.ticket_checkout_id,
+    eventId,
+  }));
+
+  if (rows.length > 0) {
+    const ours = new Set(mine.map((t) => t.id));
+    for (const payment of rows) {
       if (Number(payment.amount) + Number(payment.credit_amount ?? 0) <= 0) {
         continue;
       }
@@ -121,7 +140,7 @@ async function planEventCancel(
       payments.push({
         payment,
         whole,
-        ticketIds: tickets
+        ticketIds: mine
           .filter((t) => t.transaction_id === payment.id)
           .map((t) => t.id),
       });
@@ -132,7 +151,7 @@ async function planEventCancel(
 
 export type EventCancelQuoteResult =
   | { status: 200; data: EventCancelQuote }
-  | { status: 404 | 500; message: string };
+  | { status: 404 | 409 | 500; message: string };
 
 /** What cancelling all of the caller's tickets for an event gives back. */
 export async function eventCancelQuoteCore(

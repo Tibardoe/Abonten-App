@@ -71,6 +71,14 @@ import type {
   RewardsProgram,
 } from "@abonten/types/rewards";
 import type {
+  IncomingTicketTransfer,
+  OutgoingTicketTransfer,
+  SendTicketTarget,
+  TicketTransferProgram,
+  TicketTransferRecipient,
+  TicketTransferState,
+} from "@abonten/types/ticketTransferType";
+import type {
   EventCancelQuote,
   TicketCancelQuote,
 } from "@abonten/types/ticketType";
@@ -2241,6 +2249,28 @@ export type BalanceOverviewResult = ApiEnvelope<
 export type EventTicketPlanSettingResult = ApiEnvelope<
   import("@abonten/types/ticketPlanType").EventTicketPlanSetting
 >;
+
+// Send a ticket to a friend (docs/architecture/ticket-transfers.md).
+export type TicketTransfersOverview = {
+  incoming: IncomingTicketTransfer[];
+  outgoing: OutgoingTicketTransfer[];
+  program: TicketTransferProgram;
+};
+export type TicketTransfersResult = ApiEnvelope<TicketTransfersOverview>;
+export type TicketTransferStateResult = ApiEnvelope<TicketTransferState>;
+export type TicketTransferRecipientResult =
+  ApiEnvelope<TicketTransferRecipient>;
+export type SendTicketBody = {
+  ticketId: string;
+  target: SendTicketTarget;
+};
+export type SendTicketResult = ApiEnvelope<OutgoingTicketTransfer>;
+export type AcceptTicketTransferResult = ApiEnvelope<{ ticketId: string }>;
+export type TicketTransferAnswerResult = ApiEnvelope<{ transferId: string }>;
+export type EventTicketTransferSettingResult = ApiEnvelope<{
+  enabled: boolean;
+  programEnabled?: boolean;
+}>;
 
 export type StartTicketPlanBody = {
   eventId: string;

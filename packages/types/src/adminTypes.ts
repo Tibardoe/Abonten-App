@@ -106,7 +106,9 @@ export type AdminPermissionKey =
   | "identity.configure"
   | "plans.view"
   | "plans.manage"
-  | "plans.configure";
+  | "plans.configure"
+  | "transfers.view"
+  | "transfers.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 

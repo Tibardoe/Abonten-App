@@ -100,9 +100,8 @@ export function TicketCard({
           <AppText variant="meta">
             {ticketTypeLabel(tc, ticket.ticket_type.type)}
           </AppText>
-          <AppText variant="meta" className="tracking-widest">
-            · {ticket.ticket_code}
-          </AppText>
+          {/* The code stays on the ticket screen behind "Show code"
+              (decision X16): a screenshot of this list gives nothing away. */}
           {event.starts_at ? (
             <AppText variant="meta">
               · {formatDateWithSuffix(event.starts_at, undefined, locale)}

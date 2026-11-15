@@ -2,6 +2,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useEventInsights } from "@/features/organizer/useEventInsights";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
 import { EventTicketPlansSection } from "@/features/ticketPlans/EventTicketPlansSection";
+import { EventTicketTransfersSection } from "@/features/ticketTransfers/EventTicketTransfersSection";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import type {
@@ -570,6 +571,7 @@ export default function EventInsightsScreen() {
       {eventId ? <PromoterCommissionSection eventId={eventId} /> : null}
 
       {eventId ? <EventTicketPlansSection eventId={eventId} /> : null}
+      {eventId ? <EventTicketTransfersSection eventId={eventId} /> : null}
 
       <View className="flex-row flex-wrap gap-2">
         {PERIODS.map((p) => (

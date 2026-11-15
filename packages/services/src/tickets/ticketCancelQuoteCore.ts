@@ -93,6 +93,18 @@ export async function ticketCancelQuoteCore(
     logger.error(`Failed reading payment for a quote: ${paymentError.message}`);
     return { status: 500, message: tr("somethingWentWrong") };
   }
+  if (!payment) {
+    // Someone else paid: the ticket was sent to the caller, and its refund
+    // belongs to whoever paid (cancelUserTicketCore refuses the same way).
+    const { data: elsewhere } = await getSupabaseServiceClient()
+      .from("transaction")
+      .select("id")
+      .eq("id", ticket.transaction_id)
+      .maybeSingle();
+    if (elsewhere) {
+      return { status: 409, message: tr("ticketTransferCancelSendBack") };
+    }
+  }
   if (
     !payment ||
     Number(payment.amount ?? 0) + Number(payment.credit_amount ?? 0) <= 0
@@ -104,7 +116,7 @@ export async function ticketCancelQuoteCore(
   const tickets = await ticketsOfPayment(supabase, payment.id);
   if (!tickets) return { status: 500, message: tr("somethingWentWrong") };
   const others = tickets.filter(
-    (t) => t.id !== ticket.id && t.status === "active",
+    (t) => t.id !== ticket.id && t.status === "active" && t.holderId === userId,
   );
 
   if (refundsTicketByTicket(payment)) {
@@ -135,6 +147,9 @@ export async function ticketCancelQuoteCore(
     return { status: 200, data: quote };
   }
 
+  if (tickets.some((t) => t.holderId !== userId && t.status !== "cancelled")) {
+    return { status: 409, message: tr("ticketTransferPaidTogetherSent") };
+  }
   quote.otherTicketIds = others.map((t) => t.id);
   quote.otherEvents = others.some((t) => t.eventId !== eventId);
   quote.checkedIn = tickets.some((t) => t.status === "used");

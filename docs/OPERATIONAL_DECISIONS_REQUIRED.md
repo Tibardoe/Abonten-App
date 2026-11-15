@@ -189,6 +189,58 @@ Built 2026-10-25, switched **off**. Buyers lock an event's price, hold the ticke
 | T7 | Whether Abonten Credit can pay part of a plan | Not built | Plans are cash only (MoMo, card). Credit is shown beside plans on the Balance page, never added to them. | Not in version 1: a refund would have to split each part between credit and cash. Revisit once Rewards are on for everyone. | Open |
 | T8 | A cap on the seats plans may hold on one event | Not built | No cap beyond `max_tickets_per_plan` per plan; the organizer sees how many tickets plans hold and can switch new plans off. | No cap for the pilot; consider a share of capacity (for example half) if an event fills with plans that lapse. | Open |
 
+## Tickets, entry and teams
+
+The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-entry-and-teams.md). The founder approved every decision below on 2026-11-15. Part 1 (sending tickets) is built and switched off: [architecture/ticket-transfers.md](architecture/ticket-transfers.md), handbook [admin/ticket-transfers.md](admin/ticket-transfers.md). Legal items N1–N9.
+
+| # | Part | Decision | What it affects | Approved | Status |
+|---|---|---|---|---|---|
+| X1 | 1 | Can tickets be sent to friends by default? | `event_ticket_transfer_setting` (absent = on) | Yes for every event; the organizer can switch it off | **Decided (2026-11-15, the founder approved the plan).** |
+| X2 | 1 | How many times one ticket can be passed on | `max_moves` | 3 | **Decided (2026-11-15, the founder approved the plan).** |
+| X3 | 1 | How long a sent ticket waits to be accepted | `accept_hours`, job `ticket-transfers-expire` | 48 hours, then it returns to the sender | **Decided (2026-11-15, the founder approved the plan).** |
+| X4 | 6 | Private resale between people | Not built | Allowed through sending; Abonten moves no money between private people; resale through Abonten is X26 and X28 | **Decided (2026-11-15, the founder approved the plan).** |
+| X5 | 2 | Which team roles need an ID check | Not built | Owner and Finance only | **Decided (2026-11-15, the founder approved the plan).** |
+| X6 | 2 | Hold on the first payout to a new payout account | Not built | 48 hours, with every Owner told | **Decided (2026-11-15, the founder approved the plan).** |
+| X7 | 2 | What customers see when a team member replies | Not built | The team's name only | **Decided (2026-11-15, the founder approved the plan).** |
+| X8 | 2 | Followers when an account becomes a team | Not built | All move to the team | **Decided (2026-11-15, the founder approved the plan).** |
+| X9 | 3 | Gate staff without Abonten accounts | Not built | Allowed through a station setup QR that ends with the event; such stations only scan | **Decided (2026-11-15, the founder approved the plan).** |
+| X10 | 3 | What a station downloads for offline scanning | Not built | Code, status and ticket type; no names or photos | **Decided (2026-11-15, the founder approved the plan).** |
+| X11 | 4 | Wristband codes | Not built | Abonten makes the print file; pre-printed bands also accepted | **Decided (2026-11-15, the founder approved the plan).** |
+| X12 | 4 | Re-entry for phone tickets | Not built | Off unless the organizer switches it on | **Decided (2026-11-15, the founder approved the plan).** |
+| X13 | 4 | Warning for a band scanned twice with no exit lanes | Not built | Within 10 minutes | **Decided (2026-11-15, the founder approved the plan).** |
+| X14 | 3, 4 | Must the holder confirm a typed code | Not built (`normalizeTypedTicketCode` ready) | Yes: a text to the account's phone or approval in the app, else photo and ID at the help desk | **Decided (2026-11-15, the founder approved the plan).** |
+| X15 | 1 | New ticket code format | `@abonten/core/ticketTransfers/ticketCode`, every new ticket | 12 characters, no look-alike characters, a check character; old tickets keep theirs | **Decided (2026-11-15, the founder approved the plan).** |
+| X16 | 1 | Hide the code under the QR until tapped | Website `TicketCodeReveal`, app `TicketCodeRow` | Yes | **Decided (2026-11-15, the founder approved the plan).** |
+| X17 | 4 | Who may void a band after a dispute | Not built | A Lead, an Owner or a Manager | **Decided (2026-11-15, the founder approved the plan).** |
+| X18 | 5 | Price of entry tools for tickets sold elsewhere | Not built | Free for now | **Decided (2026-11-15, the founder approved the plan).** |
+| X19 | 5 | How long imported lists are kept | Not built | Deleted 30 days after the event | **Decided (2026-11-15, the founder approved the plan).** |
+| X20 | 5 | Names on imported lists | Not built | Optional; asked for when the codes can be guessed | **Decided (2026-11-15, the founder approved the plan).** |
+| X21 | 6 | Limit per person | Not built | Off by default; the organizer sets it per event, for example 4 for a popular event | **Decided (2026-11-15, the founder approved the plan).** |
+| X22 | 6 | Count the limit by wallet or card as well as by account | Not built | Yes | **Decided (2026-11-15, the founder approved the plan).** |
+| X23 | 6 | Hold the QR until 24 hours before high-demand events | Not built | Yes, when the organizer marks the event; the email then carries no QR | **Decided (2026-11-15, the founder approved the plan).** |
+| X24 | 4 | Keep every ticket on the holder's phone from 24 hours before its event | Not built (tickets are never stored on the phone today) | Yes, protected, removed after the event or on sign-out | **Decided (2026-11-15, the founder approved the plan).** |
+| X25 | 6 | After a ticket is sent, only the holder may cancel it | Built: only the holder holds it; a received paid ticket is sent back, not refunded by its holder | Yes | **Decided (2026-11-15, the founder approved the plan).** |
+| X26 | 6 | Sell back at face value through Abonten | Not built | Yes, after counsel and live Paystack keys | **Decided (2026-11-15, the founder approved the plan).** |
+| X27 | 1 | A sent ticket waits for the receiver to accept, and is final once accepted | `ticket_transfer_accept` | Yes | **Decided (2026-11-15, the founder approved the plan).** |
+| X28 | 6 | Sell to a person at face value through Abonten | Not built | Yes, built with X26 | **Decided (2026-11-15, the founder approved the plan).** |
+| X29 | 6 | Confirmed scam reports remove an account's right to send tickets | Not built | Yes | **Decided (2026-11-15, the founder approved the plan).** |
+| X30 | 7 | Pay promoters' commission in cash | Not built (commission is credit today) | Yes, from a promoter balance paid after the event settles; credit stays as a choice | **Decided (2026-11-15, the founder approved the plan).** |
+| X31 | 7 | ID check for promoters | Not built | Required before a promoter's first cash payout | **Decided (2026-11-15, the founder approved the plan).** |
+| X32 | 7 | Minimum age for cash commission | Not built | 18; credit only below that | **Decided (2026-11-15, the founder approved the plan).** |
+| X33 | 7 | Who can promote an event by default | Anyone today | Anyone, at the event's rate; the organizer can switch to invited promoters only | **Decided (2026-11-15, the founder approved the plan).** |
+| X34 | 7 | Promoter codes typed at checkout | Not built | Yes; a typed code beats an earlier link | **Decided (2026-11-15, the founder approved the plan).** |
+| X35 | 7 | "Send a buy link" by text | Not built | Yes; at most 20 a day per promoter, one per number per event | **Decided (2026-11-15, the founder approved the plan).** |
+| X36 | 7 | Team members earning on their own team's events | Not built | Only if an Owner adds them as a promoter | **Decided (2026-11-15, the founder approved the plan).** |
+| X37 | 7 | A chargeback after the promoter was paid in cash | Not built | Recovered from their next earnings | **Decided (2026-11-15, the founder approved the plan).** |
+| X38 | 1 | Does a free ticket you sent still count as yours | `ticket.issued_to`, `issue_free_ticket`, index `ticket_one_free_registration_per_issuee` | Yes, so nobody sends theirs and registers again | **Decided (2026-11-15, the founder approved the plan).** |
+| X39 | 4 | Tables and groups | Not built | A ticket type can issue several tickets per purchase; no ticket admits more than one person | **Decided (2026-11-15, the founder approved the plan).** |
+| X40 | 4 | Venue capacity at the gate | Not built | Optional per event; warn at 90%, stop new entries at 100% | **Decided (2026-11-15, the founder approved the plan).** |
+| X41 | 3 | Leads | Not built | At least one per event; only Leads approve typed codes, void bands and settle disputes | **Decided (2026-11-15, the founder approved the plan).** |
+| X42 | 2 | A team with the business badge changes its name | Not built | It goes back to review | **Decided (2026-11-15, the founder approved the plan).** |
+| X43 | All | How each part is switched on | Part 1: `ticket_transfer_program_setting`, `TICKET_TRANSFERS_KILL_SWITCH` | Off at first, then staff, then everyone, each with its own kill switch | **Decided (2026-11-15, the founder approved the plan).** |
+| X44 | All | Who pays for texts | Part 1: `texts_per_sender_per_day` (20) | Abonten, within daily caps; review the cost after the first month | **Decided (2026-11-15, the founder approved the plan).** |
+| X45 | All | How long scan history is kept | Not built | In full for 180 days after the event, then totals only | **Decided (2026-11-15, the founder approved the plan).** |
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |

@@ -128,6 +128,10 @@ function targetFromData(
       return data.planId
         ? `/(app)/ticket-plans/${data.planId}`
         : "/(app)/balance";
+    case "ticket_transfer":
+      // A ticket sent to or by the reader: My Tickets shows the offers
+      // waiting for them at the top, and the sender's ticket in the list.
+      return "/(app)/tickets";
     case "safety":
       // A trusted contact opens the alert they were told about (their own
       // link); the person opens their Safety screen.

@@ -132,8 +132,26 @@ export async function cancelUserTicketCore(
         provider: string;
       }>();
 
-    if (transactionError || !transaction) {
-      logger.error(`Failed fetching transaction: ${transactionError?.message}`);
+    if (transactionError) {
+      logger.error(`Failed fetching transaction: ${transactionError.message}`);
+      return { status: 500, message: tr("somethingWentWrong") };
+    }
+    if (!transaction) {
+      // Someone else paid: the ticket was sent to the caller. Its refund
+      // belongs to whoever paid, so the holder sends it back instead.
+      const { data: elsewhere } = await getSupabaseServiceClient()
+        .from("transaction")
+        .select("id")
+        .eq("id", ticket.transaction_id)
+        .maybeSingle();
+      if (elsewhere) {
+        return {
+          status: 409,
+          message: tr("ticketTransferCancelSendBack"),
+          ...about,
+        };
+      }
+      logger.error(`Transaction ${ticket.transaction_id} not found`);
       return { status: 500, message: tr("somethingWentWrong") };
     }
     if (
@@ -165,6 +183,18 @@ export async function cancelUserTicketCore(
   if (paymentId) {
     const tickets = await ticketsOfPayment(supabase, paymentId);
     if (!tickets) return { status: 500, message: tr("somethingWentWrong") };
+    // A payment refunded only as a whole cannot be while one of its tickets
+    // is with someone the buyer sent it to.
+    if (
+      wholePaymentOnly &&
+      tickets.some((t) => t.holderId !== userId && t.status !== "cancelled")
+    ) {
+      return {
+        status: 409,
+        message: tr("ticketTransferPaidTogetherSent"),
+        ...about,
+      };
+    }
     if (wholePaymentOnly && tickets.some((t) => t.status === "used")) {
       return {
         status: 409,
@@ -173,7 +203,8 @@ export async function cancelUserTicketCore(
       };
     }
     const others = tickets.filter(
-      (t) => t.id !== ticketId && t.status === "active",
+      (t) =>
+        t.id !== ticketId && t.status === "active" && t.holderId === userId,
     );
     if (wholePaymentOnly && others.length > 0 && options.scope !== "payment") {
       return {
@@ -342,13 +373,16 @@ export async function releaseCancelledTickets(
 // checkout line and, for a multi-event checkout, every event it covers) is
 // now cancelled — the gate for actually requesting a refund.
 async function areAllTicketsForTransactionCancelled(
-  supabase: SupabaseClient<Database>,
+  _supabase: SupabaseClient<Database>,
   transactionId: string,
 ) {
-  const { data: siblingTickets, error: siblingTicketsError } = await supabase
-    .from("ticket")
-    .select("status")
-    .eq("transaction_id", transactionId);
+  // Service role: a ticket of this payment sent to a friend is not visible
+  // to the buyer's client, and must still count as live here.
+  const { data: siblingTickets, error: siblingTicketsError } =
+    await getSupabaseServiceClient()
+      .from("ticket")
+      .select("status")
+      .eq("transaction_id", transactionId);
 
   if (siblingTicketsError) {
     logger.error(
@@ -370,10 +404,13 @@ export async function markCheckoutCancelledIfAllTicketsCancelled(
   supabase: SupabaseClient<Database>,
   ticketCheckoutId: string,
 ) {
-  const { data: siblingTickets, error: siblingTicketsError } = await supabase
-    .from("ticket")
-    .select("status")
-    .eq("ticket_checkout_id", ticketCheckoutId);
+  // Service role, for the same reason as above: one checkout line's tickets
+  // can be held by different people once some were sent on.
+  const { data: siblingTickets, error: siblingTicketsError } =
+    await getSupabaseServiceClient()
+      .from("ticket")
+      .select("status")
+      .eq("ticket_checkout_id", ticketCheckoutId);
 
   if (siblingTicketsError) {
     logger.error(

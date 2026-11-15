@@ -5,6 +5,7 @@ import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSect
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
 import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotionSection";
 import PaySmallSmallCard from "@/ticketPlans/molecules/PaySmallSmallCard";
+import TicketTransferOrganizerCard from "@/ticketTransfers/molecules/TicketTransferOrganizerCard";
 import type { EventStatus } from "@abonten/core/eventStatus";
 import type { ManagedEvent } from "@abonten/types/managedEventType";
 import { useTranslations } from "next-intl";
@@ -110,6 +111,7 @@ export default function ManageEventView({
             />
             <PromoterCommissionCard eventId={event.id} />
             <PaySmallSmallCard eventId={event.id} />
+            <TicketTransferOrganizerCard eventId={event.id} />
           </>
         )}
 

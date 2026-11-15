@@ -7,6 +7,7 @@ import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
 import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import TicketSendControl from "@/ticketTransfers/molecules/TicketSendControl";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
@@ -117,10 +118,10 @@ function TicketCard({
             and status above, per progressive-disclosure: the event and its
             status are what a user scans for first. */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span>
-            {ticketTypeLabel(tc, event.ticket_type.type)} ·{" "}
-            <span className="font-mono">{event.ticket_code}</span>
-          </span>
+          {/* The code itself stays on the ticket screen, behind "Show
+              code" (decision X16): a photo of this list gives nothing
+              away. */}
+          <span>{ticketTypeLabel(tc, event.ticket_type.type)}</span>
         </div>
 
         {refundBadge && (
@@ -172,6 +173,14 @@ function TicketCard({
               />
             )}
         </div>
+
+        <TicketSendControl
+          ticketId={event.id}
+          eventTitle={event.event.title}
+          live={
+            event.status === "active" && !cancelledByOrganizer && !eventEnded
+          }
+        />
       </div>
     </div>
   );

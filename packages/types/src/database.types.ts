@@ -4089,6 +4089,49 @@ export type Database = {
           },
         ]
       }
+      event_ticket_transfer_setting: {
+        Row: {
+          enabled: boolean
+          event_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          event_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          event_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_ticket_transfer_setting_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_transfer_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_transfer_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       exchange_rate: {
         Row: {
           base: string
@@ -12685,6 +12728,7 @@ export type Database = {
           expires_at: string
           id: string
           issued_at: string
+          issued_to: string
           metadata: Json | null
           occurrence_id: string | null
           qr_public_id: string
@@ -12695,6 +12739,7 @@ export type Database = {
           ticket_code: string | null
           ticket_type_id: string
           transaction_id: string | null
+          transfer_count: number
           updated_at: string | null
           used_at: string | null
           user_id: string
@@ -12704,6 +12749,9 @@ export type Database = {
           expires_at: string
           id?: string
           issued_at?: string
+          // Filled by the ticket_set_issued_to trigger when left out (kept
+          // optional by hand, 2026-11-15).
+          issued_to?: string
           metadata?: Json | null
           occurrence_id?: string | null
           qr_public_id: string
@@ -12714,6 +12762,7 @@ export type Database = {
           ticket_code?: string | null
           ticket_type_id: string
           transaction_id?: string | null
+          transfer_count?: number
           updated_at?: string | null
           used_at?: string | null
           user_id: string
@@ -12723,6 +12772,7 @@ export type Database = {
           expires_at?: string
           id?: string
           issued_at?: string
+          issued_to?: string
           metadata?: Json | null
           occurrence_id?: string | null
           qr_public_id?: string
@@ -12733,11 +12783,26 @@ export type Database = {
           ticket_code?: string | null
           ticket_type_id?: string
           transaction_id?: string | null
+          transfer_count?: number
           updated_at?: string | null
           used_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ticket_issued_to_fkey"
+            columns: ["issued_to"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_issued_to_fkey"
+            columns: ["issued_to"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "ticket_occurrence_id_fkey"
             columns: ["occurrence_id"]
@@ -13223,6 +13288,151 @@ export type Database = {
           },
           {
             foreignKeyName: "ticket_plan_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ticket_transfer: {
+        Row: {
+          cancel_reason: string | null
+          created_at: string
+          decided_at: string | null
+          event_id: string
+          expires_at: string
+          from_code: string
+          from_user_id: string
+          id: string
+          status: string
+          text_sent_at: string | null
+          ticket_id: string
+          to_code: string | null
+          to_phone: string | null
+          to_user_id: string | null
+        }
+        Insert: {
+          cancel_reason?: string | null
+          created_at?: string
+          decided_at?: string | null
+          event_id: string
+          expires_at: string
+          from_code: string
+          from_user_id: string
+          id?: string
+          status?: string
+          text_sent_at?: string | null
+          ticket_id: string
+          to_code?: string | null
+          to_phone?: string | null
+          to_user_id?: string | null
+        }
+        Update: {
+          cancel_reason?: string | null
+          created_at?: string
+          decided_at?: string | null
+          event_id?: string
+          expires_at?: string
+          from_code?: string
+          from_user_id?: string
+          id?: string
+          status?: string
+          text_sent_at?: string | null
+          ticket_id?: string
+          to_code?: string | null
+          to_phone?: string | null
+          to_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_transfer_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_transfer_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_transfer_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ticket_transfer_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_transfer_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_transfer_to_user_id_fkey"
+            columns: ["to_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      ticket_transfer_program_setting: {
+        Row: {
+          accept_hours: number
+          audience: string
+          beta_user_ids: string[]
+          enabled: boolean
+          id: number
+          max_moves: number
+          texts_per_sender_per_day: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          accept_hours?: number
+          audience?: string
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          max_moves?: number
+          texts_per_sender_per_day?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          accept_hours?: number
+          audience?: string
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          max_moves?: number
+          texts_per_sender_per_day?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_transfer_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_transfer_program_setting_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "user_profile_details"
@@ -15029,6 +15239,26 @@ export type Database = {
       }
       _ticket_plan_refund_rollup: {
         Args: { p_plan_id: string }
+        Returns: string
+      }
+      _ticket_transfer_check_free: {
+        Args: {
+          p_receiver: string
+          p_ticket: Database["public"]["Tables"]["ticket"]["Row"]
+        }
+        Returns: undefined
+      }
+      _ticket_transfer_check_ticket: {
+        Args: {
+          p_event_status: string
+          p_max_moves: number
+          p_ticket: Database["public"]["Tables"]["ticket"]["Row"]
+        }
+        Returns: undefined
+      }
+      _ticket_transfer_fail: { Args: { p_code: string }; Returns: undefined }
+      _ticket_transfer_verified_phone: {
+        Args: { p_user_id: string }
         Returns: string
       }
       _user_timezone: { Args: { p_user_id: string }; Returns: string }
@@ -18106,6 +18336,56 @@ export type Database = {
         Returns: Json
       }
       ticket_plan_work_due: { Args: never; Returns: boolean }
+      ticket_transfer_accept: {
+        Args: {
+          p_new_code: string
+          p_qr_public_id: string
+          p_qr_version: string
+          p_transfer_id: string
+          p_user_id: string
+        }
+        Returns: {
+          event_id: string
+          from_user_id: string
+          old_qr_public_id: string
+          ticket_id: string
+        }[]
+      }
+      ticket_transfer_cancel: {
+        Args: { p_transfer_id: string; p_user_id: string }
+        Returns: {
+          event_id: string
+          to_user_id: string | null
+        }[]
+      }
+      ticket_transfer_decline: {
+        Args: { p_transfer_id: string; p_user_id: string }
+        Returns: {
+          event_id: string
+          from_user_id: string
+        }[]
+      }
+      ticket_transfer_expire_due: { Args: never; Returns: number }
+      ticket_transfer_send: {
+        // One of p_to_user_id / p_to_phone is null; the generator drops the
+        // `| null` (kept by hand, 2026-11-15).
+        Args: {
+          p_from_user_id: string
+          p_ticket_id: string
+          p_to_phone: string | null
+          p_to_user_id: string | null
+        }
+        Returns: {
+          event_id: string
+          expires_at: string
+          resolved_to_user_id: string | null
+          transfer_id: string
+        }[]
+      }
+      ticket_transfer_user_by_phone: {
+        Args: { p_phone: string }
+        Returns: string | null
+      }
       toggle_message_reaction: {
         Args: { p_emoji: string; p_message_id: string }
         Returns: {

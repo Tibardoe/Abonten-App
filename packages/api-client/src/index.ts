@@ -215,6 +215,17 @@ export type {
   StartIdentityVerificationResponse,
 } from "./types";
 export type {
+  AcceptTicketTransferResult,
+  EventTicketTransferSettingResult,
+  SendTicketBody,
+  SendTicketResult,
+  TicketTransferAnswerResult,
+  TicketTransferRecipientResult,
+  TicketTransferStateResult,
+  TicketTransfersOverview,
+  TicketTransfersResult,
+} from "./types";
+export type {
   BalanceOverviewResult,
   EventTicketPlanSettingResult,
   PayTicketPlanPartBody,

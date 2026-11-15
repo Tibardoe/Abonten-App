@@ -187,6 +187,12 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   ticket_plan_ended_by_staff: n("ticket_plan_ended_by_staff"),
   ticket_plan_refunded: n("ticket_plan_refunded"),
   ticket_plan_refund_problem: n("ticket_plan_refund_problem"),
+  // Send a ticket to a friend (services + the expiry job)
+  ticket_transfer_received: n("ticket_transfer_received"),
+  ticket_transfer_accepted: n("ticket_transfer_accepted"),
+  ticket_transfer_declined: n("ticket_transfer_declined"),
+  ticket_transfer_cancelled: n("ticket_transfer_cancelled"),
+  ticket_transfer_expired: n("ticket_transfer_expired"),
   // SQL: rewards
   welcome_credit: n("welcome_credit"),
   referral_qualified: n("referral_qualified"),

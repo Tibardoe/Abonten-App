@@ -4,6 +4,7 @@ import getMyEventsTabCounts from "@/actions/getMyEventsTabCounts";
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
 import getUserTicketRefunds from "@/actions/getUserTicketRefunds";
 import { PageTitle } from "@/components/ui/typography";
+import TicketOffersPanel from "@/ticketTransfers/molecules/TicketOffersPanel";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import type { Metadata } from "next";
@@ -96,6 +97,8 @@ export default async function page({
   return (
     <div className="space-y-5">
       <PageTitle>{t("myTickets")}</PageTitle>
+
+      <TicketOffersPanel />
 
       <MyEventsTabs
         initialTab={initialTab}

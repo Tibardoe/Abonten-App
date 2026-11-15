@@ -159,6 +159,22 @@ Buyers pay for an event's tickets in parts before the event; Abonten collects ea
 | M4 | Refunds when a plan ends | `ticket_plan_release`, refunds per part (`requestPlannedPlanRefunds`) | Confirm that refunding through each original payment method, keeping the service-fee share (T2), with no promised timing, meets consumer-protection rules (with E2), including when the event is cancelled. | Open |
 | M5 | A general top-up balance (not built) | Nothing in the product | Recorded so it is not built by accident: a balance people top up and spend with many organizers is electronic money under the Payment Systems and Services Act, 2019 (Act 987), needing a Bank of Ghana licence or a licensed partner, and brings dormant balances and refund-to-another-instrument risks. Counsel to advise only if the business wants to revisit it. | Open — not built (2026-10-25) |
 
+## N — Tickets, entry and teams
+
+The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-entry-and-teams.md), approved by the founder on 2026-11-15 (decisions X1–X45). Part 1, sending tickets, is built and switched off: [architecture/ticket-transfers.md](architecture/ticket-transfers.md).
+
+| # | Item | Where | Question for counsel | Status |
+|---|---|---|---|---|
+| N1 | Terms for sending tickets | `ticket_transfer`; the ticket screens; Terms of Sale | Approve and add to the Terms of Sale. Draft for counsel: "**Sending a ticket.** Where the organizer allows it, you may send an unused ticket to another person's Abonten account. It moves when they accept it and gets a new code, and your copy stops working. A refund for a sent ticket goes to whoever paid for it, and only the person holding the ticket can cancel it. Abonten takes no part in, and cannot refund, any payment between people for a ticket." | Open — draft wording above |
+| N2 | Reselling tickets | Part 6 of the plan | Whether Ghana law says anything about selling tickets above face value; Terms that ban reselling as a business; cancelling and refunding resellers' orders; how the money moves in resale at face value. | Open |
+| N3 | Promoters | Part 7 of the plan | Promoter terms (an independent seller, not staff); whether Abonten must withhold tax on commissions or give earnings statements; paying individuals in cash; texting a buyer's number on a promoter's say-so. | Open |
+| N4 | Team terms | Part 2 of the plan | Who is responsible, the team's business or its members, and how Owners accept for the team. | Open |
+| N5 | ID checks for team members and promoters | Parts 2 and 7; extends K1 and K5 | Consent and requiring a check for Owners, Finance members and promoters paid in cash. | Open |
+| N6 | Entry tools | Parts 3 and 4 | The organizer decides who gets in and Abonten supplies the tools; Abonten is not responsible for crowd safety, and the capacity warning must never read as a safety promise. | Open |
+| N7 | Privacy of sending tickets and of entry | `ticket_transfer.to_phone`, the invitation text; Parts 3–6 | Texting a number a sender typed (Part 1, built): the text names the sender and the event and links to Abonten; the number is kept with the offer. Later parts: the account photo and name shown at the tent, ID cards checked in disputes, the in-and-out history kept 180 days, code lists on staff devices, wallet or card numbers used to spot resellers. | Open — Part 1 is built switched off |
+| N8 | Imported lists | Part 5 | The organizer answers for the data; Abonten uses it only for entry, never for marketing, and deletes it 30 days after the event. | Open |
+| N9 | Badge wording for teams | Part 2; extends H3 and K3 | "Verified business" and "ID checked" for a team. | Open |
+
 ## Specifications waiting on this register
 
 | Specification | Blocking legal items |
