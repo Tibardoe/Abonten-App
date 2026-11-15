@@ -18,6 +18,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-11-15 — Send a ticket to a friend
 
+- QA fixes: the organizer's switch also closes the offers still waiting and is checked on accept (migration `20261115140000_ticket_transfer_organizer_off`, notices `ticket_transfer_stopped_sender` / `_receiver`), the sender sees when the invite text to a number did not go, and the send control says why a ticket can't be sent (organizer, moves, restricted) before asking who to send it to: `architecture/ticket-transfers.md` 1.1, `admin/ticket-transfers.md` 1.1.
 - New: `architecture/ticket-transfers.md` 1.0, `admin/ticket-transfers.md` 1.0, `specifications/tickets-entry-and-teams.md` 1.0 (the approved plan, Parts 1–7). Registers: decisions X1–X45 (Decided 2026-11-15), legal N1–N9 (Open). Permissions `transfers.view` / `transfers.configure` (`architecture/roles-and-permissions.md`, `admin/settings-and-rbac.md`); job `ticket-transfers-expire` (`operations/scheduled-jobs.md`); env var `TICKET_TRANSFERS_KILL_SWITCH` (`security/secrets-and-environment.md`, `deployment/rollback-and-recovery.md`); `privacy/data-inventory.md` (ticket offers); `architecture/feature-inventory.md`; help `customers/sending-tickets` (five languages, not listed while the programme is off); PROJECT.md §74, CLAUDE.md quick facts.
 
 ## 2026-11-09 — Staying signed in

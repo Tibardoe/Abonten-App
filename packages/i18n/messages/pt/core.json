@@ -952,6 +952,14 @@
     "ticket_transfer_expired": {
       "title": "O seu bilhete para {title} continua a ser seu",
       "body": "Ninguém o aceitou a tempo, por isso ficou nos seus bilhetes."
+    },
+    "ticket_transfer_stopped_sender": {
+      "title": "O seu bilhete para {title} continua a ser seu",
+      "body": "O organizador desativou o envio de bilhetes para este evento, por isso a sua oferta foi fechada."
+    },
+    "ticket_transfer_stopped_receiver": {
+      "title": "O bilhete de {actor} já não pode ser enviado",
+      "body": "O organizador de {title} desativou o envio de bilhetes, por isso a oferta foi fechada."
     }
   },
   "openStatus": {

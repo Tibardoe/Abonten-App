@@ -18382,6 +18382,12 @@ export type Database = {
           transfer_id: string
         }[]
       }
+      ticket_transfer_set_event_setting: {
+        Args: { p_enabled: boolean; p_event_id: string; p_user_id: string }
+        Returns: {
+          transfer_id: string
+        }[]
+      }
       ticket_transfer_user_by_phone: {
         Args: { p_phone: string }
         Returns: string | null

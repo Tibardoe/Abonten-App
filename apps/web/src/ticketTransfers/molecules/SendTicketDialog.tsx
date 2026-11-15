@@ -1,6 +1,7 @@
 "use client";
 
 import { findTicketTransferRecipient } from "@/actions/ticketTransfers/findTicketTransferRecipient";
+import { getTicketTransferState } from "@/actions/ticketTransfers/getTicketTransferState";
 import { sendTicket } from "@/actions/ticketTransfers/sendTicket";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,15 +16,21 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { personName } from "@abonten/core/personName";
+import { ticketSendBlockMessageKey } from "@abonten/core/ticketTransfers/sendBlock";
 import type {
   SendTicketTarget,
   TicketTransferRecipient,
 } from "@abonten/types/ticketTransferType";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useRefreshAfterTransfer } from "../useTicketTransfers";
+import {
+  TICKET_TRANSFERS_KEY,
+  useRefreshAfterTransfer,
+} from "../useTicketTransfers";
 
 type Mode = "username" | "phone";
 
@@ -56,6 +63,19 @@ export default function SendTicketDialog({
   );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // The organizer may have switched sending off, or the ticket may have
+  // moved the most times allowed: say so before asking who to send it to.
+  const { data: state } = useQuery({
+    queryKey: [...TICKET_TRANSFERS_KEY, "state", ticketId],
+    enabled: open,
+    queryFn: async () => {
+      const res = answerOrThrow(await getTicketTransferState({ ticketId }));
+      return res.status === 200 && "data" in res && res.data ? res.data : null;
+    },
+    staleTime: 15_000,
+  });
+  const blockKey = ticketSendBlockMessageKey(state?.block ?? null);
 
   useEffect(() => {
     if (open) {
@@ -122,7 +142,9 @@ export default function SendTicketDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {recipient ? (
+        {blockKey ? (
+          <p className="rounded-lg bg-muted p-3 text-sm">{t(blockKey)}</p>
+        ) : recipient ? (
           <div className="space-y-3">
             {recipient.kind === "account" ? (
               <div className="flex items-center gap-3 rounded-lg border border-border p-3">
@@ -212,7 +234,7 @@ export default function SendTicketDialog({
         ) : null}
 
         <DialogFooter className="gap-2">
-          {recipient ? (
+          {blockKey ? null : recipient ? (
             <>
               <Button
                 variant="outline"

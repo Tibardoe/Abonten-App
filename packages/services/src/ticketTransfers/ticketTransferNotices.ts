@@ -127,6 +127,24 @@ export async function noticeTransferCancelled(transferId: string) {
 }
 
 /**
+ * To both sides: the organizer turned sending off for the event, so the
+ * offer was closed and the ticket stayed with the sender.
+ */
+export async function noticeTransferStoppedByOrganizer(transferId: string) {
+  const ctx = await loadContext(transferId);
+  if (!ctx) return;
+  await send(ctx, ctx.fromUserId, "ticket_transfer_stopped_sender", ctx.toName);
+  if (ctx.toUserId) {
+    await send(
+      ctx,
+      ctx.toUserId,
+      "ticket_transfer_stopped_receiver",
+      ctx.fromName,
+    );
+  }
+}
+
+/**
  * A text to a number with no account yet, in its market's language. The
  * link opens the website's tickets page, where the offer waits for an
  * account whose verified number is this one. Returns whether the text was

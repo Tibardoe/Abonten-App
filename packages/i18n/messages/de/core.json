@@ -952,6 +952,14 @@
     "ticket_transfer_expired": {
       "title": "Dein Ticket für {title} gehört weiterhin dir",
       "body": "Niemand hat es rechtzeitig angenommen, deshalb ist es in deinen Tickets geblieben."
+    },
+    "ticket_transfer_stopped_sender": {
+      "title": "Dein Ticket für {title} gehört weiterhin dir",
+      "body": "Der Veranstalter hat das Verschicken von Tickets für dieses Event ausgeschaltet, deshalb wurde dein Angebot geschlossen."
+    },
+    "ticket_transfer_stopped_receiver": {
+      "title": "Das Ticket von {actor} kann nicht mehr verschickt werden",
+      "body": "Der Veranstalter von {title} hat das Verschicken von Tickets ausgeschaltet, deshalb wurde das Angebot geschlossen."
     }
   },
   "openStatus": {

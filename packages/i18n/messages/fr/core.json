@@ -952,6 +952,14 @@
     "ticket_transfer_expired": {
       "title": "Votre billet pour {title} est toujours à vous",
       "body": "Personne ne l'a accepté à temps, il est donc resté dans vos billets."
+    },
+    "ticket_transfer_stopped_sender": {
+      "title": "Votre billet pour {title} est toujours à vous",
+      "body": "L'organisateur a désactivé l'envoi de billets pour cet événement, votre offre a donc été fermée."
+    },
+    "ticket_transfer_stopped_receiver": {
+      "title": "Le billet de {actor} ne peut plus être envoyé",
+      "body": "L'organisateur de {title} a désactivé l'envoi de billets, l'offre a donc été fermée."
     }
   },
   "openStatus": {

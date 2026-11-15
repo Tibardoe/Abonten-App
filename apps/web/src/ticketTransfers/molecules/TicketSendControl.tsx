@@ -66,6 +66,11 @@ export default function TicketSendControl({
             date: formatDateTime(pending.expiresAt, locale),
           })}
         </p>
+        {pending.toPhoneTexted === false && (
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            {t("notTextedHint")}
+          </p>
+        )}
         <Button size="sm" variant="outline" disabled={busy} onClick={takeBack}>
           {t("takeBack")}
         </Button>

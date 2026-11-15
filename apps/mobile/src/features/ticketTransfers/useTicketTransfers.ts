@@ -29,6 +29,18 @@ export function useTicketTransfers() {
   });
 }
 
+/** Whether one ticket can be sent now, and why not (organizer, moves). */
+export function useTicketTransferState(ticketId: string, enabled: boolean) {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: [...TICKET_TRANSFERS_KEY, "state", userId, ticketId],
+    enabled: !!userId && enabled,
+    queryFn: async () =>
+      settleEnvelope(await api.ticketTransfers.state(ticketId)),
+    staleTime: 15_000,
+  });
+}
+
 /** After any move: the offers and every ticket list changed. */
 export function useInvalidateAfterTransfer() {
   const qc = useQueryClient();

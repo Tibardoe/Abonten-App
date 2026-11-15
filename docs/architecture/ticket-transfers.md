@@ -4,7 +4,7 @@ purpose: How a holder offers an unused ticket to another account or a phone numb
 audience: Engineering, operations, support and legal reviewers
 scope: The ticket_transfer* tables and functions, ticket.issued_to and ticket.transfer_count, the new ticket code format (@abonten/core/ticketTransfers/ticketCode), @abonten/services ticketTransfers and admin/ticketTransfers, the refund guards in tickets/cancelUserTicketCore, ticketCancelQuoteCore and cancelEventTicketsCore, the web actions in src/actions/ticketTransfers, /api/mobile/ticket-transfers/**, the app's ticket and My Tickets screens, Admin › Ticket transfers and the ticket-transfers-expire job.
 status: Review required
-version: 1.0
+version: 1.1
 lastReviewed: 2026-11-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -29,12 +29,13 @@ Why: a buyer who bought for a group holds every QR on one phone, so a late frien
 3. **Decline** (receiver) or **take back** (sender, `ticket_transfer_cancel`): the ticket stays with the sender.
 4. **Expiry**: the `ticket-transfers-expire` job (pg_cron, every 10 minutes, `ticket_transfer_expire_due()`) ends offers past their deadline and writes the sender a registry notice (`ticket_transfer_expired`) with a push.
 5. **A check-in, cancellation or refund** of the ticket ends its open offer (trigger `ticket_transfer_on_ticket_change`, `cancel_reason = 'ticket_changed'`).
+6. **The organizer switches sending off** for the event (`ticket_transfer_set_event_setting`): the event's offers still waiting are closed in the same transaction (`cancel_reason = 'organizer_off'`) and the tickets stay with their holders.
 
-Notices (`@abonten/core/notifications/notices`, words in the recipient's language): `ticket_transfer_received` (receiver), `ticket_transfer_accepted`, `ticket_transfer_declined`, `ticket_transfer_expired` (sender), `ticket_transfer_cancelled` (receiver). `data.kind = 'ticket_transfer'`; the app opens My Tickets, the website `/manage/my-events`.
+Notices (`@abonten/core/notifications/notices`, words in the recipient's language): `ticket_transfer_received` (receiver), `ticket_transfer_accepted`, `ticket_transfer_declined`, `ticket_transfer_expired` (sender), `ticket_transfer_cancelled` (receiver), `ticket_transfer_stopped_sender` / `ticket_transfer_stopped_receiver` (both, when the organizer's switch closed the offer). `data.kind = 'ticket_transfer'`; the app opens My Tickets, the website `/manage/my-events`.
 
 ## 3. Rules the database keeps
 
-All in `supabase/migrations/20261115100000_ticket_transfers.sql`, under row locks (ticket, then offer); the services check them first only to choose the words.
+All in `supabase/migrations/20261115100000_ticket_transfers.sql` (and `20261115140000_ticket_transfer_organizer_off.sql`), under row locks (ticket, then offer); the services check them first only to choose the words.
 
 | Rule | Where |
 |---|---|
@@ -42,7 +43,7 @@ All in `supabase/migrations/20261115100000_ticket_transfers.sql`, under row lock
 | At most `max_moves` (3, X2) moves per ticket | `ticket.transfer_count` |
 | One open offer per ticket | unique index `ticket_transfer_one_open_per_ticket` |
 | Never to yourself, never to a restricted account, never to someone who has blocked you (account-wide `conversation_block`) | `ticket_transfer_send` |
-| The organizer's switch (X1, on unless turned off) | `event_ticket_transfer_setting` |
+| The organizer's switch (X1, on unless turned off), checked on every send and accept; turning it off closes the event's open offers | `event_ticket_transfer_setting`, `_ticket_transfer_check_ticket`, `ticket_transfer_set_event_setting` |
 | The receiver is the account named, or the account whose verified phone (`auth.users.phone_confirmed_at`) is the number named | `ticket_transfer_accept` / `_decline` |
 | A free registration counts against who it was first issued to as well as its holder (X38): nobody sends theirs and registers again, nobody holds two | `ticket.issued_to`, unique index `ticket_one_free_registration_per_issuee`, `issue_free_ticket`, `_ticket_transfer_check_free` |
 | The attendee row follows the ticket, carrying the holder's name instead of the buyer's contact details | `ticket_transfer_accept` |
@@ -67,7 +68,7 @@ The code under the QR is hidden until the holder taps **Show code** on the websi
 
 ## 6. Who sees what
 
-- **Sender:** a username shows the account's public name and photo; a phone number is only checked and masked (`+233 24* *** 4567`), never said to belong to anyone, so the lookup cannot be used to test numbers. The one exception: a number Abonten cannot text and that has no account is refused with "ask for their username", which says that much.
+- **Sender:** a username shows the account's public name and photo; a phone number is only checked and masked (`+233 ** *** 4567`), never said to belong to anyone, so the lookup cannot be used to test numbers. The one exception: a number Abonten cannot text and that has no account is refused with "ask for their username", which says that much. If the invite text to a number did not go (the provider refused it or did not answer), the offer stays open and the sender's ticket shows "We couldn't text this number" (`toPhoneTexted = false`, from `ticket_transfer.text_sent_at`), so they can tell the friend another way. Before asking who to send to, the send control reads the ticket's state (`getTicketTransferStateCore`: the web dialog through `getTicketTransferState`, the app's ticket screen through `GET /api/mobile/ticket-transfers/ticket/:id`) and, when the organizer switched sending off, the ticket has moved the most times allowed or the account is restricted, says so instead of offering a send that would be refused (`@abonten/core/ticketTransfers/sendBlock`).
 - **Receiver:** the sender's public name and photo, the event, the ticket type and the deadline.
 - **Staff** (Admin › Ticket transfers, `transfers.view`): every offer with its status, sender, receiver and, for a number, only its last four digits.
 
@@ -77,7 +78,7 @@ The code under the QR is hidden until the holder taps **Show code** on the websi
 |---|---|
 | `ticket_transfer_program_setting.enabled` / `audience` (`staff` → `beta` → `all`) | No new offer from people outside the audience. Open offers can still be accepted, declined or taken back. |
 | `TICKET_TRANSFERS_KILL_SWITCH=true` (web) | No new offer and no accepting. Declining, taking back and the expiry job still work, so every ticket ends up with someone. |
-| `event_ticket_transfer_setting.enabled` (organizer, per event) | No new offer for that event's tickets. |
+| `event_ticket_transfer_setting.enabled` (organizer, per event) | No new offer and no accepting for that event's tickets. Turning it off closes the offers still waiting (`organizer_off`), and the sender and the receiver are both told. |
 
 Rules in the settings row: `max_moves` (3), `accept_hours` (48), `texts_per_sender_per_day` (20). Admin › Ticket transfers changes them (`transfers.configure`, step-up, reason, audited). Rollout (X43): staff first, then beta, then everyone once counsel has approved N1.
 
@@ -85,7 +86,7 @@ Rules in the settings row: `max_moves` (3), `accept_hours` (48), `texts_per_send
 
 | Piece | Where |
 |---|---|
-| Migration | `supabase/migrations/20261115100000_ticket_transfers.sql` |
+| Migrations | `supabase/migrations/20261115100000_ticket_transfers.sql`, `20261115140000_ticket_transfer_organizer_off.sql` |
 | Codes | `packages/core/src/ticketTransfers/ticketCode.ts` (+ test) |
 | Services | `packages/services/src/ticketTransfers/` (`ticketTransferCore`, `ticketTransferProgram`, `ticketTransferNotices`); admin `packages/services/src/admin/ticketTransfers/` |
 | Inputs | `packages/validation/src/ticketTransferSchemas.ts`; types `packages/types/src/ticketTransferType.ts` |

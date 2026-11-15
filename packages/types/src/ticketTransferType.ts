@@ -44,6 +44,12 @@ export type OutgoingTicketTransfer = {
   to: TicketTransferPerson | null;
   /** Set when the offer went to a number with no account: masked. */
   toPhoneMasked: string | null;
+  /**
+   * For an offer to a number with no account: whether the invite text was
+   * accepted by the provider. False means the person has to be told some
+   * other way. Null for an offer to an account.
+   */
+  toPhoneTexted: boolean | null;
   createdAt: string;
   expiresAt: string;
 };
