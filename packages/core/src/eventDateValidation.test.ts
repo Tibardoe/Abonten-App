@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  sameDateEntries,
+  sameDateRange,
   validateSingleDateRange,
   validateSpecificDates,
 } from "./eventDateValidation";
@@ -124,5 +126,48 @@ describe("validateSpecificDates", () => {
       ok: false,
       message: "The selected date must be at least 5 hours from now",
     });
+  });
+});
+
+describe("an edit that keeps the dates", () => {
+  const range = {
+    from: day("2026-02-01T18:00:00Z"),
+    to: day("2026-02-01T22:00:00Z"),
+  };
+
+  it("sees the same range, to the minute", () => {
+    expect(
+      sameDateRange(
+        {
+          from: day("2026-02-01T18:00:30Z"),
+          to: day("2026-02-01T22:00:59Z"),
+        },
+        range,
+      ),
+    ).toBe(true);
+  });
+
+  it("sees a moved start or end", () => {
+    expect(
+      sameDateRange({ ...range, from: day("2026-02-01T18:01:00Z") }, range),
+    ).toBe(false);
+    expect(sameDateRange({ ...range, to: undefined }, range)).toBe(false);
+    expect(sameDateRange(range, undefined)).toBe(false);
+  });
+
+  it("compares lists of dates in any order", () => {
+    const a = {
+      start: day("2026-02-01T18:00:00Z"),
+      end: day("2026-02-01T22:00:00Z"),
+    };
+    const b = {
+      start: day("2026-02-08T18:00:00Z"),
+      end: day("2026-02-08T22:00:00Z"),
+    };
+    expect(sameDateEntries([b, a], [a, b])).toBe(true);
+    expect(sameDateEntries([a], [a, b])).toBe(false);
+    expect(
+      sameDateEntries([a, { ...b, end: day("2026-02-08T23:00:00Z") }], [a, b]),
+    ).toBe(false);
   });
 });

@@ -12,6 +12,8 @@ import type {
 } from "@abonten/api-client";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
+  sameDateEntries,
+  sameDateRange,
   validateSingleDateRange,
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
@@ -146,6 +148,11 @@ export function useEventEdit(eventId: string) {
   const [ticketCurrency, setTicketCurrency] = useState("");
 
   const seededAddress = useRef<string>("");
+  // The schedule as loaded: dates left as they were need no notice.
+  const seededSchedule = useRef<{
+    range?: { from: Date | null; to: Date | null };
+    entries?: { start: Date; end: Date }[];
+  }>({});
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: prefill runs once when the fetch resolves.
   useEffect(() => {
@@ -174,6 +181,16 @@ export function useEventEdit(eventId: string) {
     const occ = event.event_occurrence ?? [];
     if (occ.length > 0) {
       setScheduleMode("specific");
+      seededSchedule.current = {
+        entries: occ.map((o) => {
+          const s = splitIso(o.starts_at);
+          const e = splitIso(o.ends_at);
+          return {
+            start: combineDateAndTime(s.date, s.time) as Date,
+            end: combineDateAndTime(s.date, e.time) as Date,
+          };
+        }),
+      };
       setOccurrences(
         occ.map((o) => {
           const s = splitIso(o.starts_at);
@@ -190,6 +207,12 @@ export function useEventEdit(eventId: string) {
       setScheduleMode("single");
       const s = splitIso(event.starts_at);
       const e = splitIso(event.ends_at);
+      seededSchedule.current = {
+        range: {
+          from: combineDateAndTime(s.date, s.time),
+          to: combineDateAndTime(e.date, e.time),
+        },
+      };
       setRangeStart(s.date);
       setRangeStartTime(s.time);
       setRangeEndTime(e.time);
@@ -365,7 +388,11 @@ export function useEventEdit(eventId: string) {
       // The locked event keeps its original schedule — skip the 5-hour
       // notice check, which would fail for an event starting soon that
       // already has tickets. The server rejects any actual date change.
-      if (!locked) {
+      // Dates left as they were need no notice either.
+      if (
+        !locked &&
+        !sameDateRange({ from: start, to: end }, seededSchedule.current.range)
+      ) {
         const check = validateSingleDateRange(tc, { from: start, to: end });
         if (!check.ok) return { ok: false, message: check.message };
       } else if (!start || !end) {
@@ -393,7 +420,11 @@ export function useEventEdit(eventId: string) {
         message: t("everyDateNeedsAValidStart"),
       };
     }
-    if (!locked) {
+    const kept = entries.map((e) => ({
+      start: e.start as Date,
+      end: e.end as Date,
+    }));
+    if (!locked && !sameDateEntries(kept, seededSchedule.current.entries)) {
       const check = validateSpecificDates(
         tc,
         entries.map((e) => ({ start: e.start as Date, end: e.end as Date })),

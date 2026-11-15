@@ -6,6 +6,8 @@ export {
   type DateEntry,
   type DateValidationResult,
   getBufferedNow,
+  sameDateEntries,
+  sameDateRange,
   validateSingleDateRange,
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";

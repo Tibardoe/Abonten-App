@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Review partitions and editing an event that starts soon
+
+- Every monthly partition of `review` has row security on, and the monthly job switches it on for each one it makes (migration `20261116110000_review_partitions_row_security`; `review_january_2027` had been made without it): `operations/scheduled-jobs.md` (job row added), `architecture/data-model-overview.md`.
+- Editing an event no longer asks for five hours' notice when its dates are left as they were (an event starting soon, or running, can have its words fixed); new dates still need it. Web and app (`@abonten/core/eventDateValidation` `sameDateRange` / `sameDateEntries`).
+
 ## 2026-11-16 — Team accounts, stage 2
 
 - Members run a team's events and places within their role (Manager, Door staff, Front desk; Owner all of these), chosen under "Managing as" on the website and in the app: `architecture/team-accounts.md` 1.1 (§4a, code map, later stages), `admin/teams.md` 1.1. Migration `20261116100000_team_accounts_events_places` (`acting_accounts()` and 42 access rules), route `GET /api/mobile/teams/acting`, header `x-abonten-team`; PROJECT.md §75, CLAUDE.md quick facts.
