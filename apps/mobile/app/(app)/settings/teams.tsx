@@ -132,13 +132,16 @@ function TeamRow({ team }: { team: TeamSummary }) {
           {team.username ? `@${team.username} · ` : ""}
           {t("membersCount", { count: team.memberCount })}
         </AppText>
+        <Tag
+          label={t("role", { role: team.role })}
+          className="mt-1 self-start"
+        />
         {team.status !== "active" ? (
           <AppText variant="caption" tone="warning">
             {t("pausedShort")}
           </AppText>
         ) : null}
       </View>
-      <Tag label={t("role", { role: team.role })} />
       <Icon name="chevron-forward" size={16} tone="muted" />
     </Pressable>
   );
