@@ -121,8 +121,16 @@ export default function TeamsOverview() {
         </section>
       ) : null}
 
-      <CreateTeamDialog open={creating} onOpenChange={setCreating} />
-      <ConvertAccountDialog open={converting} onOpenChange={setConverting} />
+      <CreateTeamDialog
+        open={creating}
+        onOpenChange={setCreating}
+        terms={data.program.terms ?? null}
+      />
+      <ConvertAccountDialog
+        open={converting}
+        onOpenChange={setConverting}
+        terms={data.program.terms ?? null}
+      />
     </div>
   );
 }

@@ -2,8 +2,13 @@ import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { RowListSkeleton } from "@/components/skeletons";
-import { InviteMemberSheet, RoleChoice } from "@/features/teams/TeamSheets";
 import {
+  InviteMemberSheet,
+  RoleChoice,
+  teamTermsUrl,
+} from "@/features/teams/TeamSheets";
+import {
+  useAcceptTeamTerms,
   useCancelTeamInvite,
   useLeaveTeam,
   useRemoveTeamMember,
@@ -12,6 +17,7 @@ import {
   useSetTeamMemberRole,
   useTeam,
 } from "@/features/teams/useTeams";
+import { openExternalLink } from "@/lib/legalLinks";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateTime } from "@abonten/core/i18n/format";
 import { personName } from "@abonten/core/personName";
@@ -348,6 +354,7 @@ export default function TeamScreen() {
   const view = useQueryView(query);
   const leave = useLeaveTeam();
   const cancel = useCancelTeamInvite();
+  const acceptTerms = useAcceptTeamTerms();
   const [inviting, setInviting] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [editing, setEditing] = useState<TeamMember | null>(null);
@@ -380,6 +387,17 @@ export default function TeamScreen() {
         },
       ],
     );
+  };
+
+  // N4: an Owner accepts the published team terms for the team.
+  const accept = async (termsVersion: string) => {
+    try {
+      const res = await acceptTerms.mutateAsync({ teamId, termsVersion });
+      if (res.status === 200) toast.success(t("termsAcceptedToast"));
+      else toast.error(res.message ?? t("couldNotDo"));
+    } catch {
+      toast.error(t("couldNotDo"));
+    }
   };
 
   const withdraw = async (inviteId: string) => {
@@ -443,6 +461,52 @@ export default function TeamScreen() {
                   <AppText variant="small" tone="warning">
                     {t("pausedLong")}
                   </AppText>
+                </View>
+              ) : null}
+              {detail.terms &&
+              ((isOwner && !detail.terms.acceptedByMe) ||
+                (!isOwner && !detail.terms.acceptedByAnOwner)) ? (
+                <View className="gap-2 rounded-xl border border-border bg-muted p-3">
+                  <AppText variant="small" className="font-semibold">
+                    {isOwner
+                      ? t("termsBannerTitle", { team: teamName })
+                      : t("termsMemberPending", { team: teamName })}
+                  </AppText>
+                  {isOwner ? (
+                    <AppText variant="small" tone="muted">
+                      {detail.terms.acceptedByAnOwner
+                        ? t("termsBannerBodyOther", { team: teamName })
+                        : t("termsBannerBodyPending", { team: teamName })}
+                    </AppText>
+                  ) : null}
+                  <View className="flex-row flex-wrap items-center gap-3">
+                    <Pressable
+                      onPress={() => {
+                        if (detail.terms) {
+                          void openExternalLink(teamTermsUrl(detail.terms));
+                        }
+                      }}
+                      accessibilityRole="link"
+                    >
+                      <AppText
+                        variant="small"
+                        tone="brand"
+                        className="font-semibold"
+                      >
+                        {t("termsRead")}
+                      </AppText>
+                    </Pressable>
+                    {isOwner ? (
+                      <Button
+                        title={t("termsAccept")}
+                        size="sm"
+                        loading={acceptTerms.isPending}
+                        onPress={() => {
+                          if (detail.terms) void accept(detail.terms.version);
+                        }}
+                      />
+                    ) : null}
+                  </View>
                 </View>
               ) : null}
               <AppText variant="meta">{t("howToManage")}</AppText>

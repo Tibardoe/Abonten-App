@@ -1417,5 +1417,9 @@
   "promoterMemberOwnerOnly": "Nur ein Inhaber kann ein Teammitglied als Promoter hinzufügen.",
   "promoterTooMany": "Ein Event kann höchstens {max} Promoter haben.",
   "promoterNotOnList": "Diese Person ist kein Promoter dieses Events.",
-  "couldnTSaveThePromoter": "Der Promoter konnte nicht gespeichert werden. Bitte versuche es erneut."
+  "couldnTSaveThePromoter": "Der Promoter konnte nicht gespeichert werden. Bitte versuche es erneut.",
+  "teamTermsRequired": "Akzeptiere die Team-Bedingungen, um ein Team zu erstellen.",
+  "teamTermsChanged": "Die Team-Bedingungen haben sich geändert. Lies sie erneut und akzeptiere sie dann.",
+  "teamTermsNone": "Derzeit gibt es keine Team-Bedingungen zu akzeptieren.",
+  "teamTermsPending": "Ein Inhaber des Teams muss die Team-Bedingungen akzeptieren, bevor sein Geld bewegt werden kann."
 }

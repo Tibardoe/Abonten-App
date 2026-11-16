@@ -14,10 +14,11 @@ import type {
   TeamRoleCode,
   TeamStatus,
   TeamSummary,
+  TeamTerms,
   TeamsOverview,
 } from "@abonten/types/teamType";
 import type { TicketTransferRecipient } from "@abonten/types/ticketTransferType";
-import { tr } from "../i18n/requestLocale";
+import { requestLocale, tr } from "../i18n/requestLocale";
 import {
   isAccountRestricted,
   restrictedAccountMessage,
@@ -30,7 +31,12 @@ import {
   noticeTeamRoleChanged,
   textTeamInvite,
 } from "./teamNotices";
-import { isTeamsKillSwitchOn, resolveTeamAccess } from "./teamProgram";
+import {
+  isTeamsKillSwitchOn,
+  readTeamSettings,
+  resolveTeamAccess,
+  teamTermsOf,
+} from "./teamProgram";
 
 // Team accounts, stage 1 (docs/architecture/team-accounts.md).
 //
@@ -118,6 +124,43 @@ const adultRequired = (): Fail => ({
   status: 400,
   message: tr("teamAdultRequired"),
 });
+
+/**
+ * N4: once Abonten publishes team terms, making a team (or making an
+ * account a team) means accepting that version for it. A missing version
+ * is refused, a stale one (the terms changed while the form was open) too.
+ */
+function termsProblem(
+  terms: TeamTerms | null | undefined,
+  accepted: string | null | undefined,
+): Fail | null {
+  if (!terms) return null;
+  if (!accepted) return { status: 400, message: tr("teamTermsRequired") };
+  if (accepted !== terms.version) {
+    return { status: 409, message: tr("teamTermsChanged") };
+  }
+  return null;
+}
+
+/** Keeps who accepted which team terms for which team, and in which language. */
+async function recordTerms(
+  svc: ServiceRoleClient,
+  teamId: string,
+  userId: string,
+  version: string,
+): Promise<boolean> {
+  const { error } = await svc.from("team_terms_acceptance").upsert(
+    {
+      team_id: teamId,
+      user_id: userId,
+      terms_version: version,
+      locale: requestLocale(),
+    },
+    { onConflict: "team_id,user_id,terms_version", ignoreDuplicates: true },
+  );
+  if (error) logger.error(`teams recordTerms: ${error.message}`);
+  return !error;
+}
 
 /** Turns a `team:<code>` database error into an envelope. */
 function failFromDb(error: { message?: string } | null, where: string): Fail {
@@ -366,7 +409,7 @@ export async function getTeamCore(
   if (!me) return { status: 404, message: tr("teamNotFound") };
   const isOwner = me.role === "owner";
 
-  const [summary, members, invites, activity] = await Promise.all([
+  const [summary, members, invites, activity, settings] = await Promise.all([
     summaries(svc, [me]),
     svc
       .from("team_member")
@@ -394,6 +437,7 @@ export async function getTeamCore(
           .order("created_at", { ascending: false })
           .limit(50)
       : null,
+    readTeamSettings(svc),
   ]);
   if (!summary?.[0]) return { status: 500, message: tr("somethingWentWrong") };
   if (members.error) return failFromDb(members.error, "getTeamCore");
@@ -467,6 +511,26 @@ export async function getTeamCore(
     limitsOf.set(l.user_id, [...(limitsOf.get(l.user_id) ?? []), l.place_id]);
   }
 
+  // N4: the published team terms, and which Owners accepted them.
+  const published = teamTermsOf(settings);
+  let terms: TeamDetail["terms"] = null;
+  if (published) {
+    const { data: accepted } = await svc
+      .from("team_terms_acceptance")
+      .select("user_id")
+      .eq("team_id", teamId)
+      .eq("terms_version", published.version);
+    const owners = new Set(
+      memberRows.filter((m) => m.role === "owner").map((m) => m.user_id),
+    );
+    const acceptedBy = (accepted ?? []).map((a) => a.user_id);
+    terms = {
+      ...published,
+      acceptedByMe: acceptedBy.includes(userId),
+      acceptedByAnOwner: acceptedBy.some((id) => owners.has(id)),
+    };
+  }
+
   const memberList: TeamMember[] = [];
   for (const m of memberRows) {
     const person = persons.get(m.user_id);
@@ -518,11 +582,45 @@ export async function getTeamCore(
       members: memberList,
       invites: inviteList,
       activity: activityList,
+      terms,
       places: isOwner
         ? ((teamPlaces?.data ?? []) as { id: string; name: string }[])
         : null,
     },
   };
+}
+
+/**
+ * An Owner accepts the published team terms for the team (N4). The team's
+ * money waits until one Owner has accepted the current version
+ * (team_terms_accepted); every Owner is asked until they have.
+ */
+export async function acceptTeamTermsCore(
+  svc: ServiceRoleClient,
+  userId: string,
+  input: { teamId: string; termsVersion: string },
+): Promise<Ok<{ version: string }> | Fail> {
+  const me = await activeMembership(svc, input.teamId, userId);
+  if (!me) return { status: 404, message: tr("teamNotFound") };
+  if (me.role !== "owner") {
+    return { status: 403, message: tr("teamNotAllowed") };
+  }
+  const published = teamTermsOf(await readTeamSettings(svc, { fresh: true }));
+  if (!published) return { status: 409, message: tr("teamTermsNone") };
+  if (input.termsVersion !== published.version) {
+    return { status: 409, message: tr("teamTermsChanged") };
+  }
+  if (!(await recordTerms(svc, input.teamId, userId, published.version))) {
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  const { error } = await svc.from("team_activity").insert({
+    team_id: input.teamId,
+    actor_user_id: userId,
+    action: "terms_accepted",
+    details: { version: published.version },
+  });
+  if (error) logger.error(`acceptTeamTermsCore activity: ${error.message}`);
+  return { status: 200, data: { version: published.version } };
 }
 
 // --- Making a team -----------------------------------------------------------
@@ -535,11 +633,18 @@ export async function getTeamCore(
 export async function createTeamCore(
   svc: ServiceRoleClient,
   userId: string,
-  input: { name: string; username: string; adult: boolean },
+  input: {
+    name: string;
+    username: string;
+    adult: boolean;
+    termsVersion?: string | null;
+  },
 ): Promise<Ok<TeamSummary> | Fail> {
   if (input.adult !== true) return adultRequired();
   const access = await resolveTeamAccess(svc, userId);
   if (!access.program.enabled) return unavailable();
+  const termsFail = termsProblem(access.program.terms, input.termsVersion);
+  if (termsFail) return termsFail;
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
   }
@@ -585,6 +690,9 @@ export async function createTeamCore(
     return failFromDb(error, "createTeamCore");
   }
   await recordAdult(svc, accountId, userId);
+  if (access.program.terms) {
+    await recordTerms(svc, accountId, userId, access.program.terms.version);
+  }
   const summary = await summaries(svc, [
     {
       team_id: accountId,
@@ -607,11 +715,13 @@ export async function createTeamCore(
 export async function convertAccountToTeamCore(
   svc: ServiceRoleClient,
   userId: string,
-  input: { name: string; adult: boolean },
+  input: { name: string; adult: boolean; termsVersion?: string | null },
 ): Promise<Ok<TeamConversion> | Fail> {
   if (input.adult !== true) return adultRequired();
   const access = await resolveTeamAccess(svc, userId);
   if (!access.program.enabled) return unavailable();
+  const termsFail = termsProblem(access.program.terms, input.termsVersion);
+  if (termsFail) return termsFail;
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
   }
@@ -657,6 +767,9 @@ export async function convertAccountToTeamCore(
     badge_back_in_review?: boolean;
   };
   await recordAdult(svc, accountId, userId);
+  if (access.program.terms) {
+    await recordTerms(svc, accountId, userId, access.program.terms.version);
+  }
   const summary = await summaries(svc, [
     {
       team_id: accountId,

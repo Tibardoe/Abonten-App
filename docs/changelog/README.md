@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts before everyone: team terms (N4), the launch gate, the help page
+
+- The mechanism for accepting team terms for a team is built and dormant until staff publish a version; a team's payouts wait until an Owner accepts. Admin › Teams refuses "Everyone" until the terms are published and counsel's approval of N4, N5, N9 and K7 is recorded. Draft wording and questions for counsel in N4, N5, N9 and K7 of the legal register. New help page `organizers/team-accounts` (en, fr, es, de, pt; not listed). `architecture/team-accounts.md` 1.13 (§4m), `admin/teams.md` 1.12, `documentation-coverage-matrix.md` 1.5. Migration `20261116240000_team_terms_and_launch_gate`; PROJECT.md §75.13.
+
 ## 2026-11-16 — Invited promoters, and a team's member as its promoter (X33, X36)
 
 - Organizers add promoters to an event by username, each with their own rate, and can let only them earn; a team's member earns on its event only when an Owner adds them, and never Abonten's own referral reward. The promoter is told, and sees their rate on the event page. `architecture/rewards-ledger.md` (Phase 8, teams), `architecture/team-accounts.md` 1.12 (§4l), `admin/teams.md` 1.11, X33 and X36 in the decisions register, the plan's Part 7 row. Migration `20261116230000_invited_promoters`; PROJECT.md §75.12.

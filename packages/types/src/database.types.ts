@@ -13144,6 +13144,45 @@ export type Database = {
           },
         ]
       }
+      team_terms_acceptance: {
+        Row: {
+          accepted_at: string
+          locale: string | null
+          team_id: string
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          locale?: string | null
+          team_id: string
+          terms_version: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          locale?: string | null
+          team_id?: string
+          terms_version?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_terms_acceptance_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "team_terms_acceptance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_program_setting: {
         Row: {
           audience: string
@@ -13151,8 +13190,13 @@ export type Database = {
           enabled: boolean
           id: number
           invite_hours: number
+          launch_cleared_at: string | null
+          launch_cleared_by: string | null
+          launch_clearance: Json | null
           max_members: number
           max_teams_created: number
+          terms_path: string
+          terms_version: string | null
           texts_per_team_per_day: number
           updated_at: string
           updated_by: string | null
@@ -13163,8 +13207,13 @@ export type Database = {
           enabled?: boolean
           id?: number
           invite_hours?: number
+          launch_cleared_at?: string | null
+          launch_cleared_by?: string | null
+          launch_clearance?: Json | null
           max_members?: number
           max_teams_created?: number
+          terms_path?: string
+          terms_version?: string | null
           texts_per_team_per_day?: number
           updated_at?: string
           updated_by?: string | null
@@ -13175,8 +13224,13 @@ export type Database = {
           enabled?: boolean
           id?: number
           invite_hours?: number
+          launch_cleared_at?: string | null
+          launch_cleared_by?: string | null
+          launch_clearance?: Json | null
           max_members?: number
           max_teams_created?: number
+          terms_path?: string
+          terms_version?: string | null
           texts_per_team_per_day?: number
           updated_at?: string
           updated_by?: string | null
@@ -18914,6 +18968,7 @@ export type Database = {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
       }
+      team_terms_accepted: { Args: { p_team: string }; Returns: boolean }
       team_role_can: {
         Args: { p_capability: string; p_role: string }
         Returns: boolean

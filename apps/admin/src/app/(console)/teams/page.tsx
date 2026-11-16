@@ -34,7 +34,7 @@ export default async function TeamsPage({
     <div className="space-y-6">
       <PageHeader
         title="Teams"
-        description="Organizers and places run by several people, each with their own account and a role. Stage 1: teams, members, invitations and activity; acting for a team comes next."
+        description="Organizers and places run by several people, each with their own account and a role: who runs a team, its members and activity, and the programme switches. Opening to everyone waits on the team terms and counsel (N4, N5, N9, K7)."
       />
 
       {settings.status !== 200 || !settings.data ? (
@@ -45,6 +45,7 @@ export default async function TeamsPage({
         <TeamSettingsForm
           settings={settings.data.settings}
           killSwitch={settings.data.killSwitch}
+          readiness={settings.data.readiness}
           canConfigure={ctx.permissions.includes("teams.configure")}
           stepUpFresh={stepUpFresh}
         />

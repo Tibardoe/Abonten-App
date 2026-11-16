@@ -4,7 +4,7 @@ purpose: How to look up who runs a team, answer the common support questions abo
 audience: Support, operations
 scope: Admin › Teams, the teams.view / teams.configure / teams.manage permissions, pausing and resuming a team, appointing an Owner, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire job
 status: Approved
-version: 1.11
+version: 1.12
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -40,6 +40,7 @@ Search by the team's name or username. A team's page shows its status (**Active*
 - **"Our Verified badge disappeared after we changed our name."** That is decision X42: the badge names the business, so a new name goes back to review. Their Owners were told and asked to confirm first. The case is in Admin › Verification (Pending); a reviewer approves it or asks for papers in the new name.
 - **"I can't accept the invitation" / "I was taken out of my team."** Teams are for people 18 or older (legal item K7). Accepting asks the person to say so; an ID check that found them under 18 keeps them out, and takes them out of every team if it arrives later (the team's activity says "left the team: teams are for people 18 or older"). Nothing to do in the console; do not override it.
 - **"Our front desk at one branch sees the other branch's bookings."** An Owner limits a Front desk or Door staff member to some places: Settings › Teams › the team › the member › Places. With places chosen, they see only those places' bookings and visit QR, and Door staff only scan tickets of events held there.
+- **"We can't ask for a payout: an Owner needs to accept the team terms."** Abonten published (new) team terms and none of the team's Owners has accepted them yet. Any Owner accepts on the team page (Settings › Teams › the team). Staff cannot accept for them.
 - **"Our member shared our event and earned nothing."** A team's own people earn on its events only when an **Owner** adds them as a promoter of that event (decision X36): Promotion tab (website) or the event panel (app) › Promoters › their username. Finance can add other people but not members. Even then they earn the team's commission only, never Abonten's referral reward. A sale before they were added shows no reward (their link was not counted).
 - **"Who paid for this Spotlight promotion?"** The campaign is the team's; the payer is the member named in the team's activity ("paid to promote a Spotlight"). A refund goes back to that member's card.
 - **"How do we get our team verified?" An Owner asks while managing as the team: Manage › Business verification (website) or the Organizer screen (app). They need the registration certificate and a directors listing or a signed letter showing they may act for the business. A group with no registered business cannot get the business badge; "ID checked" still shows once one of its Owners passes the ID check.
@@ -61,7 +62,11 @@ Search by the team's name or username. A team's page shows its status (**Active*
 
 1. Staff only (the default audience).
 2. Beta: add user ids, one per line.
-3. Everyone, once counsel has approved legal items N4 (team terms) and N5 (ID checks for Owners and Finance) and the help page is listed.
+3. Everyone. The console refuses it until both are done:
+   - **Team terms published.** Once counsel approves the team terms (N4) and they are on the website (a section of the Terms of Service), type their version (e.g. `2026-12-01`) and where they are read (e.g. `/legal/terms#team-accounts`) under **Team terms**. From then on, whoever makes a team accepts them for it, Owners of existing teams are asked on the team page, and a team's payouts wait until one Owner has accepted. A new version asks everyone again. Leave the version empty until then: nobody is asked anything.
+   - **Counsel's approval recorded.** Tick the box under **Before opening to everyone** once N4, N5, N9 and K7 are Decided in `docs/LEGAL_REVIEW_REQUIRED.md`. It is saved with your name, the time and your reason, and shown there afterwards.
+
+   The same card warns when ID checks are not yet required for payouts for everyone (Admin › Identity): opening is allowed, but Owners' and Finance members' payouts then move without an ID check. List the help page (`help/organizers/team-accounts`, all five languages: `listed: yes`) in the same release.
 
 `TEAMS_KILL_SWITCH=true` on the web deployment stops new teams, invitations and accepting at once. Members can still leave and Owners can still remove members.
 

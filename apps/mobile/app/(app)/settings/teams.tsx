@@ -254,11 +254,13 @@ export default function TeamsScreen() {
       )}
       <ConvertAccountSheet
         open={converting}
+        terms={data?.program.terms ?? null}
         onClose={() => setConverting(false)}
         onConverted={(id) => router.push(`/(app)/settings/team/${id}`)}
       />
       <CreateTeamSheet
         open={creating}
+        terms={data?.program.terms ?? null}
         onClose={() => setCreating(false)}
         onCreated={(id) => router.push(`/(app)/settings/team/${id}`)}
       />

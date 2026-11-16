@@ -4,6 +4,7 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type {
   TeamAdminRow,
   TeamAdminSettings,
+  TeamLaunchReadiness,
   TeamPerson,
   TeamRoleCode,
   TeamStatus,
@@ -68,11 +69,53 @@ async function people(
   return new Map(((data ?? []) as PersonRow[]).map((r) => [r.id, toPerson(r)]));
 }
 
+/** The legal items counsel approves before "Everyone" (LEGAL_REVIEW_REQUIRED.md). */
+export const TEAM_LAUNCH_LEGAL_ITEMS = ["N4", "N5", "N9", "K7"] as const;
+
+/**
+ * What "Everyone" waits on: published team terms (N4), counsel's approval
+ * recorded by staff, and -- shown, not required -- ID checks live for
+ * payouts, which is how Owners and Finance are checked (X5, N5).
+ */
+async function launchReadiness(
+  supabase: ServiceRoleClient,
+  settings: TeamAdminSettings,
+): Promise<TeamLaunchReadiness> {
+  const [{ data: identity }, cleared] = await Promise.all([
+    supabase
+      .from("identity_program_setting")
+      .select("enabled, audience, require_for_payouts")
+      .eq("id", 1)
+      .maybeSingle(),
+    settings.launchClearedBy
+      ? people(supabase, [settings.launchClearedBy])
+      : Promise.resolve(new Map<string, TeamPerson>()),
+  ]);
+  const by = settings.launchClearedBy
+    ? cleared.get(settings.launchClearedBy)
+    : null;
+  return {
+    termsPublished: !!settings.termsVersion,
+    identity: identity
+      ? {
+          enabled: identity.enabled,
+          audience: identity.audience,
+          requireForPayouts: identity.require_for_payouts,
+        }
+      : null,
+    clearedByName: by ? (by.name ?? by.username ?? null) : null,
+  };
+}
+
 export async function getTeamSettingsCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
 ): Promise<
-  AdminEnvelope<{ settings: TeamAdminSettings; killSwitch: boolean }>
+  AdminEnvelope<{
+    settings: TeamAdminSettings;
+    killSwitch: boolean;
+    readiness: TeamLaunchReadiness;
+  }>
 > {
   try {
     assertPermission(ctx, "teams.view");
@@ -83,9 +126,14 @@ export async function getTeamSettingsCore(
     () => null,
   );
   if (!row) return { status: 500, message: "Couldn't load the settings." };
+  const settings = mapTeamSettings(row);
   return {
     status: 200,
-    data: { settings: mapTeamSettings(row), killSwitch: isTeamsKillSwitchOn() },
+    data: {
+      settings,
+      killSwitch: isTeamsKillSwitchOn(),
+      readiness: await launchReadiness(supabase, settings),
+    },
   };
 }
 
@@ -97,6 +145,8 @@ const COLUMN: Record<keyof TeamSettingsInput["patch"], string> = {
   maxMembers: "max_members",
   inviteHours: "invite_hours",
   textsPerTeamPerDay: "texts_per_team_per_day",
+  termsVersion: "terms_version",
+  termsPath: "terms_path",
 };
 
 export async function updateTeamSettingsCore(
@@ -131,7 +181,46 @@ export async function updateTeamSettingsCore(
     update[column] = value;
     changed.push(key as keyof TeamAdminSettings);
   }
+  // Recording counsel's approval (N4, N5, N9, K7) is a change of its own.
+  if (input.confirmLaunchClearance === true) {
+    update.launch_cleared_at = new Date().toISOString();
+    update.launch_cleared_by = ctx.userId;
+    update.launch_clearance = {
+      items: [...TEAM_LAUNCH_LEGAL_ITEMS],
+      reason: input.reason,
+    };
+    changed.push("launchClearedAt");
+  }
   if (changed.length === 0) return { status: 400, message: "Nothing changed." };
+
+  // The gate before "Everyone" (decision X43, legal N4/N5/N9/K7): published
+  // team terms, and counsel's approval recorded -- now or before. Taking
+  // the terms away while open to everyone is refused for the same reason.
+  const next = {
+    enabled: (update.enabled as boolean | undefined) ?? before.enabled,
+    audience: (update.audience as string | undefined) ?? before.audience,
+    termsVersion:
+      "terms_version" in update
+        ? (update.terms_version as string | null)
+        : before.termsVersion,
+  };
+  if (next.enabled && next.audience === "all") {
+    if (!next.termsVersion) {
+      return {
+        status: 400,
+        message:
+          "Publish the team terms first (a terms version): opening to everyone means every new team accepts them (legal item N4).",
+      };
+    }
+    if (!before.launchClearedAt && input.confirmLaunchClearance !== true) {
+      return {
+        status: 400,
+        message:
+          "Opening to everyone needs counsel's approval of N4, N5, N9 and K7. Confirm it below; it is recorded with your name.",
+      };
+    }
+  }
+
   update.updated_at = new Date().toISOString();
   update.updated_by = ctx.userId;
 

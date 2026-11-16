@@ -15,7 +15,9 @@ import { Label } from "@/components/ui/label";
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import AdultConfirm from "@/teams/atoms/AdultConfirm";
+import TermsConfirm from "@/teams/atoms/TermsConfirm";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import type { TeamTerms } from "@abonten/types/teamType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -29,9 +31,12 @@ import { useEffect, useState } from "react";
 export default function ConvertAccountDialog({
   open,
   onOpenChange,
+  terms = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The published team terms to accept (N4), if any. */
+  terms?: TeamTerms | null;
 }) {
   const t = useTranslations("teams");
   const toast = useToast();
@@ -40,6 +45,7 @@ export default function ConvertAccountDialog({
   const { data: details } = useCurrentUserDetails();
   const [name, setName] = useState("");
   const [adult, setAdult] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -50,6 +56,7 @@ export default function ConvertAccountDialog({
     if (open) {
       setName(fullName);
       setAdult(false);
+      setAccepted(false);
       setError(null);
       setBusy(false);
     }
@@ -58,9 +65,11 @@ export default function ConvertAccountDialog({
   const submit = async () => {
     setBusy(true);
     setError(null);
-    const res = await convertAccountToTeam({ name, adult }).catch(
-      actionUnreachable,
-    );
+    const res = await convertAccountToTeam({
+      name,
+      adult,
+      termsVersion: terms?.version ?? null,
+    }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200 && "data" in res && res.data) {
       toast.success(
@@ -112,6 +121,14 @@ export default function ConvertAccountDialog({
             checked={adult}
             onChange={setAdult}
           />
+          {terms ? (
+            <TermsConfirm
+              id="convert-terms"
+              terms={terms}
+              checked={accepted}
+              onChange={setAccepted}
+            />
+          ) : null}
         </div>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
@@ -127,7 +144,7 @@ export default function ConvertAccountDialog({
             {t("cancel")}
           </Button>
           <Button
-            disabled={busy || !name.trim() || !adult}
+            disabled={busy || !name.trim() || !adult || (!!terms && !accepted)}
             onClick={() => void submit()}
           >
             {busy ? t("converting") : t("convertAction")}

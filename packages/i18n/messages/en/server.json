@@ -1417,5 +1417,9 @@
   "promoterMemberOwnerOnly": "Only an Owner can add a member of the team as a promoter.",
   "promoterTooMany": "An event can have at most {max} promoters.",
   "promoterNotOnList": "That person isn't a promoter of this event.",
-  "couldnTSaveThePromoter": "Couldn't save the promoter. Please try again."
+  "couldnTSaveThePromoter": "Couldn't save the promoter. Please try again.",
+  "teamTermsRequired": "Accept the team terms to make a team.",
+  "teamTermsChanged": "The team terms have changed. Read them again, then accept.",
+  "teamTermsNone": "There are no team terms to accept right now.",
+  "teamTermsPending": "An Owner of the team needs to accept the team terms before its money can move."
 }

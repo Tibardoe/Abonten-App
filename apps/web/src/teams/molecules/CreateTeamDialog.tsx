@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
 import AdultConfirm from "@/teams/atoms/AdultConfirm";
+import TermsConfirm from "@/teams/atoms/TermsConfirm";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import type { TeamTerms } from "@abonten/types/teamType";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,9 +29,12 @@ import { useRefreshTeams } from "../useTeams";
 export default function CreateTeamDialog({
   open,
   onOpenChange,
+  terms = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The published team terms to accept (N4), if any. */
+  terms?: TeamTerms | null;
 }) {
   const t = useTranslations("teams");
   const toast = useToast();
@@ -38,14 +43,17 @@ export default function CreateTeamDialog({
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [adult, setAdult] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const ready = adult && (!terms || accepted);
 
   useEffect(() => {
     if (open) {
       setName("");
       setUsername("");
       setAdult(false);
+      setAccepted(false);
       setError(null);
       setBusy(false);
     }
@@ -58,6 +66,7 @@ export default function CreateTeamDialog({
       name,
       username: username.replace(/^@+/, ""),
       adult,
+      termsVersion: terms?.version ?? null,
     }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200 && "data" in res && res.data) {
@@ -104,7 +113,7 @@ export default function CreateTeamDialog({
                 setError(null);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim() && username && adult) {
+                if (e.key === "Enter" && name.trim() && username && ready) {
                   void submit();
                 }
               }}
@@ -112,6 +121,13 @@ export default function CreateTeamDialog({
             <p className="text-xs text-muted-foreground">{t("usernameHint")}</p>
           </div>
           <AdultConfirm checked={adult} onChange={setAdult} />
+          {terms ? (
+            <TermsConfirm
+              terms={terms}
+              checked={accepted}
+              onChange={setAccepted}
+            />
+          ) : null}
         </div>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
@@ -120,7 +136,7 @@ export default function CreateTeamDialog({
         ) : null}
         <DialogFooter>
           <Button
-            disabled={busy || !name.trim() || !username || !adult}
+            disabled={busy || !name.trim() || !username || !ready}
             onClick={() => void submit()}
           >
             {busy ? t("creating") : t("create")}

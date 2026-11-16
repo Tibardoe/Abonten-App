@@ -1,7 +1,13 @@
 import { useProfile } from "@/features/profile/useProfile";
+import { openExternalLink } from "@/lib/legalLinks";
+import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { personName } from "@abonten/core/personName";
 import { TEAM_ROLES, teamRoleNeedsIdCheck } from "@abonten/core/teams/roles";
-import type { InviteTarget, TeamRoleCode } from "@abonten/types/teamType";
+import type {
+  InviteTarget,
+  TeamRoleCode,
+  TeamTerms,
+} from "@abonten/types/teamType";
 import type { TicketTransferRecipient } from "@abonten/types/ticketTransferType";
 import {
   AppText,
@@ -93,10 +99,13 @@ export function ConvertAccountSheet({
   open,
   onClose,
   onConverted,
+  terms = null,
 }: {
   open: boolean;
   onClose: () => void;
   onConverted: (teamId: string) => void;
+  /** The published team terms to accept (N4), if any. */
+  terms?: TeamTerms | null;
 }) {
   const t = useTranslations("teams");
   const toast = useToast();
@@ -105,6 +114,7 @@ export function ConvertAccountSheet({
   const convert = useConvertAccountToTeam();
   const [name, setName] = useState("");
   const [adult, setAdult] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fullName = profile.data?.full_name ?? "";
   const handle = profile.data?.username ?? "";
@@ -113,6 +123,7 @@ export function ConvertAccountSheet({
     if (open) {
       setName(fullName);
       setAdult(false);
+      setAccepted(false);
       setError(null);
     }
   }, [open, fullName]);
@@ -129,6 +140,7 @@ export function ConvertAccountSheet({
       const res = await convert.mutateAsync({
         name: name.trim(),
         adult: true,
+        termsVersion: terms?.version ?? null,
       });
       if (res.status === 200 && res.data) {
         toast.success(
@@ -165,7 +177,12 @@ export function ConvertAccountSheet({
           <Button
             title={convert.isPending ? t("converting") : t("convertAction")}
             loading={convert.isPending}
-            disabled={convert.isPending || !name.trim() || !adult}
+            disabled={
+              convert.isPending ||
+              !name.trim() ||
+              !adult ||
+              (!!terms && !accepted)
+            }
             onPress={submit}
           />
         </View>
@@ -190,6 +207,13 @@ export function ConvertAccountSheet({
           <AppText variant="meta">{t("convertConfirm", { handle })}</AppText>
         ) : null}
         <AdultConfirm checked={adult} onChange={setAdult} />
+        {terms ? (
+          <TermsConfirm
+            terms={terms}
+            checked={accepted}
+            onChange={setAccepted}
+          />
+        ) : null}
       </View>
     </Sheet>
   );
@@ -199,10 +223,13 @@ export function CreateTeamSheet({
   open,
   onClose,
   onCreated,
+  terms = null,
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: (teamId: string) => void;
+  /** The published team terms to accept (N4), if any. */
+  terms?: TeamTerms | null;
 }) {
   const t = useTranslations("teams");
   const toast = useToast();
@@ -210,12 +237,15 @@ export function CreateTeamSheet({
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [adult, setAdult] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const ready = adult && (!terms || accepted);
 
   const close = () => {
     setName("");
     setUsername("");
     setAdult(false);
+    setAccepted(false);
     setError(null);
     onClose();
   };
@@ -227,6 +257,7 @@ export function CreateTeamSheet({
         name: name.trim(),
         username: username.trim().replace(/^@+/, ""),
         adult: true,
+        termsVersion: terms?.version ?? null,
       });
       if (res.status === 200 && res.data) {
         toast.success(t("createdToast"));
@@ -253,7 +284,7 @@ export function CreateTeamSheet({
             title={create.isPending ? t("creating") : t("create")}
             loading={create.isPending}
             disabled={
-              create.isPending || !name.trim() || !username.trim() || !adult
+              create.isPending || !name.trim() || !username.trim() || !ready
             }
             onPress={submit}
           />
@@ -289,12 +320,19 @@ export function CreateTeamSheet({
             maxLength={31}
             returnKeyType="done"
             onSubmitEditing={() => {
-              if (name.trim() && username.trim() && adult) void submit();
+              if (name.trim() && username.trim() && ready) void submit();
             }}
           />
           <AppText variant="meta">{t("usernameHint")}</AppText>
         </View>
         <AdultConfirm checked={adult} onChange={setAdult} />
+        {terms ? (
+          <TermsConfirm
+            terms={terms}
+            checked={accepted}
+            onChange={setAccepted}
+          />
+        ) : null}
       </View>
     </Sheet>
   );
@@ -498,5 +536,55 @@ export function AdultConfirm({
         {t("adultConfirm")}
       </AppText>
     </Pressable>
+  );
+}
+
+/** The website address of a published team terms page (N4). */
+export function teamTermsUrl(terms: TeamTerms): string {
+  return `${PUBLIC_SITE_ORIGIN}${terms.path}`;
+}
+
+/**
+ * N4: once Abonten publishes team terms, whoever makes a team (or makes
+ * their account a team) accepts them for it and says they may act for it.
+ */
+export function TermsConfirm({
+  terms,
+  checked,
+  onChange,
+}: {
+  terms: TeamTerms;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const t = useTranslations("teams");
+  return (
+    <View className="gap-2">
+      <Pressable
+        onPress={() => onChange(!checked)}
+        accessibilityRole="checkbox"
+        accessibilityLabel={t("termsConfirmPlain")}
+        accessibilityState={{ checked }}
+        className="flex-row items-start gap-3"
+      >
+        <Icon
+          name={checked ? "checkbox" : "square-outline"}
+          size={22}
+          tone={checked ? "primary" : "muted"}
+        />
+        <AppText variant="small" className="flex-1">
+          {t("termsConfirmPlain")}
+        </AppText>
+      </Pressable>
+      <Pressable
+        onPress={() => void openExternalLink(teamTermsUrl(terms))}
+        accessibilityRole="link"
+        className="ml-9"
+      >
+        <AppText variant="small" tone="brand" className="font-semibold">
+          {t("termsRead")}
+        </AppText>
+      </Pressable>
+    </View>
   );
 }

@@ -2288,9 +2288,19 @@ export type EventTicketTransferSettingResult = ApiEnvelope<{
 export type TeamsOverviewResult = ApiEnvelope<TeamsOverview>;
 export type ActingTeamsResult = ApiEnvelope<ActingTeams>;
 /** `adult`: they say they are 18 or older (K7). */
-export type CreateTeamBody = { name: string; username: string; adult: true };
+export type CreateTeamBody = {
+  name: string;
+  username: string;
+  adult: true;
+  /** The published team terms the person accepted for the team (N4). */
+  termsVersion?: string | null;
+};
 export type CreateTeamResult = ApiEnvelope<TeamSummary>;
-export type ConvertAccountToTeamBody = { name: string; adult: true };
+export type ConvertAccountToTeamBody = {
+  name: string;
+  adult: true;
+  termsVersion?: string | null;
+};
 export type ConvertAccountToTeamResult = ApiEnvelope<TeamConversion>;
 export type TeamDetailResult = ApiEnvelope<TeamDetail>;
 export type RenameTeamResult = ApiEnvelope<{ name: string }>;
@@ -2305,6 +2315,7 @@ export type TeamMemberRoleResult = ApiEnvelope<{ role: TeamRoleCode }>;
 /** A Front desk or Door staff member's places (null = all the team's). */
 export type TeamMemberPlacesResult = ApiEnvelope<{ placeIds: string[] | null }>;
 export type TeamDoneResult = ApiEnvelope<Record<string, true>>;
+export type AcceptTeamTermsResult = ApiEnvelope<{ version: string }>;
 
 export type StartTicketPlanBody = {
   eventId: string;

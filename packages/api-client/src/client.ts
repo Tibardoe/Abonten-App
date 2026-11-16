@@ -34,6 +34,7 @@ import type {
   WeeklyTeaser,
 } from "@abonten/types/weeklyType";
 import type {
+  AcceptTeamTermsResult,
   AcceptTicketTransferResult,
   AcknowledgeSafetyBody,
   ActingTeamsResult,
@@ -3072,6 +3073,13 @@ export function createApiClient(options: ApiClientOptions) {
         return request<TeamDoneResult>(
           `/api/mobile/teams/${encodeURIComponent(teamId)}/leave`,
           { method: "POST", auth: true },
+        );
+      },
+      /** An Owner accepts the published team terms for the team (N4). */
+      acceptTerms(teamId: string, termsVersion: string) {
+        return request<AcceptTeamTermsResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/terms`,
+          { method: "POST", body: { termsVersion }, auth: true },
         );
       },
     },
