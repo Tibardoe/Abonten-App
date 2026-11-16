@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts: 18 or older (K7), and Front desk and Door staff at some places
+
+- Making a team, making an account a team and accepting an invitation ask "I'm 18 or older" (recorded); the database keeps out anyone an ID check found under 18 and takes them out of their teams if such a result comes later. Owners limit Front desk and Door staff to some of a chain's places; the booking and ticket access rules, the visit QR and the organizer lists hold the limit. The team page's "coming soon" note is gone. `architecture/team-accounts.md` 1.11 (§4k), `admin/teams.md` 1.10, K7 in the legal register, the plan's Part 2 row. Migration `20261116220000_team_accounts_age_places`; PROJECT.md §75.11.
+
 ## 2026-11-16 — Team accounts: emails about a team, and a team's own rewards released
 
 - An email queued for a team (Abonten Rewards: credit it can use now) goes to the Owners and Finance members who got the notice, under their own preferences, naming the team; its button opens the team's Finances (`/notifications/open` switches "Managing as" for a team's copy, also for browser push clicks). Fix: a team's rebates and place-visit credit were never released (no verified phone on a team account); an Owner's verified phone now counts. Members' visits and purchases never count towards their team's rewards. `architecture/team-accounts.md` 1.10 (§4j), `rewards-ledger.md`. Migration `20261116210000_team_accounts_emails`; PROJECT.md §75.10.

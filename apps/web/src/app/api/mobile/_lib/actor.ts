@@ -23,12 +23,18 @@ export async function mobileActingFor(
   /** `all`: the role must cover every capability in the list. */
   options: { all?: boolean } = {},
 ): Promise<
-  | { error: null; accountId: string; role: TeamRoleCode | null }
+  | {
+      error: null;
+      accountId: string;
+      role: TeamRoleCode | null;
+      /** Front desk / Door staff limited to places: those (else null). */
+      placeIds: string[] | null;
+    }
   | { error: { status: 403; message: string } }
 > {
   const header = req.headers.get(ACTING_TEAM_HEADER)?.trim() ?? "";
   if (!UUID.test(header)) {
-    return { error: null, accountId: personId, role: null };
+    return { error: null, accountId: personId, role: null, placeIds: null };
   }
   const resolved = await resolveActingAccount(
     getSupabaseServiceClient(),
@@ -44,6 +50,7 @@ export async function mobileActingFor(
     error: null,
     accountId: resolved.actor.accountId,
     role: resolved.actor.role,
+    placeIds: resolved.actor.placeIds ?? null,
   };
 }
 

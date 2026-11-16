@@ -8,12 +8,14 @@ import {
   useLeaveTeam,
   useRemoveTeamMember,
   useRenameTeam,
+  useSetTeamMemberPlaces,
   useSetTeamMemberRole,
   useTeam,
 } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateTime } from "@abonten/core/i18n/format";
 import { personName } from "@abonten/core/personName";
+import { teamRolePlaceLimited } from "@abonten/core/teams/roles";
 import type {
   TeamActivityEntry,
   TeamMember,
@@ -25,6 +27,7 @@ import {
   Avatar,
   Button,
   EmptyState,
+  Icon,
   Input,
   Refresher,
   Sheet,
@@ -46,20 +49,31 @@ function MemberSheet({
   teamId,
   member,
   isMe,
+  places,
   onClose,
 }: {
   teamId: string;
   member: TeamMember | null;
   isMe: boolean;
+  /** The team's places, for limiting Front desk and Door staff. */
+  places: { id: string; name: string }[];
   onClose: () => void;
 }) {
   const t = useTranslations("teams");
   const tc = useTranslations("core");
   const toast = useToast();
   const setRole = useSetTeamMemberRole();
+  const setPlaces = useSetTeamMemberPlaces();
   const remove = useRemoveTeamMember();
   const [role, setLocalRole] = useState<TeamRoleCode | null>(null);
+  const [placeIds, setPlaceIds] = useState<string[] | null>(null);
   const chosen = role ?? member?.role ?? "manager";
+  // Front desk and Door staff can be limited to some of a chain's places.
+  const limitable = member ? teamRolePlaceLimited(member.role) : false;
+  const chosenPlaces = placeIds ?? member?.placeIds ?? [];
+  const placesChanged =
+    placeIds !== null &&
+    [...placeIds].sort().join() !== [...(member?.placeIds ?? [])].sort().join();
   const name = member
     ? (personName(tc, {
         full_name: member.person.name,
@@ -69,11 +83,36 @@ function MemberSheet({
 
   const close = () => {
     setLocalRole(null);
+    setPlaceIds(null);
     onClose();
   };
 
+  const savePlaces = async (): Promise<boolean> => {
+    if (!member || !placesChanged) return true;
+    try {
+      const res = await setPlaces.mutateAsync({
+        teamId,
+        userId: member.person.id,
+        placeIds: chosenPlaces,
+      });
+      if (res.status === 200) {
+        toast.success(t("placesSavedToast"));
+        return true;
+      }
+      toast.error(res.message ?? t("couldNotDo"));
+    } catch {
+      toast.error(t("couldNotDo"));
+    }
+    return false;
+  };
+
   const save = async () => {
-    if (!member || chosen === member.role) return close();
+    if (!member) return close();
+    // The places go first: a new role that is not limited clears them.
+    if (chosen === member.role) {
+      if (await savePlaces()) close();
+      return;
+    }
     try {
       const res = await setRole.mutateAsync({
         teamId,
@@ -127,8 +166,10 @@ function MemberSheet({
         <View className="gap-2">
           <Button
             title={t("save")}
-            loading={setRole.isPending}
-            disabled={setRole.isPending || remove.isPending}
+            loading={setRole.isPending || setPlaces.isPending}
+            disabled={
+              setRole.isPending || setPlaces.isPending || remove.isPending
+            }
             onPress={save}
           />
           {!isMe ? (
@@ -142,7 +183,47 @@ function MemberSheet({
         </View>
       }
     >
-      <RoleChoice value={chosen} onPick={setLocalRole} />
+      <View className="gap-4">
+        <RoleChoice value={chosen} onPick={setLocalRole} />
+        {limitable && chosen === member?.role ? (
+          <View className="gap-2">
+            <AppText variant="sectionHeading">{t("places")}</AppText>
+            <AppText variant="small" tone="muted">
+              {t("placesBody")}
+            </AppText>
+            {places.length === 0 ? (
+              <AppText variant="meta">{t("noPlacesYet")}</AppText>
+            ) : (
+              places.map((place) => {
+                const on = chosenPlaces.includes(place.id);
+                return (
+                  <Pressable
+                    key={place.id}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={place.name}
+                    accessibilityState={{ checked: on }}
+                    onPress={() =>
+                      setPlaceIds(
+                        on
+                          ? chosenPlaces.filter((id) => id !== place.id)
+                          : [...chosenPlaces, place.id],
+                      )
+                    }
+                    className="flex-row items-center gap-3 py-1"
+                  >
+                    <Icon
+                      name={on ? "checkbox" : "square-outline"}
+                      size={22}
+                      tone={on ? "primary" : "muted"}
+                    />
+                    <AppText className="flex-1">{place.name}</AppText>
+                  </Pressable>
+                );
+              })
+            )}
+          </View>
+        ) : null}
+      </View>
     </Sheet>
   );
 }
@@ -233,7 +314,11 @@ function ActivityRow({ entry }: { entry: TeamActivityEntry }) {
       <AppText variant="small">
         {t("activity", {
           // "member.joined" -> "member_joined": a select key in the catalog.
-          action: entry.action.replace(/\./g, "_"),
+          action:
+            entry.action === "member.account_closed" &&
+            entry.details.reason === "under_age"
+              ? "member_under_age"
+              : entry.action.replace(/\./g, "_"),
           // A staff step (pause, resume, a new Owner) has no member actor.
           actor:
             entry.details.by === "staff"
@@ -360,7 +445,7 @@ export default function TeamScreen() {
                   </AppText>
                 </View>
               ) : null}
-              <AppText variant="meta">{t("comingSoon")}</AppText>
+              <AppText variant="meta">{t("howToManage")}</AppText>
 
               {isOwner && active ? (
                 <View className="flex-row gap-2">
@@ -410,6 +495,16 @@ export default function TeamScreen() {
                             : ""}
                           {member.idChecked ? ` · ${t("idChecked")}` : ""}
                         </AppText>
+                        {isOwner && teamRolePlaceLimited(member.role) ? (
+                          <AppText variant="meta" numberOfLines={1}>
+                            {t("places")}:{" "}
+                            {member.placeIds?.length
+                              ? t("placesSome", {
+                                  count: member.placeIds.length,
+                                })
+                              : t("placesAll")}
+                          </AppText>
+                        ) : null}
                       </View>
                       <Tag label={t("role", { role: member.role })} />
                     </View>
@@ -515,6 +610,7 @@ export default function TeamScreen() {
                 teamId={team.id}
                 member={editing}
                 isMe={editing?.person.id === viewerId}
+                places={detail.places ?? []}
                 onClose={() => setEditing(null)}
               />
             </ScrollView>

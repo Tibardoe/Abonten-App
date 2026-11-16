@@ -44,5 +44,9 @@ export default withActionLocale(async function getOrganizerEvents(options?: {
   if (actor.error)
     return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
 
-  return fetchOrganizerEventsPage(supabase, actor.accountId, options);
+  // Door staff limited to some places see the events held at them.
+  return fetchOrganizerEventsPage(supabase, actor.accountId, {
+    ...options,
+    placeIds: actor.placeIds,
+  });
 });

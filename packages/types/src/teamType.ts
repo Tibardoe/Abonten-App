@@ -56,6 +56,11 @@ export type TeamMember = {
   joinedAt: string;
   /** Whether this member passed the ID check (shown for Owner/Finance). */
   idChecked: boolean;
+  /**
+   * Front desk and Door staff limited to some of the team's places (a
+   * chain); null = all its places. Shown to Owners.
+   */
+  placeIds?: string[] | null;
 };
 
 export type TeamInviteSent = {
@@ -91,6 +96,8 @@ export type TeamDetail = {
   members: TeamMember[];
   invites: TeamInviteSent[] | null;
   activity: TeamActivityEntry[] | null;
+  /** The team's places, for limiting Front desk and Door staff (Owners). */
+  places?: { id: string; name: string }[] | null;
 };
 
 /** An invitation waiting for the caller. */

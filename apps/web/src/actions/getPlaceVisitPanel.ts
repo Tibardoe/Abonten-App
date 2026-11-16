@@ -5,6 +5,7 @@ import { withActionLocale } from "@/i18n/withActionLocale";
 import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getPlaceVisitPanelCore } from "@abonten/services/places/placeVisitCore";
+import { actorReachesPlace } from "@abonten/services/teams/actingAccount";
 import type { PlaceVisitPanel } from "@abonten/types/rewards";
 
 /**
@@ -29,6 +30,10 @@ export const getPlaceVisitPanel = withActionLocale(
     // Managing as a team: the front desk shows the team's place's code.
     const actor = await actingFor(user.id, "visit.show");
     if (actor.error) return actor.error;
+    // Front desk limited to some of a chain's places.
+    if (!actorReachesPlace(actor, placeId)) {
+      return { status: 403, message: tr("teamPlaceNotYours") };
+    }
 
     return getPlaceVisitPanelCore(
       supabase,

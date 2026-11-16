@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
+import AdultConfirm from "@/teams/atoms/AdultConfirm";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -38,6 +39,7 @@ export default function ConvertAccountDialog({
   const qc = useQueryClient();
   const { data: details } = useCurrentUserDetails();
   const [name, setName] = useState("");
+  const [adult, setAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -47,6 +49,7 @@ export default function ConvertAccountDialog({
   useEffect(() => {
     if (open) {
       setName(fullName);
+      setAdult(false);
       setError(null);
       setBusy(false);
     }
@@ -55,7 +58,9 @@ export default function ConvertAccountDialog({
   const submit = async () => {
     setBusy(true);
     setError(null);
-    const res = await convertAccountToTeam({ name }).catch(actionUnreachable);
+    const res = await convertAccountToTeam({ name, adult }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200 && "data" in res && res.data) {
       toast.success(
@@ -102,6 +107,11 @@ export default function ConvertAccountDialog({
               {t("convertConfirm", { handle })}
             </p>
           ) : null}
+          <AdultConfirm
+            id="convert-adult"
+            checked={adult}
+            onChange={setAdult}
+          />
         </div>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
@@ -116,7 +126,10 @@ export default function ConvertAccountDialog({
           >
             {t("cancel")}
           </Button>
-          <Button disabled={busy || !name.trim()} onClick={() => void submit()}>
+          <Button
+            disabled={busy || !name.trim() || !adult}
+            onClick={() => void submit()}
+          >
             {busy ? t("converting") : t("convertAction")}
           </Button>
         </DialogFooter>

@@ -7,6 +7,7 @@ import {
   tr,
 } from "@abonten/services/i18n/requestLocale";
 import { getPlaceVisitPanelCore } from "@abonten/services/places/placeVisitCore";
+import { actorReachesPlace } from "@abonten/services/teams/actingAccount";
 
 // GET /api/mobile/organizer/places/:placeId/visit-code
 // The place's check-in QR code right now (it changes every 30 seconds --
@@ -24,6 +25,10 @@ export async function GET(
 
   try {
     const { placeId } = await params;
+    // Front desk limited to some of a chain's places.
+    if (!actorReachesPlace(actor, placeId)) {
+      return apiJson({ status: 403, message: tr("teamPlaceNotYours") });
+    }
     return fromActionResult(
       await getPlaceVisitPanelCore(auth.supabase, actor.accountId, placeId),
     );

@@ -126,6 +126,7 @@ describe("featuring a team's listings with the team's credit", () => {
     );
     if (sent.status !== 200) throw new Error(sent.message);
     const res = await answerTeamInviteCore(svc, who.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });
@@ -192,6 +193,7 @@ describe("featuring a team's listings with the team's credit", () => {
     owner = await person();
     [finance, manager] = await Promise.all([person(), person()]);
     const made = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Promo Crew",
       username: `tpt_${crypto.randomUUID().slice(0, 8)}`,
     });

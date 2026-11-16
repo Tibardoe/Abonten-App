@@ -25,7 +25,7 @@ import {
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 // Settings › Teams: invitations waiting for the person, the teams they run,
 // and "Make a team" while the programme is open to them. The native echo
@@ -38,9 +38,13 @@ function InviteCard({ invite }: { invite: TeamInviteReceived }) {
   const toast = useToast();
   const answer = useAnswerTeamInvite();
 
-  const reply = async (action: "accept" | "decline") => {
+  const send = async (action: "accept" | "decline") => {
     try {
-      const res = await answer.mutateAsync({ inviteId: invite.id, action });
+      const res = await answer.mutateAsync({
+        inviteId: invite.id,
+        action,
+        ...(action === "accept" ? { adult: true } : {}),
+      });
       if (res.status === 200) {
         toast.success(
           action === "accept" ? t("joinedToast") : t("declinedToast"),
@@ -51,6 +55,24 @@ function InviteCard({ invite }: { invite: TeamInviteReceived }) {
     } catch {
       toast.error(t("couldNotDo"));
     }
+  };
+
+  // K7: joining says they are 18 or older.
+  const reply = (action: "accept" | "decline") => {
+    if (action === "decline") {
+      void send(action);
+      return;
+    }
+    Alert.alert(
+      t("acceptAdultTitle", {
+        team: invite.team.name ?? invite.team.username ?? "",
+      }),
+      t("acceptAdultBody"),
+      [
+        { text: t("cancel"), style: "cancel" },
+        { text: t("acceptAdultConfirm"), onPress: () => void send("accept") },
+      ],
+    );
   };
 
   const inviter = invite.invitedBy
@@ -202,7 +224,7 @@ export default function TeamsScreen() {
               data.teams.map((team) => <TeamRow key={team.id} team={team} />)
             )}
             {data.teams.length > 0 || data.program.enabled ? (
-              <AppText variant="meta">{t("comingSoon")}</AppText>
+              <AppText variant="meta">{t("howToManage")}</AppText>
             ) : null}
           </View>
 

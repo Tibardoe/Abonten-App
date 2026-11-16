@@ -1405,5 +1405,10 @@
   "teamPayoutAccountTooNew": "Esta cuenta de cobro se añadió hace menos de 48 horas. Podrás pedir un cobro a ella cuando hayan pasado 48 horas.",
   "verificationTeamRequirements": "Un equipo se verifica como empresa u organización registrada, con su certificado de registro y un documento que muestre que puedes actuar en su nombre (la lista de sus directores o socios, o una carta firmada).",
   "verificationTeamIsABusiness": "Un equipo se verifica como empresa u organización registrada, no como particular.",
-  "teamRenamedBadgeInReview": "Nombre guardado. La insignia de Verificado vuelve a revisión hasta que Abonten compruebe el nuevo nombre."
+  "teamRenamedBadgeInReview": "Nombre guardado. La insignia de Verificado vuelve a revisión hasta que Abonten compruebe el nuevo nombre.",
+  "teamAdultRequired": "Los equipos en Abonten los gestionan personas adultas: confirma que tienes 18 años o más.",
+  "teamUnderAge": "Los equipos en Abonten son para personas de 18 años o más.",
+  "teamRoleNotLimited": "Solo los roles Recepción y Control de acceso pueden limitarse a lugares.",
+  "teamPlaceNotTeam": "Elige lugares que gestione este equipo.",
+  "teamPlaceNotYours": "Tu rol en este equipo cubre otros lugares."
 }

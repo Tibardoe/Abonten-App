@@ -1405,5 +1405,10 @@
   "teamPayoutAccountTooNew": "Ce compte de versement a été ajouté il y a moins de 48 heures. Vous pourrez y demander un versement une fois les 48 heures passées.",
   "verificationTeamRequirements": "Une équipe est vérifiée en tant qu'entreprise ou organisation enregistrée, avec son certificat d'enregistrement et un document montrant que vous pouvez agir en son nom (la liste de ses dirigeants ou associés, ou une lettre signée).",
   "verificationTeamIsABusiness": "Une équipe est vérifiée en tant qu'entreprise ou organisation enregistrée, pas en tant que particulier.",
-  "teamRenamedBadgeInReview": "Nom enregistré. Le badge Vérifié repasse en examen jusqu'à ce qu'Abonten vérifie le nouveau nom."
+  "teamRenamedBadgeInReview": "Nom enregistré. Le badge Vérifié repasse en examen jusqu'à ce qu'Abonten vérifie le nouveau nom.",
+  "teamAdultRequired": "Les équipes sur Abonten sont gérées par des adultes : confirmez que vous avez 18 ans ou plus.",
+  "teamUnderAge": "Les équipes sur Abonten sont réservées aux personnes de 18 ans ou plus.",
+  "teamRoleNotLimited": "Seuls les rôles Réception et Accueil à l'entrée peuvent être limités à des lieux.",
+  "teamPlaceNotTeam": "Choisissez des lieux gérés par cette équipe.",
+  "teamPlaceNotYours": "Votre rôle dans cette équipe couvre d'autres lieux."
 }

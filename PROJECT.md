@@ -4452,3 +4452,12 @@ Branch `feat/team-emails-2026-11-16`, migration `20261116210000_team_accounts_em
 - Fix (found by the test): `_reward_settle_one` required the beneficiary's own verified phone, which a team account never has, so a team's rebates and place-visit credit stayed pending (`phone_not_verified`) and would void after 90 days; `_reward_beneficiary_phone_ok` accepts an active Owner's.
 - Fix: a team's members counted as visitors of its places and their purchases towards its rebates; `place_visit_record` (patched in place, as 20260924100200 left it), `_reward_place_visits_evaluate` and `_reward_event_rebate_basis` treat them as the team's own.
 - **Checked**: `teams-emails.integration.test.ts` (a real place-visit run for a team-run place: release, member copies, Owner email naming the team, Finance opted out, a member's visit not counted) and the rewards P8, rebates and notification-delivery suites.
+
+### 75.11 Stage 5: 18 or older (K7), Front desk and Door staff at some places (2026-11-16)
+
+Branch `feat/team-age-and-places-2026-11-16`, migration `20261116220000_team_accounts_age_places`.
+
+- K7: `createTeamCore`, `convertAccountToTeamCore`, `answerTeamInviteCore` (accept) require `adult: true` (schemas, website and app ask) and record `team_member.adult_confirmed_at`; `team_member_age_guard` refuses an active membership for a person whose ID check has `is_adult = false`; `identity_under_age_leaves_teams` runs `team_forget_member(…, 'under_age')` when such a result arrives.
+- Places: `team_member_place`, `team_member_set_places` (Owners; Front desk and Door staff only; the team's places only), `team_member_places_follow_role`; `acting_accounts()` leaves out a limited member's team and `acting_places(caps)` opens their places in `place_booking_select` / `_update`, `ticket_select`, `ticket_organizer_update` and `guard_place_booking_client_write`; `resolveActingAccount` returns `placeIds` (organizer lists filtered; bookings and the visit QR refuse other places, `actorReachesPlace`). Website `MemberPlacesDialog`, app member sheet; `PUT /api/mobile/teams/:teamId/members/:userId/places`.
+- Also: the team page's "coming soon" note (`howToManage` now); `getTeamCore` reads the live ID check (`id_checked`).
+- **Checked**: `teams-age-places.integration.test.ts` (2 tests), every team suite (51 tests) and the full integration suite.

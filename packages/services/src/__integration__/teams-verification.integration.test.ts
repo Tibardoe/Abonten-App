@@ -54,6 +54,7 @@ describe("verification for teams (the business check, X42)", () => {
 
   async function teamWith(owner: TestUser, member: TestUser, role: string) {
     const made = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Osu Lounge Ltd",
       username: `tvt_${crypto.randomUUID().slice(0, 8)}`,
     });
@@ -71,6 +72,7 @@ describe("verification for teams (the business check, X42)", () => {
     );
     if (sent.status !== 200) throw new Error(sent.message);
     const res = await answerTeamInviteCore(svc, member.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });

@@ -1405,5 +1405,10 @@
   "teamPayoutAccountTooNew": "Dieses Auszahlungskonto wurde vor weniger als 48 Stunden hinzugefügt. Du kannst eine Auszahlung darauf anfordern, sobald 48 Stunden vergangen sind.",
   "verificationTeamRequirements": "Ein Team wird als eingetragenes Unternehmen oder eingetragene Organisation verifiziert, mit seiner Eintragungsurkunde und einem Dokument, das zeigt, dass du für es handeln darfst (eine Liste der Geschäftsführer oder Gesellschafter oder ein unterschriebener Brief).",
   "verificationTeamIsABusiness": "Ein Team wird als eingetragenes Unternehmen oder eingetragene Organisation verifiziert, nicht als Einzelperson.",
-  "teamRenamedBadgeInReview": "Name gespeichert. Das Verifiziert-Abzeichen wird erneut geprüft, bis Abonten den neuen Namen kontrolliert hat."
+  "teamRenamedBadgeInReview": "Name gespeichert. Das Verifiziert-Abzeichen wird erneut geprüft, bis Abonten den neuen Namen kontrolliert hat.",
+  "teamAdultRequired": "Teams auf Abonten werden von Erwachsenen geführt: Bestätige, dass du 18 Jahre oder älter bist.",
+  "teamUnderAge": "Teams auf Abonten sind für Personen ab 18 Jahren.",
+  "teamRoleNotLimited": "Nur die Rollen Empfang und Einlass können auf Orte beschränkt werden.",
+  "teamPlaceNotTeam": "Wähle Orte, die dieses Team führt.",
+  "teamPlaceNotYours": "Deine Rolle in diesem Team gilt für andere Orte."
 }

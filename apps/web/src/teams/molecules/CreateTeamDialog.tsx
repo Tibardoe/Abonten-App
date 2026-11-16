@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
+import AdultConfirm from "@/teams/atoms/AdultConfirm";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -36,6 +37,7 @@ export default function CreateTeamDialog({
   const refresh = useRefreshTeams();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [adult, setAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -43,6 +45,7 @@ export default function CreateTeamDialog({
     if (open) {
       setName("");
       setUsername("");
+      setAdult(false);
       setError(null);
       setBusy(false);
     }
@@ -54,6 +57,7 @@ export default function CreateTeamDialog({
     const res = await createTeam({
       name,
       username: username.replace(/^@+/, ""),
+      adult,
     }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200 && "data" in res && res.data) {
@@ -100,11 +104,14 @@ export default function CreateTeamDialog({
                 setError(null);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim() && username) void submit();
+                if (e.key === "Enter" && name.trim() && username && adult) {
+                  void submit();
+                }
               }}
             />
             <p className="text-xs text-muted-foreground">{t("usernameHint")}</p>
           </div>
+          <AdultConfirm checked={adult} onChange={setAdult} />
         </div>
         {error ? (
           <p role="alert" className="text-sm text-destructive">
@@ -113,7 +120,7 @@ export default function CreateTeamDialog({
         ) : null}
         <DialogFooter>
           <Button
-            disabled={busy || !name.trim() || !username}
+            disabled={busy || !name.trim() || !username || !adult}
             onClick={() => void submit()}
           >
             {busy ? t("creating") : t("create")}

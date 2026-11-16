@@ -22,6 +22,7 @@ export default withActionLocale(async function getOrganizerPlaces(options?: {
   const supabase = await createClient();
 
   let ownerId: string;
+  let placeIds: string[] | null = null;
 
   if (options?.username) {
     const { data: profile, error: profileError } = await supabase
@@ -72,10 +73,13 @@ export default withActionLocale(async function getOrganizerPlaces(options?: {
       return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
 
     ownerId = actor.accountId;
+    // Front desk limited to some of a chain's places: only those.
+    placeIds = actor.placeIds;
   }
 
   return fetchOrganizerPlacesPage(supabase, ownerId, {
     cursor: options?.cursor,
     pageSize: options?.pageSize,
+    placeIds,
   });
 });

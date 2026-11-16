@@ -12972,6 +12972,7 @@ export type Database = {
       team_member: {
         Row: {
           added_by: string | null
+          adult_confirmed_at: string | null
           ended_at: string | null
           ended_by: string | null
           joined_at: string
@@ -12983,6 +12984,7 @@ export type Database = {
         }
         Insert: {
           added_by?: string | null
+          adult_confirmed_at?: string | null
           ended_at?: string | null
           ended_by?: string | null
           joined_at?: string
@@ -12994,6 +12996,7 @@ export type Database = {
         }
         Update: {
           added_by?: string | null
+          adult_confirmed_at?: string | null
           ended_at?: string | null
           ended_by?: string | null
           joined_at?: string
@@ -13052,6 +13055,38 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profile_details"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      team_member_place: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          place_id: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          place_id: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          place_id?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_place_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -18796,6 +18831,11 @@ export type Database = {
         Args: { p_by: string; p_role: string; p_team: string; p_user: string }
         Returns: string
       }
+      team_member_set_places: {
+        Args: { p_by: string; p_places: string[]; p_team: string; p_user: string }
+        Returns: number
+      }
+      acting_places: { Args: { p_caps: string[] }; Returns: string[] }
       team_rename: {
         Args: { p_by: string; p_name: string; p_team: string }
         Returns: undefined

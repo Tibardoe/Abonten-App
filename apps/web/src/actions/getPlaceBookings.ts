@@ -5,6 +5,7 @@ import { withActionLocale } from "@/i18n/withActionLocale";
 import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchPlaceBookingsPage } from "@abonten/services/places/placeBookingsReviewsCore";
+import { actorReachesPlace } from "@abonten/services/teams/actingAccount";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
@@ -48,6 +49,16 @@ export const getPlaceBookings = withActionLocale(
 
     if (actor.error)
       return { ...actor.error, data: [], nextCursor: null, hasNextPage: false };
+    // Front desk limited to some of a chain's places.
+    if (!actorReachesPlace(actor, placeId)) {
+      return {
+        status: 403,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: tr("teamPlaceNotYours"),
+      };
+    }
 
     return fetchPlaceBookingsPage(supabase, actor.accountId, placeId, options);
   },

@@ -10,10 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import MemberPlacesDialog from "@/teams/molecules/MemberPlacesDialog";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatDateTime } from "@abonten/core/i18n/format";
 import { personName } from "@abonten/core/personName";
-import { TEAM_ROLES, isTeamRole } from "@abonten/core/teams/roles";
+import {
+  TEAM_ROLES,
+  isTeamRole,
+  teamRolePlaceLimited,
+} from "@abonten/core/teams/roles";
 import type {
   TeamActivityEntry,
   TeamDetail,
@@ -77,6 +82,7 @@ function TeamDetailBody({
   const router = useRouter();
   const refresh = useRefreshTeams();
   const [inviting, setInviting] = useState(false);
+  const [placesFor, setPlacesFor] = useState<TeamMember | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState(detail.team.name ?? "");
   const [busy, setBusy] = useState(false);
@@ -218,7 +224,7 @@ function TeamDetailBody({
         </p>
       ) : null}
 
-      <p className="text-xs text-muted-foreground">{t("comingSoon")}</p>
+      <p className="text-xs text-muted-foreground">{t("howToManage")}</p>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -267,6 +273,19 @@ function TeamDetailBody({
                     {member.person.username ? `@${member.person.username}` : ""}
                     {member.idChecked ? ` · ${t("idChecked")}` : ""}
                   </p>
+                  {isOwner && teamRolePlaceLimited(member.role) ? (
+                    <button
+                      type="button"
+                      disabled={busy || team.status !== "active"}
+                      onClick={() => setPlacesFor(member)}
+                      className="text-xs text-primary hover:underline disabled:opacity-50"
+                    >
+                      {t("places")}:{" "}
+                      {member.placeIds?.length
+                        ? t("placesSome", { count: member.placeIds.length })
+                        : t("placesAll")}
+                    </button>
+                  ) : null}
                 </div>
                 {isOwner && team.status === "active" ? (
                   <div className="flex items-center gap-2">
@@ -400,6 +419,28 @@ function TeamDetailBody({
         open={inviting}
         onOpenChange={setInviting}
       />
+      <MemberPlacesDialog
+        teamId={team.id}
+        member={
+          placesFor
+            ? {
+                id: placesFor.person.id,
+                name:
+                  personName(tc, {
+                    full_name: placesFor.person.name,
+                    username: placesFor.person.username,
+                  }) ?? "",
+                placeIds: placesFor.placeIds ?? null,
+              }
+            : null
+        }
+        places={detail.places ?? []}
+        open={!!placesFor}
+        onOpenChange={(open) => {
+          if (!open) setPlacesFor(null);
+        }}
+        onSaved={refresh}
+      />
     </div>
   );
 }
@@ -418,7 +459,11 @@ function ActivityLine({ entry }: { entry: TeamActivityEntry }) {
       <span>
         {t("activity", {
           // "member.joined" -> "member_joined": a select key in the catalog.
-          action: entry.action.replace(/\./g, "_"),
+          action:
+            entry.action === "member.account_closed" &&
+            entry.details.reason === "under_age"
+              ? "member_under_age"
+              : entry.action.replace(/\./g, "_"),
           // A staff step (pause, resume, a new Owner) has no member actor.
           actor:
             entry.details.by === "staff"

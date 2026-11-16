@@ -95,7 +95,29 @@ const SQL_ERRORS: Record<string, { status: Fail["status"]; key: string }> = {
   nothing_to_move: { status: 409, key: "teamNothingToMove" },
   payout_in_progress: { status: 409, key: "teamPayoutInProgress" },
   verification_open: { status: 409, key: "teamVerificationOpen" },
+  under_age: { status: 409, key: "teamUnderAge" },
+  role_not_limited: { status: 409, key: "teamRoleNotLimited" },
+  place_not_team: { status: 400, key: "teamPlaceNotTeam" },
 };
+
+/** K7: they said they are 18 or older; the database keeps when. */
+async function recordAdult(
+  svc: ServiceRoleClient,
+  teamId: string,
+  userId: string,
+): Promise<void> {
+  const { error } = await svc
+    .from("team_member")
+    .update({ adult_confirmed_at: new Date().toISOString() } as never)
+    .eq("team_id", teamId)
+    .eq("user_id", userId);
+  if (error) logger.error(`teams recordAdult: ${error.message}`);
+}
+
+const adultRequired = (): Fail => ({
+  status: 400,
+  message: tr("teamAdultRequired"),
+});
 
 /** Turns a `team:<code>` database error into an envelope. */
 function failFromDb(error: { message?: string } | null, where: string): Fail {
@@ -406,17 +428,41 @@ export async function getTeamCore(
       ...activityRows.map((a) => a.actor_user_id),
       ...memberSubjects,
     ]),
+    // A live check (public.account_id_checked), not a lapsed one.
     svc
       .from("user_info")
-      .select("id, identity_verified")
+      .select("id, id_checked")
       .in(
         "id",
         memberRows.map((m) => m.user_id),
       ),
   ]);
   const checked = new Map(
-    (idChecks.data ?? []).map((r) => [r.id, r.identity_verified === true]),
+    (idChecks.data ?? []).map((r) => [r.id, r.id_checked === true]),
   );
+
+  // Owners limit Front desk and Door staff to some of the team's places.
+  const [limits, teamPlaces] = isOwner
+    ? await Promise.all([
+        svc
+          .from("team_member_place")
+          .select("user_id, place_id")
+          .eq("team_id", teamId),
+        svc
+          .from("place")
+          .select("id, name")
+          .eq("owner_id", teamId)
+          .order("name")
+          .limit(200),
+      ])
+    : [null, null];
+  const limitsOf = new Map<string, string[]>();
+  for (const l of (limits?.data ?? []) as {
+    user_id: string;
+    place_id: string;
+  }[]) {
+    limitsOf.set(l.user_id, [...(limitsOf.get(l.user_id) ?? []), l.place_id]);
+  }
 
   const memberList: TeamMember[] = [];
   for (const m of memberRows) {
@@ -427,6 +473,7 @@ export async function getTeamCore(
       role: m.role as TeamRoleCode,
       joinedAt: m.joined_at,
       idChecked: checked.get(m.user_id) ?? false,
+      ...(isOwner ? { placeIds: limitsOf.get(m.user_id) ?? null } : {}),
     });
   }
 
@@ -468,6 +515,9 @@ export async function getTeamCore(
       members: memberList,
       invites: inviteList,
       activity: activityList,
+      places: isOwner
+        ? ((teamPlaces?.data ?? []) as { id: string; name: string }[])
+        : null,
     },
   };
 }
@@ -482,8 +532,9 @@ export async function getTeamCore(
 export async function createTeamCore(
   svc: ServiceRoleClient,
   userId: string,
-  input: { name: string; username: string },
+  input: { name: string; username: string; adult: boolean },
 ): Promise<Ok<TeamSummary> | Fail> {
+  if (input.adult !== true) return adultRequired();
   const access = await resolveTeamAccess(svc, userId);
   if (!access.program.enabled) return unavailable();
   if (await isAccountRestricted(userId)) {
@@ -530,6 +581,7 @@ export async function createTeamCore(
     }
     return failFromDb(error, "createTeamCore");
   }
+  await recordAdult(svc, accountId, userId);
   const summary = await summaries(svc, [
     {
       team_id: accountId,
@@ -552,8 +604,9 @@ export async function createTeamCore(
 export async function convertAccountToTeamCore(
   svc: ServiceRoleClient,
   userId: string,
-  input: { name: string },
+  input: { name: string; adult: boolean },
 ): Promise<Ok<TeamConversion> | Fail> {
+  if (input.adult !== true) return adultRequired();
   const access = await resolveTeamAccess(svc, userId);
   if (!access.program.enabled) return unavailable();
   if (await isAccountRestricted(userId)) {
@@ -600,6 +653,7 @@ export async function convertAccountToTeamCore(
     person_username?: string;
     badge_back_in_review?: boolean;
   };
+  await recordAdult(svc, accountId, userId);
   const summary = await summaries(svc, [
     {
       team_id: accountId,
@@ -822,7 +876,12 @@ export async function inviteTeamMemberCore(
 export async function answerTeamInviteCore(
   svc: ServiceRoleClient,
   userId: string,
-  input: { inviteId: string; action: "accept" | "decline" },
+  input: {
+    inviteId: string;
+    action: "accept" | "decline";
+    /** K7: accepting says they are 18 or older. */
+    adult?: boolean;
+  },
 ): Promise<Ok<{ teamId: string; joined: boolean }> | Fail> {
   if (input.action === "decline") {
     const { data, error } = await svc.rpc("team_invite_decline", {
@@ -834,6 +893,7 @@ export async function answerTeamInviteCore(
     return { status: 200, data: { teamId: row?.team_id ?? "", joined: false } };
   }
   if (isTeamsKillSwitchOn()) return unavailable();
+  if (input.adult !== true) return adultRequired();
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
   }
@@ -846,6 +906,7 @@ export async function answerTeamInviteCore(
   if (error) return failFromDb(error, "answerTeamInviteCore");
   const row = (data ?? [])[0];
   if (!row) return { status: 500, message: tr("somethingWentWrong") };
+  await recordAdult(svc, row.team_id, userId);
   if (row.invited_by) {
     await noticeTeamInviteAccepted(
       row.team_id,
@@ -891,6 +952,31 @@ export async function setTeamMemberRoleCore(
     await noticeTeamRoleChanged(input.teamId, input.userId, input.role);
   }
   return { status: 200, data: { role: input.role } };
+}
+
+/**
+ * An Owner limits a Front desk or Door staff member to some of the team's
+ * places (a chain), or lifts the limit (no places = all of them).
+ */
+export async function setTeamMemberPlacesCore(
+  svc: ServiceRoleClient,
+  userId: string,
+  input: { teamId: string; userId: string; placeIds: string[] },
+): Promise<Ok<{ placeIds: string[] | null }> | Fail> {
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: restrictedAccountMessage() };
+  }
+  const { error } = await svc.rpc("team_member_set_places", {
+    p_team: input.teamId,
+    p_by: userId,
+    p_user: input.userId,
+    p_places: input.placeIds,
+  });
+  if (error) return failFromDb(error, "setTeamMemberPlacesCore");
+  return {
+    status: 200,
+    data: { placeIds: input.placeIds.length > 0 ? input.placeIds : null },
+  };
 }
 
 /** An Owner removes a member; their access to the team ends at once. */

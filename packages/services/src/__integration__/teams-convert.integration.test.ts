@@ -216,6 +216,7 @@ describe("making an organizer account a team", () => {
     expect(overview.status === 200 && overview.data.canConvert).toBe(true);
 
     const res = await convertAccountToTeamCore(svc, ama.id, {
+      adult: true,
       name: "Ama Nights",
     });
     expect(res.status, "message" in res ? res.message : "").toBe(200);
@@ -341,6 +342,7 @@ describe("making an organizer account a team", () => {
 
     // Nothing left to move: the person is now just the team's Owner.
     const again = await convertAccountToTeamCore(svc, ama.id, {
+      adult: true,
       name: "Twice",
     });
     expect(again.status).toBe(409);
@@ -353,6 +355,7 @@ describe("making an organizer account a team", () => {
 
     const empty = await person(`empty_${crypto.randomUUID().slice(0, 6)}`);
     const nothing = await convertAccountToTeamCore(svc, empty.id, {
+      adult: true,
       name: "Nothing",
     });
     expect(nothing.status).toBe(409);
@@ -380,6 +383,7 @@ describe("making an organizer account a team", () => {
       status: "processing",
     } as never);
     const paying = await convertAccountToTeamCore(svc, busy.id, {
+      adult: true,
       name: "Busy",
     });
     expect(paying.status).toBe(409);
@@ -395,6 +399,7 @@ describe("making an organizer account a team", () => {
       status: "draft",
     } as never);
     const reviewing = await convertAccountToTeamCore(svc, busy.id, {
+      adult: true,
       name: "Busy",
     });
     expect(reviewing.status).toBe(409);
@@ -423,6 +428,7 @@ describe("making an organizer account a team", () => {
       const someone = await person(`off_${crypto.randomUUID().slice(0, 6)}`);
       await placeFor(someone.id, false);
       const res = await convertAccountToTeamCore(svc, someone.id, {
+        adult: true,
         name: "Off",
       });
       expect(res.status).toBe(403);

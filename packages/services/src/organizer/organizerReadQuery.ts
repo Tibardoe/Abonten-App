@@ -115,7 +115,12 @@ export async function fetchOrganizerFinanceOverview(
 export async function fetchOrganizerEventsPage(
   supabase: SupabaseClient<Database>,
   userId: string,
-  options?: { cursor?: string | null; pageSize?: number },
+  options?: {
+    cursor?: string | null;
+    pageSize?: number;
+    /** Door staff limited to places: only the events held at them. */
+    placeIds?: string[] | null;
+  },
 ): Promise<PaginatedResult<UserPostType>> {
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -127,6 +132,10 @@ export async function fetchOrganizerEventsPage(
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);
+
+  if (options?.placeIds) {
+    query = query.in("place_id", options.placeIds);
+  }
 
   if (cursor) {
     query = query.or(keysetOlderThan("created_at", "id", cursor));
@@ -339,7 +348,12 @@ export async function fetchOrganizerLedgerPage(
 export async function fetchOrganizerPlacesPage(
   supabase: SupabaseClient<Database>,
   ownerId: string,
-  options?: { cursor?: string | null; pageSize?: number },
+  options?: {
+    cursor?: string | null;
+    pageSize?: number;
+    /** Front desk or Door staff limited to places: only those. */
+    placeIds?: string[] | null;
+  },
 ): Promise<PaginatedResult<OrganizerPlaceRow>> {
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -351,6 +365,10 @@ export async function fetchOrganizerPlacesPage(
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);
+
+  if (options?.placeIds) {
+    query = query.in("id", options.placeIds);
+  }
 
   if (cursor) {
     query = query.or(keysetOlderThan("created_at", "id", cursor));
