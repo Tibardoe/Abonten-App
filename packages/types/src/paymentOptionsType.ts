@@ -39,7 +39,10 @@ export type CheckoutPaymentOptions = {
   countryCode: string;
   marketName: string;
   currency: string;
-  /** False when the market is paused or in maintenance: nothing can pay. */
+  /**
+   * False when nothing can pay: the market is paused or in maintenance, or
+   * no payment method is open to this person.
+   */
   transacting: boolean;
   methods: AvailablePaymentMethod[];
   saved: SavedInstrumentOption[];

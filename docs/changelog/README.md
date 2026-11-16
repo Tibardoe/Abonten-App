@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Paid sales paused until live Paystack keys
+
+- Before outreach, every pilot, test and App Review sample listing was hidden (moderation "hide", audited, reversible) and Paystack checkout was paused with the `checkout.paystack` flag for everyone but the founder's and the two QA accounts; a checkout with no way to pay now says "Sales are paused" instead of showing an empty list. Opening sales is step 13 of the live cutover. `finance/paystack-live-cutover.md`
+
 ## 2026-11-16 — Cancelling an event refunds its buyers one at a time
 
 - Paystack takes one refund request per account at a time and refused two of three when an event's buyers were refunded side by side; cancelling an event now refunds them one after another, and a refund Paystack refuses as "already being processed" is asked again after a short pause (1.5 s, 3 s, 6 s). `finance/payments-and-ticketing-runbook.md`
