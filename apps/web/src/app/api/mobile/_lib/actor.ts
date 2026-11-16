@@ -46,3 +46,23 @@ export async function mobileActingFor(
     role: resolved.actor.role,
   };
 }
+
+/**
+ * The team whose inbox the person answers while managing as it (stage 4),
+ * or null for their own inbox. Never an error: a role that does not answer
+ * messages simply keeps the person's own inbox.
+ */
+export async function mobileTeamInboxAccount(
+  req: Request,
+  personId: string,
+): Promise<string | null> {
+  const header = req.headers.get(ACTING_TEAM_HEADER)?.trim() ?? "";
+  if (!UUID.test(header)) return null;
+  const resolved = await resolveActingAccount(
+    getSupabaseServiceClient(),
+    personId,
+    header,
+    "messages.reply",
+  );
+  return resolved.ok && resolved.actor.role ? resolved.actor.accountId : null;
+}

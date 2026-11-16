@@ -20,6 +20,7 @@ export async function GET(req: Request) {
     "places.manage",
     "bookings.manage",
     "visit.show",
+    "reviews.reply",
   ]);
   if (actor.error) return apiJson(actor.error);
 

@@ -1,3 +1,4 @@
+import { teamRoleCan } from "@abonten/core/teams/roles";
 import { AppText, Chip, Icon, Overline } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
@@ -116,6 +117,35 @@ export function TeamRoleBlocked() {
         className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
       >
         <AppText className="font-semibold text-primary-foreground">
+          {t("useOwnAccount")}
+        </AppText>
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * Over the inbox while it is a team's (managing as a team whose messages
+ * the person answers): says whose it is, with the way back to their own.
+ */
+export function TeamInboxBanner() {
+  const t = useTranslations("teams");
+  const { current } = useActingTeams();
+  const switchTo = useSwitchActingTeam();
+  if (!current || !teamRoleCan(current.role, "messages.reply")) return null;
+  return (
+    <View className="mx-4 mb-2 flex-row items-center gap-3 rounded-xl border border-border bg-card p-3">
+      <Icon name="people-outline" size={18} tone="primary" />
+      <AppText variant="small" className="flex-1" numberOfLines={2}>
+        {t("teamInbox", { team: current.name ?? "" })}
+      </AppText>
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={8}
+        onPress={() => switchTo(null)}
+        className="active:opacity-70"
+      >
+        <AppText variant="small" tone="brand" className="font-semibold">
           {t("useOwnAccount")}
         </AppText>
       </Pressable>

@@ -85,6 +85,8 @@ export async function respondToPlaceReviewCore(
   userId: string,
   reviewId: string,
   response: string,
+  /** The team the person answers reviews for; omitted = their own. */
+  accountId?: string | null,
 ): Promise<ReviewResponseResult> {
   const normalized = normalizeResponse(response);
   if (!normalized.ok) return { status: 400, message: normalized.message };
@@ -103,7 +105,7 @@ export async function respondToPlaceReviewCore(
 
   const place = review.place;
 
-  if (!place || place.owner_id !== userId) {
+  if (!place || place.owner_id !== (accountId ?? userId)) {
     return {
       status: 403,
       message: tr("notAuthorizedToRespondToThis2"),
@@ -190,6 +192,8 @@ export async function deletePlaceReviewResponseCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   reviewId: string,
+  /** The team the person answers reviews for; omitted = their own. */
+  accountId?: string | null,
 ): Promise<ReviewResponseResult> {
   const { data: review, error: fetchError } = await supabase
     .from("place_review")
@@ -203,7 +207,7 @@ export async function deletePlaceReviewResponseCore(
 
   const place = review.place;
 
-  if (!place || place.owner_id !== userId) {
+  if (!place || place.owner_id !== (accountId ?? userId)) {
     return {
       status: 403,
       message: tr("notAuthorizedToModifyThisReview"),
@@ -261,6 +265,8 @@ export async function respondToEventReviewCore(
   userId: string,
   reviewId: string,
   response: string,
+  /** The team the person answers reviews for; omitted = their own. */
+  accountId?: string | null,
 ): Promise<ReviewResponseResult> {
   const normalized = normalizeResponse(response);
   if (!normalized.ok) return { status: 400, message: normalized.message };
@@ -279,7 +285,7 @@ export async function respondToEventReviewCore(
 
   const event = review.event;
 
-  if (!event || event.organizer_id !== userId) {
+  if (!event || event.organizer_id !== (accountId ?? userId)) {
     return {
       status: 403,
       message: tr("notAuthorizedToRespondToThis2"),
@@ -361,6 +367,8 @@ export async function deleteEventReviewResponseCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   reviewId: string,
+  /** The team the person answers reviews for; omitted = their own. */
+  accountId?: string | null,
 ): Promise<ReviewResponseResult> {
   const { data: review, error: fetchError } = await supabase
     .from("event_review")
@@ -374,7 +382,7 @@ export async function deleteEventReviewResponseCore(
 
   const event = review.event;
 
-  if (!event || event.organizer_id !== userId) {
+  if (!event || event.organizer_id !== (accountId ?? userId)) {
     return {
       status: 403,
       message: tr("notAuthorizedToModifyThisReview"),

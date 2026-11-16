@@ -6,6 +6,7 @@ import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
+import { useActingContext } from "@/teams/useActingContext";
 import {
   type ReviewListRow,
   type ReviewPage,
@@ -99,8 +100,14 @@ export default function ReviewsBrowser({
             ? t("peopleWhoAttendedCanReview")
             : t("beTheFirstToShare"),
       };
+  const acting = useActingContext(!!viewerId);
   const isOrganizer =
-    subject.kind === "event" && !!viewerId && viewerId === subject.ownerId;
+    subject.kind === "event" &&
+    !!viewerId &&
+    (viewerId === subject.ownerId ||
+      // Managing as the team that runs the event, in a role that answers
+      // reviews (team accounts, stage 4).
+      (acting.current?.id === subject.ownerId && acting.can("reviews.reply")));
 
   // Bring a shared review into view once it's on the page.
   useEffect(() => {

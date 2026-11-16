@@ -2,6 +2,7 @@
 
 import { supabase } from "@/config/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useActingContext } from "@/teams/useActingContext";
 import {
   type InboxConversationBroadcast,
   MESSAGING_INBOX_EVENTS,
@@ -10,6 +11,7 @@ import {
   openPrivateChannel,
   userInboxChannelName,
 } from "@abonten/core/messagingRealtime";
+import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -40,7 +42,12 @@ import { messagingKeys } from "./keys";
 export function useInboxRealtime(activeId?: string) {
   const qc = useQueryClient();
   const { data: user } = useCurrentUser();
-  const myId = user?.id;
+  // Managing as a team the person answers messages for, the inbox shown is
+  // the team's: its channel, and its own replies are not unread.
+  const acting = useActingContext(!!user);
+  const team = acting.current;
+  const myId =
+    team && teamRoleCan(team.role, "messages.reply") ? team.id : user?.id;
   const activeRef = useRef(activeId);
   activeRef.current = activeId;
   // Bumped to tear the channel down and open a fresh one.

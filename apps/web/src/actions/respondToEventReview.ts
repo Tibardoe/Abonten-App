@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { respondToEventReviewCore } from "@abonten/services/reviews/reviewResponseCore";
 
@@ -24,11 +25,14 @@ export const respondToEventReview = withActionLocale(
       return { status: 401, message: tr("userNotAuthenticated") };
     }
 
+    // Managing as a team that answers reviews: its reply.
+    const actor = await actingFor(user.id, "reviews.reply");
     const result = await respondToEventReviewCore(
       supabase,
       user.id,
       reviewId,
       response,
+      actor.error ? null : actor.accountId,
     );
 
     if (result.status === 200 && result.data?.eventCode) {

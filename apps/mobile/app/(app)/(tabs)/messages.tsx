@@ -26,6 +26,7 @@ import {
   useMarkConversationUnread,
   useSetConversationState,
 } from "@/features/messaging/useMessagingActions";
+import { TeamInboxBanner } from "@/features/teams/ManagingAs";
 import { useQueryView } from "@/lib/useQueryView";
 import type { ConversationListItem } from "@abonten/api-client";
 import {
@@ -206,6 +207,7 @@ export default function Messages() {
         // conversations permanent space; search and filtered views drop them.
         ListHeaderComponent={
           <>
+            <TeamInboxBanner />
             {searching || filtered ? null : <StoriesRow />}
             <View className="pt-1">
               <InboxFilterChips

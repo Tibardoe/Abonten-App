@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts, stage 4 (messages and reviews)
+
+- Owners and Content and messages answer the team's inbox and its reviews, as the team (X7); nobody reviews or messages, as a customer, a team they belong to: `architecture/team-accounts.md` 1.3 (§4c, roles, code map), `admin/teams.md` 1.3, `privacy/data-inventory.md` (`message_team_sender`). Migration `20261116140000_team_accounts_messages_reviews`; PROJECT.md §75.3, CLAUDE.md quick facts.
+
 ## 2026-11-16 — Team notices pushed to members; no mail to a team's placeholder
 
 - A member's copy of a notice written to their team is queued for a push (migration `20261116130000_team_notice_push`); the delivery queue and `sendEmail` never send to a `.invalid` address (a team account's placeholder); app money screens tell a role without money so: `architecture/team-accounts.md` 1.2 (§4b, later stages).

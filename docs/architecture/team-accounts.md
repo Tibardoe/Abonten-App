@@ -1,10 +1,10 @@
 ---
 title: Team accounts — organizers and places run by several people
-purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 to 3 of Part 2 of the Tickets, entry and teams plan.
+purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 to 4 of Part 2 of the Tickets, entry and teams plan.
 audience: Engineering, operations, support and legal reviewers
 scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for(), acting_accounts() and acting_account_for(), the team_* functions, the access rules on events, places and money, the organizer money functions, the team notice fan-out, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
 status: Review required
-version: 1.2
+version: 1.3
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Team accounts
 
-**State (2026-11-16): stages 1 to 3 built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
+**State (2026-11-16): stages 1 to 4 (messages and reviews) built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
 
 ## 1. The model: a team is its own account
 
@@ -26,7 +26,7 @@ An organizer or a place can be run by a team: one public profile (handle, follow
 
 Stages: **1** — teams, members, invitations, roles, activity, Admin › Teams. **2** — running events and places as a team (Manager, Door staff, Front desk), attendee lists, check-in (§4a). **3** — the team's money (§4b): Owners and Finance, the payout account and its 48-hour wait, ID checks, notices by role; "make this a team" (turning a person's existing listings into a team's) follows stage 4, because a converted account needs its money and messages to work as a team. **3** — money: the team's payout account (Owner only, fresh sign-in, the first payout to a new account held 48 hours, every Owner told), Finance, the ID check for Owners and Finance (X5), rebates to the team's balance. **4** — messages and content: the team inbox, review replies, Spotlight and Stories, customers seeing only the team's name (X7). **5** — trust and edge cases: the business check and the two team badges, a renamed team with the business badge going back to review (X42), disputes, bans, expired IDs.
 
-Since stage 2 a team's members run its events and places within their role (§4a), and since stage 3 Owners and Finance its money (§4b); messages, reviews, promotion and Spotlight as a team are still "coming soon".
+Since stage 2 a team's members run its events and places within their role (§4a), since stage 3 Owners and Finance its money (§4b), and since stage 4 the team's messages and review replies are answered by Owners and Content and messages (§4c); promotion and Spotlight as a team are still "coming soon".
 
 ## 2. Roles (X5)
 
@@ -81,7 +81,7 @@ Notices (`@abonten/core/notifications/notices`, words in the recipient's languag
 | Door staff | Check a ticket in by scanning or typing its code (only that event's tickets) | See who is coming |
 | Front desk | Answer a place's booking requests; show the visit QR | Change the place |
 | Finance | The team's money (§4b) | Events and places |
-| Content and messages | Nothing yet (stage 4) | |
+| Content and messages | The team's inbox and review replies (§4c) | Spotlight and Stories (later) |
 
 **Screens.** Website: the Manage menu lists the person's teams with their role; a team's event page shows the tabs the role covers (details, attendees, or check-in by code), a team's place page the same (details, photos, hours, services, bookings, visit QR). App: Organizer starts with a **Managing as** card; with a team chosen it shows the team's events and places as far as the role covers, an event or a place opens a panel of what the role can do, Door staff get a scan-or-type check-in screen instead of the attendee list, and the publish screens say "Publishing as …" with a way back to the person's own account. Sales figures, payouts, cancelling an event (it refunds buyers), promotion, reviews and verification stay on the person's own account until stages 3 and 4.
 
@@ -98,6 +98,16 @@ Notices (`@abonten/core/notifications/notices`, words in the recipient's languag
 **Notices by role.** A notice written to a team (a booking request, a review, a payout notice) is copied by the trigger `trg_notification_fan_out_to_team` to every active member whose role covers it (`public.team_notice_capability`: bookings → `bookings.manage`, reviews → `reviews.reply`, messages → `messages.reply`, Spotlight → `content.post`, refunds → `refunds.issue`, payouts → `payout.view`, credit and plans → `money.view`, anything else → Owners). Each copy carries `team_id` / `team_name` / `source_notification_id`, is queued for a push to the member (`notification_delivery`, source `app`, migration `20261116130000`; the member's own push preferences apply when it is sent), and opening it on the website or in the app switches "Managing as" to the team first; a manage page opened while managing as another account offers to switch. A team account's email address is a placeholder on the reserved `.invalid` domain: the delivery queue and `sendEmail` never send to it (it would only bounce).
 
 **Screens.** Website: Dashboard and Finances in the Manage menu for Owners and Finance; the Insights tab on a team's event; add, remove and make-main on payout accounts for Owners only (with the 48-hour and sign-in rules shown); Withdraw for Owners and Finance; Cancel event for Owners. App: Owners and Finance get the dashboard and an event's insights for the team; Withdraw for Owners and Finance; payout account changes for Owners; Cancel event for Owners. Promotion credit, promotion purchases, reviews and the promoter commission stay with the person's own account for now.
+
+## 4c. Messages and review replies (stage 4)
+
+**The team's inbox.** Members whose role covers `messages.reply` (Owners, Content and messages) read and answer the team's conversations while managing as the team: the inbox, the unread count and its badge, read state, mute and archive, blocks, reactions and edits are the team's. `public.messaging_actor(conversation)` says who the signed-in person speaks as there (themselves when they take part, else the team they answer for), and every messaging function uses it; `list_conversations` and `get_unread_conversation_count` take `p_account` (checked with `acting_account_for`). `is_conversation_participant` counts the teams a person answers for, so the message, attachment and reaction read rules, the conversation's realtime channel and its attachment files open to those members; the team's `inbox:<team>` channel is readable by them too. A member whose role does not answer messages keeps their own inbox even while managing as the team.
+
+**Customers see the team (X7).** A message a member sends is the team's (`sender_id` = the team; notifications name the team). Which member wrote it is kept in `message_team_sender`, which only the server can read.
+
+**Reviews.** Members whose role covers `reviews.reply` reply to reviews of the team's events and places (the review update rules and the column guards use `acting_accounts`); the website shows the reply controls to them on the team's event and in the place page's Reviews tab, the app on the team's event and place panels.
+
+**Your own team.** Nobody reviews an event or a place of a team they belong to, or opens a conversation with it as a customer (`is_team_member`).
 
 ## 5. Who sees what
 
@@ -128,8 +138,9 @@ Limits in the settings row: `max_teams_created` (5), `max_members` (50), `invite
 | Admin | `apps/admin/src/app/(console)/teams/*`; handbook [admin/teams.md](../admin/teams.md) |
 | Acting (stage 2) | Migration `supabase/migrations/20261116100000_team_accounts_events_places.sql`; `packages/services/src/teams/actingAccount.ts`; web `apps/web/src/utils/teamActor.ts`, `actions/teams/{setActingTeam,getActingContext}.ts`, `teams/useActingContext.ts`, the Manage menu; app routes `api/mobile/_lib/actor.ts`, `GET /api/mobile/teams/acting`; app `src/features/teams/{actingTeam.ts,ManagingAs.tsx}`, `src/components/organizer/DoorCheckIn.tsx` |
 | Money (stage 3) | Migration `supabase/migrations/20261116120000_team_accounts_money.sql`; `packages/services/src/teams/{teamMoney,accountArg}.ts`; the organizer money cores (`organizer/*Query.ts`, `payoutAccountCore`, `requestOrganizerPayoutCore`, `events/cancelEventCore`); identity `identityCore.requireVerifiedIdentity` (teams); website `teams/molecules/SwitchToTeamPrompt.tsx`, the Finances and event menus; app `src/features/teams/noticeTeam.ts`, the Organizer, event and Finances screens |
-| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts` |
+| Messages and reviews (stage 4) | Migration `supabase/migrations/20261116140000_team_accounts_messages_reviews.sql`; `messaging/conversationsQuery.ts`, `sendMessageCore.ts`, `reviews/reviewResponseCore.ts`; website `utils/teamActor.teamInboxAccount`, `teams/atoms/TeamInboxBanner.tsx`, the reviews organisms; app routes `_lib/actor.mobileTeamInboxAccount`; app `features/teams/ManagingAs.TeamInboxBanner`, the inbox realtime hooks |
+| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts`, `teams-messages.integration.test.ts` |
 
 ## 8. Not yet (later stages)
 
-Acting for a team on messages, reviews, promotion purchases, promotion credit and Spotlight (stage 4); "make this a team" (after stage 4); emails about a team to its members (the in-app notice and the push reach them; the email is not sent); the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.
+Acting for a team on promotion purchases, promotion credit and Spotlight and Stories; "make this a team" (after stage 4); emails about a team to its members (the in-app notice and the push reach them; the email is not sent); the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.

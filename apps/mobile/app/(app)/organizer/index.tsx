@@ -462,7 +462,12 @@ function TeamHub() {
             </Pressable>
           </Link>
         ) : null}
-        {can("events.manage", "attendees.view", "checkin.scan") ? (
+        {can(
+          "events.manage",
+          "attendees.view",
+          "checkin.scan",
+          "reviews.reply",
+        ) ? (
           <TeamNavRow href="/(app)/organizer/events" label={t("myEvents2")} />
         ) : null}
         {canEvents && draftCount > 0 ? (
@@ -471,7 +476,12 @@ function TeamHub() {
             label={t("eventDrafts2", { draftCount: draftCount })}
           />
         ) : null}
-        {can("places.manage", "bookings.manage", "visit.show") ? (
+        {can(
+          "places.manage",
+          "bookings.manage",
+          "visit.show",
+          "reviews.reply",
+        ) ? (
           <TeamNavRow href="/(app)/organizer/places" label={t("myPlaces2")} />
         ) : null}
         {canPlaces && placeDraftCount > 0 ? (

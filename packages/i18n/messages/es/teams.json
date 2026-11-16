@@ -75,6 +75,7 @@
   "sending": "Enviando…",
   "subjectTeam": "este equipo",
   "subjectTeams": "tus equipos",
+  "teamInbox": "Bandeja del equipo: {team}",
   "teamPayoutAccountRules": "Cambiar la cuenta de cobro del equipo requiere un inicio de sesión reciente, y se avisa a cada persona propietaria. Los cobros pueden ir a una cuenta nueva 48 horas después de añadirla.",
   "ticketCodeLabel": "Código de la entrada",
   "title": "Equipos",

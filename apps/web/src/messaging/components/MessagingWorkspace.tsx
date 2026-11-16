@@ -2,6 +2,7 @@
 
 import { cn } from "@/components/lib/utils";
 import { useInboxRealtime } from "@/messaging/hooks/useInboxRealtime";
+import TeamInboxBanner from "@/teams/atoms/TeamInboxBanner";
 import { MessageSquare } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ChatThread } from "./ChatThread";
@@ -25,6 +26,7 @@ export function MessagingWorkspace({ activeId }: { activeId?: string }) {
           activeId && "hidden md:block",
         )}
       >
+        <TeamInboxBanner />
         <ConversationList activeId={activeId} />
       </div>
       <div className={cn("min-w-0 flex-1", !activeId && "hidden md:block")}>

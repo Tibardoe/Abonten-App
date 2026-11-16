@@ -558,12 +558,12 @@ function EventInsightsScreen() {
               label={t("managePromoCodes")}
             />
           ) : null}
-          {current ? null : (
+          {can("reviews.reply") ? (
             <TeamNavRow
               href={`/(app)/organizer/events/${eventId}/reviews`}
               label={t("reviewsReplies")}
             />
-          )}
+          ) : null}
         </View>
       ) : null}
 
@@ -692,6 +692,12 @@ function TeamEventPanel() {
           <TeamNavRow
             href={`/(app)/organizer/events/${id}/promo-codes`}
             label={t("managePromoCodes")}
+          />
+        ) : null}
+        {can("reviews.reply") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/reviews`}
+            label={t("reviewsReplies")}
           />
         ) : null}
         <TeamNavRow
