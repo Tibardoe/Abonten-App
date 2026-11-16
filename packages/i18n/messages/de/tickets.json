@@ -75,6 +75,7 @@
   "sendBlockedOrganizerOff": "Der Veranstalter hat das Verschicken von Tickets für dieses Event ausgeschaltet.",
   "sendBlockedTooManyMoves": "Dieses Ticket wurde bereits so oft verschickt wie erlaubt.",
   "sendBlockedRestricted": "Dein Konto kann im Moment keine Tickets verschicken.",
+  "refundGoesToPayer": "Dieses Ticket wurde dir geschickt, deshalb geht jede Erstattung an die Person, die es bezahlt hat.",
   "sentToYouNoRefund": "Dieses Ticket wurde dir geschickt, deshalb steht die Erstattung der Person zu, die bezahlt hat. Wenn du nicht hingehen kannst, schick es ihr zurück.",
   "takeBack": "Zurücknehmen",
   "sendTicket": "An jemanden senden",

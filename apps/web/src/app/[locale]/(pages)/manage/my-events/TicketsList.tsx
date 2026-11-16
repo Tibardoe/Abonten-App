@@ -140,12 +140,19 @@ function TicketCard({
                 </span>
               )}
             </div>
-            {refundBadge.description && (
+            {sentToHolder ? (
+              // Its refund is the payer's: nothing for the holder to ask for.
               <p className="text-xs text-muted-foreground">
-                {refundBadge.description}
+                {tt("refundGoesToPayer")}
               </p>
+            ) : (
+              refundBadge.description && (
+                <p className="text-xs text-muted-foreground">
+                  {refundBadge.description}
+                </p>
+              )
             )}
-            {canRetryRefund && event.transaction_id && (
+            {canRetryRefund && !sentToHolder && event.transaction_id && (
               <RetryRefundBtn
                 transactionId={event.transaction_id}
                 queryKey={queryKey}

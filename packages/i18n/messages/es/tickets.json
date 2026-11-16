@@ -75,6 +75,7 @@
   "sendBlockedOrganizerOff": "El organizador ha desactivado el envío de entradas para este evento.",
   "sendBlockedTooManyMoves": "Esta entrada ya se ha enviado el número máximo de veces.",
   "sendBlockedRestricted": "Tu cuenta no puede enviar entradas por ahora.",
+  "refundGoesToPayer": "Esta entrada te la enviaron, así que cualquier reembolso es para la persona que la pagó.",
   "sentToYouNoRefund": "Esta entrada te la enviaron, así que su reembolso es para la persona que pagó. Si no puedes ir, devuélvesela.",
   "takeBack": "Retirarla",
   "sendTicket": "Enviar a alguien",
