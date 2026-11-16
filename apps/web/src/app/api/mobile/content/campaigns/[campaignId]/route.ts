@@ -1,4 +1,6 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { CONTENT_PROMOTION_CAPABILITIES } from "@abonten/core/teams/roles";
 import {
   advertiserCampaignActionCore,
   getContentCampaignCore,
@@ -25,6 +27,13 @@ async function getOwnCampaignWithHistory(
   };
 }
 
+/** Managing as a team: its Owners promote its Spotlights; they pay. */
+async function advertiser(req: Request, userId: string) {
+  return mobileActingFor(req, userId, CONTENT_PROMOTION_CAPABILITIES, {
+    all: true,
+  });
+}
+
 // GET /api/mobile/content/campaigns/[campaignId] — one own campaign with history
 export async function GET(
   req: Request,
@@ -39,8 +48,11 @@ export async function GET(
       label: "GET /content/campaigns/[campaignId]",
       params: { campaignId },
     },
-    ({ svc, userId, data, ip }) =>
-      getOwnCampaignWithHistory(svc, signedIn(userId), data.campaignId),
+    async ({ svc, userId, data }) => {
+      const acting = await advertiser(req, signedIn(userId));
+      if (acting.error) return acting.error;
+      return getOwnCampaignWithHistory(svc, acting.accountId, data.campaignId);
+    },
   );
 }
 
@@ -58,7 +70,15 @@ export async function POST(
       label: "POST /content/campaigns/[campaignId]",
       params: { campaignId },
     },
-    ({ svc, userId, data, ip }) =>
-      advertiserCampaignActionCore(svc, signedIn(userId), data),
+    async ({ svc, userId, data }) => {
+      const acting = await advertiser(req, signedIn(userId));
+      if (acting.error) return acting.error;
+      return advertiserCampaignActionCore(
+        svc,
+        acting.accountId,
+        data,
+        signedIn(userId),
+      );
+    },
   );
 }

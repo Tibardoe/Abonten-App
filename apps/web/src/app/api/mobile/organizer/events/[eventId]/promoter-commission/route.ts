@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -21,13 +22,21 @@ export async function GET(
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
+  // Managing as a team: Owners and Finance, who pay for its promotion.
+  const actor = await mobileActingFor(req, auth.user.id, [
+    "promotions.buy",
+    "money.view",
+  ]);
+  if (actor.error) return apiJson(actor.error);
+
   try {
     const { eventId } = await params;
     return fromActionResult(
       await getEventPromoterCommissionCore(
         auth.supabase,
-        auth.user.id,
+        actor.accountId,
         eventId,
+        auth.user.id,
       ),
     );
   } catch (error) {
@@ -52,6 +61,10 @@ export async function PUT(
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
+  // The commission comes off the team's earnings: Owners and Finance.
+  const actor = await mobileActingFor(req, auth.user.id, "promotions.buy");
+  if (actor.error) return apiJson(actor.error);
+
   try {
     const { eventId } = await params;
     const body = (await req.json().catch(() => null)) as {
@@ -64,10 +77,12 @@ export async function PUT(
           ? body.rateBps
           : Number.NaN;
     return fromActionResult(
-      await setEventPromoterCommissionCore(auth.supabase, auth.user.id, {
-        eventId,
-        rateBps,
-      }),
+      await setEventPromoterCommissionCore(
+        auth.supabase,
+        actor.accountId,
+        { eventId, rateBps },
+        auth.user.id,
+      ),
     );
   } catch (error) {
     logger.error(

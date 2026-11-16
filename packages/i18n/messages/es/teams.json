@@ -1,6 +1,6 @@
 {
   "accept": "Aceptar",
-  "activity": "{action, select, team_created {{actor} creó el equipo} team_renamed {{actor} cambió el nombre del equipo} member_invited {{actor} invitó a alguien} member_joined {{actor} se unió} member_declined {{actor} rechazó una invitación} member_invite_cancelled {{actor} retiró una invitación} member_invite_expired {Una invitación caducó} member_role_changed {{actor} cambió el rol de {subject}} member_removed {{actor} quitó a {subject}} member_left {{actor} salió} member_account_closed {{subject} salió al cerrarse su cuenta} team_frozen {El equipo quedó en pausa} payout_account_added {{actor} añadió una cuenta de cobro} payout_account_removed {{actor} quitó una cuenta de cobro} payout_account_default {{actor} cambió la cuenta de cobro principal} payout_requested {{actor} pidió un cobro} event_cancelled {{actor} canceló un evento} promotion_bought {{actor} pagó para destacar un evento o un lugar} content_published {{actor} publicó en Spotlight o en las Stories} team_converted {{actor} convirtió su cuenta de organizador en este equipo} other {{actor} hizo un cambio}}",
+  "activity": "{action, select, team_created {{actor} creó el equipo} team_renamed {{actor} cambió el nombre del equipo} member_invited {{actor} invitó a alguien} member_joined {{actor} se unió} member_declined {{actor} rechazó una invitación} member_invite_cancelled {{actor} retiró una invitación} member_invite_expired {Una invitación caducó} member_role_changed {{actor} cambió el rol de {subject}} member_removed {{actor} quitó a {subject}} member_left {{actor} salió} member_account_closed {{subject} salió al cerrarse su cuenta} team_frozen {El equipo quedó en pausa} payout_account_added {{actor} añadió una cuenta de cobro} payout_account_removed {{actor} quitó una cuenta de cobro} payout_account_default {{actor} cambió la cuenta de cobro principal} payout_requested {{actor} pidió un cobro} event_cancelled {{actor} canceló un evento} promotion_bought {{actor} pagó para destacar un evento o un lugar} content_published {{actor} publicó en Spotlight o en las Stories} team_converted {{actor} convirtió su cuenta de organizador en este equipo} team_resumed {El equipo se reanudó} content_promotion_bought {{actor} pagó para promocionar un Spotlight} content_promotion_pause {{actor} pausó la promoción de un Spotlight} content_promotion_resume {{actor} reanudó la promoción de un Spotlight} content_promotion_cancel {{actor} canceló la promoción de un Spotlight} promoter_commission_changed {{actor} cambió lo que un evento paga a los promotores} other {{actor} hizo un cambio}}",
   "activityTitle": "Actividad",
   "byPhone": "Número de teléfono",
   "byUsername": "Nombre de usuario",
@@ -34,7 +34,6 @@
   "invitedByUntil": "Invitación de {name} · abierta hasta el {date}",
   "joinedToast": "Te has unido al equipo.",
   "lastOwnerHint": "Eres el único propietario. Nombra propietario a otro miembro antes de salir.",
-  "laterAsTeam": "Pagar para promocionar un Spotlight como equipo llegará pronto.",
   "leave": "Salir del equipo",
   "leaveConfirmBody": "Perderás el acceso al equipo. Un propietario puede volver a invitarte.",
   "leaveConfirmTitle": "¿Salir de {team}?",
@@ -98,5 +97,6 @@
   "renameVerifiedTitle": "¿Cambiar el nombre de un equipo verificado?",
   "renameVerifiedBody": "La insignia de Verificado nombra a la empresa, así que se retira y vuelve a revisión hasta que Abonten compruebe el nuevo nombre. Abonten puede pedir documentos a nombre del nuevo nombre.",
   "renameVerifiedConfirm": "Cambiar el nombre",
-  "convertedBadgeInReview": "Tu insignia de Verificado pasó al equipo y vuelve a estar en revisión: Abonten comprueba el equipo como empresa antes de que se muestre de nuevo."
+  "convertedBadgeInReview": "Tu insignia de Verificado pasó al equipo y vuelve a estar en revisión: Abonten comprueba el equipo como empresa antes de que se muestre de nuevo.",
+  "staffActor": "El equipo de Abonten"
 }

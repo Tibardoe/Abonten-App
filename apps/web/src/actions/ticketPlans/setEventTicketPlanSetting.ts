@@ -2,6 +2,7 @@
 
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { parseDiscoveryInput } from "@/utils/discoveryAction";
+import { actingFor } from "@/utils/teamActor";
 import { requireTicketPlanUser } from "@/utils/ticketPlanAction";
 import { setEventTicketPlanSettingCore } from "@abonten/services/ticketPlans/eventTicketPlanCore";
 import { eventTicketPlanSettingSchema } from "@abonten/validation/ticketPlanSchemas";
@@ -13,6 +14,9 @@ export const setEventTicketPlanSetting = withActionLocale(
     if (caller.error) return caller.error;
     const input = parseDiscoveryInput(eventTicketPlanSettingSchema, raw);
     if (input.error) return input.error;
-    return setEventTicketPlanSettingCore(caller.userId, input.data);
+    // Managing as a team: the same rule as the app (events.manage).
+    const acting = await actingFor(caller.userId, "events.manage");
+    if (acting.error) return acting.error;
+    return setEventTicketPlanSettingCore(acting.accountId, input.data);
   },
 );

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { setEventPromoterCommissionCore } from "@abonten/services/rewards/promoterCommissionCore";
 import type { EventPromoterCommission } from "@abonten/types/rewards";
@@ -32,6 +33,15 @@ export const setEventPromoterCommission = withActionLocale(
       return { status: 400, message: tr("invalidRequest2") };
     }
 
-    return setEventPromoterCommissionCore(supabase, user.id, input);
+    // Managing as a team: the commission comes off the team's earnings, so
+    // the members who pay for its promotion set it (Owners and Finance).
+    const acting = await actingFor(user.id, "promotions.buy");
+    if (acting.error) return acting.error;
+    return setEventPromoterCommissionCore(
+      supabase,
+      acting.accountId,
+      input,
+      user.id,
+    );
   },
 );

@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { recordTeamMoneyEventFor } from "../teams/teamMoney";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
 
 // Organizer-funded promoter commissions (Abonten Rewards Phase 8). The
@@ -13,6 +14,10 @@ import { getRewardsProgramCore } from "./rewardsProgramQuery";
 // the same amount comes off the organizer's payout (the reward engine posts
 // both -- _reward_evaluate_promoter_commission). Shared by the web Server
 // Actions and /api/mobile/organizer/events/[id]/promoter-commission.
+//
+// `userId` is the account that runs the event: the person, or the team they
+// manage as (Owners and Finance, promotions.buy; the transport checks the
+// role). `personId` is who is signed in and changed it.
 
 type Envelope<T> = {
   status: 200 | 400 | 401 | 403 | 404 | 409 | 429 | 500;
@@ -69,6 +74,7 @@ export async function getEventPromoterCommissionCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
+  _personId: string = userId,
 ): Promise<Envelope<EventPromoterCommission>> {
   if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   if (!eventId) return { status: 400, message: tr("eventIsRequired") };
@@ -128,12 +134,13 @@ export async function setEventPromoterCommissionCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   input: { eventId: string; rateBps: number | null },
+  personId: string = userId,
 ): Promise<Envelope<EventPromoterCommission>> {
   if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   if (!input?.eventId) return { status: 400, message: tr("eventIsRequired") };
 
   const allowed = await checkRateLimit(
-    `promoter-commission:${userId}`,
+    `promoter-commission:${personId}`,
     20,
     3600,
   );
@@ -154,7 +161,7 @@ export async function setEventPromoterCommissionCore(
       .from("event_promoter_commission")
       .update({
         is_active: false,
-        updated_by: userId,
+        updated_by: personId,
         updated_at: new Date().toISOString(),
       })
       .eq("event_id", input.eventId);
@@ -162,6 +169,7 @@ export async function setEventPromoterCommissionCore(
       logger.error(`Stopping promoter commission failed: ${error.message}`);
       return { status: 500, message: tr("couldnTStopTheCommission") };
     }
+    await recordCommissionChange(userId, personId, input.eventId, null);
     return getEventPromoterCommissionCore(supabase, userId, input.eventId);
   }
 
@@ -201,7 +209,7 @@ export async function setEventPromoterCommissionCore(
       event_id: input.eventId,
       rate_bps: rate,
       is_active: true,
-      updated_by: userId,
+      updated_by: personId,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "event_id" },
@@ -210,19 +218,46 @@ export async function setEventPromoterCommissionCore(
     logger.error(`Saving promoter commission failed: ${error.message}`);
     return { status: 500, message: tr("couldnTSaveTheCommission") };
   }
+  await recordCommissionChange(userId, personId, input.eventId, rate);
   return getEventPromoterCommissionCore(supabase, userId, input.eventId);
+}
+
+/** A team's activity names who changed what its event pays promoters. */
+async function recordCommissionChange(
+  accountId: string,
+  personId: string,
+  eventId: string,
+  rateBps: number | null,
+): Promise<void> {
+  if (accountId === personId) return;
+  await recordTeamMoneyEventFor(
+    getSupabaseServiceClient(),
+    accountId,
+    personId,
+    {
+      kind: "promoter_commission_changed",
+      eventId,
+      rateBps,
+    },
+  );
 }
 
 /**
  * The commission a sharer can earn on an event (for "share and earn" copy):
  * the rate while commissions are live for the caller and the event offers
  * one, else null. Reads with the caller's client (the offer is public).
+ * Nobody earns on an event they run: not its organizer, not a member of the
+ * organizer's team (X36; the reward engine refuses it as organizer_linked).
  */
 export async function getEventPromoterOfferCore(
   supabase: SupabaseClient<Database>,
   eventId: string,
+  viewerId: string | null = null,
 ): Promise<{ status: 200 | 400 | 500; data?: { rateBps: number } | null }> {
   if (!eventId) return { status: 400 };
+  if (viewerId && (await runsEvent(viewerId, eventId))) {
+    return { status: 200, data: null };
+  }
   const [program, offer] = await Promise.all([
     getRewardsProgramCore(supabase),
     supabase
@@ -247,4 +282,21 @@ export async function getEventPromoterOfferCore(
       ),
     },
   };
+}
+
+/** The viewer organizes this event, or is an active member of its team. */
+async function runsEvent(viewerId: string, eventId: string): Promise<boolean> {
+  const service = getSupabaseServiceClient();
+  const { data } = await service
+    .from("event")
+    .select("organizer_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (!data?.organizer_id) return false;
+  if (data.organizer_id === viewerId) return true;
+  const { data: member } = await service.rpc("is_team_member", {
+    p_team_id: data.organizer_id,
+    p_user_id: viewerId,
+  });
+  return member === true;
 }

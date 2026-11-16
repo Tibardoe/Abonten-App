@@ -230,7 +230,7 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | X33 | 7 | Who can promote an event by default | Anyone today | Anyone, at the event's rate; the organizer can switch to invited promoters only | **Decided (2026-11-15, the founder approved the plan).** |
 | X34 | 7 | Promoter codes typed at checkout | Not built | Yes; a typed code beats an earlier link | **Decided (2026-11-15, the founder approved the plan).** |
 | X35 | 7 | "Send a buy link" by text | Not built | Yes; at most 20 a day per promoter, one per number per event | **Decided (2026-11-15, the founder approved the plan).** |
-| X36 | 7 | Team members earning on their own team's events | Not built | Only if an Owner adds them as a promoter | **Decided (2026-11-15, the founder approved the plan).** |
+| X36 | 7 | Team members earning on their own team's events | Never, until invited promoters (Part 7): `_reward_organizer_linked` (2026-11-16) | Only if an Owner adds them as a promoter | **Decided (2026-11-15, the founder approved the plan).** |
 | X37 | 7 | A chargeback after the promoter was paid in cash | Not built | Recovered from their next earnings | **Decided (2026-11-15, the founder approved the plan).** |
 | X38 | 1 | Does a free ticket you sent still count as yours | `ticket.issued_to`, `issue_free_ticket`, index `ticket_one_free_registration_per_issuee` | Yes, so nobody sends theirs and registers again | **Decided (2026-11-15, the founder approved the plan).** |
 | X39 | 4 | Tables and groups | Not built | A ticket type can issue several tickets per purchase; no ticket admits more than one person | **Decided (2026-11-15, the founder approved the plan).** |

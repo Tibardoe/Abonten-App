@@ -7968,7 +7968,7 @@
   },
   "teams": {
     "accept": "bb54db51",
-    "activity": "c0f3130b",
+    "activity": "f773e7ef",
     "activityTitle": "81c0d915",
     "byPhone": "8961d3bf",
     "byUsername": "84c29015",
@@ -8002,7 +8002,6 @@
     "invitedByUntil": "ce7b1837",
     "joinedToast": "27d8fa39",
     "lastOwnerHint": "f3ac5322",
-    "laterAsTeam": "194cec8b",
     "leave": "b445f9b6",
     "leaveConfirmBody": "eb10f04e",
     "leaveConfirmTitle": "ee784fba",
@@ -8066,7 +8065,8 @@
     "renameVerifiedTitle": "4aeaf780",
     "renameVerifiedBody": "fbd188ed",
     "renameVerifiedConfirm": "3a8c4a18",
-    "convertedBadgeInReview": "159ad324"
+    "convertedBadgeInReview": "159ad324",
+    "staffActor": "6abecdb0"
   },
   "ticketPlans": {
     "abontenCredit": "746223a4",

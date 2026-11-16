@@ -3,6 +3,7 @@ import { userFacingError } from "@abonten/core/userFacingError";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { tr } from "../../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
+import { recordTeamMoneyEventFor } from "../../teams/teamMoney";
 import { notifyCampaign } from "../contentNotifyCore";
 
 // The fulfilment step for a paid campaign checkout — the fourth
@@ -72,12 +73,28 @@ export default async function activateContentCampaign(
   }
   const result = (data ?? {}) as { campaign_id?: string; replayed?: boolean };
   if (result.campaign_id && !result.replayed) {
+    // The campaign is the advertiser's: the payer, or the team a member
+    // paid for (its activity names who paid).
+    const { data: campaign } = await supabase
+      .from("content_campaign")
+      .select("advertiser_id, budget_minor, currency")
+      .eq("id", result.campaign_id)
+      .maybeSingle();
+    const advertiserId = campaign?.advertiser_id ?? userId;
     await notifyCampaign(supabase, {
       id: result.campaign_id,
-      advertiserId: userId,
+      advertiserId,
       status: "pending_review",
       reason: tr("weCheckEveryPromotionBeforeIt"),
     });
+    if (advertiserId !== userId) {
+      await recordTeamMoneyEventFor(supabase, advertiserId, userId, {
+        kind: "content_promotion_bought",
+        campaignId: result.campaign_id,
+        amountMinor: Number(campaign?.budget_minor ?? 0),
+        currency: campaign?.currency ?? null,
+      });
+    }
   }
   return { status: 200, message: tr("campaignSubmittedForReview") };
 }

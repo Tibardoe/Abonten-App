@@ -188,6 +188,7 @@ export default withActionLocale(async function getShellBootstrap(
           await getContentProgramCore(svc, userId, {
             publisherId: publisher?.accountId ?? null,
             blocked: publisher?.blocked ?? false,
+            canPromote: publisher?.canPromote ?? false,
           })
         ).data;
       },

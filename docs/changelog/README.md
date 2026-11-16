@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts: paying to promote a Spotlight, the promoter commission, X36
+
+- Owners promote a team's Spotlights (posting and paying: `content.post` + `promotions.buy`), paying with their own card; the campaign is the team's. Owners and Finance set a team's event promoter commission. A team's own people never earn rewards on its events (`_reward_organizer_linked`, X36) and are not offered "share and earn" there. Team campaign notices go to those who pay. The website's Pay small small and sending switches act for the team (`events.manage`) and Managers reach them. Staff steps read "Abonten staff" in a team's activity, not "Former member". `architecture/team-accounts.md` 1.9 (§4i), `spotlight-and-stories.md` 1.5, `rewards-ledger.md`, `admin/teams.md` 1.9. Migration `20261116200000_team_accounts_promotions_commission`; PROJECT.md §75.9.
+
 ## 2026-11-16 — Team accounts: the business check, team badges and X42
 
 - Owners ask for verification for the team (the business check: a registered business, its registration and a directors listing or signed letter) and for its places; the case is the team's (`requested_by` the member). "Verified business" and "ID checked" (one of its Owners, `account_id_checked` / `user_info.id_checked`) on a team. A Verified team that changes its name goes back to review (X42, `return_to_review`), replacing the interim name lock. "Make this a team" no longer fails for organizers who once asked for verification. Evidence types worded in every language. `architecture/team-accounts.md` 1.8 (§4h), `architecture/trust-and-verification.md` 1.2 (§8a), `admin/verification.md` 1.1, `admin/teams.md` 1.8. Migration `20261116190000_team_accounts_verification`; PROJECT.md §75.8.

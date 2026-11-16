@@ -1,4 +1,4 @@
-import type { TeamCapability } from "@abonten/core/teams/roles";
+import { type TeamCapability, teamRoleCan } from "@abonten/core/teams/roles";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { resolveActingAccount } from "@abonten/services/teams/actingAccount";
 import type { TeamRoleCode } from "@abonten/types/teamType";
@@ -56,7 +56,7 @@ export async function mobileActingFor(
 export async function mobileContentPublisher(
   req: Request,
   personId: string,
-): Promise<{ accountId: string; blocked: boolean }> {
+): Promise<{ accountId: string; blocked: boolean; canPromote?: boolean }> {
   const header = req.headers.get(ACTING_TEAM_HEADER)?.trim() ?? "";
   if (!UUID.test(header)) return { accountId: personId, blocked: false };
   const resolved = await resolveActingAccount(
@@ -66,7 +66,14 @@ export async function mobileContentPublisher(
     "content.post",
   );
   return resolved.ok
-    ? { accountId: resolved.actor.accountId, blocked: false }
+    ? {
+        accountId: resolved.actor.accountId,
+        blocked: false,
+        // Owners also pay to promote the team's Spotlights (stage 5).
+        canPromote:
+          !!resolved.actor.role &&
+          teamRoleCan(resolved.actor.role, "promotions.buy"),
+      }
     : { accountId: personId, blocked: true };
 }
 

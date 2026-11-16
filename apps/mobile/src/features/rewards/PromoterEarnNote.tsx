@@ -27,9 +27,25 @@ export function PromoterEarnNote({
   const program = useRewardsProgram({ enabled: !!code });
   const terms = program.data?.enabled ? program.data.promoterCommission : null;
   const { data: rateBps } = useQuery({
-    queryKey: ["mobile", "rewards", "promoter-offer", eventId],
+    queryKey: [
+      "mobile",
+      "rewards",
+      "promoter-offer",
+      eventId,
+      session?.user.id ?? null,
+    ],
     enabled: !!code && !!terms,
     queryFn: async () => {
+      // Nobody earns on an event they run: a member of the organizer's team
+      // is not offered a share (X36).
+      const me = session?.user.id;
+      if (me && organizerId && me !== organizerId) {
+        const { data: member } = await supabase.rpc("is_team_member", {
+          p_team_id: organizerId,
+          p_user_id: me,
+        });
+        if (member === true) return null;
+      }
       const { data } = await supabase
         .from("event_promoter_commission")
         .select("rate_bps")

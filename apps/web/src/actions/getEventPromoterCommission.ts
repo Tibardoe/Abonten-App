@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getEventPromoterCommissionCore } from "@abonten/services/rewards/promoterCommissionCore";
 import type { EventPromoterCommission } from "@abonten/types/rewards";
@@ -26,6 +27,14 @@ export const getEventPromoterCommission = withActionLocale(
       return { status: 400, message: tr("eventIsRequired") };
     }
 
-    return getEventPromoterCommissionCore(supabase, user.id, eventId);
+    // Managing as a team: Owners and Finance, who pay for its promotion.
+    const acting = await actingFor(user.id, ["promotions.buy", "money.view"]);
+    if (acting.error) return acting.error;
+    return getEventPromoterCommissionCore(
+      supabase,
+      acting.accountId,
+      eventId,
+      user.id,
+    );
   },
 );
