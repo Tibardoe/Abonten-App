@@ -43,7 +43,7 @@ Every public event and place has ready-made images its owner can post to their o
 ## Where owners find it
 
 - **Website**: a "Share kit" card at the top of the Promotion tab of an event's and a place's manage page (`ShareKitCard`): previews, Download (same-origin download, file name `abonten-<key>-<format>.png`) and Copy link. Before the listing is public the card says the images come once it is published (`hasShareImages`).
-- **App**: a "Share kit" section on the organizer's event screen and the place screen, for the owner and for team members who manage the listing or buy promotions (`ShareKitSection`): previews, one button per image that downloads it to the cache and opens the phone's share sheet, and Share for the link.
+- **App**: a "Share kit" section on the organizer's event screen and the place screen, for the owner and for team members who manage the listing or buy promotions (`ShareKitSection`): previews, one button per image that downloads it to the cache and opens the phone's share sheet, and Share link. Previews share one height so the buttons line up.
 - The organizer **welcome** image has no button yet; its address is `/api/share/profiles/<username>/welcome`.
 
 ## Not done (yet)

@@ -453,6 +453,7 @@
     "welcome": "Ya en Abonten",
     "download": "Descargar",
     "share": "Compartir",
+    "shareLink": "Compartir enlace",
     "copyLink": "Copiar enlace",
     "linkCopied": "Enlace copiado",
     "previewAlt": "Imagen {format} de {name}",
