@@ -312,27 +312,47 @@ export async function verifyTransaction(
   return data;
 }
 
+/**
+ * Paystack takes one refund request at a time per account and refuses the
+ * others with "A refund is already being processed for this account. Please
+ * retry shortly." (seen 2026-11-16, when cancelling an event refunded its
+ * buyers side by side). A refused request created nothing, so asking again
+ * after a pause cannot refund twice.
+ */
+const REFUND_BUSY = /already being processed/i;
+export const REFUND_BUSY_WAITS_MS = [1_500, 3_000, 6_000] as const;
+
 export async function refundTransaction(
   account: ProviderAccount,
   reference: string,
   amountMinor?: number | null,
 ): Promise<{ status: string; id: string | null }> {
-  const { ok, status, json } = await call<{
-    status?: boolean;
-    data?: { status?: string; id?: string | number };
-  }>(account, "/refund", {
-    method: "POST",
-    body:
-      amountMinor && amountMinor > 0
-        ? { transaction: reference, amount: amountMinor }
-        : { transaction: reference },
-  });
-  if (!ok) fail(messageOf(json), "Refund failed", status);
-  const id = json?.data?.id;
-  return {
-    status: json?.data?.status ?? "pending",
-    id: id == null ? null : String(id),
-  };
+  for (let attempt = 0; ; attempt++) {
+    const { ok, status, json } = await call<{
+      status?: boolean;
+      data?: { status?: string; id?: string | number };
+    }>(account, "/refund", {
+      method: "POST",
+      body:
+        amountMinor && amountMinor > 0
+          ? { transaction: reference, amount: amountMinor }
+          : { transaction: reference },
+    });
+    if (ok) {
+      const id = json?.data?.id;
+      return {
+        status: json?.data?.status ?? "pending",
+        id: id == null ? null : String(id),
+      };
+    }
+    const message = messageOf(json);
+    const wait = REFUND_BUSY_WAITS_MS[attempt];
+    if (wait === undefined || typeof message !== "string") {
+      fail(message, "Refund failed", status);
+    }
+    if (!REFUND_BUSY.test(message)) fail(message, "Refund failed", status);
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
 }
 
 export async function listBanks(

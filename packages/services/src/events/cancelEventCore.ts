@@ -151,21 +151,24 @@ export async function cancelEventCore(
   const transactions = (refundable ?? []) as RefundableTransactionRow[];
 
   const serviceClient = getSupabaseServiceClient();
-  const refundResults = await Promise.allSettled(
-    transactions.map((row) =>
-      issueRefundCore(serviceClient, row.refund_transaction_id),
-    ),
-  );
-
   let refundsInitiated = 0;
   let refundsFailedToStart = 0;
 
-  for (const result of refundResults) {
-    if (result.status === "fulfilled" && result.value.status === 200) {
-      refundsInitiated += 1;
-    } else {
-      refundsFailedToStart += 1;
-    }
+  // One after another, never side by side: Paystack takes one refund request
+  // at a time per account and refused all but one of three when they were
+  // sent together (2026-11-16).
+  for (const row of transactions) {
+    const result = await issueRefundCore(
+      serviceClient,
+      row.refund_transaction_id,
+    ).catch((error) => {
+      logger.error(
+        `cancelEvent: refund of ${row.refund_transaction_id} threw: ${error}`,
+      );
+      return null;
+    });
+    if (result?.status === 200) refundsInitiated += 1;
+    else refundsFailedToStart += 1;
   }
 
   // Pay small small plans still running on the event end too: their seats
