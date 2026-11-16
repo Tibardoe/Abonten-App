@@ -73,6 +73,7 @@ import type {
 import type {
   ActingTeams,
   InviteTarget,
+  TeamConversion,
   TeamDetail,
   TeamInviteSent,
   TeamRoleCode,
@@ -2286,6 +2287,8 @@ export type TeamsOverviewResult = ApiEnvelope<TeamsOverview>;
 export type ActingTeamsResult = ApiEnvelope<ActingTeams>;
 export type CreateTeamBody = { name: string; username: string };
 export type CreateTeamResult = ApiEnvelope<TeamSummary>;
+export type ConvertAccountToTeamBody = { name: string };
+export type ConvertAccountToTeamResult = ApiEnvelope<TeamConversion>;
 export type TeamDetailResult = ApiEnvelope<TeamDetail>;
 export type RenameTeamResult = ApiEnvelope<{ name: string }>;
 export type TeamInviteeResult = ApiEnvelope<TicketTransferRecipient>;

@@ -102,6 +102,21 @@ export type TeamsOverview = {
   program: TeamProgram;
   teams: TeamSummary[];
   invites: TeamInviteReceived[];
+  /**
+   * "Make this a team": the person runs events or places of their own, so
+   * their account can become a team (absent = no).
+   */
+  canConvert?: boolean;
+};
+
+/** What "make this a team" moved to the new team. */
+export type TeamConversion = {
+  team: TeamSummary;
+  events: number;
+  places: number;
+  followers: number;
+  /** The person's new handle (the team took theirs). */
+  personUsername: string;
 };
 
 export type InviteTarget =

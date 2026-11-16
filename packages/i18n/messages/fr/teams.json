@@ -1,6 +1,6 @@
 {
   "accept": "Accepter",
-  "activity": "{action, select, team_created {{actor} a créé l'équipe} team_renamed {{actor} a renommé l'équipe} member_invited {{actor} a invité quelqu'un} member_joined {{actor} a rejoint l'équipe} member_declined {{actor} a refusé une invitation} member_invite_cancelled {{actor} a retiré une invitation} member_invite_expired {Une invitation a expiré} member_role_changed {{actor} a changé le rôle de {subject}} member_removed {{actor} a retiré {subject}} member_left {{actor} est parti} member_account_closed {{subject} est parti à la fermeture de son compte} team_frozen {L'équipe a été mise en pause} payout_account_added {{actor} a ajouté un compte de versement} payout_account_removed {{actor} a retiré un compte de versement} payout_account_default {{actor} a changé le compte de versement principal} payout_requested {{actor} a demandé un versement} event_cancelled {{actor} a annulé un événement} promotion_bought {{actor} a payé pour mettre en avant un événement ou un lieu} content_published {{actor} a publié dans Spotlight ou les Stories} other {{actor} a fait un changement}}",
+  "activity": "{action, select, team_created {{actor} a créé l'équipe} team_renamed {{actor} a renommé l'équipe} member_invited {{actor} a invité quelqu'un} member_joined {{actor} a rejoint l'équipe} member_declined {{actor} a refusé une invitation} member_invite_cancelled {{actor} a retiré une invitation} member_invite_expired {Une invitation a expiré} member_role_changed {{actor} a changé le rôle de {subject}} member_removed {{actor} a retiré {subject}} member_left {{actor} est parti} member_account_closed {{subject} est parti à la fermeture de son compte} team_frozen {L'équipe a été mise en pause} payout_account_added {{actor} a ajouté un compte de versement} payout_account_removed {{actor} a retiré un compte de versement} payout_account_default {{actor} a changé le compte de versement principal} payout_requested {{actor} a demandé un versement} event_cancelled {{actor} a annulé un événement} promotion_bought {{actor} a payé pour mettre en avant un événement ou un lieu} content_published {{actor} a publié dans Spotlight ou les Stories} team_converted {{actor} a fait de son compte organisateur cette équipe} other {{actor} a fait un changement}}",
   "activityTitle": "Activité",
   "byPhone": "Numéro de téléphone",
   "byUsername": "Nom d'utilisateur",
@@ -11,7 +11,7 @@
   "checkInTitle": "Enregistrer les entrées",
   "checkedIn": "Entrée enregistrée.",
   "codePlaceholder": "TKT-XXXX XXXX XXXX",
-  "comingSoon": "Gérez les événements, les lieux et l'argent de l'équipe en choisissant l'équipe sous « Gérer en tant que ». Les messages, les avis et Spotlight en équipe arrivent bientôt.",
+  "comingSoon": "Gérez les événements, les lieux, l'argent, les messages, les avis, les Spotlights et les Stories de l'équipe en choisissant l'équipe sous « Gérer en tant que ». Payer pour promouvoir un Spotlight en équipe arrive bientôt.",
   "continue": "Continuer",
   "couldNotDo": "Cela n'a pas fonctionné. Réessayez.",
   "create": "Créer l'équipe",
@@ -88,5 +88,11 @@
   "you": "vous",
   "yourAccount": "Votre propre compte",
   "yourRole": "Votre rôle",
-  "yourTeams": "Vos équipes"
+  "yourTeams": "Vos équipes",
+  "convertTitle": "Faire de votre compte organisateur une équipe",
+  "convertBody": "Vos événements et vos lieux, leurs avis et leurs abonnés, les conversations à leur sujet, votre argent d'organisateur et vos comptes de versement, ainsi que vos badges Vérifié, passent à une nouvelle équipe qui garde votre @nom d'utilisateur, votre nom et votre photo. Vous en devenez le premier propriétaire et recevez un nouveau @nom d'utilisateur. Vos billets, votre crédit, vos Spotlights, vos Stories et vos messages directs restent à vous.",
+  "convertAction": "En faire une équipe",
+  "convertConfirm": "@{handle} appartiendra à l'équipe et vous recevrez un nouveau @nom d'utilisateur. Cette action ne peut pas être annulée dans l'application.",
+  "converting": "Transfert…",
+  "convertedToast": "C'est fait. {team} gère désormais vos événements et vos lieux. Votre nouveau @nom d'utilisateur est @{username}."
 }

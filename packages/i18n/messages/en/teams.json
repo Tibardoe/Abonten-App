@@ -1,6 +1,6 @@
 {
   "accept": "Accept",
-  "activity": "{action, select, team_created {{actor} made the team} team_renamed {{actor} renamed the team} member_invited {{actor} invited someone} member_joined {{actor} joined} member_declined {{actor} declined an invitation} member_invite_cancelled {{actor} withdrew an invitation} member_invite_expired {An invitation ran out} member_role_changed {{actor} changed the role of {subject}} member_removed {{actor} removed {subject}} member_left {{actor} left} member_account_closed {{subject} left when their account closed} team_frozen {The team was paused} payout_account_added {{actor} added a payout account} payout_account_removed {{actor} removed a payout account} payout_account_default {{actor} changed the main payout account} payout_requested {{actor} asked for a payout} event_cancelled {{actor} cancelled an event} promotion_bought {{actor} paid to feature an event or a place} content_published {{actor} posted to Spotlight or Stories} other {{actor} made a change}}",
+  "activity": "{action, select, team_created {{actor} made the team} team_renamed {{actor} renamed the team} member_invited {{actor} invited someone} member_joined {{actor} joined} member_declined {{actor} declined an invitation} member_invite_cancelled {{actor} withdrew an invitation} member_invite_expired {An invitation ran out} member_role_changed {{actor} changed the role of {subject}} member_removed {{actor} removed {subject}} member_left {{actor} left} member_account_closed {{subject} left when their account closed} team_frozen {The team was paused} payout_account_added {{actor} added a payout account} payout_account_removed {{actor} removed a payout account} payout_account_default {{actor} changed the main payout account} payout_requested {{actor} asked for a payout} event_cancelled {{actor} cancelled an event} promotion_bought {{actor} paid to feature an event or a place} content_published {{actor} posted to Spotlight or Stories} team_converted {{actor} made their organizer account this team} other {{actor} made a change}}",
   "activityTitle": "Activity",
   "byPhone": "Phone number",
   "byUsername": "Username",
@@ -11,7 +11,7 @@
   "checkInTitle": "Check people in",
   "checkedIn": "Checked in.",
   "codePlaceholder": "TKT-XXXX XXXX XXXX",
-  "comingSoon": "Run the team's events, places and money by choosing the team under \"Managing as\". Messages, reviews and Spotlight as a team are coming soon.",
+  "comingSoon": "Run the team's events, places, money, messages, reviews, Spotlights and Stories by choosing the team under \"Managing as\". Paying to promote a Spotlight as a team is coming soon.",
   "continue": "Continue",
   "couldNotDo": "That didn't work. Try again.",
   "create": "Make team",
@@ -88,5 +88,11 @@
   "you": "you",
   "yourAccount": "Your own account",
   "yourRole": "Your role",
-  "yourTeams": "Your teams"
+  "yourTeams": "Your teams",
+  "convertTitle": "Make your organizer account a team",
+  "convertBody": "Your events and places, their reviews and followers, the conversations about them, your organizer money and payout accounts, and your Verified badges move to a new team that keeps your @username, name and photo. You become its first Owner and get a new @username. Your tickets, credit, Spotlights, Stories and direct messages stay with you.",
+  "convertAction": "Make it a team",
+  "convertConfirm": "@{handle} will belong to the team, and you will get a new @username. This can't be undone in the app.",
+  "converting": "Moving…",
+  "convertedToast": "Done. {team} now runs your events and places. Your new @username is @{username}."
 }

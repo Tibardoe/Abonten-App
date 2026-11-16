@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/useToast";
 import PublishingAsBanner from "@/teams/atoms/PublishingAsBanner";
+import { useActingContext } from "@/teams/useActingContext";
 import { CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY } from "@abonten/core/content/copy";
 import {
   MAX_CAPTION_LENGTH,
@@ -54,6 +55,9 @@ export default function ContentComposer({
   const tc = useTranslations("core");
 
   const { program } = useContentProgram();
+  const acting = useActingContext();
+  const postingTeam =
+    acting.current && acting.can("content.post") ? acting.current : null;
   const toast = useToast();
   const qc = useQueryClient();
   const kinds: ContentKind[] = [
@@ -240,7 +244,10 @@ export default function ContentComposer({
                 disabled={busy}
                 onChange={(e) => setPublisher(e.target.value)}
               >
-                <option value="me">{t("meOrganizerProfile")}</option>
+                <option value="me">
+                  {/* Posting as a team: its own profile, by name. */}
+                  {postingTeam?.name ?? t("meOrganizerProfile")}
+                </option>
                 {program.publisherPlaces.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}

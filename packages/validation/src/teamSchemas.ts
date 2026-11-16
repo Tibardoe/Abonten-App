@@ -45,6 +45,12 @@ export const createTeamSchema = z.object({
 });
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 
+/** "Make this a team": the team takes the person's handle; only its name. */
+export const convertAccountToTeamSchema = z.object({ name: teamName });
+export type ConvertAccountToTeamInput = z.infer<
+  typeof convertAccountToTeamSchema
+>;
+
 /** A request with nothing to check (the caller is proved by the transport). */
 export const noInputSchema = z.object({});
 

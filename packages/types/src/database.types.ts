@@ -18700,6 +18700,15 @@ export type Database = {
         Args: { p_detail?: string; p_ids: number[]; p_status: string }
         Returns: number
       }
+      team_convert_account: {
+        Args: {
+          p_account: string
+          p_max_created: number
+          p_name: string
+          p_person: string
+        }
+        Returns: Json
+      }
       team_finalize_create: {
         Args: {
           p_account: string

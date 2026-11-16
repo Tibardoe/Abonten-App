@@ -4,7 +4,7 @@ purpose: How to look up who runs a team, answer the common support questions abo
 audience: Support, operations
 scope: Admin › Teams, the teams.view / teams.configure permissions, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire job
 status: Approved
-version: 1.5
+version: 1.6
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -35,6 +35,8 @@ Search by the team's name or username. A team's page shows its status (**Active*
 - **"The invitation never came."** Invitations by username appear in the person's notifications and under Settings › Teams. One by phone to a number with no account is texted (Ghana today, at most the daily number per team); the Owner sees "We couldn't text this number" if it did not go. Invitations last a week by default.
 - **"Who answered me?"** (from a customer) Replies from a team show the team's name only. Staff can see which member wrote a message (`message_team_sender`) when a complaint needs it.
 - **"I can't see the team's messages."** The member must manage as the team (Manage › Managing as on the website, the top of Organizer in the app) and hold Owner or Content and messages.
+- **"I made my account a team and my @username changed."** That is how "make this a team" works: the team keeps the @username people know (with the events, places, followers and money); the person gets a new one, which they can change in their profile. The team's activity shows `team.converted` with who did it.
+- **"It won't let me make my account a team."** It refuses while a payout is being processed (wait until it is paid), while a verification request is open (finish or withdraw it), or when the person runs no events or places (they make a new team instead).
 - **"Who posted this?"** A team's Spotlight or Story shows the team only. The team's activity (Admin › Teams › the team) names the member who published it (`content_published`), and the upload is that member's (`content_media.owner_id`).
 - **"I can't post as the team."** Only Owners and Content and messages post for a team, while managing as it. Others see "your role doesn't cover this" and switch back to their own account to post as themselves. Paying to promote a Spotlight is for one's own posts only for now.
 - **"Whose credit paid for this feature?"** A feature bought for a team spends the team's credit (rebates and visit credit earned by its events and places); the member who bought it paid any cash part with their own card. The checkout records both (`owner_id` = the payer, `account_id` = the team), and the team's activity says who bought it.

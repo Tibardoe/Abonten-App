@@ -40,6 +40,8 @@ import type {
   AddSafetyContactBody,
   AnswerTeamInviteResult,
   BalanceOverviewResult,
+  ConvertAccountToTeamBody,
+  ConvertAccountToTeamResult,
   CreateTeamBody,
   CreateTeamResult,
   EventTicketPlanSettingResult,
@@ -2924,6 +2926,21 @@ export function createApiClient(options: ApiClientOptions) {
           auth: true,
           timeoutMs: 25_000,
         });
+      },
+      /**
+       * "Make this a team": the caller's events, places, followers and
+       * organizer money move to a new team that takes their handle.
+       */
+      convert(body: ConvertAccountToTeamBody) {
+        return request<ConvertAccountToTeamResult>(
+          "/api/mobile/teams/convert",
+          {
+            method: "POST",
+            body,
+            auth: true,
+            timeoutMs: 25_000,
+          },
+        );
       },
       get(teamId: string) {
         return request<TeamDetailResult>(

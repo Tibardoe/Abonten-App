@@ -5,6 +5,7 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type {
   InviteTarget,
   TeamActivityEntry,
+  TeamConversion,
   TeamDetail,
   TeamInviteReceived,
   TeamInviteSent,
@@ -91,6 +92,9 @@ const SQL_ERRORS: Record<string, { status: Fail["status"]; key: string }> = {
   not_receiver: { status: 404, key: "teamInviteNotForYou" },
   last_owner: { status: 409, key: "teamLastOwner" },
   remove_self: { status: 400, key: "teamRemoveSelf" },
+  nothing_to_move: { status: 409, key: "teamNothingToMove" },
+  payout_in_progress: { status: 409, key: "teamPayoutInProgress" },
+  verification_open: { status: 409, key: "teamVerificationOpen" },
 };
 
 /** Turns a `team:<code>` database error into an envelope. */
@@ -226,7 +230,26 @@ export async function getTeamsOverviewCore(
   if (!teams) return { status: 500, message: tr("somethingWentWrong") };
   const invites = await listInvitesForPerson(svc, userId);
   if (!invites) return { status: 500, message: tr("somethingWentWrong") };
-  return { status: 200, data: { program, teams, invites } };
+  const canConvert = program.enabled ? await runsListings(svc, userId) : false;
+  return { status: 200, data: { program, teams, invites, canConvert } };
+}
+
+/** Whether the person runs events or places of their own. */
+async function runsListings(
+  svc: ServiceRoleClient,
+  userId: string,
+): Promise<boolean> {
+  const [events, places] = await Promise.all([
+    svc
+      .from("event")
+      .select("id", { count: "exact", head: true })
+      .eq("organizer_id", userId),
+    svc
+      .from("place")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", userId),
+  ]);
+  return (events.count ?? 0) + (places.count ?? 0) > 0;
 }
 
 type InviteRow = {
@@ -509,6 +532,84 @@ export async function createTeamCore(
   ]);
   if (!summary?.[0]) return { status: 500, message: tr("somethingWentWrong") };
   return { status: 200, data: summary[0] };
+}
+
+/**
+ * "Make this a team" (X8; docs/architecture/team-accounts.md §4f): the
+ * person's organizer and place work becomes a team that takes their handle,
+ * photo, events, places, followers, conversations about them, organizer
+ * money and badge; the person is its first Owner and gets a new handle.
+ * Their tickets, credit, posts, direct messages and ID check stay theirs.
+ */
+export async function convertAccountToTeamCore(
+  svc: ServiceRoleClient,
+  userId: string,
+  input: { name: string },
+): Promise<Ok<TeamConversion> | Fail> {
+  const access = await resolveTeamAccess(svc, userId);
+  if (!access.program.enabled) return unavailable();
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: restrictedAccountMessage() };
+  }
+
+  const { data: created, error: createError } = await svc.auth.admin.createUser(
+    {
+      email: `team-${randomUUID()}@teams.abontenhub.invalid`,
+      email_confirm: true,
+      // A team is never signed in to; its members act for it.
+      ban_duration: "876000h",
+      user_metadata: { full_name: input.name },
+      app_metadata: { account_kind: "team" },
+    },
+  );
+  if (createError || !created.user) {
+    logger.error(
+      `convertAccountToTeamCore: auth user not created (${createError?.message})`,
+    );
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  const accountId = created.user.id;
+
+  const { data: moved, error } = await svc.rpc("team_convert_account", {
+    p_account: accountId,
+    p_person: userId,
+    p_name: input.name,
+    p_max_created: access.maxTeamsCreated,
+  });
+  if (error) {
+    const { error: cleanupError } = await svc.auth.admin.deleteUser(accountId);
+    if (cleanupError) {
+      logger.error(
+        `convertAccountToTeamCore: team account ${accountId} left behind (${cleanupError.message})`,
+      );
+    }
+    return failFromDb(error, "convertAccountToTeamCore");
+  }
+  const counts = (moved ?? {}) as {
+    events?: number;
+    places?: number;
+    followers?: number;
+    person_username?: string;
+  };
+  const summary = await summaries(svc, [
+    {
+      team_id: accountId,
+      user_id: userId,
+      role: "owner",
+      joined_at: new Date().toISOString(),
+    },
+  ]);
+  if (!summary?.[0]) return { status: 500, message: tr("somethingWentWrong") };
+  return {
+    status: 200,
+    data: {
+      team: summary[0],
+      events: Number(counts.events ?? 0),
+      places: Number(counts.places ?? 0),
+      followers: Number(counts.followers ?? 0),
+      personUsername: counts.person_username ?? "",
+    },
+  };
 }
 
 export async function renameTeamCore(

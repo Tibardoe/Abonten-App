@@ -1,6 +1,6 @@
 {
   "accept": "Annehmen",
-  "activity": "{action, select, team_created {{actor} hat das Team erstellt} team_renamed {{actor} hat das Team umbenannt} member_invited {{actor} hat jemanden eingeladen} member_joined {{actor} ist beigetreten} member_declined {{actor} hat eine Einladung abgelehnt} member_invite_cancelled {{actor} hat eine Einladung zurückgezogen} member_invite_expired {Eine Einladung ist abgelaufen} member_role_changed {{actor} hat die Rolle von {subject} geändert} member_removed {{actor} hat {subject} entfernt} member_left {{actor} hat das Team verlassen} member_account_closed {{subject} ist mit der Schließung des Kontos ausgeschieden} team_frozen {Das Team wurde pausiert} payout_account_added {{actor} hat ein Auszahlungskonto hinzugefügt} payout_account_removed {{actor} hat ein Auszahlungskonto entfernt} payout_account_default {{actor} hat das Hauptauszahlungskonto geändert} payout_requested {{actor} hat eine Auszahlung angefordert} event_cancelled {{actor} hat ein Event abgesagt} promotion_bought {{actor} hat bezahlt, um ein Event oder einen Ort hervorzuheben} content_published {{actor} hat in Spotlight oder den Stories gepostet} other {{actor} hat etwas geändert}}",
+  "activity": "{action, select, team_created {{actor} hat das Team erstellt} team_renamed {{actor} hat das Team umbenannt} member_invited {{actor} hat jemanden eingeladen} member_joined {{actor} ist beigetreten} member_declined {{actor} hat eine Einladung abgelehnt} member_invite_cancelled {{actor} hat eine Einladung zurückgezogen} member_invite_expired {Eine Einladung ist abgelaufen} member_role_changed {{actor} hat die Rolle von {subject} geändert} member_removed {{actor} hat {subject} entfernt} member_left {{actor} hat das Team verlassen} member_account_closed {{subject} ist mit der Schließung des Kontos ausgeschieden} team_frozen {Das Team wurde pausiert} payout_account_added {{actor} hat ein Auszahlungskonto hinzugefügt} payout_account_removed {{actor} hat ein Auszahlungskonto entfernt} payout_account_default {{actor} hat das Hauptauszahlungskonto geändert} payout_requested {{actor} hat eine Auszahlung angefordert} event_cancelled {{actor} hat ein Event abgesagt} promotion_bought {{actor} hat bezahlt, um ein Event oder einen Ort hervorzuheben} content_published {{actor} hat in Spotlight oder den Stories gepostet} team_converted {{actor} hat das eigene Veranstalterkonto zu diesem Team gemacht} other {{actor} hat etwas geändert}}",
   "activityTitle": "Aktivität",
   "byPhone": "Telefonnummer",
   "byUsername": "Benutzername",
@@ -11,7 +11,7 @@
   "checkInTitle": "Gäste einlassen",
   "checkedIn": "Eingelassen.",
   "codePlaceholder": "TKT-XXXX XXXX XXXX",
-  "comingSoon": "Führe die Events, Orte und Finanzen des Teams, indem du das Team unter „Verwalten als“ wählst. Nachrichten, Bewertungen und Spotlight als Team kommen bald.",
+  "comingSoon": "Führe die Events, Orte, Finanzen, Nachrichten, Bewertungen, Spotlights und Stories des Teams, indem du das Team unter „Verwalten als“ wählst. Einen Spotlight als Team bezahlt bewerben kommt bald.",
   "continue": "Weiter",
   "couldNotDo": "Das hat nicht geklappt. Versuch es noch einmal.",
   "create": "Team erstellen",
@@ -88,5 +88,11 @@
   "you": "du",
   "yourAccount": "Dein eigenes Konto",
   "yourRole": "Deine Rolle",
-  "yourTeams": "Deine Teams"
+  "yourTeams": "Deine Teams",
+  "convertTitle": "Dein Veranstalterkonto zu einem Team machen",
+  "convertBody": "Deine Events und Orte, ihre Bewertungen und Follower, die Unterhaltungen darüber, dein Veranstaltergeld und deine Auszahlungskonten sowie deine Verifiziert-Abzeichen gehen an ein neues Team, das deinen @Benutzernamen, Namen und dein Foto behält. Du wirst sein erster Inhaber und bekommst einen neuen @Benutzernamen. Deine Tickets, dein Guthaben, deine Spotlights, Stories und Direktnachrichten bleiben bei dir.",
+  "convertAction": "Zum Team machen",
+  "convertConfirm": "@{handle} gehört dann dem Team, und du bekommst einen neuen @Benutzernamen. Das lässt sich in der App nicht rückgängig machen.",
+  "converting": "Wird übertragen…",
+  "convertedToast": "Erledigt. {team} führt jetzt deine Events und Orte. Dein neuer @Benutzername ist @{username}."
 }

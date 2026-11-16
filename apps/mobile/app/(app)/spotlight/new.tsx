@@ -639,7 +639,8 @@ export default function NewContentScreen() {
             <AppText variant="label">{t("postAs")}</AppText>
             <View className="flex-row flex-wrap gap-2">
               <Chip
-                label={t("me")}
+                // Posting as a team: its own profile, by name.
+                label={team?.name ?? t("me")}
                 selected={placeId === null}
                 onPress={() => setPublisherPlace(null)}
               />
