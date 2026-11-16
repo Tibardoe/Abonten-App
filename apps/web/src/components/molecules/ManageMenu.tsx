@@ -76,6 +76,7 @@ export default function ManageMenu({
         "bookings.manage",
         "visit.show",
         "reviews.reply",
+        "promotions.buy",
       )
     : isPlaceOwner;
   const showMoney = team ? acting.can("money.view") : isOrganizer;

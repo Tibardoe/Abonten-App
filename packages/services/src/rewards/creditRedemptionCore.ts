@@ -7,6 +7,7 @@ import type { CreditBlockedReason, CreditQuote } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { resolveActingAccount } from "../teams/actingAccount";
 import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
 
 // Spending Abonten Credit at checkout (Phase 2: promotions). The credit
@@ -79,6 +80,13 @@ export type PromotionOrder = {
   expiresAt: string | null;
   /** Shown on the credit activity line: "Used on a feature for {name}". */
   label: string;
+  /**
+   * Whose credit pays the credit part: the payer, or the team the feature
+   * is for (checkout.account_id) while the payer still buys features for it.
+   */
+  creditAccountId: string;
+  /** The team's name when creditAccountId is a team; null otherwise. */
+  accountName: string | null;
 };
 
 type CheckoutWithTier = {
@@ -86,6 +94,7 @@ type CheckoutWithTier = {
   status: string;
   currency: string;
   expires_at: string | null;
+  account_id: string | null;
   tier: { price: number; currency: string } | null;
   entity: {
     name?: string | null;
@@ -105,8 +114,8 @@ export async function loadPromotionOrder(
     return loadCampaignOrder(supabase, userId, checkoutId);
   const select =
     kind === "event"
-      ? "id, status, currency, expires_at, tier:event_promotion_tier(price, currency), entity:event(title, country_code)"
-      : "id, status, currency, expires_at, tier:place_promotion_tier(price, currency), entity:place(name, country_code)";
+      ? "id, status, currency, expires_at, account_id, tier:event_promotion_tier(price, currency), entity:event(title, country_code)"
+      : "id, status, currency, expires_at, account_id, tier:place_promotion_tier(price, currency), entity:place(name, country_code)";
 
   const { data, error } = await supabase
     .from(PROMOTION_TARGETS[kind].checkoutTable)
@@ -122,6 +131,29 @@ export async function loadPromotionOrder(
   const row = data as unknown as CheckoutWithTier | null;
   if (!row?.tier) return null;
 
+  // Bought for a team: its credit pays, and only while the payer still
+  // buys features for it (a member who left, or whose role changed, can no
+  // longer finish the purchase; they start again as themselves).
+  let creditAccountId = userId;
+  let accountName: string | null = null;
+  if (row.account_id && row.account_id !== userId) {
+    const service = getSupabaseServiceClient();
+    const acting = await resolveActingAccount(
+      service,
+      userId,
+      row.account_id,
+      "promotions.buy",
+    );
+    if (!acting.ok) return null;
+    creditAccountId = row.account_id;
+    const { data: team } = await service
+      .from("user_info")
+      .select("full_name, username")
+      .eq("id", row.account_id)
+      .maybeSingle();
+    accountName = team?.full_name?.trim() || team?.username || null;
+  }
+
   const name = row.entity?.title ?? row.entity?.name ?? null;
   const currency = (row.tier.currency ?? row.currency).toUpperCase();
   return {
@@ -132,6 +164,8 @@ export async function loadPromotionOrder(
     countryCode: row.entity?.country_code ?? null,
     expiresAt: row.expires_at,
     label: name ? `a feature for ${name}` : "a promotion",
+    creditAccountId,
+    accountName,
   };
 }
 
@@ -170,6 +204,9 @@ async function loadCampaignOrder(
     countryCode: campaign.advertiser?.country_code ?? null,
     expiresAt: data.expires_at,
     label: `a Spotlight promotion (${formatMoney(money(Number(campaign.budget_minor), currency))} budget)`,
+    // Cash only: no credit is ever reserved for a campaign.
+    creditAccountId: userId,
+    accountName: null,
   };
 }
 
@@ -338,24 +375,42 @@ export async function getPromotionCreditQuoteCore(
       };
     }
     const spendable = await getSpendableCredit(
-      userId,
+      order.creditAccountId,
       "promotions",
       undefined,
       order.currency,
     );
-    return { status: 200, data: quoteCredit(order, spendable) };
+    return {
+      status: 200,
+      data: withAccount(quoteCredit(order, spendable), order),
+    };
   } catch {
     return { status: 500, message: tr("somethingWentWrong") };
   }
 }
 
+/** The quote, naming the team whose credit it is (when it is a team's). */
+function withAccount(quote: CreditQuote, order: PromotionOrder): CreditQuote {
+  return order.accountName
+    ? { ...quote, accountName: order.accountName }
+    : quote;
+}
+
+/** What the order's credit account can pay (the team's, for a team's feature). */
 export async function computePromotionCredit(
   order: PromotionOrder,
-  userId: string,
 ): Promise<CreditQuote> {
-  return quoteCredit(
+  return withAccount(
+    quoteCredit(
+      order,
+      await getSpendableCredit(
+        order.creditAccountId,
+        "promotions",
+        undefined,
+        order.currency,
+      ),
+    ),
     order,
-    await getSpendableCredit(userId, "promotions", undefined, order.currency),
   );
 }
 

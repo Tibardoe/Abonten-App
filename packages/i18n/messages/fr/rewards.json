@@ -171,6 +171,7 @@
   "youGetWhenFriendBuys": "Vous recevez {amount} lorsqu'un ami que vous invitez achète son premier billet et que son événement a eu lieu.",
   "youGetWhenFriendBuysMin": "Vous recevez {amount} lorsqu'un ami que vous invitez achète son premier billet de {minimum} ou plus et que son événement a eu lieu.",
   "youHaveYouCanUseHere": "Vous avez {formatCredit} à utiliser ici.",
+  "teamHasCreditYouCanUseHere": "{team} a {formatCredit} à utiliser ici.",
   "youJoinedWithSInvite": "Vous avez rejoint Abonten grâce à l'invitation de {name}.",
   "youPay": "Vous payez",
   "youReOfflineYourBalanceWill": "Vous êtes hors ligne. Votre solde se chargera quand vous serez de nouveau en ligne.",

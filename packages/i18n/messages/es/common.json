@@ -869,6 +869,7 @@
   "youHaveUnsavedChangesToThis": "Tienes cambios sin guardar en este evento.",
   "youHaveUnsavedChangesToThis2": "Tienes cambios sin guardar en esta reseña.",
   "youHaveYouCanUseHere": "Tienes {formatCredit} que puedes usar aquí.",
+  "teamHasCreditYouCanUseHere": "{team} tiene {formatCredit} que puedes usar aquí.",
   "youPay": "Pagas",
   "youReAllCaughtUp": "Estás al día",
   "youReAllCaughtUpNothing": "Estás al día — nada requiere atención ahora mismo.",

@@ -171,6 +171,7 @@
   "youGetWhenFriendBuys": "Du erhältst {amount}, wenn ein von dir eingeladener Freund sein erstes Ticket kauft und sein Event stattgefunden hat.",
   "youGetWhenFriendBuysMin": "Du erhältst {amount}, wenn ein von dir eingeladener Freund sein erstes Ticket ab {minimum} kauft und sein Event stattgefunden hat.",
   "youHaveYouCanUseHere": "Du hast {formatCredit}, die du hier verwenden kannst.",
+  "teamHasCreditYouCanUseHere": "{team} hat {formatCredit}, die du hier verwenden kannst.",
   "youJoinedWithSInvite": "Du bist mit der Einladung von {name} beigetreten.",
   "youPay": "Du zahlst",
   "youReOfflineYourBalanceWill": "Du bist offline. Dein Guthaben wird geladen, sobald du wieder online bist.",

@@ -869,6 +869,7 @@
   "youHaveUnsavedChangesToThis": "Tem alterações por guardar neste evento.",
   "youHaveUnsavedChangesToThis2": "Tem alterações por guardar nesta avaliação.",
   "youHaveYouCanUseHere": "Tem {formatCredit} que pode utilizar aqui.",
+  "teamHasCreditYouCanUseHere": "{team} tem {formatCredit} que pode utilizar aqui.",
   "youPay": "Você paga",
   "youReAllCaughtUp": "Está tudo em dia",
   "youReAllCaughtUpNothing": "Está tudo em dia — nada requer atenção neste momento.",

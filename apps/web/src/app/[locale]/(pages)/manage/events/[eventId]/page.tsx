@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import getEventHasConfirmedParticipation from "@/actions/getEventHasConfirmedParticipation";
 import { getEventPromotionTiers } from "@/actions/getEventPromotionTiers";
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import ManageEventView from "@/events/organisms/ManageEventView";
 import SwitchToTeamPrompt from "@/teams/molecules/SwitchToTeamPrompt";
 import {
@@ -99,6 +100,7 @@ export default async function page({
     "attendees.view",
     "checkin.scan",
     "money.view",
+    "promotions.buy",
   ]);
   if (actor.error || event.organizer_id !== actor.accountId) {
     // Opened while managing as another account (a notice about a team's
@@ -144,8 +146,10 @@ export default async function page({
     // Lightweight count only — not the full Insights dashboard — just
     // enough to know whether a capacity-limited event is sold out, for the
     // Promotion tab's eligibility check (Part 18: a sold-out event
-    // shouldn't be promotable).
-    supabase
+    // shouldn't be promotable). Counted with the service role, after the
+    // check above: a team member who buys features (Finance) does not read
+    // the attendee list, and must not see a sold-out event as open.
+    getSupabaseServiceClient()
       .from("attendance")
       .select("id", { count: "exact", head: true })
       .eq("event_id", eventId)

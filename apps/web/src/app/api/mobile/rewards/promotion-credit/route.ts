@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -16,8 +17,11 @@ export async function GET(req: Request) {
   if (auth.response) return auth.response;
 
   try {
+    // Managing as a team: its credit, for the members who see its money.
+    const actor = await mobileActingFor(req, auth.user.id, "money.view");
+    if (actor.error) return apiJson(actor.error);
     return fromActionResult(
-      await getPromotionCreditCore(auth.supabase, auth.user.id),
+      await getPromotionCreditCore(auth.supabase, actor.accountId),
     );
   } catch (error) {
     logger.error("mobile GET /rewards/promotion-credit failed", error);

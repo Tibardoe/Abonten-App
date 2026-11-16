@@ -4383,3 +4383,13 @@ Branch `feat/team-accounts-stage4-2026-11-16`, migration `20261116140000_team_ac
 - **Reviews**: replies by `reviews.reply` members (update rules + column guards); web reply controls and the place Reviews tab, app panels.
 - **Own team**: nobody reviews, or messages as a customer, a team they belong to (`is_team_member`).
 - **Checked**: `teams-messages.integration.test.ts` (4 tests) and the messaging, review and story-reply suites (85 tests).
+
+### 75.4 Stage 4b: featuring and the team's credit (2026-11-16)
+
+Branch `feat/team-accounts-promotions-2026-11-16`, migration `20261116150000_team_accounts_promotions`. **Ships off**.
+
+- **Featuring**: `promotions.buy` (Owners, Finance) on the event and place Promotion tabs (web) and the Promote / Feature rows (app); `{event,place}_promotion_checkout.account_id` = the team (server-written), `owner_id` = the member who pays the cash part.
+- **Credit**: the team's credit pays the credit part (`loadPromotionOrder` → `creditAccountId`, re-checked against the member's role); `finalizePayment.reservationMatches` accepts the team's reservation only when the checkout names it; the switch names the team. The team's promotion credit shows on its Finances; credit notices copied to members open `/finances`.
+- **Audience**: `rewards_enabled_for_user` counts a team in when an active Owner is in the audience.
+- **Also**: "Your event is now featured" goes to the team (`promotion_started` → `promotions.buy` members); `promotion_bought` in the team's activity; Managers see a team place's Insights tab; the app's "coming soon" line now names only Spotlight and Stories.
+- **Checked**: `teams-promotions.integration.test.ts` (5 tests) and the credit, promotion, rewards, grants, money-path and team suites (177 tests).

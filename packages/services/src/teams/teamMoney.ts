@@ -88,7 +88,13 @@ export type TeamMoneyEvent =
   | { kind: "payout_account_removed"; label: string }
   | { kind: "payout_account_default"; label: string }
   | { kind: "payout_requested"; amount: number; currency: string }
-  | { kind: "event_cancelled"; eventId: string; title: string };
+  | { kind: "event_cancelled"; eventId: string; title: string }
+  | {
+      kind: "promotion_bought";
+      subjectKind: "event" | "place";
+      subjectId: string;
+      title: string;
+    };
 
 const NOTICE_OF: Partial<Record<TeamMoneyEvent["kind"], string>> = {
   payout_account_added: "team_payout_account_added",
@@ -110,7 +116,20 @@ export async function recordTeamMoneyEvent(
   event: TeamMoneyEvent,
 ): Promise<void> {
   if (!actor.role) return;
-  const teamId = actor.accountId;
+  await recordTeamMoneyEventFor(svc, actor.accountId, actor.personId, event);
+}
+
+/**
+ * The same, for a step that runs after the request that started it (a
+ * payment confirmed by the provider): the team and the member are known
+ * from the server-written record, not from a "Managing as" choice.
+ */
+export async function recordTeamMoneyEventFor(
+  svc: ServiceRoleClient,
+  teamId: string,
+  personId: string,
+  event: TeamMoneyEvent,
+): Promise<void> {
   const details: Record<string, string | number> = {};
   let subject: { kind: string; id: string } | null = null;
   if ("label" in event) details.label = event.label;
@@ -122,9 +141,13 @@ export async function recordTeamMoneyEvent(
     details.title = event.title;
     subject = { kind: "event", id: event.eventId };
   }
+  if (event.kind === "promotion_bought") {
+    details.title = event.title;
+    subject = { kind: event.subjectKind, id: event.subjectId };
+  }
   const { error } = await svc.from("team_activity").insert({
     team_id: teamId,
-    actor_user_id: actor.personId,
+    actor_user_id: personId,
     action: event.kind,
     subject_kind: subject?.kind ?? null,
     subject_id: subject?.id ?? null,
@@ -138,7 +161,7 @@ export async function recordTeamMoneyEvent(
     svc
       .from("user_info")
       .select("full_name, username")
-      .eq("id", actor.personId)
+      .eq("id", personId)
       .maybeSingle(),
     svc
       .from("user_info")

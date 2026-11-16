@@ -36,17 +36,27 @@ export default function UseCreditToggle({
             })}
           </p>
           <p className="text-xs text-muted-foreground">
-            {!quote.creditOnly
-              ? t("youHaveYouCanUseHere", {
+            {quote.accountName
+              ? // A team's credit, on a feature bought for the team.
+                t("teamHasCreditYouCanUseHere", {
+                  team: quote.accountName,
                   formatCredit: formatCredit(
                     quote.spendableMinor,
                     quote.currency,
                     locale,
                   ),
                 })
-              : checked
-                ? t("yourCreditCoversThisNoCard")
-                : t("yourCreditCanCoverAllOf")}
+              : !quote.creditOnly
+                ? t("youHaveYouCanUseHere", {
+                    formatCredit: formatCredit(
+                      quote.spendableMinor,
+                      quote.currency,
+                      locale,
+                    ),
+                  })
+                : checked
+                  ? t("yourCreditCoversThisNoCard")
+                  : t("yourCreditCanCoverAllOf")}
           </p>
         </div>
         <button

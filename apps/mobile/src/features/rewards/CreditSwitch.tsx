@@ -36,17 +36,27 @@ export function CreditSwitch({
             })}
           </AppText>
           <AppText variant="meta">
-            {!quote.creditOnly
-              ? t("youHaveYouCanUseHere", {
+            {quote.accountName
+              ? // A team's credit, on a feature bought for the team.
+                t("teamHasCreditYouCanUseHere", {
+                  team: quote.accountName,
                   formatCredit: formatCredit(
                     quote.spendableMinor,
                     quote.currency,
                     locale,
                   ),
                 })
-              : value
-                ? t("yourCreditCoversThisNothingElse")
-                : t("yourCreditCanCoverAllOf")}
+              : !quote.creditOnly
+                ? t("youHaveYouCanUseHere", {
+                    formatCredit: formatCredit(
+                      quote.spendableMinor,
+                      quote.currency,
+                      locale,
+                    ),
+                  })
+                : value
+                  ? t("yourCreditCoversThisNothingElse")
+                  : t("yourCreditCanCoverAllOf")}
           </AppText>
         </View>
         <Switch

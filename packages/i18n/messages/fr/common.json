@@ -869,6 +869,7 @@
   "youHaveUnsavedChangesToThis": "Vous avez des modifications non enregistrées sur cet événement.",
   "youHaveUnsavedChangesToThis2": "Vous avez des modifications non enregistrées sur cet avis.",
   "youHaveYouCanUseHere": "Vous avez {formatCredit} à utiliser ici.",
+  "teamHasCreditYouCanUseHere": "{team} a {formatCredit} à utiliser ici.",
   "youPay": "Vous payez",
   "youReAllCaughtUp": "Vous êtes à jour",
   "youReAllCaughtUpNothing": "Vous êtes à jour — rien ne demande votre attention pour le moment.",

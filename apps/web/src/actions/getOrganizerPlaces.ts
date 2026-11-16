@@ -65,6 +65,7 @@ export default withActionLocale(async function getOrganizerPlaces(options?: {
       "bookings.manage",
       "visit.show",
       "reviews.reply",
+      "promotions.buy",
     ]);
 
     if (actor.error)

@@ -481,8 +481,9 @@ function EventInsightsScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
-  // Managing as a team: the links follow the person's role; promotion,
-  // reviews and the promoter commission stay with personal events for now.
+  // Managing as a team: the links follow the person's role (Owners and
+  // Finance feature the event); the promoter commission stays with
+  // personal events for now.
   const { current, can } = useActingTeams();
 
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -523,16 +524,20 @@ function EventInsightsScreen() {
         ) : null}
       </View>
 
-      {eventId && can("events.manage") ? (
+      {eventId &&
+      (can("events.manage") ||
+        (IN_APP_PROMOTION_PURCHASES && can("promotions.buy"))) ? (
         <View className="flex-row gap-2">
-          <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
-            <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
-              <AppText className="text-sm font-semibold text-primary">
-                {t("editEvent")}
-              </AppText>
-            </Pressable>
-          </Link>
-          {IN_APP_PROMOTION_PURCHASES && !current ? (
+          {can("events.manage") ? (
+            <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
+              <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
+                <AppText className="text-sm font-semibold text-primary">
+                  {t("editEvent")}
+                </AppText>
+              </Pressable>
+            </Link>
+          ) : null}
+          {IN_APP_PROMOTION_PURCHASES && can("promotions.buy") ? (
             <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
               <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
                 <AppText className="text-sm font-semibold text-primary">

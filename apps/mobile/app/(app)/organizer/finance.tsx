@@ -169,9 +169,9 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
 
 function OrganizerFinanceScreenBody() {
   const t = useTranslations("manage");
-  // Managing as a team: Owners and Finance ask for payouts; promotion
-  // credit stays the person's own.
-  const { current, can } = useActingTeams();
+  // Managing as a team: Owners and Finance ask for payouts and see the
+  // team's promotion credit (stage 4b).
+  const { can } = useActingTeams();
 
   const finance = useOrganizerFinance();
   const ledger = useOrganizerLedger();
@@ -233,7 +233,7 @@ function OrganizerFinanceScreenBody() {
         />
       )}
 
-      {!current && showPromotionCredit(promotionCredit.data) ? (
+      {showPromotionCredit(promotionCredit.data) ? (
         <PromotionCreditCard credit={promotionCredit.data} />
       ) : null}
 

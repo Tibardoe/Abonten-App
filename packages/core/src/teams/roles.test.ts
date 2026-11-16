@@ -16,6 +16,7 @@ describe("team roles", () => {
       "payout.request",
       "money.view",
       "refunds.issue",
+      "promotions.buy",
     ]);
     expect(teamRoleCapabilities("manager")).toEqual([
       "events.manage",
@@ -42,6 +43,10 @@ describe("team roles", () => {
       expect(teamRoleCan(role, "payout.manage")).toBe(role === "owner");
       expect(teamRoleCan(role, "team.members")).toBe(role === "owner");
       expect(teamRoleCan(role, "money.view")).toBe(
+        role === "owner" || role === "finance",
+      );
+      // Featuring spends the team's credit (stage 4b).
+      expect(teamRoleCan(role, "promotions.buy")).toBe(
         role === "owner" || role === "finance",
       );
     }

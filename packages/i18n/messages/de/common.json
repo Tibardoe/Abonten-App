@@ -869,6 +869,7 @@
   "youHaveUnsavedChangesToThis": "Du hast nicht gespeicherte Änderungen an diesem Event.",
   "youHaveUnsavedChangesToThis2": "Du hast nicht gespeicherte Änderungen an dieser Bewertung.",
   "youHaveYouCanUseHere": "Du hast {formatCredit}, die du hier verwenden kannst.",
+  "teamHasCreditYouCanUseHere": "{team} hat {formatCredit}, die du hier verwenden kannst.",
   "youPay": "Du zahlst",
   "youReAllCaughtUp": "Du bist auf dem neuesten Stand",
   "youReAllCaughtUpNothing": "Du bist auf dem neuesten Stand — im Moment braucht nichts deine Aufmerksamkeit.",

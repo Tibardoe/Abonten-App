@@ -21,6 +21,7 @@ export async function GET(req: Request) {
     "bookings.manage",
     "visit.show",
     "reviews.reply",
+    "promotions.buy",
   ]);
   if (actor.error) return apiJson(actor.error);
 
