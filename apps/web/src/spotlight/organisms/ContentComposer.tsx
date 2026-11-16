@@ -12,6 +12,7 @@ import {
 import { Select } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/useToast";
+import PublishingAsBanner from "@/teams/atoms/PublishingAsBanner";
 import { CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY } from "@abonten/core/content/copy";
 import {
   MAX_CAPTION_LENGTH,
@@ -207,6 +208,7 @@ export default function ContentComposer({
         </DialogDescription>
 
         <div className="space-y-4">
+          <PublishingAsBanner />
           {kinds.length > 1 ? (
             <div className="flex gap-2">
               {kinds.map((k) => (

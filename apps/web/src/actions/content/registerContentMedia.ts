@@ -6,6 +6,7 @@ import {
   parseContentInput,
   requireContentUser,
 } from "@/utils/contentAction";
+import { contentPublisherFor } from "@/utils/teamActor";
 import { registerContentMediaCore } from "@abonten/services/content/contentMediaCore";
 import { registerContentMediaSchema } from "@abonten/validation/contentSchemas";
 
@@ -16,6 +17,10 @@ export const registerContentMedia = withActionLocale(
     if (caller.error) return caller.error;
     const parsed = parseContentInput(registerContentMediaSchema, input);
     if (parsed.error) return parsed.error;
-    return registerContentMediaCore(caller.svc, caller.userId, parsed.data);
+    const publisher = await contentPublisherFor(caller.userId);
+    return registerContentMediaCore(caller.svc, caller.userId, parsed.data, {
+      publisherId: publisher.accountId,
+      blocked: publisher.blocked,
+    });
   },
 );

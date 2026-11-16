@@ -1,4 +1,7 @@
-import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
+import {
+  mobileActingFor,
+  mobileContentPublisher,
+} from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -34,9 +37,18 @@ export async function POST(req: Request) {
     }
 
     // Spotlight / Story uploads only for people who could post them.
+    // Posting as the team named in the header (stage 4c): allowed when the
+    // role covers it; the media stays the person's.
+    const publisher =
+      body.kind === "content"
+        ? await mobileContentPublisher(req, auth.user.id)
+        : null;
     if (
-      body.kind === "content" &&
-      !(await canUploadContentMedia(getSupabaseServiceClient(), auth.user.id))
+      publisher &&
+      !(await canUploadContentMedia(getSupabaseServiceClient(), auth.user.id, {
+        publisherId: publisher.accountId,
+        blocked: publisher.blocked,
+      }))
     ) {
       return apiJson({
         status: 403,

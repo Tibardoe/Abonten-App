@@ -1,3 +1,7 @@
+import {
+  mobileActingFor,
+  mobileContentPublisher,
+} from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import {
   deleteContentPostCore,
@@ -25,7 +29,18 @@ export async function GET(
       allowAnonymous: true,
       params: { postId },
     },
-    ({ svc, userId, data, ip }) => getContentPostCore(svc, userId, data.postId),
+    async ({ svc, userId, data }) => {
+      // A team's draft or ended Story opens for the members who post for it.
+      const publisher = userId
+        ? await mobileContentPublisher(req, userId)
+        : null;
+      return getContentPostCore(
+        svc,
+        userId,
+        data.postId,
+        publisher && !publisher.blocked ? publisher.accountId : null,
+      );
+    },
   );
 }
 
@@ -43,8 +58,15 @@ export async function PATCH(
       label: "PATCH /content/posts/[postId]",
       params: { postId },
     },
-    ({ svc, userId, data, ip }) =>
-      updateContentPostCore(svc, signedIn(userId), data),
+    async ({ svc, userId, data }) => {
+      const actor = await mobileActingFor(
+        req,
+        signedIn(userId),
+        "content.post",
+      );
+      if (actor.error) return actor.error;
+      return updateContentPostCore(svc, actor.accountId, data);
+    },
   );
 }
 
@@ -62,7 +84,14 @@ export async function DELETE(
       label: "DELETE /content/posts/[postId]",
       params: { postId },
     },
-    ({ svc, userId, data, ip }) =>
-      deleteContentPostCore(svc, signedIn(userId), data.postId),
+    async ({ svc, userId, data }) => {
+      const actor = await mobileActingFor(
+        req,
+        signedIn(userId),
+        "content.post",
+      );
+      if (actor.error) return actor.error;
+      return deleteContentPostCore(svc, actor.accountId, data.postId);
+    },
   );
 }

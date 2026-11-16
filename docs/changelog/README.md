@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts, stage 4c (Spotlight and Stories as a team)
+
+- Owners and Content and messages post Spotlights and Stories as the team (author = the team, uploads and audience the member's, `content_published` in the team's activity); they edit, delete, see insights and remove comments on the team's posts; nobody replies to their own team's Story; paid Spotlight promotion stays personal: `architecture/team-accounts.md` 1.5 (§4e, roles, code map), `admin/teams.md` 1.5, `architecture/spotlight-and-stories.md` 1.4. Migration `20261116160000_team_accounts_content`; PROJECT.md §75.5, CLAUDE.md quick facts.
+
 ## 2026-11-16 — Team accounts, stage 4b (featuring and the team's credit)
 
 - Owners and Finance feature the team's events and places; the member pays the cash part, the team's credit the credit part; a team counts in the Rewards audience when an Owner does; credit notices copied to members open the team's Finances: `architecture/team-accounts.md` 1.4 (§4d, roles, code map), `admin/teams.md` 1.4, `architecture/rewards-ledger.md`. Migration `20261116150000_team_accounts_promotions`; PROJECT.md §75.4, CLAUDE.md quick facts.

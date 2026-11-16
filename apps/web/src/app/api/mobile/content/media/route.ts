@@ -1,3 +1,4 @@
+import { mobileContentPublisher } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { registerContentMediaCore } from "@abonten/services/content/contentMediaCore";
 import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
@@ -9,7 +10,12 @@ export async function POST(req: Request) {
   return discoveryRoute(
     req,
     { schema: registerContentMediaSchema, label: "POST /content/media" },
-    ({ svc, userId, data, ip }) =>
-      registerContentMediaCore(svc, signedIn(userId), data),
+    async ({ svc, userId, data }) => {
+      const publisher = await mobileContentPublisher(req, signedIn(userId));
+      return registerContentMediaCore(svc, signedIn(userId), data, {
+        publisherId: publisher.accountId,
+        blocked: publisher.blocked,
+      });
+    },
   );
 }

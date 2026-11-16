@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
-import { teamInboxAccount } from "@/utils/teamActor";
+import { contentPublisherFor, teamInboxAccount } from "@/utils/teamActor";
 import { logger } from "@abonten/core/logger";
 import { getContentProgramCore } from "@abonten/services/content/contentProgram";
 import { getMyFieldOpsCore } from "@abonten/services/fieldOps/member/myFieldOpsQuery";
@@ -180,7 +180,17 @@ export default withActionLocale(async function getShellBootstrap(
     part<ContentProgram | null>(
       "contentProgram",
       degraded,
-      async () => (await getContentProgramCore(svc, userId)).data,
+      async () => {
+        // Posting follows the account posted as (stage 4c): the team the
+        // person manages as, when their role covers it.
+        const publisher = userId ? await contentPublisherFor(userId) : null;
+        return (
+          await getContentProgramCore(svc, userId, {
+            publisherId: publisher?.accountId ?? null,
+            blocked: publisher?.blocked ?? false,
+          })
+        ).data;
+      },
       DISABLED_CONTENT_PROGRAM,
     ),
     part(

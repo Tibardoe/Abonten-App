@@ -4,8 +4,8 @@ purpose: How Spotlight posts, 24-hour Stories, the follow graph, engagement, tel
 audience: Engineering, operations, finance, security reviewers
 scope: The content_* and follow tables and functions (migrations 20260916120000..20260917120000), @abonten/services content and admin/content modules, /spotlight, /stories and /manage/spotlight on web, /api/mobile/content/**, the mobile Spotlight, Story and creator screens, the Stories row in Messages, Admin › Spotlight & Stories, the seven content cron jobs, and the spotlight-promotion payment path. Not covered - hashtag pages, audio libraries, duets, live streaming and creator payouts, which are not built.
 status: Approved
-version: 1.3
-lastReviewed: 2026-09-17
+version: 1.4
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -55,6 +55,8 @@ The older empty `story` and `story_default` tables from the original schema are 
 1. The client asks for a Cloudinary signature (`kind: "content"`, folder `content_media/<environment>/<user id>`, where the environment is `production`, `preview` or `development` from `VERCEL_ENV`), uploads directly, then calls **register media**. `registerContentMediaCore` refuses anything outside the caller's folder, re-reads the asset from the Cloudinary Admin API and checks type, format, size and length there (the client's claims are ignored). The length comes from the Admin API with `media_metadata`; a video whose length cannot be read, or with no picture, is refused. A refused upload is destroyed on Cloudinary at once. A signature for `content` is issued only to people who can post. Trims are applied as a delivery transformation. Long or large videos get an asynchronous optimised rendition (`playback_status = pending`); the original always plays meanwhile.
 2. **Create post** attaches the caller's ready media in order and either keeps a draft or calls `content_post_publish`. `clientRequestId` makes a retried create return the same post.
 3. `content_post_publish(post, actor)` is the only way to publish. It re-checks author, eligibility, the posting switches, the rights acknowledgement, media count and state, daily caps (`spotlight_posts_per_day`, `stories_per_day`), and the linked event or place (live, owned by the publisher or held at the publisher's place). It sets `published_at`, and for Stories `expires_at = now() + story_ttl_hours`.
+
+**As a team** (team accounts, stage 4c; [team-accounts.md §4e](team-accounts.md)): a member whose role covers `content.post` posts as the team they manage as. The post's author is the team (eligibility, places and daily caps are the team's); the audience check and the uploads stay the member's; the team's activity names who published. Paid promotion stays with personal posts.
 
 Deleting a post is a soft delete; a running promotion on it is cancelled, and an unpaid promotion order for it is cancelled unless a payment is in flight. Registered-but-unused uploads are destroyed after `orphan_media_hours`, media of deleted posts and ended Stories after their retention, through `draft_asset_cleanup_queue`; uploads that never became a `content_media` row are found by a daily sweep of this environment's `content_media/<environment>/` folder on Cloudinary (see §11). The Cloudinary account is shared by production, previews and local development, each with its own database; the environment folder keeps one environment's sweep away from another's uploads.
 

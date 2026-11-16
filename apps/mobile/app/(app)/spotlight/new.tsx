@@ -15,6 +15,11 @@ import {
   type EditableMedia,
   useHighlightComposer,
 } from "@/features/profile/useHighlightComposer";
+import {
+  PublishingAsBanner,
+  TeamRoleBlocked,
+} from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import type { ContentKind } from "@abonten/types/contentType";
@@ -57,6 +62,9 @@ export default function NewContentScreen() {
   const toast = useToast();
   const params = useLocalSearchParams<{ kind?: string }>();
   const { program, ready } = useContentProgram();
+  // Managing as a team: its Owners and Content and messages post as it
+  // (stage 4c); other roles switch back first.
+  const { current: team, can } = useActingTeams();
   const invalidate = useInvalidateContent();
   const qc = useQueryClient();
   const { session } = useSession();
@@ -251,6 +259,8 @@ export default function NewContentScreen() {
     composer.reset();
     router.back();
   }
+
+  if (team && !can("content.post")) return <TeamRoleBlocked />;
 
   if (ready && kinds.length === 0) {
     return (
@@ -618,6 +628,7 @@ export default function NewContentScreen() {
         </AppText>
       </View>
       <KeyboardAwareScrollView contentContainerClassName="gap-5 p-4">
+        <PublishingAsBanner />
         <PublishPreview
           items={composer.items}
           posters={posters}

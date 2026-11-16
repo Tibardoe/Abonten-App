@@ -1,6 +1,6 @@
 {
   "accept": "Aceitar",
-  "activity": "{action, select, team_created {{actor} criou a equipa} team_renamed {{actor} mudou o nome da equipa} member_invited {{actor} convidou alguém} member_joined {{actor} entrou} member_declined {{actor} recusou um convite} member_invite_cancelled {{actor} retirou um convite} member_invite_expired {Um convite expirou} member_role_changed {{actor} mudou a função de {subject}} member_removed {{actor} removeu {subject}} member_left {{actor} saiu} member_account_closed {{subject} saiu quando a conta foi fechada} team_frozen {A equipa foi pausada} payout_account_added {{actor} adicionou uma conta de pagamento} payout_account_removed {{actor} removeu uma conta de pagamento} payout_account_default {{actor} mudou a conta de pagamento principal} payout_requested {{actor} pediu um pagamento} event_cancelled {{actor} cancelou um evento} promotion_bought {{actor} pagou para destacar um evento ou um local} other {{actor} fez uma alteração}}",
+  "activity": "{action, select, team_created {{actor} criou a equipa} team_renamed {{actor} mudou o nome da equipa} member_invited {{actor} convidou alguém} member_joined {{actor} entrou} member_declined {{actor} recusou um convite} member_invite_cancelled {{actor} retirou um convite} member_invite_expired {Um convite expirou} member_role_changed {{actor} mudou a função de {subject}} member_removed {{actor} removeu {subject}} member_left {{actor} saiu} member_account_closed {{subject} saiu quando a conta foi fechada} team_frozen {A equipa foi pausada} payout_account_added {{actor} adicionou uma conta de pagamento} payout_account_removed {{actor} removeu uma conta de pagamento} payout_account_default {{actor} mudou a conta de pagamento principal} payout_requested {{actor} pediu um pagamento} event_cancelled {{actor} cancelou um evento} promotion_bought {{actor} pagou para destacar um evento ou um local} content_published {{actor} publicou no Spotlight ou nas Stories} other {{actor} fez uma alteração}}",
   "activityTitle": "Atividade",
   "byPhone": "Número de telefone",
   "byUsername": "Nome de utilizador",
@@ -34,7 +34,7 @@
   "invitedByUntil": "Convite de {name} · aberto até {date}",
   "joinedToast": "Entrou na equipa.",
   "lastOwnerHint": "É o único proprietário. Torne outro membro proprietário antes de sair.",
-  "laterAsTeam": "O Spotlight e as Stories em equipa chegam em breve.",
+  "laterAsTeam": "Pagar para promover um Spotlight em equipa chega em breve.",
   "leave": "Sair da equipa",
   "leaveConfirmBody": "Vai perder o acesso à equipa. Um proprietário pode voltar a convidá-lo.",
   "leaveConfirmTitle": "Sair de {team}?",

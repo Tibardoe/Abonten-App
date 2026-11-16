@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { useActingChoice } from "@/features/teams/actingTeam";
 import { api } from "@/lib/api";
 import {
   type ContentProgram,
@@ -14,8 +15,11 @@ export const CONTENT_KEY = ["mobile", "content"] as const;
 
 export function useContentProgram() {
   const { session } = useSession();
+  // Posting is decided for the account posted as: the team chosen under
+  // "Managing as" (stage 4c), or the person.
+  const teamId = useActingChoice()?.teamId ?? null;
   const query = useQuery({
-    queryKey: [...CONTENT_KEY, "program", session?.user.id ?? null],
+    queryKey: [...CONTENT_KEY, "program", session?.user.id ?? null, teamId],
     queryFn: async (): Promise<ContentProgram> => {
       const res = await api.content.program();
       // A server hiccup, or a 401 while the token cannot be refreshed,

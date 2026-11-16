@@ -125,6 +125,29 @@ export async function managingTargetFor(
 }
 
 /**
+ * Who a Spotlight or a Story is posted as (stage 4c): the person, or the
+ * team they manage as when their role covers content.post. `blocked`: they
+ * manage as a team whose role does not cover posting (or that they can no
+ * longer act for), so posting is off until they switch back. Never an
+ * error: reading the programme or one's own posts must still answer.
+ */
+export async function contentPublisherFor(
+  personId: string,
+): Promise<{ accountId: string; blocked: boolean }> {
+  const teamId = await readActingTeamId();
+  if (!teamId) return { accountId: personId, blocked: false };
+  const resolved = await resolveActingAccount(
+    getSupabaseServiceClient(),
+    personId,
+    teamId,
+    "content.post",
+  );
+  return resolved.ok
+    ? { accountId: resolved.actor.accountId, blocked: false }
+    : { accountId: personId, blocked: true };
+}
+
+/**
  * The team whose inbox the person answers while managing as it (stage 4),
  * or null for their own inbox. Never an error: a role that does not answer
  * messages simply keeps the person's own inbox.
