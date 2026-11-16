@@ -109,6 +109,11 @@ const SESSION_CALLABLE: Call[] = [
 // with real fixtures in money-path-lockdown, so they are not repeated here.)
 const SERVICE_ROLE_ONLY: Call[] = [
   {
+    name: "refund_retry_candidates",
+    args: { p_limit: 1 },
+    why: "read by the payment-reconcile sweep only: it lists other people's payments that are owed a refund (2026-11-16)",
+  },
+  {
     name: "safety_record_locations",
     args: { p_session_id: ABSENT_ID, p_user_id: ABSENT_ID, p_points: [] },
     why: "Abonten Safety positions are written by the service after it proved who is asking (2026-10-21)",

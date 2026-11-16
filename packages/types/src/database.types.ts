@@ -18506,6 +18506,13 @@ export type Database = {
         Args: { p_ticket_ids: string[]; p_transaction_id: string }
         Returns: number
       }
+      refund_retry_candidates: {
+        Args: { p_limit?: number }
+        Returns: {
+          failed_parts: number
+          transaction_id: string
+        }[]
+      }
       release_transaction_refund_claim: {
         Args: { p_transaction_id: string }
         Returns: undefined

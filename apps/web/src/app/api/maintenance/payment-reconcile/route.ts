@@ -4,6 +4,7 @@ import {
   isReconcileTokenValid,
   reconcilePaymentAttemptsCore,
 } from "@abonten/services/payments/reconcilePaymentAttemptsCore";
+import { retryOwedRefundsCore } from "@abonten/services/payments/retryOwedRefundsCore";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 60;
@@ -11,11 +12,13 @@ export const maxDuration = 60;
 // POST /api/maintenance/payment-reconcile
 //
 // Settles payments that neither the buyer's app nor the provider's webhook
-// finished (reconcilePaymentAttemptsCore). Called every 5 minutes by the
-// `payment-reconcile` pg_cron job, only while such an attempt exists, with
-// the token from payment_reconcile_config in the `x-reconcile-token`
-// header. Each attempt goes through finalizePayment's lock, so an
-// overlapping call, the app and the webhook can never settle one twice.
+// finished (reconcilePaymentAttemptsCore), then asks again for refunds the
+// provider refused or that were never sent (retryOwedRefundsCore). Called
+// every 5 minutes by the `payment-reconcile` pg_cron job, only while such an
+// attempt or refund exists, with the token from payment_reconcile_config in
+// the `x-reconcile-token` header. Each attempt goes through finalizePayment's
+// lock and each refund through refund_prepare's, so an overlapping call, the
+// app and the webhook can never settle one twice.
 export async function POST(req: Request) {
   if (!(await isReconcileTokenValid(req.headers.get("x-reconcile-token")))) {
     logger.warn(
@@ -23,11 +26,26 @@ export async function POST(req: Request) {
     );
     return NextResponse.json({ status: 401 }, { status: 401 });
   }
+  const started = Date.now();
+  let failed = false;
+  let summary: Awaited<ReturnType<typeof reconcilePaymentAttemptsCore>> | null =
+    null;
   try {
-    const summary = await reconcilePaymentAttemptsCore(paymentFulfillmentDeps);
-    return NextResponse.json({ status: 200, ...summary });
+    summary = await reconcilePaymentAttemptsCore(paymentFulfillmentDeps);
   } catch (e) {
+    failed = true;
     logger.error("maintenance/payment-reconcile failed", e);
+  }
+  // The cron waits 55 s for an answer: no new refund starts after 40 s.
+  let refunds: Awaited<ReturnType<typeof retryOwedRefundsCore>> | null = null;
+  try {
+    refunds = await retryOwedRefundsCore({ deadline: started + 40_000 });
+  } catch (e) {
+    failed = true;
+    logger.error("maintenance/payment-reconcile: refund retry failed", e);
+  }
+  if (failed) {
     return NextResponse.json({ status: 500 }, { status: 500 });
   }
+  return NextResponse.json({ status: 200, ...summary, refunds });
 }

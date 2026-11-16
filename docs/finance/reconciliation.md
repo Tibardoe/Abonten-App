@@ -4,8 +4,8 @@ purpose: What the automated reconciliation checks, how its incidents appear, and
 audience: Finance admins, engineering
 scope: run_financial_reconciliation, rewards_health, fieldops_health, Paystack dashboard reconciliation
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-25
+version: 1.3
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -34,7 +34,10 @@ provider-side backstop: open charges past the checkout hold and under two
 days old are verified with Paystack and finished through `finalizePayment`
 (fulfilled, failed or refunded); a recorded charge whose issuance failed
 (`fulfillment_failed`) is retried the same way every 30 minutes;
-never-started attempts are cancelled after an hour. The health check's `paystack` row counts charged payments still
+never-started attempts are cancelled after an hour. Since 2026-11-16
+(migration `20261116230148`) it also asks again for refunds the provider
+refused or that were never sent, and opens `fin_reconciliation.refunds_refused`
+after five refusals ([payments-and-ticketing-runbook.md](payments-and-ticketing-runbook.md) §5). The health check's `paystack` row counts charged payments still
 unsettled after two hours (`unsettledPayments`) and shows each key's
 test/live mode.
 

@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Refused refunds are asked for again on their own; App Review checklist
+
+- The `payment-reconcile` sweep now also asks again for refunds the provider refused or that were never sent (a cancelled ticket of a cash payment no live refund part covers), one at a time, paced, and opens `fin_reconciliation.refunds_refused` after five refusals. `finance/payments-and-ticketing-runbook.md`
+- Before an App Store / TestFlight submission: accept pending App Store Connect agreements, check what a reviewer will find, the payments line and the demo account; new review notes; the hidden samples are not to be unhidden. `deployment/mobile-eas.md`
+
 ## 2026-11-16 — Field Ops for Accra/Osu, online, commissions off
 
 - Campaign "Accra online, Osu first" is active for staff online onboarding (Osu and Accra territories, two staff members), with commissions and payouts off. The Monitoring `fieldops` check no longer reads the commission sweep as late while commissions are off; the programme switch goes on once that is live. `admin/field-ops.md`, `architecture/field-ops.md`
