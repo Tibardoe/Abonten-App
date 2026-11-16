@@ -37,7 +37,10 @@
     "open": "Open Abonten Rewards",
     "subjectMany": "Abonten Rewards: {count} updates",
     "unsubscribe": "Don't want these emails? <link>Unsubscribe</link>. You'll still see your credit in the app.",
-    "why": "You're getting this because you earned Abonten Credit on your Abonten Hub account. Credit can be spent on Abonten and can't be exchanged for cash."
+    "why": "You're getting this because you earned Abonten Credit on your Abonten Hub account. Credit can be spent on Abonten and can't be exchanged for cash.",
+    "introTeam": "{greeting} here's what's new with the Abonten Credit of {team}, a team you help run.",
+    "openTeam": "Open {team} on Abonten",
+    "whyTeam": "You're getting this because you're an Owner or a Finance member of {team} on Abonten Hub. Credit can be spent on Abonten and can't be exchanged for cash."
   },
   "ticket": {
     "amountPaid": "Amount paid",

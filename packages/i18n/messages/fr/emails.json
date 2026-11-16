@@ -37,7 +37,10 @@
     "open": "Ouvrir Abonten Rewards",
     "subjectMany": "Abonten Rewards : {count} nouveautés",
     "unsubscribe": "Vous ne voulez plus recevoir ces e-mails ? <link>Se désabonner</link>. Vous verrez toujours votre crédit dans l'application.",
-    "why": "Vous recevez ce message parce que vous avez gagné du Crédit Abonten sur votre compte Abonten Hub. Le crédit se dépense sur Abonten et ne peut pas être échangé contre de l'argent."
+    "why": "Vous recevez ce message parce que vous avez gagné du Crédit Abonten sur votre compte Abonten Hub. Le crédit se dépense sur Abonten et ne peut pas être échangé contre de l'argent.",
+    "introTeam": "{greeting} voici les nouveautés du Crédit Abonten de {team}, une équipe que vous aidez à gérer.",
+    "openTeam": "Ouvrir {team} sur Abonten",
+    "whyTeam": "Vous recevez ce message parce que vous êtes propriétaire ou membre Finances de {team} sur Abonten Hub. Le crédit peut être utilisé sur Abonten et ne peut pas être échangé contre de l'argent."
   },
   "ticket": {
     "amountPaid": "Montant payé",
