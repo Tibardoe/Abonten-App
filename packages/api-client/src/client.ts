@@ -161,6 +161,7 @@ import type {
   EventInsightsResult,
   EventPromoCodesResult,
   EventPromoterCommissionResult,
+  EventPromoterOfferResult,
   EventPromotionContextResult,
   EventTicketsBody,
   FieldOpsAnalyticsResult,
@@ -1604,13 +1605,52 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "GET", auth: true },
         );
       },
-      /** Sets the promoter commission (basis points), or stops it (null). */
-      setEventPromoterCommission(eventId: string, rateBps: number | null) {
+      /**
+       * Sets the promoter commission (basis points), or stops it (null);
+       * `invitedOnly` says only the promoters on the list earn (X33).
+       */
+      setEventPromoterCommission(
+        eventId: string,
+        rateBps: number | null,
+        invitedOnly?: boolean,
+      ) {
         return request<EventPromoterCommissionResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(
             eventId,
           )}/promoter-commission`,
-          { method: "PUT", body: { rateBps }, auth: true },
+          {
+            method: "PUT",
+            body:
+              invitedOnly === undefined
+                ? { rateBps }
+                : { rateBps, invitedOnly },
+            auth: true,
+          },
+        );
+      },
+      /**
+       * Adds a promoter by username (their own rate, or the event's when
+       * null), or changes the rate of one on the list. Adding a member of
+       * the team takes an Owner (X36).
+       */
+      addEventPromoter(
+        eventId: string,
+        input: { username: string; rateBps: number | null },
+      ) {
+        return request<EventPromoterCommissionResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promoters`,
+          { method: "POST", body: input, auth: true },
+        );
+      },
+      /** Takes a promoter off the event. */
+      removeEventPromoter(eventId: string, promoterId: string) {
+        return request<EventPromoterCommissionResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promoters/${encodeURIComponent(promoterId)}`,
+          { method: "DELETE", auth: true },
         );
       },
       /**
@@ -2007,6 +2047,19 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     rewards: {
+      /**
+       * What the caller earns by sharing this event: their own rate if the
+       * organizer added them as a promoter, else the event's; null when
+       * there is nothing to earn.
+       */
+      promoterOffer(eventId: string) {
+        return request<EventPromoterOfferResult>(
+          `/api/mobile/rewards/promoter-offer?eventId=${encodeURIComponent(
+            eventId,
+          )}`,
+          { method: "GET", auth: true },
+        );
+      },
       /** The caller's Abonten Credit balance + whether Rewards is on for them. */
       summary() {
         return request<CreditSummaryResult>("/api/mobile/rewards/summary", {

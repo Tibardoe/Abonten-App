@@ -165,6 +165,7 @@ export type {
   LoyaltyProgressResult,
   RewardEmailPreferenceResult,
   EventPromoterCommissionResult,
+  EventPromoterOfferResult,
   PlaceVisitPanelResult,
   PlaceVisitBody,
   PlaceVisitResultEnvelope,

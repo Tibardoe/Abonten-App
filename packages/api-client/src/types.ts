@@ -59,6 +59,7 @@ import type {
   CreditQuote,
   CreditSummary,
   EventPromoterCommission,
+  EventPromoterOffer,
   LoyaltyProgress,
   PlaceVisitPanel,
   PlaceVisitResult,
@@ -178,6 +179,7 @@ export type LoyaltyProgressResult = ApiEnvelope<LoyaltyProgress | null>;
 export type RewardEmailPreferenceResult = ApiEnvelope<RewardEmailPreference>;
 export type EventPromoterCommissionResult =
   ApiEnvelope<EventPromoterCommission>;
+export type EventPromoterOfferResult = ApiEnvelope<EventPromoterOffer | null>;
 export type PlaceVisitPanelResult = ApiEnvelope<PlaceVisitPanel>;
 export type PlaceVisitBody = {
   placeId?: string | null;

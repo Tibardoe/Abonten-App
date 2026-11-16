@@ -1410,5 +1410,12 @@
   "teamUnderAge": "Teams on Abonten are for people 18 or older.",
   "teamRoleNotLimited": "Only Front desk and Door staff can be limited to places.",
   "teamPlaceNotTeam": "Choose places this team runs.",
-  "teamPlaceNotYours": "Your role in this team covers other places."
+  "teamPlaceNotYours": "Your role in this team covers other places.",
+  "promoterOfferFirst": "Offer a commission on this event first, then add promoters.",
+  "promoterOwnEvent": "You run this event, so you can't be one of its promoters.",
+  "promoterRestricted": "This account can't promote events right now.",
+  "promoterMemberOwnerOnly": "Only an Owner can add a member of the team as a promoter.",
+  "promoterTooMany": "An event can have at most {max} promoters.",
+  "promoterNotOnList": "That person isn't a promoter of this event.",
+  "couldnTSaveThePromoter": "Couldn't save the promoter. Please try again."
 }

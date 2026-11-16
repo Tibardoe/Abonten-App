@@ -26,10 +26,19 @@ import {
 } from "../places/placeVisitCore";
 import { getLoyaltyProgressCore } from "../rewards/loyaltyCore";
 import {
+  addEventPromoterCore,
   getEventPromoterCommissionCore,
+  getEventPromoterOfferCore,
+  removeEventPromoterCore,
   setEventPromoterCommissionCore,
 } from "../rewards/promoterCommissionCore";
 import { getReferralLinkCore } from "../rewards/referralCore";
+import {
+  answerTeamInviteCore,
+  createTeamCore,
+  inviteTeamMemberCore,
+} from "../teams/teamCore";
+import { resetTeamSettingsCache } from "../teams/teamProgram";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -712,6 +721,280 @@ describe("Rewards Phase 8: loyalty, promoter commissions, place visits", () => {
     await runEngine();
     expect(await reward(later.checkoutId, "promoter_commission")).toBeNull();
     await setRule("promoter_commission", false);
+  });
+
+  // ── Invited promoters (X33, X36) ─────────────────────────────────────
+
+  it("pays invited promoters their own rate, only them when the organizer says so, and a team's member only when an Owner adds them", async () => {
+    await setRule("promoter_commission", true);
+    const named = async (u: TestUser, prefix: string) => {
+      const username = `${prefix}_${u.id.slice(0, 8)}`;
+      await service
+        .from("user_info")
+        .update({ username, full_name: `${prefix} person` })
+        .eq("id", u.id);
+      return username;
+    };
+    const codeOf = async (u: TestUser) =>
+      (await getReferralLinkCore(u.id)).data?.code as string;
+    const commission = async (checkoutId: string) =>
+      (await reward(checkoutId, "promoter_commission"))?.amount_minor ?? null;
+
+    // ── A person's event ──
+    const organizer = await newUser();
+    const invited = await newUser();
+    const other = await newUser();
+    const organizerName = await named(organizer, "ipo");
+    const invitedName = await named(invited, "ipi");
+    const event = await newEvent(organizer.id);
+
+    // The commission comes first: the promoter is told what they earn.
+    const early = await addEventPromoterCore(organizer.client, organizer.id, {
+      eventId: event.eventId,
+      username: invitedName,
+      rateBps: 2500,
+    });
+    expect(early.status).toBe(409);
+    await setEventPromoterCommissionCore(organizer.client, organizer.id, {
+      eventId: event.eventId,
+      rateBps: 1000,
+    });
+    const self = await addEventPromoterCore(organizer.client, organizer.id, {
+      eventId: event.eventId,
+      username: organizerName,
+      rateBps: null,
+    });
+    expect(self.status).toBe(409);
+    const stranger = await addEventPromoterCore(other.client, other.id, {
+      eventId: event.eventId,
+      username: invitedName,
+      rateBps: null,
+    });
+    expect(stranger.status).toBe(403);
+    const added = await addEventPromoterCore(organizer.client, organizer.id, {
+      eventId: event.eventId,
+      username: `@${invitedName.toUpperCase()}`,
+      rateBps: 2500,
+    });
+    expect(added.status, added.message).toBe(200);
+    expect(added.data?.promoters).toMatchObject([
+      { userId: invited.id, rateBps: 2500, teamMember: false, approved: true },
+    ]);
+    const { data: told } = await service
+      .from("notification")
+      .select("data")
+      .eq("user_id", invited.id)
+      .eq("type", "promoter_added");
+    expect(told).toHaveLength(1);
+    // Nobody reads the list directly.
+    const { data: peek } = await other.client
+      .from("event_promoter")
+      .select("promoter_id")
+      .eq("event_id", event.eventId);
+    expect(peek ?? []).toEqual([]);
+
+    // Their own rate for them, the event's for everyone else.
+    const viaInvited = await buy(await newUser(), event, await codeOf(invited));
+    const viaOther = await buy(await newUser(), event, await codeOf(other));
+    await runEngine();
+    expect(await commission(viaInvited.checkoutId)).toBe(2500);
+    expect(await commission(viaOther.checkoutId)).toBe(1000);
+    expect(
+      (await getEventPromoterOfferCore(service, event.eventId, invited.id))
+        .data,
+    ).toEqual({ rateBps: 2500, invited: true });
+    const figures = await getEventPromoterCommissionCore(
+      organizer.client,
+      organizer.id,
+      event.eventId,
+    );
+    expect(figures.data?.promoters[0]).toMatchObject({
+      sales: 1,
+      pendingMinor: 2500,
+    });
+
+    // Invited promoters only (X33): the others stop earning, and the public
+    // row no longer says "earn 10%".
+    const closed = await setEventPromoterCommissionCore(
+      organizer.client,
+      organizer.id,
+      { eventId: event.eventId, rateBps: 1000, invitedOnly: true },
+    );
+    expect(closed.data).toMatchObject({ invitedOnly: true, rateBps: 1000 });
+    expect(
+      (await getEventPromoterOfferCore(service, event.eventId, other.id)).data,
+    ).toBeNull();
+    const { data: publicRow } = await other.client
+      .from("event_promoter_commission")
+      .select("rate_bps")
+      .eq("event_id", event.eventId);
+    expect(publicRow ?? []).toEqual([]);
+    const closedOther = await buy(await newUser(), event, await codeOf(other));
+    await runEngine();
+    expect(
+      await reward(closedOther.checkoutId, "promoter_commission"),
+    ).toBeNull();
+
+    // Taken off the list: later sales through their link earn nothing.
+    const removed = await removeEventPromoterCore(
+      organizer.client,
+      organizer.id,
+      { eventId: event.eventId, promoterId: invited.id },
+    );
+    expect(removed.data?.promoters).toEqual([]);
+    const afterRemoval = await buy(
+      await newUser(),
+      event,
+      await codeOf(invited),
+    );
+    await runEngine();
+    expect(
+      await reward(afterRemoval.checkoutId, "promoter_commission"),
+    ).toBeNull();
+    const { data: byeNotice } = await service
+      .from("notification")
+      .select("id")
+      .eq("user_id", invited.id)
+      .eq("type", "promoter_removed");
+    expect(byeNotice).toHaveLength(1);
+
+    // ── A team's event (X36) ──
+    await service
+      .from("team_program_setting")
+      .update({ enabled: true, audience: "all" })
+      .eq("id", 1);
+    resetTeamSettingsCache();
+    let teamId: string | null = null;
+    // Abonten's own referral reward is on too, to show a member never gets it.
+    const { data: refRules } = await service
+      .from("reward_rule")
+      .select("id, is_active")
+      .eq("rule_key", "event_referral");
+    const referralBefore = refRules?.find((r) => r.is_active)?.id ?? null;
+    await setRule("event_referral", true);
+    try {
+      const owner = await newUser();
+      const finance = await newUser();
+      const member = await newUser();
+      const outsider = await newUser();
+      await named(owner, "ipt");
+      const financeName = await named(finance, "ipt");
+      const memberName = await named(member, "ipt");
+      const outsiderName = await named(outsider, "ipt");
+      const made = await createTeamCore(service as never, owner.id, {
+        name: "Promoter Crew",
+        username: `ipteam_${crypto.randomUUID().slice(0, 8)}`,
+        adult: true,
+      });
+      if (made.status !== 200) throw new Error(made.message);
+      teamId = made.data.id;
+      for (const [who, name, role] of [
+        [finance, financeName, "finance"],
+        [member, memberName, "content"],
+      ] as const) {
+        const sent = await inviteTeamMemberCore(
+          service as never,
+          owner.id,
+          { teamId, role, target: { kind: "username", username: name } },
+          { canTextNumber: async () => false },
+        );
+        if (sent.status !== 200) throw new Error(sent.message);
+        const joined = await answerTeamInviteCore(service as never, who.id, {
+          inviteId: sent.data.id,
+          action: "accept",
+          adult: true,
+        });
+        if (joined.status !== 200) throw new Error(joined.message);
+      }
+      const teamEvent = await newEvent(owner.id);
+      await service
+        .from("event")
+        .update({ organizer_id: teamId })
+        .eq("id", teamEvent.eventId);
+      const offered = await setEventPromoterCommissionCore(
+        owner.client,
+        teamId,
+        { eventId: teamEvent.eventId, rateBps: 1000 },
+        owner.id,
+      );
+      expect(offered.status, offered.message).toBe(200);
+
+      // Not on the list: a member's link does not count on the team's event.
+      const memberCode = await codeOf(member);
+      const unlisted = await buy(await newUser(), teamEvent, memberCode);
+      expect(unlisted.referrer).toBeNull();
+
+      // Finance may add others, but only an Owner may add a member.
+      const byFinance = await addEventPromoterCore(
+        finance.client,
+        teamId,
+        { eventId: teamEvent.eventId, username: memberName, rateBps: null },
+        finance.id,
+      );
+      expect(byFinance.status).toBe(403);
+      const outsiderByFinance = await addEventPromoterCore(
+        finance.client,
+        teamId,
+        { eventId: teamEvent.eventId, username: outsiderName, rateBps: null },
+        finance.id,
+      );
+      expect(outsiderByFinance.status, outsiderByFinance.message).toBe(200);
+      const byOwner = await addEventPromoterCore(
+        owner.client,
+        teamId,
+        { eventId: teamEvent.eventId, username: memberName, rateBps: 1500 },
+        owner.id,
+      );
+      expect(byOwner.status, byOwner.message).toBe(200);
+      expect(
+        byOwner.data?.promoters.find((p) => p.userId === member.id),
+      ).toMatchObject({ teamMember: true, approved: true, rateBps: 1500 });
+      expect(
+        (await getEventPromoterOfferCore(service, teamEvent.eventId, member.id))
+          .data,
+      ).toEqual({ rateBps: 1500, invited: true });
+
+      // Now their sales earn the team's commission -- and never Abonten's
+      // own referral reward.
+      const listed = await buy(await newUser(), teamEvent, memberCode);
+      expect(listed.referrer).toBe(member.id);
+      await runEngine();
+      expect(
+        await reward(listed.checkoutId, "promoter_commission"),
+      ).toMatchObject({
+        status: "pending",
+        beneficiary_user_id: member.id,
+        amount_minor: 1500,
+      });
+      expect(await reward(listed.checkoutId, "event_referral")).toBeNull();
+
+      // The team's activity names who added whom.
+      const { data: log } = await service
+        .from("team_activity")
+        .select("actor_user_id, subject_id")
+        .eq("team_id", teamId)
+        .eq("action", "promoter_added");
+      expect(log).toEqual(
+        expect.arrayContaining([
+          { actor_user_id: owner.id, subject_id: member.id },
+          { actor_user_id: finance.id, subject_id: outsider.id },
+        ]),
+      );
+    } finally {
+      await service.rpc("reward_rule_set_active", {
+        p_rule_key: "event_referral",
+        p_rule_id: referralBefore as string,
+      });
+      if (teamId) {
+        await service.auth.admin.deleteUser(teamId).catch(() => undefined);
+      }
+      await service
+        .from("team_program_setting")
+        .update({ enabled: false })
+        .eq("id", 1);
+      resetTeamSettingsCache();
+      await setRule("promoter_commission", false);
+    }
   });
 
   // ── Place visits ─────────────────────────────────────────────────────

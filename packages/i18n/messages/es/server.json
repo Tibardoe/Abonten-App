@@ -1410,5 +1410,12 @@
   "teamUnderAge": "Los equipos en Abonten son para personas de 18 años o más.",
   "teamRoleNotLimited": "Solo los roles Recepción y Control de acceso pueden limitarse a lugares.",
   "teamPlaceNotTeam": "Elige lugares que gestione este equipo.",
-  "teamPlaceNotYours": "Tu rol en este equipo cubre otros lugares."
+  "teamPlaceNotYours": "Tu rol en este equipo cubre otros lugares.",
+  "promoterOfferFirst": "Ofrece primero una comisión en este evento y después añade promotores.",
+  "promoterOwnEvent": "Organizas este evento, así que no puedes ser uno de sus promotores.",
+  "promoterRestricted": "Esta cuenta no puede promocionar eventos ahora mismo.",
+  "promoterMemberOwnerOnly": "Solo un Propietario puede añadir a un miembro del equipo como promotor.",
+  "promoterTooMany": "Un evento puede tener como máximo {max} promotores.",
+  "promoterNotOnList": "Esa persona no es promotora de este evento.",
+  "couldnTSaveThePromoter": "No se pudo guardar el promotor. Inténtalo de nuevo."
 }

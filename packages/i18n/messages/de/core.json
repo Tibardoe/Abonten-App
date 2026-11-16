@@ -996,6 +996,14 @@
     "verification_back_in_review": {
       "title": "Dein Verifiziert-Abzeichen wird erneut geprüft",
       "body": "Der Name lautet jetzt {subject}, deshalb prüft Abonten ihn erneut. Das Abzeichen wird wieder angezeigt, sobald es genehmigt ist."
+    },
+    "promoter_added": {
+      "title": "{actor} hat dich als Promoter hinzugefügt",
+      "body": "Teile {event} mit deinem Link: Du verdienst {pct} % an jedem darüber verkauften Ticket, als Abonten-Guthaben nach dem Event."
+    },
+    "promoter_removed": {
+      "title": "Du bist kein Promoter mehr für {event}",
+      "body": "{actor} hat dich als Promoter entfernt. Was du bereits verdient hast, bleibt dir."
     }
   },
   "openStatus": {

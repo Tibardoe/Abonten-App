@@ -113,6 +113,15 @@ export type TeamMoneyEvent =
       eventId: string;
       /** Null when the commission was stopped. */
       rateBps: number | null;
+      /** Whether only invited promoters earn (X33), when it changed. */
+      invitedOnly?: boolean;
+    }
+  | {
+      kind: "promoter_added" | "promoter_removed";
+      eventId: string;
+      promoterId: string;
+      /** Their own rate (added only); null = the event's. */
+      rateBps?: number | null;
     };
 
 const NOTICE_OF: Partial<Record<TeamMoneyEvent["kind"], string>> = {
@@ -178,7 +187,15 @@ export async function recordTeamMoneyEventFor(
   }
   if (event.kind === "promoter_commission_changed") {
     if (event.rateBps !== null) details.rate_bps = event.rateBps;
+    if (event.invitedOnly !== undefined) {
+      details.invited_only = event.invitedOnly ? 1 : 0;
+    }
     subject = { kind: "event", id: event.eventId };
+  }
+  if (event.kind === "promoter_added" || event.kind === "promoter_removed") {
+    details.event_id = event.eventId;
+    if (typeof event.rateBps === "number") details.rate_bps = event.rateBps;
+    subject = { kind: "person", id: event.promoterId };
   }
   const { error } = await svc.from("team_activity").insert({
     team_id: teamId,

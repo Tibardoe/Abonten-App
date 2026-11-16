@@ -996,6 +996,14 @@
     "verification_back_in_review": {
       "title": "Tu insignia de Verificado vuelve a revisión",
       "body": "El nombre ahora es {subject}, así que Abonten lo vuelve a comprobar. La insignia se mostrará de nuevo cuando se apruebe."
+    },
+    "promoter_added": {
+      "title": "{actor} te añadió como promotor",
+      "body": "Comparte {event} con tu enlace: ganas {pct} % de cada entrada vendida con él, como crédito de Abonten después del evento."
+    },
+    "promoter_removed": {
+      "title": "Ya no eres promotor de {event}",
+      "body": "{actor} te quitó de sus promotores. Lo que ya ganaste sigue siendo tuyo."
     }
   },
   "openStatus": {

@@ -337,6 +337,40 @@ export type EventPromoterCommission = {
     pendingMinor: number;
     paidMinor: number;
   };
+  /** Only the promoters below earn (X33); otherwise anyone who shares. */
+  invitedOnly: boolean;
+  /** The promoters the organizer added (X33, X36), newest first. */
+  promoters: EventPromoter[];
+  /** At most this many promoters on one event. */
+  maxPromoters: number;
+};
+
+/** One promoter an organizer added to an event. */
+export type EventPromoter = {
+  userId: string;
+  name: string;
+  username: string | null;
+  avatarPublicId: string | null;
+  avatarVersion: string | null;
+  /** Their own rate; null = the event's rate. */
+  rateBps: number | null;
+  /**
+   * A member of the team that runs the event. They earn only when an Owner
+   * added them (X36): `approved` says whether one did.
+   */
+  teamMember: boolean;
+  approved: boolean;
+  addedAt: string;
+  sales: number;
+  pendingMinor: number;
+  paidMinor: number;
+};
+
+/** What a person earns by sharing an event (the "share and earn" note). */
+export type EventPromoterOffer = {
+  rateBps: number;
+  /** The organizer added them as a promoter (their own rate, if any). */
+  invited: boolean;
 };
 
 /** What a place owner sees to let visitors check in (Phase 8). */

@@ -13,6 +13,7 @@ import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { View } from "react-native";
+import { PromoterListSection } from "./PromoterListSection";
 
 const pct = (bps: number) => Number((bps / 100).toFixed(2));
 
@@ -20,7 +21,8 @@ const pct = (bps: number) => Number((bps / 100).toFixed(2));
 // native echo of the web Promotion-tab card: whoever's share link sells a
 // ticket gets this share of the price as Abonten Credit after the event,
 // and it comes off the organizer's payout for that sale. Hidden while
-// commissions aren't switched on (and the event has no offer).
+// commissions aren't switched on (and the event has no offer). Below the
+// rate: the promoters the organizer added (PromoterListSection).
 export function PromoterCommissionSection({ eventId }: { eventId: string }) {
   const { locale } = useLocale();
   const t = useTranslations("rewards");
@@ -77,7 +79,13 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
   return (
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <Overline>{t("promoterCommission")}</Overline>
-      <AppText variant="small">{t("rewardPeopleWhoSellYourTickets")}</AppText>
+      <AppText variant="small">
+        {t(
+          data.invitedOnly
+            ? "rewardInvitedPromoters"
+            : "rewardPeopleWhoSellYourTickets",
+        )}
+      </AppText>
       {data.rateBps !== null ? (
         <AppText variant="bodyStrong">
           {t("promotersEarnOfEachTicket", { pct: pct(data.rateBps) })}
@@ -129,6 +137,13 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
           {t("promoterCommissionsArePausedOnAbonten")}
         </AppText>
       )}
+      {data.available && data.rateBps !== null ? (
+        <PromoterListSection
+          eventId={eventId}
+          offer={data}
+          onSaved={(next) => qc.setQueryData(key, next)}
+        />
+      ) : null}
       {s.sales > 0 ? (
         <View className="gap-1 border-t border-border pt-3">
           <AppText variant="small">

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Invited promoters, and a team's member as its promoter (X33, X36)
+
+- Organizers add promoters to an event by username, each with their own rate, and can let only them earn; a team's member earns on its event only when an Owner adds them, and never Abonten's own referral reward. The promoter is told, and sees their rate on the event page. `architecture/rewards-ledger.md` (Phase 8, teams), `architecture/team-accounts.md` 1.12 (§4l), `admin/teams.md` 1.11, X33 and X36 in the decisions register, the plan's Part 7 row. Migration `20261116230000_invited_promoters`; PROJECT.md §75.12.
+
 ## 2026-11-16 — An outside alarm: the uptime watch
 
 - A Google Apps Script project on the founder's Workspace checks the website, the app's API and database, the admin console and Supabase every 5 minutes, outside Vercel and Supabase, and emails the founder after two failed runs and again on recovery, plus a Monday "still watching" note. Source `scripts/ops/uptime-watch.gs`. New `operations/uptime-watch.md` 1.0; `architecture/observability.md` 1.2 (Gaps).

@@ -3533,10 +3533,62 @@ export type Database = {
           },
         ]
       }
+      event_promoter: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          event_id: string
+          owner_approved: boolean
+          promoter_id: string
+          rate_bps: number | null
+          removed_at: string | null
+          removed_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          event_id: string
+          owner_approved?: boolean
+          promoter_id: string
+          rate_bps?: number | null
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          event_id?: string
+          owner_approved?: boolean
+          promoter_id?: string
+          rate_bps?: number | null
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_promoter_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_promoter_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_promoter_commission: {
         Row: {
           created_at: string
           event_id: string
+          invited_only: boolean
           is_active: boolean
           rate_bps: number
           updated_at: string
@@ -3545,6 +3597,7 @@ export type Database = {
         Insert: {
           created_at?: string
           event_id: string
+          invited_only?: boolean
           is_active?: boolean
           rate_bps: number
           updated_at?: string
@@ -3553,6 +3606,7 @@ export type Database = {
         Update: {
           created_at?: string
           event_id?: string
+          invited_only?: boolean
           is_active?: boolean
           rate_bps?: number
           updated_at?: string
@@ -18206,6 +18260,16 @@ export type Database = {
       promoter_commission_event_stats: {
         Args: { p_event_id: string }
         Returns: Json
+      }
+      promoter_commission_promoter_stats: {
+        Args: { p_event_id: string }
+        Returns: {
+          paid_minor: number
+          pending_minor: number
+          promoter_id: string
+          revenue_minor: number
+          sales: number
+        }[]
       }
       purge_reviewed_claim_documents: {
         Args: { p_older_than?: string }

@@ -416,8 +416,11 @@ export async function getTeamCore(
     created_at: string;
   };
   const activityRows = (activity?.data ?? []) as ActivityRow[];
+  // A member, or a person the team dealt with (a promoter it added).
+  const personSubject = (kind: string | null) =>
+    kind === "member" || kind === "person";
   const memberSubjects = activityRows
-    .filter((a) => a.subject_kind === "member" && a.subject_id)
+    .filter((a) => personSubject(a.subject_kind) && a.subject_id)
     .map((a) => a.subject_id as string);
 
   const [persons, idChecks] = await Promise.all([
@@ -499,7 +502,7 @@ export async function getTeamCore(
         subjectKind: a.subject_kind,
         subjectId: a.subject_id,
         subject:
-          a.subject_kind === "member" && a.subject_id
+          personSubject(a.subject_kind) && a.subject_id
             ? (persons.get(a.subject_id) ?? null)
             : null,
         // Never a full number: invitations keep only the last four digits.
