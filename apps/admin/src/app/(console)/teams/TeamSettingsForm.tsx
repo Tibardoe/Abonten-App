@@ -5,7 +5,11 @@ import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
 import { actionUnreachable } from "@/lib/actionUnreachable";
 import { updateTeamSettings } from "@/server/actions/teams";
-import type { TeamAdminSettings, TeamAudience } from "@abonten/types/teamType";
+import type {
+  TeamAdminSettings,
+  TeamAudience,
+  TeamLaunchReadiness,
+} from "@abonten/types/teamType";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -15,11 +19,13 @@ const input =
 export function TeamSettingsForm({
   settings,
   killSwitch,
+  readiness,
   canConfigure,
   stepUpFresh,
 }: {
   settings: TeamAdminSettings;
   killSwitch: boolean;
+  readiness: TeamLaunchReadiness;
   canConfigure: boolean;
   stepUpFresh: boolean;
 }) {
@@ -34,7 +40,12 @@ export function TeamSettingsForm({
   const [maxMembers, setMaxMembers] = useState(String(settings.maxMembers));
   const [inviteHours, setInviteHours] = useState(String(settings.inviteHours));
   const [texts, setTexts] = useState(String(settings.textsPerTeamPerDay));
+  const [termsVersion, setTermsVersion] = useState(settings.termsVersion ?? "");
+  const [termsPath, setTermsPath] = useState(settings.termsPath);
+  const [clearance, setClearance] = useState(false);
   const [reason, setReason] = useState("");
+  const cleared = !!settings.launchClearedAt;
+  const openingToAll = enabled && audience === "all";
   const editable = canConfigure && stepUpFresh;
 
   const save = () =>
@@ -45,7 +56,7 @@ export function TeamSettingsForm({
         audience === "all" &&
         (!settings.enabled || settings.audience !== "all") &&
         !(await confirm(
-          "Open team accounts to everyone? Before this, counsel should have approved the team terms (N4) and the ID-check consent for Owners and Finance (N5), and the help page should be listed.",
+          "Open team accounts to everyone? Every new team will accept the team terms, and Owners of existing teams will be asked to. List the help page (organizers/team-accounts) in the same release.",
           { confirmLabel: "Open to everyone" },
         ))
       ) {
@@ -65,7 +76,10 @@ export function TeamSettingsForm({
           maxMembers: Number(maxMembers),
           inviteHours: Number(inviteHours),
           textsPerTeamPerDay: Number(texts),
+          termsVersion: termsVersion.trim() || null,
+          termsPath: termsPath.trim() || "/legal/terms",
         },
+        confirmLaunchClearance: clearance || undefined,
       }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
@@ -73,6 +87,7 @@ export function TeamSettingsForm({
       });
       if (res.status === 200) {
         setReason("");
+        setClearance(false);
         router.refresh();
       }
     });
@@ -212,6 +227,97 @@ export function TeamSettingsForm({
           200,
           "Decision X44: Abonten pays the text to a number with no account. 0 stops texts; invitations to accounts still work.",
         )}
+      </Card>
+
+      <Card className="space-y-3 p-4">
+        <p className="text-sm font-semibold">Team terms (legal item N4)</p>
+        <p className="text-xs text-muted-foreground">
+          Leave the version empty until counsel has approved the team terms and
+          they are published on the website. With a version set, whoever makes a
+          team accepts it for the team, every Owner of an existing team is asked
+          to, and a team&apos;s payouts wait until one Owner has. Changing the
+          version asks everyone again.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block text-sm">
+            <span className="font-medium">Terms version</span>
+            <input
+              value={termsVersion}
+              disabled={!editable}
+              placeholder="e.g. 2026-12-01"
+              onChange={(e) => setTermsVersion(e.target.value)}
+              className={cn(input, "mt-1")}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="font-medium">Where they are read</span>
+            <input
+              value={termsPath}
+              disabled={!editable}
+              onChange={(e) => setTermsPath(e.target.value)}
+              className={cn(input, "mt-1 font-mono text-xs")}
+            />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              A path on the website, e.g. /legal/terms#team-accounts.
+            </span>
+          </label>
+        </div>
+      </Card>
+
+      <Card className="space-y-3 p-4">
+        <p className="text-sm font-semibold">Before opening to everyone</p>
+        <ul className="space-y-1 text-sm">
+          <li>
+            {readiness.termsPublished ? "✓" : "✗"} Team terms published (version
+            set above).
+          </li>
+          <li>
+            {cleared ? "✓" : "✗"} Counsel approved the team terms (N4), the ID
+            checks and consent for Owners and Finance (N5), the badge wording
+            for teams (N9) and 18 as the minimum age (K7)
+            {cleared
+              ? ` — recorded ${new Date(
+                  settings.launchClearedAt as string,
+                ).toLocaleDateString("en-GB")}${
+                  readiness.clearedByName
+                    ? ` by ${readiness.clearedByName}`
+                    : ""
+                }.`
+              : "."}
+          </li>
+          <li>
+            {readiness.identity?.enabled &&
+            readiness.identity.requireForPayouts &&
+            readiness.identity.audience === "all"
+              ? "✓"
+              : "⚠"}{" "}
+            ID checks required for payouts for everyone (how Owners and Finance
+            are checked, X5). Not required to open, but without them a
+            team&apos;s money moves without an ID check, as a person&apos;s does
+            today.
+          </li>
+        </ul>
+        {!cleared ? (
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={clearance}
+              disabled={!editable}
+              onChange={(e) => setClearance(e.target.checked)}
+            />
+            <span>
+              Counsel has approved N4, N5, N9 and K7 (Decided in
+              docs/LEGAL_REVIEW_REQUIRED.md). Recorded with my name, the time
+              and the reason below.
+            </span>
+          </label>
+        ) : null}
+        {openingToAll && (!readiness.termsPublished || !cleared) ? (
+          <p className="text-xs text-destructive">
+            “Everyone” is refused until both of the first two are done.
+          </p>
+        ) : null}
       </Card>
 
       {editable ? (

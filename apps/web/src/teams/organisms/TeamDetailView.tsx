@@ -1,5 +1,6 @@
 "use client";
 
+import { acceptTeamTerms } from "@/actions/teams/acceptTeamTerms";
 import { cancelTeamInvite } from "@/actions/teams/cancelTeamInvite";
 import { leaveTeam } from "@/actions/teams/leaveTeam";
 import { removeTeamMember } from "@/actions/teams/removeTeamMember";
@@ -217,6 +218,25 @@ function TeamDetailBody({
           <TeamRoleChip role={team.role} />
         </div>
       </header>
+
+      {detail.terms && (isOwner || !detail.terms.acceptedByAnOwner) ? (
+        <TermsBanner
+          terms={detail.terms}
+          teamName={teamName}
+          isOwner={isOwner}
+          busy={busy}
+          onAccept={() =>
+            run(
+              () =>
+                acceptTeamTerms({
+                  teamId: team.id,
+                  termsVersion: detail.terms?.version ?? "",
+                }).catch(actionUnreachable),
+              t("termsAcceptedToast"),
+            )
+          }
+        />
+      ) : null}
 
       {team.status !== "active" ? (
         <p className="rounded-lg bg-amber-500/15 p-3 text-sm text-amber-700 dark:text-amber-300">
@@ -476,5 +496,58 @@ function ActivityLine({ entry }: { entry: TeamActivityEntry }) {
         {formatDateTime(entry.createdAt, locale)}
       </span>
     </li>
+  );
+}
+
+/**
+ * N4: the published team terms. An Owner who has not accepted the current
+ * version is asked to; the team's payouts wait until one Owner has, which
+ * every member is told.
+ */
+function TermsBanner({
+  terms,
+  teamName,
+  isOwner,
+  busy,
+  onAccept,
+}: {
+  terms: NonNullable<TeamDetail["terms"]>;
+  teamName: string;
+  isOwner: boolean;
+  busy: boolean;
+  onAccept: () => void;
+}) {
+  const t = useTranslations("teams");
+  if (isOwner && terms.acceptedByMe) return null;
+  return (
+    <section className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-700 dark:bg-amber-950/40">
+      <h2 className="font-semibold">
+        {isOwner
+          ? t("termsBannerTitle", { team: teamName })
+          : t("termsMemberPending", { team: teamName })}
+      </h2>
+      {isOwner ? (
+        <p className="text-muted-foreground">
+          {terms.acceptedByAnOwner
+            ? t("termsBannerBodyOther", { team: teamName })
+            : t("termsBannerBodyPending", { team: teamName })}
+        </p>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-3">
+        <a
+          href={terms.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium underline"
+        >
+          {t("termsRead")}
+        </a>
+        {isOwner ? (
+          <Button size="sm" disabled={busy} onClick={onAccept}>
+            {t("termsAccept")}
+          </Button>
+        ) : null}
+      </div>
+    </section>
   );
 }

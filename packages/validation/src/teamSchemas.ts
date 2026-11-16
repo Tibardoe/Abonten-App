@@ -47,15 +47,26 @@ const adult = z.literal(true, {
   errorMap: () => ({ message: "Confirm you are 18 or older." }),
 });
 
+/**
+ * N4: the version of the team terms the person accepted for the team, when
+ * Abonten has published some (the service refuses a missing or stale one).
+ */
+const termsVersion = z.string().trim().min(1).max(40).nullish();
+
 export const createTeamSchema = z.object({
   name: teamName,
   username: teamUsername,
   adult,
+  termsVersion,
 });
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 
 /** "Make this a team": the team takes the person's handle; only its name. */
-export const convertAccountToTeamSchema = z.object({ name: teamName, adult });
+export const convertAccountToTeamSchema = z.object({
+  name: teamName,
+  adult,
+  termsVersion,
+});
 export type ConvertAccountToTeamInput = z.infer<
   typeof convertAccountToTeamSchema
 >;
@@ -64,6 +75,12 @@ export type ConvertAccountToTeamInput = z.infer<
 export const noInputSchema = z.object({});
 
 export const teamIdSchema = z.object({ teamId: uuid });
+
+/** An Owner accepts the published team terms for the team (N4). */
+export const acceptTeamTermsSchema = z.object({
+  teamId: uuid,
+  termsVersion: z.string().trim().min(1).max(40),
+});
 
 export const renameTeamSchema = z.object({ teamId: uuid, name: teamName });
 
@@ -128,8 +145,19 @@ export const teamSettingsSchema = z.object({
       maxMembers: z.number().int().min(2).max(500),
       inviteHours: z.number().int().min(1).max(720),
       textsPerTeamPerDay: z.number().int().min(0).max(200),
+      /** N4: null = no team terms published, nobody is asked. */
+      termsVersion: z.string().trim().min(1).max(40).nullable(),
+      termsPath: z
+        .string()
+        .trim()
+        .regex(/^\/[A-Za-z0-9/_#.-]{0,200}$/),
     })
     .partial(),
+  /**
+   * Opening to everyone: staff confirm counsel approved N4, N5, N9 and K7.
+   * Recorded with who and when; the server refuses "Everyone" without it.
+   */
+  confirmLaunchClearance: z.boolean().optional(),
 });
 export type TeamSettingsInput = z.infer<typeof teamSettingsSchema>;
 

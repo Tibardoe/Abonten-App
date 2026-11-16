@@ -69,12 +69,27 @@ export async function guardTeamPayoutAccountChange(
   return requireTeamMoneyIdentity(svc, actor);
 }
 
-/** An Owner or Finance member moving the team's money is ID-checked (X5). */
+/**
+ * Before a team's money moves: an Owner has accepted the published team
+ * terms for it (N4; nothing to accept while none are published), and the
+ * Owner or Finance member moving it is ID-checked (X5).
+ */
 export async function requireTeamMoneyIdentity(
   svc: ServiceRoleClient,
   actor: ActingAccount,
 ): Promise<{ status: 409 | 500; message: string } | null> {
-  if (!actor.role || !teamRoleNeedsIdCheck(actor.role)) return null;
+  if (!actor.role) return null;
+  const { data: accepted, error } = await svc.rpc("team_terms_accepted", {
+    p_team: actor.accountId,
+  });
+  if (error) {
+    logger.error(`team_terms_accepted: ${error.message}`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  if (accepted !== true) {
+    return { status: 409, message: tr("teamTermsPending") };
+  }
+  if (!teamRoleNeedsIdCheck(actor.role)) return null;
   const gate = await requireVerifiedIdentity(svc, actor.personId, "payouts");
   if (!gate) return null;
   return {

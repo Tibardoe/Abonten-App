@@ -65,14 +65,26 @@ function useTeamMutation<V, R extends { status: number }>(
 
 /** `adult`: they say they are 18 or older (K7). */
 export const useCreateTeam = () =>
-  useTeamMutation((body: { name: string; username: string; adult: true }) =>
-    api.teams.create(body),
+  useTeamMutation(
+    (body: {
+      name: string;
+      username: string;
+      adult: true;
+      termsVersion?: string | null;
+    }) => api.teams.create(body),
   );
 
 /** "Make this a team": the person's organizer work moves to a new team. */
 export const useConvertAccountToTeam = () =>
-  useTeamMutation((body: { name: string; adult: true }) =>
-    api.teams.convert(body),
+  useTeamMutation(
+    (body: { name: string; adult: true; termsVersion?: string | null }) =>
+      api.teams.convert(body),
+  );
+
+/** An Owner accepts the published team terms for the team (N4). */
+export const useAcceptTeamTerms = () =>
+  useTeamMutation((v: { teamId: string; termsVersion: string }) =>
+    api.teams.acceptTerms(v.teamId, v.termsVersion),
   );
 
 export const useRenameTeam = () =>

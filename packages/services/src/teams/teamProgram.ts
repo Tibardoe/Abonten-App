@@ -5,6 +5,7 @@ import type {
   TeamAdminSettings,
   TeamAudience,
   TeamProgram,
+  TeamTerms,
 } from "@abonten/types/teamType";
 import { ticketPlanAudienceIncludes } from "../ticketPlans/ticketPlanProgram";
 
@@ -75,6 +76,13 @@ async function isStaff(
   return data?.status === "active";
 }
 
+/** The published team terms (N4), or null while none are published. */
+export function teamTermsOf(row: TeamSettingRow | null): TeamTerms | null {
+  const version = row?.terms_version?.trim();
+  if (!row || !version) return null;
+  return { version, path: row.terms_path || "/legal/terms" };
+}
+
 export type TeamAccess = {
   program: TeamProgram;
   maxTeamsCreated: number;
@@ -104,7 +112,10 @@ export async function resolveTeamAccess(
     userId,
     (id) => isStaff(supabase, id),
   );
-  return { program: { enabled }, ...limits };
+  return {
+    program: { enabled, terms: enabled ? teamTermsOf(row) : null },
+    ...limits,
+  };
 }
 
 export function mapTeamSettings(row: TeamSettingRow): TeamAdminSettings {
@@ -116,6 +127,10 @@ export function mapTeamSettings(row: TeamSettingRow): TeamAdminSettings {
     maxMembers: row.max_members,
     inviteHours: row.invite_hours,
     textsPerTeamPerDay: row.texts_per_team_per_day,
+    termsVersion: row.terms_version ?? null,
+    termsPath: row.terms_path,
+    launchClearedAt: row.launch_cleared_at ?? null,
+    launchClearedBy: row.launch_cleared_by ?? null,
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
   };

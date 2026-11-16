@@ -7343,7 +7343,11 @@
     "promoterMemberOwnerOnly": "6918698e",
     "promoterTooMany": "6780716b",
     "promoterNotOnList": "453e52b4",
-    "couldnTSaveThePromoter": "c6624f0b"
+    "couldnTSaveThePromoter": "c6624f0b",
+    "teamTermsRequired": "3d3d92b1",
+    "teamTermsChanged": "3855e73d",
+    "teamTermsNone": "760ededb",
+    "teamTermsPending": "a5ed4144"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -8038,7 +8042,7 @@
   },
   "teams": {
     "accept": "bb54db51",
-    "activity": "d9f40d8d",
+    "activity": "1d0eb918",
     "activityTitle": "81c0d915",
     "byPhone": "8961d3bf",
     "byUsername": "84c29015",
@@ -8147,7 +8151,16 @@
     "placesBody": "932aee4c",
     "placesSavedToast": "16b72fa5",
     "noPlacesYet": "7034c71e",
-    "howToManage": "c084f742"
+    "howToManage": "c084f742",
+    "termsConfirm": "2ffbd437",
+    "termsConfirmPlain": "233ed9e7",
+    "termsRead": "4a2b9e28",
+    "termsAccept": "788aa6b7",
+    "termsAcceptedToast": "ef916293",
+    "termsBannerTitle": "16397436",
+    "termsBannerBodyPending": "898e2ec6",
+    "termsBannerBodyOther": "906f7ba9",
+    "termsMemberPending": "0081eed7"
   },
   "ticketPlans": {
     "abontenCredit": "746223a4",

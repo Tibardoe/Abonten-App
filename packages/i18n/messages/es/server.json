@@ -1417,5 +1417,9 @@
   "promoterMemberOwnerOnly": "Solo un Propietario puede añadir a un miembro del equipo como promotor.",
   "promoterTooMany": "Un evento puede tener como máximo {max} promotores.",
   "promoterNotOnList": "Esa persona no es promotora de este evento.",
-  "couldnTSaveThePromoter": "No se pudo guardar el promotor. Inténtalo de nuevo."
+  "couldnTSaveThePromoter": "No se pudo guardar el promotor. Inténtalo de nuevo.",
+  "teamTermsRequired": "Acepta las condiciones de los equipos para crear un equipo.",
+  "teamTermsChanged": "Las condiciones de los equipos han cambiado. Vuelve a leerlas y acéptalas.",
+  "teamTermsNone": "Ahora mismo no hay condiciones de los equipos que aceptar.",
+  "teamTermsPending": "Un Propietario del equipo tiene que aceptar las condiciones de los equipos antes de que su dinero pueda moverse."
 }

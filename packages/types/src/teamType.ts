@@ -21,6 +21,18 @@ export type TeamInviteStatus =
 /** What a person sees of the programme. */
 export type TeamProgram = {
   enabled: boolean;
+  /**
+   * The team terms to accept when making a team (N4), when Abonten has
+   * published some; absent or null = nothing to accept.
+   */
+  terms?: TeamTerms | null;
+};
+
+/** A published version of the team terms, and where it is read. */
+export type TeamTerms = {
+  version: string;
+  /** A path on the website, e.g. /legal/terms#team-accounts. */
+  path: string;
 };
 
 /** A person as a team shows them: public profile fields only. */
@@ -96,6 +108,13 @@ export type TeamDetail = {
   members: TeamMember[];
   invites: TeamInviteSent[] | null;
   activity: TeamActivityEntry[] | null;
+  /**
+   * The published team terms (N4) and who accepted them: the page asks an
+   * Owner who has not; the team's money waits until one Owner has.
+   */
+  terms?:
+    | (TeamTerms & { acceptedByMe: boolean; acceptedByAnOwner: boolean })
+    | null;
   /** The team's places, for limiting Front desk and Door staff (Owners). */
   places?: { id: string; name: string }[] | null;
 };
@@ -149,8 +168,25 @@ export type TeamAdminSettings = {
   maxMembers: number;
   inviteHours: number;
   textsPerTeamPerDay: number;
+  termsVersion: string | null;
+  termsPath: string;
+  /** When staff recorded counsel's approval of N4, N5, N9 and K7. */
+  launchClearedAt: string | null;
+  launchClearedBy: string | null;
   updatedAt: string;
   updatedBy: string | null;
+};
+
+/** What Admin › Teams shows before "Everyone" can be chosen. */
+export type TeamLaunchReadiness = {
+  termsPublished: boolean;
+  /** ID checks for Owners and Finance (X5, N5) need the identity programme. */
+  identity: {
+    enabled: boolean;
+    audience: string;
+    requireForPayouts: boolean;
+  } | null;
+  clearedByName: string | null;
 };
 
 export type TeamAdminRow = {
