@@ -54,8 +54,17 @@ export async function createContentPostCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: CreateContentPostInput,
+  /**
+   * The team the person posts for (stage 4c; their role covers
+   * content.post, checked by the transport): the post is the team's, the
+   * media stays the uploader's. Omitted = their own post.
+   */
+  authorId?: string | null,
 ): Promise<Envelope<ContentPostDocument>> {
-  const { program } = await resolveContentAccess(supabase, userId);
+  const author = authorId ?? userId;
+  const { program } = await resolveContentAccess(supabase, userId, {
+    publisherId: author,
+  });
   const allowed =
     input.kind === "spotlight"
       ? program.spotlightPosting
@@ -66,7 +75,10 @@ export async function createContentPostCore(
       message: tr("postingIsnTAvailableForYour2"),
     };
   }
-  if (await accountIsRestricted(supabase, userId)) {
+  if (
+    (await accountIsRestricted(supabase, userId)) ||
+    (author !== userId && (await accountIsRestricted(supabase, author)))
+  ) {
     return {
       status: 403,
       message: tr("yourAccountHasBeenRestricted"),
@@ -101,8 +113,8 @@ export async function createContentPostCore(
       .limit(1)
       .maybeSingle();
     if (existing?.post_id) {
-      const doc = await loadPostDocument(supabase, userId, existing.post_id);
-      if (doc && doc.authorId === userId) return { status: 200, data: doc };
+      const doc = await loadPostDocument(supabase, author, existing.post_id);
+      if (doc && doc.authorId === author) return { status: 200, data: doc };
     }
   }
 
@@ -139,7 +151,7 @@ export async function createContentPostCore(
     .from("content_post")
     .insert({
       kind: input.kind,
-      author_id: userId,
+      author_id: author,
       publisher_kind: input.publisher.kind,
       publisher_place_id:
         input.publisher.kind === "place"
@@ -179,27 +191,52 @@ export async function createContentPostCore(
   }
 
   if (input.publish) {
-    const published = await publishContentPostCore(supabase, userId, post.id);
+    const published = await publishContentPostCore(
+      supabase,
+      author,
+      post.id,
+      userId,
+    );
     if (published.status !== 200) {
       // Keep the draft so the person can fix what the database refused.
       return { ...published, data: undefined } as Envelope<ContentPostDocument>;
     }
     return published;
   }
-  const doc = await loadPostDocument(supabase, userId, post.id);
+  const doc = await loadPostDocument(supabase, author, post.id);
   return doc ? { status: 200, data: doc } : FAIL;
 }
 
+/**
+ * `userId`: the post's author (the person, or the team they post for).
+ * `personId`: who pressed Publish, when it is a team's post: the team's
+ * activity names them (followers and viewers see the team only).
+ */
 export async function publishContentPostCore(
   supabase: ServiceRoleClient,
   userId: string,
   postId: string,
+  personId?: string | null,
 ): Promise<Envelope<ContentPostDocument>> {
   const { error } = await supabase.rpc("content_post_publish", {
     p_post_id: postId,
     p_actor_id: userId,
   });
   if (error) return sqlError(error);
+  if (personId && personId !== userId) {
+    const { error: activityError } = await supabase
+      .from("team_activity")
+      .insert({
+        team_id: userId,
+        actor_user_id: personId,
+        action: "content_published",
+        subject_kind: "content_post",
+        subject_id: postId,
+      });
+    if (activityError) {
+      logger.error(`publishContentPostCore activity: ${activityError.message}`);
+    }
+  }
   const doc = await loadPostDocument(supabase, userId, postId);
   return doc ? { status: 200, data: doc } : FAIL;
 }
@@ -358,6 +395,8 @@ export async function getContentPostCore(
   supabase: ServiceRoleClient,
   userId: string | null,
   postId: string,
+  /** The team the viewer posts for: its drafts and ended Stories open too. */
+  accountId?: string | null,
 ): Promise<GetContentPostResult> {
   const { data: row } = await supabase
     .from("content_post")
@@ -373,7 +412,8 @@ export async function getContentPostCore(
     };
   }
   const { program } = await resolveContentAccess(supabase, userId);
-  const isAuthor = userId === row.author_id;
+  const isAuthor =
+    userId === row.author_id || (!!accountId && accountId === row.author_id);
   if (
     !isAuthor &&
     !(row.kind === "story" ? program.stories : program.spotlight)
@@ -400,7 +440,11 @@ export async function getContentPostCore(
       data: { expired: true, publisher },
     };
   }
-  const doc = await loadPostDocument(supabase, userId, postId);
+  const doc = await loadPostDocument(
+    supabase,
+    isAuthor ? row.author_id : userId,
+    postId,
+  );
   if (!doc)
     return {
       status: 404,

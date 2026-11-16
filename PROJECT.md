@@ -4393,3 +4393,13 @@ Branch `feat/team-accounts-promotions-2026-11-16`, migration `20261116150000_tea
 - **Audience**: `rewards_enabled_for_user` counts a team in when an active Owner is in the audience.
 - **Also**: "Your event is now featured" goes to the team (`promotion_started` → `promotions.buy` members); `promotion_bought` in the team's activity; Managers see a team place's Insights tab; the app's "coming soon" line now names only Spotlight and Stories.
 - **Checked**: `teams-promotions.integration.test.ts` (5 tests) and the credit, promotion, rewards, grants, money-path and team suites (177 tests).
+
+### 75.5 Stage 4c: Spotlight and Stories as a team (2026-11-16)
+
+Branch `feat/team-accounts-content-2026-11-16`, migration `20261116160000_team_accounts_content`. **Ships off**.
+
+- **Posting**: `content.post` members (Owners, Content and messages) post as the team they manage as: `content_post.author_id` = the team; `resolveContentAccess(person, { publisherId, blocked })` keeps the audience the person's and takes eligibility and places from the team; uploads stay the member's. `content_published` in the team's activity.
+- **Managing posts**: create/publish/edit/delete, the post list, insights and attachable events act for the team (`actingFor` / `mobileActingFor`); reading a team draft and removing comments on team posts accept the team (`contentPublisherFor` / `mobileContentPublisher`); the person's own profile lists their own posts (`mine?personal=true`). The website shell, creator hub and composer, and the app composer and manage screen say "Publishing as …" or that the role doesn't cover posting.
+- **Replies**: `send_story_reply` refuses a member's reply to their own team's Story; others' replies reach the team's inbox.
+- **Not yet**: paid Spotlight promotion as a team (`spotlightPromotions` is false while posting as a team).
+- **Checked**: `teams-content.integration.test.ts` (4 tests) and the content, story, field-ops content, team, messaging and grants suites (198 tests).

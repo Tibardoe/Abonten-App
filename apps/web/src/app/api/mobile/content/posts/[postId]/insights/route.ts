@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { getContentInsightsCore } from "@abonten/services/content/contentTelemetryCore";
 import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
@@ -17,7 +18,14 @@ export async function GET(
       label: "GET /content/posts/[postId]/insights",
       params: { postId },
     },
-    ({ svc, userId, data, ip }) =>
-      getContentInsightsCore(svc, signedIn(userId), data),
+    async ({ svc, userId, data }) => {
+      const actor = await mobileActingFor(
+        req,
+        signedIn(userId),
+        "content.post",
+      );
+      if (actor.error) return actor.error;
+      return getContentInsightsCore(svc, actor.accountId, data);
+    },
   );
 }

@@ -6,6 +6,7 @@ import {
   parseContentInput,
   resolveContentCaller,
 } from "@/utils/contentAction";
+import { contentPublisherFor } from "@/utils/teamActor";
 import { listContentCommentsCore } from "@abonten/services/content/contentEngagementCore";
 import { contentCommentsRequestSchema } from "@abonten/validation/contentSchemas";
 
@@ -15,6 +16,16 @@ export const listContentComments = withActionLocale(
     const caller = await resolveContentCaller();
     const parsed = parseContentInput(contentCommentsRequestSchema, input);
     if (parsed.error) return parsed.error;
-    return listContentCommentsCore(caller.svc, caller.userId, parsed.data);
+    // Comments on the team's post: the members who post for it may remove
+    // them (stage 4c).
+    const publisher = caller.userId
+      ? await contentPublisherFor(caller.userId)
+      : null;
+    return listContentCommentsCore(
+      caller.svc,
+      caller.userId,
+      parsed.data,
+      publisher && !publisher.blocked ? publisher.accountId : null,
+    );
   },
 );

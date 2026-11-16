@@ -28,7 +28,11 @@ import { tr } from "../i18n/requestLocale";
 import { enqueueCloudinaryCleanup } from "../platform/cloudinaryCleanupCore";
 import { checkRateLimit } from "../security/rateLimit";
 import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
-import { readContentSettings, resolveContentAccess } from "./contentProgram";
+import {
+  type ContentPublisherChoice,
+  readContentSettings,
+  resolveContentAccess,
+} from "./contentProgram";
 import { type Envelope, FAIL, accountIsRestricted } from "./contentShared";
 
 // The media half of the content pipeline. The bytes go browser/app ->
@@ -164,8 +168,10 @@ async function requestRendition(
 export async function canUploadContentMedia(
   supabase: ServiceRoleClient,
   userId: string,
+  /** The team they post for (stage 4c); the media stays the person's. */
+  publisher: ContentPublisherChoice = {},
 ): Promise<boolean> {
-  const { program } = await resolveContentAccess(supabase, userId);
+  const { program } = await resolveContentAccess(supabase, userId, publisher);
   if (!program.spotlightPosting && !program.storiesPosting) return false;
   return !(await accountIsRestricted(supabase, userId));
 }
@@ -199,8 +205,10 @@ export async function registerContentMediaCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: RegisterContentMediaInput,
+  /** The team they post for (stage 4c); the media stays the person's. */
+  publisher: ContentPublisherChoice = {},
 ): Promise<Envelope<ContentMediaItem>> {
-  const { program } = await resolveContentAccess(supabase, userId);
+  const { program } = await resolveContentAccess(supabase, userId, publisher);
   const allowed =
     input.kind === "spotlight"
       ? program.spotlightPosting

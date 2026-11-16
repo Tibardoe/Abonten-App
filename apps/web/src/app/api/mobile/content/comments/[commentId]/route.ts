@@ -1,3 +1,4 @@
+import { mobileContentPublisher } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import {
   deleteContentCommentCore,
@@ -23,8 +24,16 @@ export async function DELETE(
       label: "DELETE /content/comments/[commentId]",
       params: { commentId },
     },
-    ({ svc, userId, data, ip }) =>
-      deleteContentCommentCore(svc, signedIn(userId), data.commentId),
+    async ({ svc, userId, data }) => {
+      // A comment on the team's post: the members who post for it.
+      const publisher = await mobileContentPublisher(req, signedIn(userId));
+      return deleteContentCommentCore(
+        svc,
+        signedIn(userId),
+        data.commentId,
+        publisher.blocked ? null : publisher.accountId,
+      );
+    },
   );
 }
 

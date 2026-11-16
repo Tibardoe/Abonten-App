@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { createContentPostCore } from "@abonten/services/content/contentPostCore";
 import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
@@ -9,7 +10,20 @@ export async function POST(req: Request) {
   return discoveryRoute(
     req,
     { schema: createContentPostSchema, label: "POST /content/posts" },
-    ({ svc, userId, data, ip }) =>
-      createContentPostCore(svc, signedIn(userId), data),
+    async ({ svc, userId, data }) => {
+      // Posting as the team named in the header (stage 4c).
+      const actor = await mobileActingFor(
+        req,
+        signedIn(userId),
+        "content.post",
+      );
+      if (actor.error) return actor.error;
+      return createContentPostCore(
+        svc,
+        signedIn(userId),
+        data,
+        actor.accountId,
+      );
+    },
   );
 }

@@ -6,6 +6,7 @@ import {
   parseContentInput,
   requireContentUser,
 } from "@/utils/contentAction";
+import { actingFor } from "@/utils/teamActor";
 import { listOwnContentPostsCore } from "@abonten/services/content/contentPostCore";
 import { ownContentRequestSchema } from "@abonten/validation/contentSchemas";
 
@@ -17,5 +18,12 @@ export const listOwnContent = withActionLocale(async function listOwnContent(
   if (caller.error) return caller.error;
   const parsed = parseContentInput(ownContentRequestSchema, input);
   if (parsed.error) return parsed.error;
-  return listOwnContentPostsCore(caller.svc, caller.userId, parsed.data);
+  // The team's posts while managing as it (stage 4c); the person's own
+  // when asked for them (their own profile).
+  if (parsed.data.personal) {
+    return listOwnContentPostsCore(caller.svc, caller.userId, parsed.data);
+  }
+  const actor = await actingFor(caller.userId, "content.post");
+  if (actor.error) return actor.error;
+  return listOwnContentPostsCore(caller.svc, actor.accountId, parsed.data);
 });

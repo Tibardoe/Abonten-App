@@ -490,6 +490,14 @@ export const ownContentRequestSchema = z.object({
   /** Narrow to published posts or drafts (the profile Spotlights tab). */
   status: z.enum(["published", "draft"]).optional(),
   cursor: optionalString,
+  /**
+   * The person's own posts even while they manage as a team (their own
+   * profile); otherwise the posts of the account they post as.
+   */
+  personal: z
+    .union([z.boolean(), z.enum(["true", "false"])])
+    .optional()
+    .transform((v) => v === true || v === "true"),
 });
 
 export const checkoutIdSchema = z.object({ checkoutId: uuid });

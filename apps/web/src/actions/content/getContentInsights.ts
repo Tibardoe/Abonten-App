@@ -6,6 +6,7 @@ import {
   parseContentInput,
   requireContentUser,
 } from "@/utils/contentAction";
+import { actingFor } from "@/utils/teamActor";
 import { getContentInsightsCore } from "@abonten/services/content/contentTelemetryCore";
 import { contentInsightsRequestSchema } from "@abonten/validation/contentSchemas";
 
@@ -16,6 +17,9 @@ export const getContentInsights = withActionLocale(
     if (caller.error) return caller.error;
     const parsed = parseContentInput(contentInsightsRequestSchema, input);
     if (parsed.error) return parsed.error;
-    return getContentInsightsCore(caller.svc, caller.userId, parsed.data);
+    // Posting as the team the person manages as (stage 4c).
+    const actor = await actingFor(caller.userId, "content.post");
+    if (actor.error) return actor.error;
+    return getContentInsightsCore(caller.svc, actor.accountId, parsed.data);
   },
 );

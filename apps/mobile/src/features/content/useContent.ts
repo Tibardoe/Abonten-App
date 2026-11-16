@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { ACTIVE_PROMOTIONS_KEY } from "@/features/promotions/useActivePromotions";
+import { useActingChoice } from "@/features/teams/actingTeam";
 import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
 import type {
@@ -362,8 +363,10 @@ export { useComments } from "./commentThread";
 
 export function useOwnContent(kind: ContentKind) {
   const { session } = useSession();
+  // The team's posts while managing as it (stage 4c).
+  const teamId = useActingChoice()?.teamId ?? null;
   return useInfiniteQuery({
-    queryKey: [...CONTENT_KEY, "own", session?.user.id ?? null, kind],
+    queryKey: [...CONTENT_KEY, "own", session?.user.id ?? null, kind, teamId],
     enabled: !!session,
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam }) =>
@@ -394,6 +397,8 @@ export function useOwnSpotlights(
           kind: "spotlight",
           status,
           cursor: pageParam,
+          // The person's own, even while managing as a team.
+          personal: true,
         }),
       ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
@@ -500,8 +505,14 @@ export function usePromotionEstimate(
 
 export function useAttachableEvents(enabled: boolean) {
   const { session } = useSession();
+  const teamId = useActingChoice()?.teamId ?? null;
   return useQuery({
-    queryKey: [...CONTENT_KEY, "attachable-events", session?.user.id ?? null],
+    queryKey: [
+      ...CONTENT_KEY,
+      "attachable-events",
+      session?.user.id ?? null,
+      teamId,
+    ],
     enabled: enabled && !!session,
     queryFn: async () => unwrap(await api.content.attachableEvents()),
     staleTime: 5 * 60_000,

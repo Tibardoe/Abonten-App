@@ -2,6 +2,11 @@ import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useOwnCampaigns, useOwnContent } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
+import {
+  PublishingAsBanner,
+  TeamRoleBlocked,
+} from "@/features/teams/ManagingAs";
+import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { campaignStatusLabel } from "@abonten/core/content/copy";
@@ -57,6 +62,8 @@ export default function ManageContentScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { program, ready } = useContentProgram();
+  // Managing as a team: its posts, for the roles that post (stage 4c).
+  const { current: team, can } = useActingTeams();
   const [tab, setTab] = useState<Tab>(
     params.tab === "story" || params.tab === "campaigns"
       ? params.tab
@@ -96,6 +103,14 @@ export default function ManageContentScreen() {
     />
   );
 
+  if (team && !can("content.post")) {
+    return (
+      <View className="flex-1 bg-background">
+        {header}
+        <TeamRoleBlocked />
+      </View>
+    );
+  }
   if (!ready) {
     return (
       <View className="flex-1 bg-background">
@@ -122,7 +137,8 @@ export default function ManageContentScreen() {
   return (
     <View className="flex-1 bg-background">
       {header}
-      <View className="px-4 pb-2 pt-3">
+      <View className="gap-3 px-4 pb-2 pt-3">
+        <PublishingAsBanner />
         <SegmentedTabs options={options} value={current} onChange={setTab} />
       </View>
       {current === "campaigns" ? <Campaigns /> : <Posts kind={current} />}

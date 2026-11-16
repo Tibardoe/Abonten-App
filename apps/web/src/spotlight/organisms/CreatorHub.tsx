@@ -5,6 +5,9 @@ import { listOwnContent } from "@/actions/content/listOwnContent";
 import { publishContentPost } from "@/actions/content/publishContentPost";
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
+import PublishingAsBanner from "@/teams/atoms/PublishingAsBanner";
+import TeamRoleBlockedNotice from "@/teams/atoms/TeamRoleBlockedNotice";
+import { useActingContext } from "@/teams/useActingContext";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { spotlightPath } from "@abonten/core/content/links";
@@ -37,6 +40,7 @@ export default function CreatorHub() {
   const t = useTranslations("spotlight");
 
   const { program, ready } = useContentProgram();
+  const acting = useActingContext();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -72,6 +76,11 @@ export default function CreatorHub() {
   const canPost =
     program.canPublish && (program.spotlightPosting || program.storiesPosting);
 
+  // Managing as a team whose role does not post (stage 4c).
+  if (acting.current && !acting.can("content.post")) {
+    return <TeamRoleBlockedNotice />;
+  }
+
   if (!canPost) {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
@@ -99,6 +108,7 @@ export default function CreatorHub() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-5">
+      <PublishingAsBanner />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t("spotlightStories")}</h1>
@@ -168,6 +178,8 @@ function OwnPosts({ kind }: { kind: ContentKind }) {
   const t = useTranslations("spotlight");
 
   const query = useInfiniteQuery({
+    // The team's posts while managing as it (stage 4c); switching
+    // "Managing as" resets every query, so this never mixes the two.
     queryKey: ["content", "own", kind],
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam }) => {

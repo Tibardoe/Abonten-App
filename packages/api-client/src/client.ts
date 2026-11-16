@@ -3162,11 +3162,14 @@ export function createApiClient(options: ApiClientOptions) {
         kind?: ContentKind;
         status?: "published" | "draft";
         cursor?: string | null;
+        /** The person's own posts even while managing as a team. */
+        personal?: boolean;
       }) {
         const qs = new URLSearchParams();
         if (params.kind) qs.set("kind", params.kind);
         if (params.status) qs.set("status", params.status);
         if (params.cursor) qs.set("cursor", params.cursor);
+        if (params.personal) qs.set("personal", "true");
         return request<ContentOwnPostsResult>(
           `/api/mobile/content/mine?${qs.toString()}`,
           { method: "GET", auth: true },

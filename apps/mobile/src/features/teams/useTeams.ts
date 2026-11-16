@@ -111,6 +111,7 @@ const ORGANIZER_KEY = ["mobile", "organizer"] as const;
 /** The inbox follows "Managing as" too (a team's, for those who answer it). */
 const MESSAGING_KEY = ["mobile", "messaging"] as const;
 const PROMOTION_CREDIT_KEY = ["mobile", "rewards", "promotion-credit"] as const;
+const CONTENT_KEY_PREFIX = ["mobile", "content"] as const;
 
 /** Forgets what was read for the previous account. */
 export function resetAccountQueries(qc: ReturnType<typeof useQueryClient>) {
@@ -118,6 +119,11 @@ export function resetAccountQueries(qc: ReturnType<typeof useQueryClient>) {
   void qc.resetQueries({ queryKey: MESSAGING_KEY });
   // The promotion credit shown on Finances is the managed account's.
   void qc.resetQueries({ queryKey: PROMOTION_CREDIT_KEY });
+  // A post, its comments' remove buttons and its insights depend on whose
+  // posts the person manages (stage 4c).
+  void qc.resetQueries({ queryKey: [...CONTENT_KEY_PREFIX, "post"] });
+  void qc.resetQueries({ queryKey: [...CONTENT_KEY_PREFIX, "insights"] });
+  void qc.resetQueries({ queryKey: [...CONTENT_KEY_PREFIX, "comments"] });
 }
 
 /**

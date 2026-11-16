@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { contentPublisherFor } from "@/utils/teamActor";
 import { canUploadContentMedia } from "@abonten/services/content/contentMediaCore";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
@@ -24,7 +25,13 @@ export default withActionLocale(
     if (!user || error) {
       return { status: 401, message: tr("signInToUpload") };
     }
-    if (!(await canUploadContentMedia(getSupabaseServiceClient(), user.id))) {
+    const publisher = await contentPublisherFor(user.id);
+    if (
+      !(await canUploadContentMedia(getSupabaseServiceClient(), user.id, {
+        publisherId: publisher.accountId,
+        blocked: publisher.blocked,
+      }))
+    ) {
       return {
         status: 401,
         message: tr("postingIsnTAvailableForYour"),

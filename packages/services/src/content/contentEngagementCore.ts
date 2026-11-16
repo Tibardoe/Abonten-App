@@ -351,6 +351,8 @@ async function mapComments(
   viewerId: string | null,
   postAuthorId: string,
   rows: CommentRow[],
+  /** The team the viewer posts for (stage 4c): its posts' comments too. */
+  viewerAccountId?: string | null,
 ): Promise<ContentComment[]> {
   if (rows.length === 0) return [];
   const authorIds = [...new Set(rows.map((r) => r.author_id))];
@@ -391,7 +393,9 @@ async function mapComments(
       },
       likedByMe: liked.has(r.id),
       isMine: viewerId === r.author_id,
-      canModerate: viewerId === postAuthorId,
+      canModerate:
+        viewerId === postAuthorId ||
+        (!!viewerAccountId && viewerAccountId === postAuthorId),
     };
   });
 }
@@ -400,6 +404,8 @@ export async function listContentCommentsCore(
   supabase: ServiceRoleClient,
   userId: string | null,
   input: { postId: string; parentId?: string | null; cursor?: string | null },
+  /** The team the viewer posts for: they may remove comments on its posts. */
+  accountId?: string | null,
 ): Promise<Envelope<ContentCommentsPage>> {
   const post = await livePost(supabase, input.postId);
   if (!post)
@@ -471,7 +477,13 @@ export async function listContentCommentsCore(
     );
     visible = page.filter((_, i) => !checks[i]);
   }
-  const comments = await mapComments(supabase, userId, post.author_id, visible);
+  const comments = await mapComments(
+    supabase,
+    userId,
+    post.author_id,
+    visible,
+    accountId,
+  );
   const last = page[page.length - 1];
   return {
     status: 200,
@@ -573,11 +585,16 @@ export async function createContentCommentCore(
   return { status: 200, data: comment };
 }
 
-/** The comment's author, or the post's author, removes a comment. */
+/**
+ * The comment's author, or the post's author, removes a comment. A team's
+ * post: the members who post for it (`accountId`, content.post, checked by
+ * the transport).
+ */
 export async function deleteContentCommentCore(
   supabase: ServiceRoleClient,
   userId: string,
   commentId: string,
+  accountId?: string | null,
 ): Promise<Envelope> {
   const { data: comment } = await supabase
     .from("content_comment")
@@ -588,7 +605,11 @@ export async function deleteContentCommentCore(
   const postAuthor = (
     comment.content_post as unknown as { author_id: string } | null
   )?.author_id;
-  if (comment.author_id !== userId && postAuthor !== userId) {
+  if (
+    comment.author_id !== userId &&
+    postAuthor !== userId &&
+    !(accountId && postAuthor === accountId)
+  ) {
     return { status: 403, message: tr("youCanTRemoveThisComment") };
   }
   if (comment.status === "deleted")

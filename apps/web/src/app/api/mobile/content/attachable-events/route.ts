@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { listAttachableEventsCore } from "@abonten/services/content/contentAttachCore";
 import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
@@ -13,6 +14,14 @@ export async function GET(req: Request) {
       schema: z.object({}).passthrough(),
       label: "GET /content/attachable-events",
     },
-    ({ svc, userId }) => listAttachableEventsCore(svc, signedIn(userId)),
+    async ({ svc, userId }) => {
+      const actor = await mobileActingFor(
+        req,
+        signedIn(userId),
+        "content.post",
+      );
+      if (actor.error) return actor.error;
+      return listAttachableEventsCore(svc, actor.accountId);
+    },
   );
 }

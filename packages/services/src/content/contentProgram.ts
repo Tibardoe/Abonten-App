@@ -97,13 +97,27 @@ export type ContentAccess = {
 };
 
 /**
+ * Who posts: the signed-in person (the default), or a team they post for
+ * (team accounts, stage 4c: a member whose role covers content.post, checked
+ * by the transport). `blocked`: they are managing as a team whose role does
+ * not cover posting, so nothing may be posted until they switch back.
+ */
+export type ContentPublisherChoice = {
+  publisherId?: string | null;
+  blocked?: boolean;
+};
+
+/**
  * What one caller (or an anonymous visitor, userId null) may use. Publishing
  * needs a signed-in organizer, place owner or staff member; the database
- * re-checks that at publish time (content_publisher_eligible).
+ * re-checks that at publish time (content_publisher_eligible). The audience
+ * is the person's; whether they may publish, and as which places, is the
+ * publishing account's (the person, or the team they post for).
  */
 export async function resolveContentAccess(
   supabase: ServiceRoleClient,
   userId: string | null,
+  publisher: ContentPublisherChoice = {},
 ): Promise<ContentAccess> {
   const row = await readContentSettings(supabase);
   if (!row) {
@@ -145,17 +159,18 @@ export async function resolveContentAccess(
 
   let canPublish = false;
   let publisherPlaces: ContentProgram["publisherPlaces"] = [];
-  if (userId && (spotlight || stories)) {
+  const publisherId = publisher.publisherId ?? userId;
+  if (userId && publisherId && !publisher.blocked && (spotlight || stories)) {
     const [{ data: eligible }, { data: places }] = await Promise.all([
       supabase.rpc("content_publisher_eligible", {
-        p_user_id: userId,
+        p_user_id: publisherId,
         p_publisher_kind: "organizer",
         p_publisher_place_id: null as unknown as string,
       }),
       supabase
         .from("place")
         .select("id, name, status, moderation_state, temporary_status")
-        .eq("owner_id", userId)
+        .eq("owner_id", publisherId)
         .eq("status", "published")
         .order("name"),
     ]);
@@ -179,11 +194,14 @@ export async function resolveContentAccess(
         spotlight && row.spotlight_posting_enabled && canPublish,
       spotlightComments: spotlight && row.spotlight_comments_enabled,
       spotlightDownloads: spotlight && row.spotlight_downloads_enabled,
+      // Paid promotion is bought by the person for their own posts; as a
+      // team it comes later (stage 4c posts as a team, it does not buy).
       spotlightPromotions:
         spotlight &&
         row.spotlight_promotions_enabled &&
         !isSpotlightPromotionsKillSwitchOn() &&
-        canPublish,
+        canPublish &&
+        publisherId === userId,
       nearby: spotlight && row.nearby_enabled,
       trending: spotlight && row.trending_enabled,
       happeningSoon: spotlight && row.happening_soon_enabled,
@@ -205,8 +223,9 @@ export async function resolveContentAccess(
 export async function getContentProgramCore(
   supabase: ServiceRoleClient,
   userId: string | null,
+  publisher: ContentPublisherChoice = {},
 ): Promise<{ status: 200; data: ContentProgram }> {
-  const { program } = await resolveContentAccess(supabase, userId);
+  const { program } = await resolveContentAccess(supabase, userId, publisher);
   return { status: 200, data: program };
 }
 

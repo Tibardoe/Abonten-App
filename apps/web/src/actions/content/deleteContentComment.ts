@@ -6,6 +6,7 @@ import {
   parseContentInput,
   requireContentUser,
 } from "@/utils/contentAction";
+import { contentPublisherFor } from "@/utils/teamActor";
 import { deleteContentCommentCore } from "@abonten/services/content/contentEngagementCore";
 import { contentCommentIdSchema } from "@abonten/validation/contentSchemas";
 
@@ -16,10 +17,13 @@ export const deleteContentComment = withActionLocale(
     if (caller.error) return caller.error;
     const parsed = parseContentInput(contentCommentIdSchema, input);
     if (parsed.error) return parsed.error;
+    // A comment on the team's post: the members who post for it.
+    const publisher = await contentPublisherFor(caller.userId);
     return deleteContentCommentCore(
       caller.svc,
       caller.userId,
       parsed.data.commentId,
+      publisher.blocked ? null : publisher.accountId,
     );
   },
 );

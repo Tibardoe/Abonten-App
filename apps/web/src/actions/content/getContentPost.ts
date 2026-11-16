@@ -6,6 +6,7 @@ import {
   parseContentInput,
   resolveContentCaller,
 } from "@/utils/contentAction";
+import { contentPublisherFor } from "@/utils/teamActor";
 import { getContentPostCore } from "@abonten/services/content/contentPostCore";
 import { contentPostIdSchema } from "@abonten/validation/contentSchemas";
 
@@ -16,5 +17,14 @@ export const getContentPost = withActionLocale(async function getContentPost(
   const caller = await resolveContentCaller();
   const parsed = parseContentInput(contentPostIdSchema, input);
   if (parsed.error) return parsed.error;
-  return getContentPostCore(caller.svc, caller.userId, parsed.data.postId);
+  // A team's draft or ended Story opens for the members who post for it.
+  const publisher = caller.userId
+    ? await contentPublisherFor(caller.userId)
+    : null;
+  return getContentPostCore(
+    caller.svc,
+    caller.userId,
+    parsed.data.postId,
+    publisher && !publisher.blocked ? publisher.accountId : null,
+  );
 });

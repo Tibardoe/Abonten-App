@@ -3361,6 +3361,8 @@
         "listingBelongsToTeam",
         "listingIsYours",
         "manageAsTeam",
+        "publishingAs",
+        "roleDoesNotCover",
         "ticketCodeLabel",
         "useOwnAccount"
       ],
