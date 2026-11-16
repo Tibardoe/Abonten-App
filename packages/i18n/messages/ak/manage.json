@@ -605,5 +605,6 @@
   "aNewCodeIsOnItsWay": "A new code is on its way.",
   "weLlTextACodeToThis": "We'll text a code to this number to check it's right. The verified phone number on your account doesn't need one.",
   "businessVerification": "Business verification",
-  "businessVerificationIntro": "Show ticket buyers that Abonten has reviewed this team's business registration and that its Owners may act for it. It's optional: the team can keep creating events either way."
+  "businessVerificationIntro": "Show ticket buyers that Abonten has reviewed this team's business registration and that its Owners may act for it. It's optional: the team can keep creating events either way.",
+  "teamPlaceNotYours": "Your role in this team covers other places."
 }

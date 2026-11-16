@@ -123,6 +123,17 @@ export default async function page({
       </p>
     );
   }
+  // Door staff limited to some of the team's places: the events held there.
+  if (
+    actor.placeIds &&
+    !(event.place_id && actor.placeIds.includes(event.place_id))
+  ) {
+    return (
+      <p className="p-8 text-center text-muted-foreground">
+        {t("teamPlaceNotYours")}
+      </p>
+    );
+  }
 
   const [
     tiersResponse,
