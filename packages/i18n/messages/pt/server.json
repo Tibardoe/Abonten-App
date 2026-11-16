@@ -211,6 +211,18 @@
   "paySmallSmallIsPausedRightNow": "Pagar em prestações está em pausa neste momento. Tente novamente mais tarde.",
   "planCancelled": "Plano cancelado.",
   "planCancelledYourRefundIsOn": "Plano cancelado. O seu reembolso está a caminho.",
+  "shareKit": {
+    "ticketsFrom": "Bilhetes a partir de {price}",
+    "ticketsAt": "Bilhetes {price}",
+    "freeEntry": "Entrada gratuita",
+    "ctaTickets": "Garanta os seus bilhetes no Abonten",
+    "ctaFree": "Reserve o seu lugar no Abonten",
+    "ctaDetails": "Veja no Abonten",
+    "ctaPlace": "Encontre-nos no Abonten",
+    "welcomeHeading": "Agora no Abonten",
+    "welcomeOrganizer": "Siga-nos no Abonten e não perca o nosso próximo evento.",
+    "welcomePlace": "Encontre-nos no Abonten: veja o que há e envie um pedido de reserva."
+  },
   "theDeadlineToFinishPayingHas": "O prazo para concluir o pagamento já passou.",
   "thisEventIsTooSoonToPay": "Este evento está demasiado próximo para pagar em prestações. Compre antes os bilhetes de uma só vez.",
   "thisEventWasCancelledYourPlan": "Este evento foi cancelado. O seu plano terminou e o seu reembolso está a caminho.",

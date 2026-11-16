@@ -211,6 +211,18 @@
   "paySmallSmallIsPausedRightNow": "In Raten zahlen ist gerade pausiert. Bitte versuche es später erneut.",
   "planCancelled": "Plan abgebrochen.",
   "planCancelledYourRefundIsOn": "Plan abgebrochen. Deine Erstattung ist unterwegs.",
+  "shareKit": {
+    "ticketsFrom": "Tickets ab {price}",
+    "ticketsAt": "Tickets {price}",
+    "freeEntry": "Eintritt frei",
+    "ctaTickets": "Hol dir deine Tickets auf Abonten",
+    "ctaFree": "Sichere dir deinen Platz auf Abonten",
+    "ctaDetails": "Jetzt auf Abonten ansehen",
+    "ctaPlace": "Finde uns auf Abonten",
+    "welcomeHeading": "Jetzt auf Abonten",
+    "welcomeOrganizer": "Folge uns auf Abonten und verpasse keine Veranstaltung mehr.",
+    "welcomePlace": "Finde uns auf Abonten: Sieh, was los ist, und sende eine Buchungsanfrage."
+  },
   "theDeadlineToFinishPayingHas": "Die Frist zum Abschließen der Zahlung ist abgelaufen.",
   "thisEventIsTooSoonToPay": "Dieses Event ist zu bald, um es in Raten zu zahlen. Kaufe deine Tickets stattdessen auf einmal.",
   "thisEventWasCancelledYourPlan": "Dieses Event wurde abgesagt. Dein Plan wurde beendet, und deine Erstattung ist unterwegs.",

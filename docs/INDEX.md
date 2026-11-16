@@ -71,6 +71,7 @@ Legal register, versioning and effective dates: [legal/README.md](legal/README.m
 | Mobile and web product docs | [mobile/README.md](mobile/README.md) · [web/README.md](web/README.md) | [mobile/guide/navigation-and-screens.md](mobile/guide/navigation-and-screens.md) · [mobile/guide/permissions-notifications-and-device.md](mobile/guide/permissions-notifications-and-device.md) · [mobile/guide/ios-vs-android.md](mobile/guide/ios-vs-android.md) · [mobile/release-verification.md](mobile/release-verification.md) (SOURCE / BUILD / DEVICE / PRODUCTION verified) |
 | Development setup | [development/setup.md](development/setup.md) | [development/README.md](development/README.md) |
 | Search engines (SEO) | [architecture/search-engines.md](architecture/search-engines.md) | titles, canonical addresses, structured data, sitemap, robots.txt, IndexNow, the owner's Search Console steps |
+| Share kit | [architecture/share-kit.md](architecture/share-kit.md) | ready-made story and post images organizers and place owners post to their own socials; `/api/share/...` |
 
 ## I have a problem — where do I look?
 

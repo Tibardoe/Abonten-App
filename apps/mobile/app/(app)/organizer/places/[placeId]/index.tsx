@@ -3,6 +3,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
 import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
+import { ShareKitSection } from "@/features/shareKit/ShareKitSection";
 import { TeamNavRow } from "@/features/teams/ManagingAs";
 import { useActingTeams } from "@/features/teams/useTeams";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
@@ -119,6 +120,8 @@ function PlaceInsightsScreen() {
           ))}
         </View>
       )}
+
+      {id ? <ShareKitSection kind="places" id={id} /> : null}
 
       {id ? (
         <View className="gap-3">
@@ -324,6 +327,9 @@ function TeamPlacePanel() {
           label={t("viewPublicPlacePage")}
         />
       </View>
+      {id && (can("places.manage") || can("promotions.buy")) ? (
+        <ShareKitSection kind="places" id={id} />
+      ) : null}
     </ScrollView>
   );
 }

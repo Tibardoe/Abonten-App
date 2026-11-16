@@ -12,11 +12,13 @@ import ManagePlacePromotionSection from "@/places/organisms/ManagePlacePromotion
 import ManagePlaceReviewsSection from "@/places/organisms/ManagePlaceReviewsSection";
 import ManagePlaceServicesSection from "@/places/organisms/ManagePlaceServicesSection";
 import PlaceVisitQrCard from "@/places/organisms/PlaceVisitQrCard";
+import ShareKitCard from "@/shareKit/organisms/ShareKitCard";
 import { readEventAddress } from "@abonten/core/eventAddress";
 import {
   readPlaceTemporaryStatus,
   readSocialLinks,
 } from "@abonten/core/placeJson";
+import { hasShareImages } from "@abonten/core/shareKit/shareKit";
 import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
@@ -310,11 +312,19 @@ export default function ManagePlaceView({
         )}
 
         {activeTab === "promotion" && (
-          <ManagePlacePromotionSection
-            placeId={place.id}
-            tiers={promotionTiers}
-            currentPromotion={currentPromotion}
-          />
+          <>
+            <ShareKitCard
+              kind="places"
+              subjectKey={place.slug}
+              name={place.name}
+              isPublic={hasShareImages(place)}
+            />
+            <ManagePlacePromotionSection
+              placeId={place.id}
+              tiers={promotionTiers}
+              currentPromotion={currentPromotion}
+            />
+          </>
         )}
 
         {activeTab === "visit" && (
