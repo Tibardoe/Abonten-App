@@ -867,6 +867,7 @@
   "youHaveUnsavedChangesToThis": "You have unsaved changes to this event.",
   "youHaveUnsavedChangesToThis2": "You have unsaved changes to this review.",
   "youHaveYouCanUseHere": "You have {formatCredit} you can use here.",
+  "teamHasCreditYouCanUseHere": "{team} has {formatCredit} you can use here.",
   "youPay": "You pay",
   "youReAllCaughtUp": "You're all caught up",
   "youReAllCaughtUpNothing": "You're all caught up — nothing needs attention right now.",

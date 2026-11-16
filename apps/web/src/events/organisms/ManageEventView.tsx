@@ -47,16 +47,16 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "insights", label: "tabs.insights" },
 ];
 
-// Managing as a team (stage 2): what the role covers. Money (promotion,
-// insights) follows in stage 3, so a team sees details, its attendees and
-// check-in only.
+// Managing as a team: what the role covers (details for Managers, the
+// attendee list or check-in for those at the door, featuring for Owners and
+// Finance, sales and earnings for Owners and Finance).
 function tabsFor(role: TeamRoleCode | null): Tab[] {
   if (!role) return ["details", "promotion", "insights"];
   const tabs: Tab[] = [];
   if (teamRoleCan(role, "events.manage")) tabs.push("details");
   if (teamRoleCan(role, "attendees.view")) tabs.push("attendees");
   else if (teamRoleCan(role, "checkin.scan")) tabs.push("checkin");
-  // Sales and earnings: Owners and Finance (stage 3).
+  if (teamRoleCan(role, "promotions.buy")) tabs.push("promotion");
   if (teamRoleCan(role, "money.view")) tabs.push("insights");
   return tabs;
 }

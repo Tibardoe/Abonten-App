@@ -3,6 +3,7 @@ import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
+import { recordTeamMoneyEventFor } from "@abonten/services/teams/teamMoney";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
@@ -138,9 +139,22 @@ export default async function activateEventPromotion(
     .eq("id", checkout.event_id)
     .maybeSingle();
 
+  // A feature bought for a team: the team hears of it (its Owners and
+  // the members who buy features get a copy, the payer among them) and its
+  // activity names who bought it, once.
+  const teamId = checkout.account_id ?? null;
+  if (teamId && !insertError) {
+    await recordTeamMoneyEventFor(supabase, teamId, userId, {
+      kind: "promotion_bought",
+      subjectKind: "event",
+      subjectId: checkout.event_id,
+      title: event?.title ?? "",
+    }).catch((e) => logger.error(`activateEventPromotion activity: ${e}`));
+  }
+
   await createNotification(
     {
-      userId,
+      userId: teamId ?? userId,
       type: "promotion_started",
       notice: event?.title
         ? {

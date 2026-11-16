@@ -29,7 +29,13 @@ export async function insertEventPromotionCheckoutCore(
   userId: string,
   eventId: string,
   tierId: number,
+  /**
+   * The team the person features this for (they act for it with
+   * promotions.buy, checked by the caller); omitted = their own event.
+   */
+  accountId?: string | null,
 ): Promise<InsertEventPromotionCheckoutResult> {
+  const forAccount = accountId ?? userId;
   const { data: event, error: eventError } = await supabase
     .from("event")
     .select("id, organizer_id")
@@ -40,7 +46,7 @@ export async function insertEventPromotionCheckoutCore(
     return { status: 404, message: tr("eventNotFound") };
   }
 
-  if (event.organizer_id !== userId) {
+  if (event.organizer_id !== forAccount) {
     return {
       status: 403,
       message: tr("notAuthorizedToPromoteThisEvent"),
@@ -63,7 +69,9 @@ export async function insertEventPromotionCheckoutCore(
       .from("event_promotion_checkout")
       .insert({
         event_id: eventId,
+        // Who pays; the team it is for (whose credit can pay) beside it.
         owner_id: userId,
+        account_id: forAccount === userId ? null : forAccount,
         tier_id: tier.id,
         unit_price: tier.price,
         total_price: tier.price,

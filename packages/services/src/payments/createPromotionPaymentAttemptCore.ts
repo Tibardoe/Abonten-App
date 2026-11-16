@@ -320,7 +320,7 @@ async function startCreditPayment(
         message: tr("thisCheckoutHasExpiredPleaseStart"),
       };
     }
-    quote = await computePromotionCredit(order, userId);
+    quote = await computePromotionCredit(order);
   } catch {
     return { status: 500, message: tr("somethingWentWrong") };
   }
@@ -396,7 +396,8 @@ async function startCreditPayment(
   const attempt = inserted as PaymentAttemptRow;
 
   const reserved = await reserveCredit({
-    userId,
+    // The team's credit for a team's feature; the payer's own otherwise.
+    userId: order.creditAccountId,
     scope: "promotions",
     targetType: cfg.targetType,
     targetId: input.checkoutId,

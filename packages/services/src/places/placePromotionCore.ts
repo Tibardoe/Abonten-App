@@ -35,6 +35,8 @@ export async function fetchPlacePromotionContext(
   supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
+  /** The team the person features this for; omitted = their own place. */
+  accountId?: string | null,
 ): Promise<PlacePromotionContextResult> {
   const { data: place, error: placeError } = await supabase
     .from("place")
@@ -45,7 +47,7 @@ export async function fetchPlacePromotionContext(
   if (placeError || !place) {
     return { status: 404, message: tr("placeNotFound") };
   }
-  if (place.owner_id !== userId) {
+  if (place.owner_id !== (accountId ?? userId)) {
     return {
       status: 403,
       message: tr("notAuthorizedToPromoteThisPlace"),
@@ -126,7 +128,13 @@ export async function insertPlacePromotionCheckoutCore(
   userId: string,
   placeId: string,
   tierId: number,
+  /**
+   * The team the person features this for (they act for it with
+   * promotions.buy, checked by the caller); omitted = their own place.
+   */
+  accountId?: string | null,
 ): Promise<InsertPlacePromotionCheckoutResult> {
+  const forAccount = accountId ?? userId;
   const { data: place, error: placeError } = await supabase
     .from("place")
     .select("id, owner_id")
@@ -136,7 +144,7 @@ export async function insertPlacePromotionCheckoutCore(
   if (placeError || !place) {
     return { status: 404, message: tr("placeNotFound") };
   }
-  if (place.owner_id !== userId) {
+  if (place.owner_id !== forAccount) {
     return {
       status: 403,
       message: tr("notAuthorizedToPromoteThisPlace"),
@@ -159,7 +167,9 @@ export async function insertPlacePromotionCheckoutCore(
       .from("place_promotion_checkout")
       .insert({
         place_id: placeId,
+        // Who pays; the team it is for (whose credit can pay) beside it.
         owner_id: userId,
+        account_id: forAccount === userId ? null : forAccount,
         tier_id: tier.id,
         unit_price: tier.price,
         total_price: tier.price,

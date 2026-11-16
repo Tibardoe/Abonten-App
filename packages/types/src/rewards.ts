@@ -189,6 +189,11 @@ export type CreditQuote = {
   /** Credit covers the whole order: no card or wallet is charged. */
   creditOnly: boolean;
   currency: string;
+  /**
+   * Whose credit this is when it is not the person's own: the team a
+   * feature is bought for (team accounts, stage 4b). Absent otherwise.
+   */
+  accountName?: string | null;
 };
 
 // ─────────────────────────────────────────────────────────────

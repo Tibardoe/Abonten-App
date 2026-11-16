@@ -101,7 +101,9 @@ lot only receives what's left after repayment).
 - `reward_program_setting` (one row): `rewards_enabled`, `audience`
   (`staff` → `beta` → `all`), feature switches, thresholds. Everything ships
   off. `rewards_enabled_for_user(user)` / `get_rewards_program_public()`
-  decide visibility. The deploy-level kill switch `REWARDS_KILL_SWITCH=true`
+  decide visibility. A team account (team-accounts.md §4d) counts as in the
+  audience when an active Owner of the active team is; its credit is spent
+  only by its Owners and Finance, on the team's own features. The deploy-level kill switch `REWARDS_KILL_SWITCH=true`
   (web env) overrides the database.
 - `reward_rule`: **versioned**; rows are never edited (a trigger allows only
   `is_active` to change), and at most one version per rule is active. Seeded

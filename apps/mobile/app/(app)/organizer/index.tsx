@@ -403,7 +403,13 @@ function PersonalDashboard() {
             label={t("eventDrafts2", { draftCount: draftCount })}
           />
         ) : null}
-        {can("places.manage", "bookings.manage", "visit.show") ? (
+        {can(
+          "places.manage",
+          "bookings.manage",
+          "visit.show",
+          "reviews.reply",
+          "promotions.buy",
+        ) ? (
           <NavRow href="/(app)/organizer/places" label={t("myPlaces2")} />
         ) : null}
         {placeDraftCount > 0 ? (

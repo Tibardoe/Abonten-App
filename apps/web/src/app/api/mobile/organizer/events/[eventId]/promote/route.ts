@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -40,11 +41,16 @@ export async function POST(
       });
     }
 
+    // Managing as a team: its Owners and Finance feature its listings.
+    const actor = await mobileActingFor(req, auth.user.id, "promotions.buy");
+    if (actor.error) return apiJson(actor.error);
+
     const result = await insertEventPromotionCheckoutCore(
       auth.supabase,
       auth.user.id,
       eventId,
       tierId,
+      actor.accountId,
     );
 
     if (result.status !== 200) {

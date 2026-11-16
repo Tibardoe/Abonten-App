@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -24,10 +25,14 @@ export async function GET(
       return apiJson({ status: 400, message: tr("missingPlaceId") });
     }
 
+    const actor = await mobileActingFor(req, auth.user.id, "promotions.buy");
+    if (actor.error) return apiJson(actor.error);
+
     const result = await fetchPlacePromotionContext(
       auth.supabase,
       auth.user.id,
       placeId,
+      actor.accountId,
     );
     return fromActionResult(result);
   } catch (error) {

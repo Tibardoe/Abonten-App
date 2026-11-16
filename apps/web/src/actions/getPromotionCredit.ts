@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getPromotionCreditCore } from "@abonten/services/rewards/promotionCreditCore";
 import type { PromotionCredit } from "@abonten/types/rewards";
@@ -23,6 +24,10 @@ export const getPromotionCredit = withActionLocale(
     } = await supabase.auth.getUser();
     if (!user) return { status: 401, message: tr("userNotLoggedIn") };
 
-    return getPromotionCreditCore(supabase, user.id);
+    // Managing as a team: its credit, for the members who see its money.
+    const actor = await actingFor(user.id, "money.view");
+    if (actor.error) return actor.error;
+
+    return getPromotionCreditCore(supabase, actor.accountId);
   },
 );

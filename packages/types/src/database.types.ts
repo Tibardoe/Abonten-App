@@ -3636,6 +3636,7 @@ export type Database = {
       }
       event_promotion_checkout: {
         Row: {
+          account_id: string | null
           completed_at: string | null
           created_at: string
           currency: string
@@ -3649,6 +3650,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          account_id?: string | null
           completed_at?: string | null
           created_at?: string
           currency: string
@@ -3662,6 +3664,7 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          account_id?: string | null
           completed_at?: string | null
           created_at?: string
           currency?: string
@@ -3675,6 +3678,20 @@ export type Database = {
           unit_price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "event_promotion_checkout_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_promotion_checkout_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "event_promotion_checkout_event_id_fkey"
             columns: ["event_id"]
@@ -9016,6 +9033,7 @@ export type Database = {
       }
       place_promotion_checkout: {
         Row: {
+          account_id: string | null
           completed_at: string | null
           created_at: string
           currency: string
@@ -9029,6 +9047,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          account_id?: string | null
           completed_at?: string | null
           created_at?: string
           currency: string
@@ -9042,6 +9061,7 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          account_id?: string | null
           completed_at?: string | null
           created_at?: string
           currency?: string
@@ -9055,6 +9075,20 @@ export type Database = {
           unit_price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "place_promotion_checkout_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "place_promotion_checkout_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "place_promotion_checkout_owner_id_fkey"
             columns: ["owner_id"]

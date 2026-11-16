@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { actingFor } from "@/utils/teamActor";
 import { userFacingError } from "@abonten/core/userFacingError";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/placePromotionCore";
@@ -39,11 +40,16 @@ export default withActionLocale(async function insertPlacePromotionCheckout(
     };
   }
 
+  // Managing as a team: its Owners and Finance feature its listings.
+  const actor = await actingFor(user.id, "promotions.buy");
+  if (actor.error) return actor.error;
+
   const result = await insertPlacePromotionCheckoutCore(
     supabase,
     user.id,
     placeId,
     tierId,
+    actor.accountId,
   );
 
   // Preserve the original action's `{ status, data: { id } }` shape for its

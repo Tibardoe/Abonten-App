@@ -254,10 +254,9 @@ function PlaceInsightsScreen() {
   );
 }
 
-// Managing as a team (docs/architecture/team-accounts.md, stage 2): what the
-// role covers for this place. Figures, reviews, verification and promotion
-// stay with the person's own places until the team's money and messages
-// arrive.
+// Managing as a team (docs/architecture/team-accounts.md): what the role
+// covers for this place. Verification as a team comes with the business
+// check (stage 5).
 function TeamPlacePanel() {
   const t = useTranslations("manage");
   const tt = useTranslations("teams");
@@ -307,6 +306,12 @@ function TeamPlacePanel() {
           <TeamNavRow
             href={`/(app)/organizer/places/${id}/check-in`}
             label={t("visitorCheckInCode")}
+          />
+        ) : null}
+        {IN_APP_PROMOTION_PURCHASES && can("promotions.buy") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/places/${id}/promote`}
+            label={t("featureThisPlace")}
           />
         ) : null}
         <TeamNavRow

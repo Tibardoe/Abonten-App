@@ -225,21 +225,47 @@ function reservationTarget(
 }
 
 /**
- * Whether the credit reservation really belongs to this attempt: same user,
- * same checkout. The reservation is written only by the credit_* functions,
- * so it -- not the payment_attempt row -- decides how much credit paid and
- * how much cash the provider must have collected.
+ * Whether the credit reservation really belongs to this attempt: same
+ * checkout, and the payer's credit -- or, for a feature bought for a team
+ * (team accounts, stage 4b), the credit of the team the checkout was
+ * written for by the server (checkout.owner_id = the payer,
+ * checkout.account_id = the team). The reservation is written only by the
+ * credit_* functions, so it -- not the payment_attempt row -- decides how
+ * much credit paid and how much cash the provider must have collected.
  */
-function reservationMatches(
+async function reservationMatches(
   attempt: PaymentAttemptFullRow,
   reservation: CreditReservationRow,
-): boolean {
+): Promise<boolean> {
   const target = reservationTarget(attempt);
+  if (
+    !target ||
+    reservation.target_type !== target.type ||
+    reservation.target_id !== target.id
+  ) {
+    return false;
+  }
+  if (reservation.user_id === attempt.user_id) return true;
+  if (
+    target.type !== "event_promotion_checkout" &&
+    target.type !== "place_promotion_checkout"
+  ) {
+    return false;
+  }
+  const { data, error } = await getSupabaseServiceClient()
+    .from(target.type)
+    .select("owner_id, account_id")
+    .eq("id", target.id)
+    .maybeSingle();
+  if (error) {
+    logger.error(`reservationMatches: ${error.message}`);
+    return false;
+  }
   return (
-    !!target &&
-    reservation.user_id === attempt.user_id &&
-    reservation.target_type === target.type &&
-    reservation.target_id === target.id
+    !!data &&
+    data.owner_id === attempt.user_id &&
+    !!data.account_id &&
+    data.account_id === reservation.user_id
   );
 }
 
@@ -480,7 +506,7 @@ export async function finalizePayment(
     );
   }
 
-  if (reservation && !reservationMatches(primary, reservation)) {
+  if (reservation && !(await reservationMatches(primary, reservation))) {
     logger.error(
       `finalizePayment: credit reservation ${reservation.id} does not match attempt ${primary.id}`,
     );
@@ -656,7 +682,7 @@ async function finalizeCreditOnly(
 ): Promise<FinalizeResult> {
   if (
     !reservation ||
-    !reservationMatches(primary, reservation) ||
+    !(await reservationMatches(primary, reservation)) ||
     reservation.cash_minor !== 0 ||
     groupMembers.some((m) => attemptMoney(m).amountMinor !== 0) ||
     (!primary.checkout_session_id && !!primary.payment_group_id)

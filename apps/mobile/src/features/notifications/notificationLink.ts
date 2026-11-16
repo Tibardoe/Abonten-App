@@ -94,7 +94,9 @@ function targetFromData(
     case "place_booking":
       return data.placeId ? `/(app)/place/${data.placeId}` : null;
     case "rewards":
-      return "/(app)/rewards";
+      // A team's credit (a rebate, visit credit) shows on the team's
+      // Finances; the person's own on Rewards.
+      return data.team_id ? "/(app)/organizer/finance" : "/(app)/rewards";
     case "fieldops":
       // Field workers use the web app (/field). The app has no section to
       // open until Phase 9, so the notice is readable but not tappable.

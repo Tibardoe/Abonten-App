@@ -110,11 +110,14 @@ export const useLeaveTeam = () =>
 const ORGANIZER_KEY = ["mobile", "organizer"] as const;
 /** The inbox follows "Managing as" too (a team's, for those who answer it). */
 const MESSAGING_KEY = ["mobile", "messaging"] as const;
+const PROMOTION_CREDIT_KEY = ["mobile", "rewards", "promotion-credit"] as const;
 
 /** Forgets what was read for the previous account. */
 export function resetAccountQueries(qc: ReturnType<typeof useQueryClient>) {
   void qc.resetQueries({ queryKey: ORGANIZER_KEY });
   void qc.resetQueries({ queryKey: MESSAGING_KEY });
+  // The promotion credit shown on Finances is the managed account's.
+  void qc.resetQueries({ queryKey: PROMOTION_CREDIT_KEY });
 }
 
 /**

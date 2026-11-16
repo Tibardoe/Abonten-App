@@ -4,7 +4,7 @@ purpose: How to look up who runs a team, answer the common support questions abo
 audience: Support, operations
 scope: Admin › Teams, the teams.view / teams.configure permissions, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire job
 status: Approved
-version: 1.3
+version: 1.4
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Admin — Teams
 
-An organizer or a place can be run by a team: its own account, run by members who each sign in as themselves and hold a role (Owner, Finance, Manager, Content and messages, Door staff, Front desk). How it works: [architecture/team-accounts.md](../architecture/team-accounts.md). Since stage 2 members run the team's events and places within their role (chosen under **Managing as** in Manage on the website, at the top of Organizer in the app); since stage 3 Owners and Finance also see and move its money, and since stage 4 Owners and Content and messages answer its messages and reviews (customers see the team's name, never the member's).
+An organizer or a place can be run by a team: its own account, run by members who each sign in as themselves and hold a role (Owner, Finance, Manager, Content and messages, Door staff, Front desk). How it works: [architecture/team-accounts.md](../architecture/team-accounts.md). Since stage 2 members run the team's events and places within their role (chosen under **Managing as** in Manage on the website, at the top of Organizer in the app); since stage 3 Owners and Finance also see and move its money, since stage 4 Owners and Content and messages answer its messages and reviews (customers see the team's name, never the member's), and since stage 4b Owners and Finance feature its events and places, paying the credit part with the team's credit.
 
 ## Permissions
 
@@ -35,6 +35,8 @@ Search by the team's name or username. A team's page shows its status (**Active*
 - **"The invitation never came."** Invitations by username appear in the person's notifications and under Settings › Teams. One by phone to a number with no account is texted (Ghana today, at most the daily number per team); the Owner sees "We couldn't text this number" if it did not go. Invitations last a week by default.
 - **"Who answered me?"** (from a customer) Replies from a team show the team's name only. Staff can see which member wrote a message (`message_team_sender`) when a complaint needs it.
 - **"I can't see the team's messages."** The member must manage as the team (Manage › Managing as on the website, the top of Organizer in the app) and hold Owner or Content and messages.
+- **"Whose credit paid for this feature?"** A feature bought for a team spends the team's credit (rebates and visit credit earned by its events and places); the member who bought it paid any cash part with their own card. The checkout records both (`owner_id` = the payer, `account_id` = the team), and the team's activity says who bought it.
+- **"I can't use the team's credit."** Only Owners and Finance spend it, while managing as the team. If their role changed after they started the checkout, they start again.
 - **"Can a team member see the money?"** Only Owners and Finance: the team's dashboard, insights, balance, ledger and payouts. Owners and Finance ask for payouts; only Owners change the payout account.
 - **"The payout was refused: the account is too new."** A team's payouts go to a payout account only 48 hours after it was added, and every Owner is told when one is added. Wait out the 48 hours, or ask the Owners whether they added it.
 - **"It asks me to sign in again before I change the payout account."** For a team, changing the payout account needs a sign-in in the last 15 minutes. Sign out of that device, sign in again and change it straight away.

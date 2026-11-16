@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts, stage 4b (featuring and the team's credit)
+
+- Owners and Finance feature the team's events and places; the member pays the cash part, the team's credit the credit part; a team counts in the Rewards audience when an Owner does; credit notices copied to members open the team's Finances: `architecture/team-accounts.md` 1.4 (§4d, roles, code map), `admin/teams.md` 1.4, `architecture/rewards-ledger.md`. Migration `20261116150000_team_accounts_promotions`; PROJECT.md §75.4, CLAUDE.md quick facts.
+
 ## 2026-11-16 — Team accounts, stage 4 (messages and reviews)
 
 - Owners and Content and messages answer the team's inbox and its reviews, as the team (X7); nobody reviews or messages, as a customer, a team they belong to: `architecture/team-accounts.md` 1.3 (§4c, roles, code map), `admin/teams.md` 1.3, `privacy/data-inventory.md` (`message_team_sender`). Migration `20261116140000_team_accounts_messages_reviews`; PROJECT.md §75.3, CLAUDE.md quick facts.

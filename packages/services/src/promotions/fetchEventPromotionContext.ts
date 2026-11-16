@@ -5,6 +5,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { EventPromotionTier } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Everything the Promotion tab of the per-event management screen needs, in
 // one owner-scoped read — mirrors what manage/events/[eventId]/page.tsx
@@ -31,6 +32,8 @@ export async function fetchEventPromotionContext(
   supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
+  /** The team the person features this for; omitted = their own event. */
+  accountId?: string | null,
 ): Promise<EventPromotionContextResult> {
   const { data: event, error: eventError } = await supabase
     .from("event")
@@ -43,7 +46,7 @@ export async function fetchEventPromotionContext(
   if (eventError || !event) {
     return { status: 404, message: tr("eventNotFound") };
   }
-  if (event.organizer_id !== userId) {
+  if (event.organizer_id !== (accountId ?? userId)) {
     return {
       status: 403,
       message: tr("notAuthorizedToPromoteThisEvent"),
@@ -70,7 +73,10 @@ export async function fetchEventPromotionContext(
       .order("ends_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    supabase
+    // Counted with the service role: a member who buys features (Finance)
+    // does not read the team's attendee list, and the sold-out check must
+    // not see an empty one.
+    getSupabaseServiceClient()
       .from("attendance")
       .select("id", { count: "exact", head: true })
       .eq("event_id", eventId)
