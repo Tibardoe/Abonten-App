@@ -112,8 +112,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "visit", label: "tabs.visit" },
 ];
 
-// Managing as a team: what the role covers. Verification as a team comes
-// with the business check (stage 5).
+// Managing as a team: what the role covers. Owners ask for the place's
+// verification for the team (verification.request, stage 5).
 function tabsFor(role: TeamRoleCode | null): Tab[] {
   if (!role) {
     return TABS.map((tab) => tab.id).filter((id) => id !== "visit");
@@ -127,6 +127,7 @@ function tabsFor(role: TeamRoleCode | null): Tab[] {
   // Views and bookings over time (getPlaceInsights acts for places.manage).
   if (teamRoleCan(role, "places.manage")) tabs.push("insights");
   if (teamRoleCan(role, "promotions.buy")) tabs.push("promotion");
+  if (teamRoleCan(role, "verification.request")) tabs.push("verification");
   if (teamRoleCan(role, "visit.show")) tabs.push("visit");
   return tabs;
 }

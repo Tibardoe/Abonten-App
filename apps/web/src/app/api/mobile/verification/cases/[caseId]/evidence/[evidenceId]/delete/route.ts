@@ -19,6 +19,7 @@ export async function POST(
       params: { caseId, evidenceId },
       label: "POST /verification/cases/[caseId]/evidence/[evidenceId]/delete",
     },
-    (svc, userId, data) => removeVerificationEvidenceCore(svc, userId, data),
+    (svc, userId, data, personId) =>
+      removeVerificationEvidenceCore(svc, userId, data, personId),
   );
 }

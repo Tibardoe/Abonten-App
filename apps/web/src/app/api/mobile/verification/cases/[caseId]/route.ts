@@ -19,6 +19,7 @@ export async function POST(
       params: { caseId },
       label: "POST /verification/cases/[caseId]",
     },
-    (svc, userId, data) => updateVerificationCaseCore(svc, userId, data),
+    (svc, userId, data, personId) =>
+      updateVerificationCaseCore(svc, userId, data, personId),
   );
 }

@@ -17,6 +17,11 @@ export const updateVerificationCase = withActionLocale(
     if (caller.error) return caller.error;
     const parsed = parseVerificationInput(updateVerificationCaseSchema, input);
     if (parsed.error) return parsed.error;
-    return updateVerificationCaseCore(caller.svc, caller.userId, parsed.data);
+    return updateVerificationCaseCore(
+      caller.svc,
+      caller.userId,
+      parsed.data,
+      caller.personId,
+    );
   },
 );

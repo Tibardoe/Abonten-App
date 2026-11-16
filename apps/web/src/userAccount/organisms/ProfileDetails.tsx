@@ -81,6 +81,7 @@ export default async function ProfileDetails({
   ]);
   const organizerVerified = organizerVerifiedRes.data.verified;
   const identityChecked = organizerVerifiedRes.data.identityChecked;
+  const isTeam = organizerVerifiedRes.data.team;
   const events = Number(data.total_posts ?? 0);
 
   return (
@@ -102,9 +103,15 @@ export default async function ProfileDetails({
                 {displayName}
               </h1>
               {organizerVerified ? (
-                <VerifiedBadgePopover subjectType="organizer" compact />
+                <VerifiedBadgePopover
+                  subjectType="organizer"
+                  compact
+                  team={isTeam}
+                />
               ) : null}
-              {identityChecked ? <IdentityCheckedBadge compact /> : null}
+              {identityChecked ? (
+                <IdentityCheckedBadge compact team={isTeam} />
+              ) : null}
             </div>
             {data.full_name?.trim() ? (
               <p className="text-muted-foreground">@{handle}</p>

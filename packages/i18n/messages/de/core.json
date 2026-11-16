@@ -992,6 +992,10 @@
     "team_payout_requested": {
       "title": "{actor} hat eine Auszahlung für {team} angefordert",
       "body": "{amount} auf das Auszahlungskonto des Teams."
+    },
+    "verification_back_in_review": {
+      "title": "Dein Verifiziert-Abzeichen wird erneut geprüft",
+      "body": "Der Name lautet jetzt {subject}, deshalb prüft Abonten ihn erneut. Das Abzeichen wird wieder angezeigt, sobald es genehmigt ist."
     }
   },
   "openStatus": {
@@ -1231,11 +1235,13 @@
   "verification": {
     "badgeExplanation": {
       "organizer": "Abonten hat Dokumente geprüft, die die Identität oder Registrierung dieses Veranstalters und seine Verbindung zu diesem Konto belegen. Die Verifizierung ist keine Garantie für ein Event, seine Durchführung, Sicherheit oder Qualität.",
-      "place": "Abonten hat Dokumente geprüft, die die Registrierung dieses Unternehmens und seine Verbindung zu dem Konto belegen, das diesen Eintrag verwaltet. Die Verifizierung ist keine Garantie für das Unternehmen, seine Leistung, Sicherheit oder Qualität."
+      "place": "Abonten hat Dokumente geprüft, die die Registrierung dieses Unternehmens und seine Verbindung zu dem Konto belegen, das diesen Eintrag verwaltet. Die Verifizierung ist keine Garantie für das Unternehmen, seine Leistung, Sicherheit oder Qualität.",
+      "team": "Abonten hat Dokumente geprüft, die die Eintragung dieses Unternehmens belegen und dass der Inhaber, der dieses Team verwaltet, für es handeln darf. Die Verifizierung ist keine Garantie für ein Event, seine Durchführung, Sicherheit oder Qualität."
     },
     "badgeLabel": {
       "organizer": "Verifizierter Veranstalter",
-      "place": "Verifizierter Ort"
+      "place": "Verifizierter Ort",
+      "team": "Verifiziertes Unternehmen"
     },
     "chip": {
       "approved": "Verifiziert",
@@ -1302,6 +1308,56 @@
         "2": "Menschen buchen und besuchen eher ein Unternehmen, das Abonten geprüft hat.",
         "3": "Einige Abonten-Programme, etwa Promotion-Guthaben für Besuche, stehen nur verifizierten Orten offen."
       }
+    },
+    "evidenceType": {
+      "business_registration": {
+        "label": "Eintragungsurkunde des Unternehmens",
+        "description": "Gründungsurkunde oder Eintragung des Firmennamens beim Registrar General's Department."
+      },
+      "operating_permit": {
+        "label": "Betriebsgenehmigung",
+        "description": "Die Betriebsgenehmigung deiner Distrikt-, Gemeinde- oder Metropolversammlung."
+      },
+      "sector_licence": {
+        "label": "Branchenlizenz oder -genehmigung",
+        "description": "Eine Lizenz für deine Art von Geschäft, zum Beispiel für Gastgewerbe, Lebensmittel oder Tourismus."
+      },
+      "tin_certificate": {
+        "label": "Steuernummer-Bescheinigung (TIN)",
+        "description": "Die Bescheinigung über die Steueridentifikationsnummer deines Unternehmens."
+      },
+      "lease_or_tenancy": {
+        "label": "Miet- oder Pachtvertrag",
+        "description": "Ein unterschriebener Vertrag für die Räume mit Name und Adresse des Unternehmens."
+      },
+      "utility_bill": {
+        "label": "Versorgungsrechnung für die Räume",
+        "description": "Eine aktuelle Strom-, Wasser- oder ähnliche Rechnung an das Unternehmen an diesem Standort."
+      },
+      "authorisation_letter": {
+        "label": "Vollmachtsschreiben",
+        "description": "Ein unterschriebener Brief auf dem Briefpapier des Unternehmens oder der Organisation, der dich zur Verwaltung dieses Kontos berechtigt."
+      },
+      "director_listing": {
+        "label": "Liste der Geschäftsführer oder Gesellschafter",
+        "description": "Der Auszug des Registrar General mit den Geschäftsführern oder Gesellschaftern des Unternehmens, auf dem die Person steht, die dieses Konto verwaltet."
+      },
+      "event_permit": {
+        "label": "Veranstaltungs- oder Ortsgenehmigung",
+        "description": "Eine Genehmigung für ein vergangenes oder bevorstehendes Event, das du organisiert hast."
+      },
+      "venue_confirmation": {
+        "label": "Buchungsbestätigung eines Veranstaltungsorts",
+        "description": "Eine Buchungsbestätigung eines Veranstaltungsorts für ein Event, das du organisiert hast."
+      },
+      "past_event_material": {
+        "label": "Material vergangener Events",
+        "description": "Flyer, Tickets, Presseberichte oder Fotos von Events, die du organisiert hast."
+      },
+      "other": {
+        "label": "Anderer Nachweis",
+        "description": "Jedes andere Dokument, das deine Verbindung zum Unternehmen oder deine Arbeit als Veranstalter zeigt."
+      }
     }
   },
   "weekly": {
@@ -1343,7 +1399,8 @@
   },
   "identity": {
     "badgeLabel": "Ausweis geprüft",
-    "badgeExplanation": "Abonten hat den amtlichen Ausweis dieser Person und ein live aufgenommenes Selfie geprüft. Das heißt nicht, dass Abonten für diese Person, ihre Events oder ihre Orte bürgt."
+    "badgeExplanation": "Abonten hat den amtlichen Ausweis dieser Person und ein live aufgenommenes Selfie geprüft. Das heißt nicht, dass Abonten für diese Person, ihre Events oder ihre Orte bürgt.",
+    "badgeExplanationTeam": "Abonten hat den amtlichen Ausweis und ein live aufgenommenes Selfie von mindestens einem Inhaber dieses Teams geprüft. Das heißt nicht, dass Abonten für das Team, seine Events oder seine Orte bürgt."
   },
   "promoDraft": {
     "code": "Gib einen Code mit höchstens {max} Zeichen ein.",

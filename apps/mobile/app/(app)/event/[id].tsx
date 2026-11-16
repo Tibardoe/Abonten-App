@@ -442,10 +442,15 @@ export default function EventDetailScreen() {
                     {event.user_info.username}
                   </AppText>
                   {showsOrganizerBadge(event.user_info) ? (
-                    <VerifiedPill subjectType="organizer" />
+                    <VerifiedPill
+                      subjectType="organizer"
+                      team={event.user_info.account_kind === "team"}
+                    />
                   ) : null}
                   {showsIdentityBadge(event.user_info) ? (
-                    <IdentityCheckedPill />
+                    <IdentityCheckedPill
+                      team={event.user_info.account_kind === "team"}
+                    />
                   ) : null}
                 </View>
                 {/* No stars until someone has rated them: five grey stars

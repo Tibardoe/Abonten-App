@@ -94,5 +94,9 @@
   "convertAction": "Convertir en equipo",
   "convertConfirm": "@{handle} pasará a ser del equipo y tú recibirás un @nombre de usuario nuevo. Esto no se puede deshacer en la app.",
   "converting": "Moviendo…",
-  "convertedToast": "Listo. {team} gestiona ahora tus eventos y lugares. Tu nuevo @nombre de usuario es @{username}."
+  "convertedToast": "Listo. {team} gestiona ahora tus eventos y lugares. Tu nuevo @nombre de usuario es @{username}.",
+  "renameVerifiedTitle": "¿Cambiar el nombre de un equipo verificado?",
+  "renameVerifiedBody": "La insignia de Verificado nombra a la empresa, así que se retira y vuelve a revisión hasta que Abonten compruebe el nuevo nombre. Abonten puede pedir documentos a nombre del nuevo nombre.",
+  "renameVerifiedConfirm": "Cambiar el nombre",
+  "convertedBadgeInReview": "Tu insignia de Verificado pasó al equipo y vuelve a estar en revisión: Abonten comprueba el equipo como empresa antes de que se muestre de nuevo."
 }

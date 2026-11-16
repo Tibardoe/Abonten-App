@@ -284,6 +284,14 @@ afterAll(async () => {
     .delete()
     .in("user_id", [organizer.id, viewer.id, viewer2.id]);
   for (const id of placeIds) await svc.from("place").delete().eq("id", id);
+  // A campaign keeps its ledger (append-only) and its advertiser, so these
+  // accounts cannot be deleted; take their posts out of every feed instead,
+  // so a later run's feed tests on the same database do not page past a
+  // pile of old promotions.
+  await svc
+    .from("content_post")
+    .update({ status: "deleted" } as never)
+    .in("author_id", [organizer.id, viewer.id, viewer2.id, stranger.id]);
   for (const u of [organizer, viewer, viewer2, stranger]) {
     await deleteTestUser(svc as never, u.id);
   }

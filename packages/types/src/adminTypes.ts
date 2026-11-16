@@ -868,7 +868,19 @@ export type VerificationCaseDetail = {
     fullName: string | null;
     email: string | null; // only for users.view_pii
     accountStatus: string | null;
+    /** The applicant is a team account (the business check, stage 5). */
+    isTeam: boolean;
   };
+  /**
+   * For a team's request: the member who asked (an Owner when they did).
+   * The email is theirs, only for users.view_pii (a team has none).
+   */
+  requestedBy: {
+    id: string;
+    username: string | null;
+    fullName: string | null;
+    email: string | null;
+  } | null;
   evidence: VerificationEvidenceView[];
   /** Whether this reviewer may open the documents. */
   canOpenEvidence: boolean;

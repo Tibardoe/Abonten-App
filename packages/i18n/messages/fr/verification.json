@@ -84,5 +84,8 @@
   "youHaveReachedTheLimit": "Vous avez atteint la limite.",
   "yourBadgeShowsOnYourEvents": "Votre badge s'affiche sur vos événements et votre profil.",
   "yourDocumentsAreRemovedAndNothing": "Vos documents sont supprimés et rien n'est examiné.",
-  "yourVerification": "votre vérification"
+  "yourVerification": "votre vérification",
+  "returnedToReview": "Le nom a changé, Abonten vérifie donc de nouveau le badge Vérifié. Il réapparaîtra une fois approuvé.",
+  "teamRequirementsTitle": "Ce qu'il faut pour une équipe",
+  "teamRequirements": "Une équipe est vérifiée en tant qu'entreprise ou organisation enregistrée. Ajoutez son certificat d'enregistrement et un document montrant que vous pouvez agir en son nom : la liste de ses dirigeants ou associés, ou une lettre signée sur son papier à en-tête."
 }

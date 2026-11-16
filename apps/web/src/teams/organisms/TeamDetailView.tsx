@@ -95,7 +95,9 @@ function TeamDetailBody({
     setBusy(true);
     const res = await work();
     setBusy(false);
-    if (res.status === 200) toast.success(done);
+    // A success that has more to say (a renamed Verified team's badge is
+    // back in review) says it instead.
+    if (res.status === 200) toast.success(res.message ?? done);
     else toast.error(res.message ?? t("couldNotDo"));
     refresh();
     return res.status === 200;
@@ -161,6 +163,19 @@ function TeamDetailBody({
                 size="sm"
                 disabled={busy || !newName.trim()}
                 onClick={async () => {
+                  // X42: the badge names the business, so a new name goes
+                  // back to review. Say so before it happens.
+                  if (
+                    team.verified &&
+                    newName.trim() !== (team.name ?? "") &&
+                    !(await confirm({
+                      title: t("renameVerifiedTitle"),
+                      message: t("renameVerifiedBody"),
+                      confirmLabel: t("renameVerifiedConfirm"),
+                    }))
+                  ) {
+                    return;
+                  }
                   if (
                     await run(
                       () =>

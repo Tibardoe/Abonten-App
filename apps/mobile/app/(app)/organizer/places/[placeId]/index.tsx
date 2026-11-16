@@ -255,8 +255,8 @@ function PlaceInsightsScreen() {
 }
 
 // Managing as a team (docs/architecture/team-accounts.md): what the role
-// covers for this place. Verification as a team comes with the business
-// check (stage 5).
+// covers for this place. Owners ask for its verification for the team
+// (verification.request, stage 5).
 function TeamPlacePanel() {
   const t = useTranslations("manage");
   const tt = useTranslations("teams");
@@ -312,6 +312,12 @@ function TeamPlacePanel() {
           <TeamNavRow
             href={`/(app)/organizer/places/${id}/promote`}
             label={t("featureThisPlace")}
+          />
+        ) : null}
+        {can("verification.request") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/places/${id}/verification`}
+            label={t("verification")}
           />
         ) : null}
         <TeamNavRow

@@ -4418,6 +4418,17 @@ Branch `feat/team-accounts-convert-2026-11-16`, migration `20261116170000_team_a
 Branch `feat/team-accounts-staff-tools-2026-11-16`, migration `20261116180000_team_accounts_staff_tools`.
 
 - `admin_team_set_status(team, to, reason)` (pause for a dispute or a staff hold; resume only with an Owner) and `admin_team_appoint_owner(team, user)` (a current or former member in good standing; an Owner-less team resumes), service role only; Admin › Teams › a team: Staff actions (`teams.manage`, Operations; step-up; reason; audit `teams.pause` / `teams.resume` / `teams.owner.appoint`).
-- X42 interim: `team_rename_guard_verified` keeps a Verified team's name until teams can be reviewed.
-- **Open (stage 5, second part)**: verification requests by a team and X42's review after a rename.
+- X42 interim: `team_rename_guard_verified` kept a Verified team's name until teams could be reviewed (replaced by §75.8 the same day).
 - **Checked**: `teams-staff.integration.test.ts` (3 tests) and the admin, team and grants suites (109 tests).
+
+### 75.8 Stage 5, second part: the business check, team badges and X42 (2026-11-16)
+
+Branch `feat/team-verification-2026-11-16`, migration `20261116190000_team_accounts_verification`.
+
+- Owners (`verification.request`) ask for verification for the team and its places while managing as it; the case is the team's (`requester_id`), `verification_case.requested_by` the member; `verification_transition()` checks the member is an Owner of the active team and refuses a paused team at submit and approve.
+- The business check: a team's organizer request is business or organisation only, with `business_registration` and `director_listing` (new type) or `authorisation_letter` (`verification_team_requirements`).
+- X42: a Verified team's rename sends the approved case back to review (`return_to_review`, trigger `team_name_back_to_review` → `verification_team_back_to_review`), the badge off and the Owners told (`verification_back_in_review`); the interim lock is dropped. Owners confirm before renaming.
+- Badges: "Verified business" on a team; "ID checked" on a team when an Owner has a live check (`account_id_checked`, computed column `user_info.id_checked`, `get_public_profile` + `account_kind`), read by the website, the app and the Safety view. Legal item N9 holds the wording.
+- Fix: "make this a team" failed (check `verification_case_organizer_is_requester`) for anyone who had ever asked for organizer verification (one production organizer); the case now moves whole, and a badge of an individual or moved under another name goes back to review.
+- Fix: seeded evidence types were shown in English in every language; they are worded from the catalogs now.
+- **Checked**: `teams-verification.integration.test.ts` (3 tests), the updated conversion and staff tests, and the full integration suite.

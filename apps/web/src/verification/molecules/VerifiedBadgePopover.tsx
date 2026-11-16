@@ -18,11 +18,14 @@ export default function VerifiedBadgePopover({
   subjectType,
   className,
   compact = false,
+  team = false,
 }: {
   subjectType: VerificationSubjectType;
   className?: string;
   /** Icon only, for tight rows like cards. */
   compact?: boolean;
+  /** The organizer is a team: the badge is the business check. */
+  team?: boolean;
 }) {
   const t = useTranslations("verification");
   const tc = useTranslations("core");
@@ -32,7 +35,9 @@ export default function VerifiedBadgePopover({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={t("whatThisMeans", { item: badgeLabel(tc, subjectType) })}
+          aria-label={t("whatThisMeans", {
+            item: badgeLabel(tc, subjectType, team),
+          })}
           className={`inline-flex items-center gap-1 text-sm font-medium text-primary transition-opacity hover:opacity-80 ${
             className ?? ""
           }`}
@@ -42,9 +47,9 @@ export default function VerifiedBadgePopover({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-72 text-sm" align="start">
-        <p className="font-semibold">{badgeLabel(tc, subjectType)}</p>
+        <p className="font-semibold">{badgeLabel(tc, subjectType, team)}</p>
         <p className="mt-1 text-muted-foreground">
-          {badgeExplanation(tc, subjectType)}
+          {badgeExplanation(tc, subjectType, team)}
         </p>
       </PopoverContent>
     </Popover>

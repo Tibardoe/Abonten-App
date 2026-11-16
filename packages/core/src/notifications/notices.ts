@@ -54,6 +54,9 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   verification_info_requested: n("verification_info_requested"),
   verification_rejected: n("verification_rejected"),
   verification_revoked: n("verification_revoked"),
+  // Written by the database: a Verified team renamed, or its badge moved to
+  // a team (X42, migration 20261116190000).
+  verification_back_in_review: n("verification_back_in_review"),
   // Spotlight & Stories (services)
   content_like: n("content_like", false),
   content_reaction: n("content_reaction", false),

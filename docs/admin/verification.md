@@ -4,8 +4,8 @@ purpose: How to review a place or organizer verification request: what to look f
 audience: Abonten reviewers, operations, support
 scope: The Verification module in the admin console, the four verification permissions, and the "approve and verify" option on a place claim
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -56,6 +56,7 @@ None of these is mandatory. An applicant may send any combination, and a small b
 | Utility bill | Recent, addressed to the business at the listing's address |
 | Authorisation letter | On the business's letterhead, names the applicant, signed |
 | Event permit, venue confirmation, past event material | For organizers: shows the applicant really ran the events they claim |
+| Directors or partners listing | The Registrar General's record names the person who asked (see "Asked by") among the directors or partners |
 
 Two things matter more than any single document: **does the name line up across what they sent**, and **does the address line up with the listing**. A mismatch is usually a reason to ask, not to reject — people submit the wrong photo all the time.
 
@@ -70,6 +71,12 @@ Bad: "Insufficient documentation." · "Docs don't check out." · "See notes."
 Approve needs no reason. Rejecting and asking for more both require one, and the form will not let you submit without it.
 
 **Ask for more information** when the applicant can plausibly fix it — wrong document, unreadable photo, missing page. **Reject** when what they sent contradicts the claim, or when they have already been asked and could not answer. A rejected applicant can always start a new request, so rejection is not a permanent door closed.
+
+## A team's request (the business check)
+
+A case whose applicant shows **Kind: Team** is a team asking to be verified as a business. **Asked by** names the Owner who sent it; the contact email is theirs (a team has none). Approve it only when the registration certificate names the business the team presents itself as **and** a directors or partners listing, or a signed letter on the business's letterhead, shows the person who asked may act for it. The app will not let a team send its request without those, but you still judge whether they hang together.
+
+A team's case can come back to you after it was approved: **"returned to review"** in its history means the Verified team changed its name (or its badge moved to a team under another name). The badge is off until you decide. The "subject changed" entry beside it shows the old and new names. Approve if the papers already cover the new name (a trading name, say); otherwise ask for papers in the new name.
 
 ## Approving a claim and verifying together
 
@@ -89,6 +96,7 @@ You do not need to revoke for a change of owner or a ban — both revoke themsel
 
 - A verified place changing hands revokes its badge and withdraws any open request.
 - Banning an organizer revokes their badge. Suspending one hides it while the suspension lasts, without touching the case.
+- A Verified team that changes its name goes back to your queue (above); a paused team cannot be approved until staff resume it (Admin › Teams).
 - Editing a verified place's name, address, location or category logs an entry on its case. Nothing happens automatically; it is there so you can see it if the case comes back to you.
 
 ## Timing

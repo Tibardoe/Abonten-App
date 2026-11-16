@@ -94,5 +94,9 @@
   "convertAction": "En faire une équipe",
   "convertConfirm": "@{handle} appartiendra à l'équipe et vous recevrez un nouveau @nom d'utilisateur. Cette action ne peut pas être annulée dans l'application.",
   "converting": "Transfert…",
-  "convertedToast": "C'est fait. {team} gère désormais vos événements et vos lieux. Votre nouveau @nom d'utilisateur est @{username}."
+  "convertedToast": "C'est fait. {team} gère désormais vos événements et vos lieux. Votre nouveau @nom d'utilisateur est @{username}.",
+  "renameVerifiedTitle": "Changer le nom d'une équipe vérifiée ?",
+  "renameVerifiedBody": "Le badge Vérifié désigne l'entreprise : il est retiré et repasse en examen jusqu'à ce qu'Abonten vérifie le nouveau nom. Abonten peut demander des documents au nouveau nom.",
+  "renameVerifiedConfirm": "Changer le nom",
+  "convertedBadgeInReview": "Votre badge Vérifié a été transféré à l'équipe et repasse en examen : Abonten vérifie l'équipe en tant qu'entreprise avant qu'il ne réapparaisse."
 }

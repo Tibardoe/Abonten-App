@@ -94,5 +94,9 @@
   "convertAction": "Zum Team machen",
   "convertConfirm": "@{handle} gehört dann dem Team, und du bekommst einen neuen @Benutzernamen. Das lässt sich in der App nicht rückgängig machen.",
   "converting": "Wird übertragen…",
-  "convertedToast": "Erledigt. {team} führt jetzt deine Events und Orte. Dein neuer @Benutzername ist @{username}."
+  "convertedToast": "Erledigt. {team} führt jetzt deine Events und Orte. Dein neuer @Benutzername ist @{username}.",
+  "renameVerifiedTitle": "Den Namen eines verifizierten Teams ändern?",
+  "renameVerifiedBody": "Das Verifiziert-Abzeichen nennt das Unternehmen. Es wird deshalb entfernt und erneut geprüft, bis Abonten den neuen Namen kontrolliert hat. Abonten kann Unterlagen auf den neuen Namen anfordern.",
+  "renameVerifiedConfirm": "Namen ändern",
+  "convertedBadgeInReview": "Dein Verifiziert-Abzeichen ist zum Team gewechselt und wird erneut geprüft: Abonten prüft das Team als Unternehmen, bevor es wieder angezeigt wird."
 }

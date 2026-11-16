@@ -1,3 +1,4 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
@@ -13,7 +14,9 @@ import type { ZodSchema } from "zod";
 //
 // The service-role client is what reaches the core because the verification
 // tables carry no anon/authenticated privileges at all; the core re-checks
-// that this caller owns the subject before touching anything.
+// that this caller owns the subject before touching anything. Managing as a
+// team (header x-abonten-team), the request is the team's when the person's
+// role covers verification.request (Owners): `userId` is then the team.
 
 type Envelope = { status: number; message?: string; data?: unknown };
 
@@ -25,10 +28,21 @@ export async function verificationRoute<T>(
     params?: Record<string, string>;
     label: string;
   },
-  run: (svc: ServiceRoleClient, userId: string, data: T) => Promise<Envelope>,
+  run: (
+    svc: ServiceRoleClient,
+    userId: string,
+    data: T,
+    personId: string,
+  ) => Promise<Envelope>,
 ) {
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
+  const acting = await mobileActingFor(
+    req,
+    auth.user.id,
+    "verification.request",
+  );
+  if (acting.error) return apiJson(acting.error);
 
   try {
     let raw: Record<string, unknown>;
@@ -50,8 +64,9 @@ export async function verificationRoute<T>(
     }
     const result = await run(
       getSupabaseServiceClient(),
-      auth.user.id,
+      acting.accountId,
       parsed.data,
+      auth.user.id,
     );
     return apiJson(result);
   } catch (error) {

@@ -151,11 +151,14 @@ function RenameSheet({
   teamId,
   open,
   current,
+  verified,
   onClose,
 }: {
   teamId: string;
   open: boolean;
   current: string;
+  /** X42: a Verified team's new name goes back to review. */
+  verified: boolean;
   onClose: () => void;
 }) {
   const t = useTranslations("teams");
@@ -163,11 +166,12 @@ function RenameSheet({
   const rename = useRenameTeam();
   const [name, setName] = useState(current);
 
-  const save = async () => {
+  const send = async () => {
     try {
       const res = await rename.mutateAsync({ teamId, name: name.trim() });
       if (res.status === 200) {
-        toast.success(t("renamedToast"));
+        // A renamed Verified team hears that its badge is back in review.
+        toast.success(res.message ?? t("renamedToast"));
         onClose();
       } else {
         toast.error(res.message ?? t("couldNotDo"));
@@ -175,6 +179,19 @@ function RenameSheet({
     } catch {
       toast.error(t("couldNotDo"));
     }
+  };
+
+  // X42: the badge names the business, so a new name goes back to review.
+  // Say so before it happens.
+  const save = () => {
+    if (!verified || name.trim() === current) {
+      void send();
+      return;
+    }
+    Alert.alert(t("renameVerifiedTitle"), t("renameVerifiedBody"), [
+      { text: t("cancel"), style: "cancel" },
+      { text: t("renameVerifiedConfirm"), onPress: () => void send() },
+    ]);
   };
 
   return (
@@ -487,6 +504,7 @@ export default function TeamScreen() {
                 teamId={team.id}
                 open={renaming}
                 current={team.name ?? ""}
+                verified={team.verified === true}
                 onClose={() => setRenaming(false)}
               />
               <MemberSheet

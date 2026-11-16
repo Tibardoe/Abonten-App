@@ -84,5 +84,8 @@
   "youHaveReachedTheLimit": "You have reached the limit.",
   "yourBadgeShowsOnYourEvents": "Your badge shows on your events and your profile.",
   "yourDocumentsAreRemovedAndNothing": "Your documents are removed and nothing is reviewed.",
-  "yourVerification": "your verification"
+  "yourVerification": "your verification",
+  "returnedToReview": "The name changed, so Abonten is checking the Verified badge again. It shows again once it's approved.",
+  "teamRequirementsTitle": "What a team needs",
+  "teamRequirements": "A team is verified as a registered business or organisation. Add its registration certificate and a paper showing you may act for it: a directors or partners listing, or a signed letter on its letterhead."
 }

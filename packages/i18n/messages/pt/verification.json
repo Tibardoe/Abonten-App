@@ -84,5 +84,8 @@
   "youHaveReachedTheLimit": "Atingiu o limite.",
   "yourBadgeShowsOnYourEvents": "O seu distintivo aparece nos seus eventos e no seu perfil.",
   "yourDocumentsAreRemovedAndNothing": "Os seus documentos são removidos e nada é revisto.",
-  "yourVerification": "a sua verificação"
+  "yourVerification": "a sua verificação",
+  "returnedToReview": "O nome mudou, por isso o Abonten está a verificar novamente o selo Verificado. Volta a aparecer quando for aprovado.",
+  "teamRequirementsTitle": "O que uma equipa precisa",
+  "teamRequirements": "Uma equipa é verificada como empresa ou organização registada. Adicione a certidão de registo e um documento que mostre que pode agir em nome dela: a lista de administradores ou sócios, ou uma carta assinada em papel timbrado."
 }

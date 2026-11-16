@@ -18,7 +18,7 @@ export const getVerificationProgram = withActionLocale(
     status: number;
     data: VerificationProgram;
   }> {
-    const caller = await resolveVerificationCaller();
+    const caller = await resolveVerificationCaller({ personal: true });
     if (caller.error) {
       return { status: 200, data: DISABLED_VERIFICATION_PROGRAM };
     }

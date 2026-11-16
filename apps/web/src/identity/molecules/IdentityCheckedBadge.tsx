@@ -19,10 +19,13 @@ import { IoIdCardOutline } from "react-icons/io5";
 export default function IdentityCheckedBadge({
   compact = false,
   className,
+  team = false,
 }: {
   /** Icon only, for tight rows. */
   compact?: boolean;
   className?: string;
+  /** A team: at least one of its Owners was checked. */
+  team?: boolean;
 }) {
   const tc = useTranslations("core");
   const label = identityBadgeLabel(tc);
@@ -43,7 +46,7 @@ export default function IdentityCheckedBadge({
       <PopoverContent className="w-72 text-sm" align="start">
         <p className="font-semibold">{label}</p>
         <p className="mt-1 text-muted-foreground">
-          {identityBadgeExplanation(tc)}
+          {identityBadgeExplanation(tc, team)}
         </p>
       </PopoverContent>
     </Popover>

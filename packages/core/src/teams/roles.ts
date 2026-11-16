@@ -45,6 +45,11 @@ export const TEAM_CAPABILITIES = [
   "reviews.reply",
   /** Show a place's visit QR. */
   "visit.show",
+  /**
+   * Ask Abonten to verify the team (the business check) or one of its
+   * places. Owners only: the documents speak for the business.
+   */
+  "verification.request",
 ] as const;
 export type TeamCapability = (typeof TEAM_CAPABILITIES)[number];
 

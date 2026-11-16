@@ -40,11 +40,17 @@ import {
 
 // Owner-facing Trust & Verification (PROJECT.md §30).
 //
-// Every function here takes the SERVICE-ROLE client and the caller's user id.
-// The verification tables carry no anon/authenticated privileges at all, so
-// the ownership check IS the boundary and it lives here, never in the
-// transport — same rule the money-path services follow. A place is owned via
-// place.owner_id; an "organizer" subject is always the caller themselves.
+// Every function here takes the SERVICE-ROLE client and the account the
+// request is for: the signed-in person, or a team they manage as when their
+// role covers verification.request (Owners; the transport resolves that with
+// resolveActingAccount). `personId` is who is signed in: the programme's
+// audience, the rate limits, who uploaded a document and who acted are
+// theirs, and verification_transition() re-checks that they may act for the
+// case's account. The verification tables carry no anon/authenticated
+// privileges at all, so the ownership check IS the boundary and it lives
+// here, never in the transport — same rule the money-path services follow.
+// A place is owned via place.owner_id; an "organizer" subject is always the
+// account itself (a person, or a team: the business check).
 
 const MAX_STARTS_PER_HOUR = 5;
 const MAX_UPLOAD_TICKETS_PER_HOUR = 30;
@@ -56,6 +62,8 @@ type SubjectInput = {
 
 type SubjectFacts = {
   name: string | null;
+  /** A team account, or a place a team runs. */
+  team: boolean;
   /** Eligible to have a request submitted right now. */
   eligible: boolean;
   blockedReason: string | null;
@@ -83,12 +91,14 @@ async function resolveSubject(
       return null;
     }
     if (!data || data.owner_id !== userId) return null;
+    const team = await isTeamAccount(supabase, userId);
 
     const hidden =
       data.moderation_state === "hidden" || data.moderation_state === "removed";
     if (data.status !== "published") {
       return {
         name: data.name,
+        team,
         eligible: false,
         blockedReason: tr("publishThisPlaceBeforeAskingFor"),
       };
@@ -96,18 +106,20 @@ async function resolveSubject(
     if (hidden) {
       return {
         name: data.name,
+        team,
         eligible: false,
         blockedReason: tr("thisListingIsCurrentlyHiddenBy"),
       };
     }
-    return { name: data.name, eligible: true, blockedReason: null };
+    return { name: data.name, team, eligible: true, blockedReason: null };
   }
 
-  // Organizer verification is self-service only: the subject is the caller.
+  // Organizer verification is self-service only: the subject is the
+  // account the request is for (the person, or the team: the business check).
   if (subject.subjectId !== userId) return null;
   const { data, error } = await supabase
     .from("user_info")
-    .select("id, full_name, username, status_id")
+    .select("id, full_name, username, status_id, account_kind")
     .eq("id", userId)
     .maybeSingle();
   if (error) {
@@ -115,17 +127,50 @@ async function resolveSubject(
     return null;
   }
   if (!data) return null;
+  const team = data.account_kind === "team";
   if (data.status_id !== 1) {
     return {
       name: data.full_name || data.username,
+      team,
       eligible: false,
       blockedReason: tr("yourAccountIsRestrictedSoVerification"),
     };
   }
   return {
     name: data.full_name || data.username,
+    team,
     eligible: true,
     blockedReason: null,
+  };
+}
+
+async function isTeamAccount(
+  supabase: ServiceRoleClient,
+  accountId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_info")
+    .select("account_kind")
+    .eq("id", accountId)
+    .maybeSingle();
+  if (error) logger.error(`isTeamAccount failed: ${error.message}`);
+  return data?.account_kind === "team";
+}
+
+/**
+ * A team is checked as a registered business or organisation (the plan's
+ * business check), never as an individual: the programme's organizer types
+ * without "individual" for a team's own request.
+ */
+function programFor(
+  program: VerificationProgram,
+  subjectType: VerificationSubjectType,
+  team: boolean,
+): VerificationProgram {
+  if (!team || subjectType !== "organizer") return program;
+  return {
+    ...program,
+    organizerTypes: program.organizerTypes.filter((t) => t !== "individual"),
   };
 }
 
@@ -145,7 +190,8 @@ async function loadCaseWithChildren(
       .from("verification_event")
       .select(EVENT_COLUMNS)
       .eq("case_id", row.id)
-      .order("created_at", { ascending: true }),
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true }),
   ]);
   return mapCase(
     row,
@@ -164,14 +210,15 @@ export async function getSubjectVerificationCore(
   supabase: ServiceRoleClient,
   userId: string,
   subject: SubjectInput,
+  personId: string = userId,
 ): Promise<VerificationEnvelope<SubjectVerificationView>> {
   const facts = await resolveSubject(supabase, userId, subject);
   if (!facts) {
     return { status: 404, message: tr("notFound") };
   }
 
-  const [program, labels, evidenceTypes] = await Promise.all([
-    getVerificationProgramCore(supabase, userId),
+  const [personProgram, labels, evidenceTypes] = await Promise.all([
+    getVerificationProgramCore(supabase, personId),
     evidenceTypeLabels(supabase),
     loadEvidenceTypes(supabase, subject.subjectType),
   ]);
@@ -187,6 +234,7 @@ export async function getSubjectVerificationCore(
     return { status: 500, message: tr("somethingWentWrong") };
   }
 
+  const program = programFor(personProgram, subject.subjectType, facts.team);
   const rows = (data ?? []) as CaseRow[];
   const approvedRow = rows.find((r) => r.status === "approved") ?? null;
   const openRow =
@@ -228,6 +276,7 @@ export async function getSubjectVerificationCore(
       subjectType: subject.subjectType,
       subjectId: subject.subjectId,
       subjectName: facts.name,
+      team: facts.team,
       approved,
       openCase,
       lastClosedCase,
@@ -259,6 +308,7 @@ export async function startVerificationCaseCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: StartVerificationCoreInput,
+  personId: string = userId,
 ): Promise<VerificationEnvelope<{ caseId: string }>> {
   if (isVerificationKillSwitchOn()) {
     return {
@@ -270,7 +320,11 @@ export async function startVerificationCaseCore(
   const facts = await resolveSubject(supabase, userId, input);
   if (!facts) return { status: 404, message: tr("notFound") };
 
-  const program = await getVerificationProgramCore(supabase, userId);
+  const program = programFor(
+    await getVerificationProgramCore(supabase, personId),
+    input.subjectType,
+    facts.team,
+  );
   if (!requestsEnabledFor(program, input.subjectType)) {
     return {
       status: 403,
@@ -292,12 +346,14 @@ export async function startVerificationCaseCore(
   ) {
     return {
       status: 400,
-      message: tr("thatOrganizerTypeIsnTAccepted"),
+      message: facts.team
+        ? tr("verificationTeamIsABusiness")
+        : tr("thatOrganizerTypeIsnTAccepted"),
     };
   }
 
   const allowed = await checkRateLimit(
-    `verification:start:${userId}`,
+    `verification:start:${personId}`,
     MAX_STARTS_PER_HOUR,
     3600,
   );
@@ -316,6 +372,8 @@ export async function startVerificationCaseCore(
       organizer_user_id:
         input.subjectType === "organizer" ? input.subjectId : null,
       requester_id: userId,
+      // A team's request: which member asked.
+      requested_by: personId !== userId ? personId : null,
       status: "draft",
       source: "owner",
       organizer_type: input.organizerType ?? null,
@@ -341,7 +399,7 @@ export async function startVerificationCaseCore(
 
   await supabase.from("verification_event").insert({
     case_id: data.id,
-    actor_id: userId,
+    actor_id: personId,
     actor_kind: "user",
     event_type: "created",
     to_status: "draft",
@@ -406,9 +464,18 @@ export async function updateVerificationCaseCore(
     contactPhone?: string | null;
     contactEmail?: string | null;
   },
+  // Who is signed in; the case is the account's (see the note at the top).
+  _personId: string = userId,
 ): Promise<VerificationEnvelope> {
   const owned = await ownedEditableCase(supabase, userId, input.caseId);
   if (!owned.ok) return owned.result;
+  if (
+    input.organizerType === "individual" &&
+    owned.row.subject_type === "organizer" &&
+    (await isTeamAccount(supabase, userId))
+  ) {
+    return { status: 400, message: tr("verificationTeamIsABusiness") };
+  }
 
   const patch: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -459,12 +526,13 @@ export async function requestVerificationEvidenceUploadCore(
     sizeBytes: number;
     fileName?: string | null;
   },
+  personId: string = userId,
 ): Promise<VerificationEnvelope<VerificationUploadTicket>> {
   const owned = await ownedEditableCase(supabase, userId, input.caseId);
   if (!owned.ok) return owned.result;
   const row = owned.row;
 
-  const program = await getVerificationProgramCore(supabase, userId);
+  const program = await getVerificationProgramCore(supabase, personId);
   if (input.sizeBytes > program.maxFileBytes) {
     return {
       status: 400,
@@ -497,7 +565,7 @@ export async function requestVerificationEvidenceUploadCore(
   }
 
   const allowed = await checkRateLimit(
-    `verification:upload:${userId}`,
+    `verification:upload:${personId}`,
     MAX_UPLOAD_TICKETS_PER_HOUR,
     3600,
   );
@@ -531,7 +599,7 @@ export async function requestVerificationEvidenceUploadCore(
       mime_type: input.mimeType,
       size_bytes: input.sizeBytes,
       status: "pending_upload",
-      uploaded_by: userId,
+      uploaded_by: personId,
     } as never);
   if (insErr) {
     logger.error(`verification evidence insert failed: ${insErr.message}`);
@@ -570,6 +638,7 @@ export async function removeVerificationEvidenceCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: { caseId: string; evidenceId: string },
+  personId: string = userId,
 ): Promise<VerificationEnvelope> {
   const owned = await ownedEditableCase(supabase, userId, input.caseId);
   if (!owned.ok) return owned.result;
@@ -597,7 +666,7 @@ export async function removeVerificationEvidenceCore(
 
   await supabase.from("verification_event").insert({
     case_id: input.caseId,
-    actor_id: userId,
+    actor_id: personId,
     actor_kind: "user",
     event_type: "evidence_removed",
   } as never);
@@ -614,6 +683,7 @@ export async function submitVerificationCaseCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: { caseId: string },
+  personId: string = userId,
 ): Promise<VerificationEnvelope> {
   if (isVerificationKillSwitchOn()) {
     return {
@@ -683,7 +753,7 @@ export async function submitVerificationCaseCore(
     "verification_transition",
     transitionArgs({
       caseId: row.id,
-      actorId: userId,
+      actorId: personId,
       actorKind: "user",
       action: resubmit ? "resubmit" : "submit",
       expectedStatus: row.status,
@@ -712,6 +782,7 @@ export async function withdrawVerificationCaseCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: { caseId: string },
+  personId: string = userId,
 ): Promise<VerificationEnvelope> {
   const { data, error } = await supabase
     .from("verification_case")
@@ -734,7 +805,7 @@ export async function withdrawVerificationCaseCore(
     "verification_transition",
     transitionArgs({
       caseId: row.id,
-      actorId: userId,
+      actorId: personId,
       actorKind: "user",
       action: "withdraw",
       expectedStatus: row.status,

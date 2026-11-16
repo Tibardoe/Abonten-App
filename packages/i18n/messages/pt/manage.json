@@ -603,5 +603,7 @@
   "theUpcomingEvents": "os próximos eventos",
   "continueText": "Continuar",
   "aNewCodeIsOnItsWay": "Um novo código está a caminho.",
-  "weLlTextACodeToThis": "Vamos enviar um código por SMS para este número para confirmar que está correto. O número verificado da sua conta não precisa de código."
+  "weLlTextACodeToThis": "Vamos enviar um código por SMS para este número para confirmar que está correto. O número verificado da sua conta não precisa de código.",
+  "businessVerification": "Verificação da empresa",
+  "businessVerificationIntro": "Mostre a quem compra bilhetes que o Abonten analisou o registo da empresa desta equipa e que os seus proprietários podem agir em nome dela. É opcional: a equipa pode continuar a criar eventos de qualquer forma."
 }

@@ -236,7 +236,7 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | X39 | 4 | Tables and groups | Not built | A ticket type can issue several tickets per purchase; no ticket admits more than one person | **Decided (2026-11-15, the founder approved the plan).** |
 | X40 | 4 | Venue capacity at the gate | Not built | Optional per event; warn at 90%, stop new entries at 100% | **Decided (2026-11-15, the founder approved the plan).** |
 | X41 | 3 | Leads | Not built | At least one per event; only Leads approve typed codes, void bands and settle disputes | **Decided (2026-11-15, the founder approved the plan).** |
-| X42 | 2 | A team with the business badge changes its name | Not built | It goes back to review | **Decided (2026-11-15, the founder approved the plan).** |
+| X42 | 2 | A team with the business badge changes its name | Built 2026-11-16: `return_to_review`, trigger `team_name_back_to_review` (switched off with teams) | It goes back to review | **Decided (2026-11-15, the founder approved the plan).** |
 | X43 | All | How each part is switched on | Part 1: `ticket_transfer_program_setting`, `TICKET_TRANSFERS_KILL_SWITCH` | Off at first, then staff, then everyone, each with its own kill switch | **Decided (2026-11-15, the founder approved the plan).** |
 | X44 | All | Who pays for texts | Part 1: `texts_per_sender_per_day` (20) | Abonten, within daily caps; review the cost after the first month | **Decided (2026-11-15, the founder approved the plan).** |
 | X45 | All | How long scan history is kept | Not built | In full for 180 days after the event, then totals only | **Decided (2026-11-15, the founder approved the plan).** |

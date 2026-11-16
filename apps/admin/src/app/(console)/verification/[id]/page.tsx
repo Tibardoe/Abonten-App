@@ -118,6 +118,30 @@ export default async function VerificationDetailPage({
                     c.requester.id.slice(0, 8)}
                 </Link>
               </dd>
+              {c.requester.isTeam ? (
+                <>
+                  <dt className="text-muted-foreground">Kind</dt>
+                  <dd>
+                    Team (the business check: registration and a paper showing
+                    the Owner may act for it)
+                  </dd>
+                </>
+              ) : null}
+              {c.requestedBy ? (
+                <>
+                  <dt className="text-muted-foreground">Asked by</dt>
+                  <dd>
+                    <Link
+                      href={`/users/${c.requestedBy.id}`}
+                      className="text-primary hover:underline"
+                    >
+                      {c.requestedBy.fullName ??
+                        c.requestedBy.username ??
+                        c.requestedBy.id.slice(0, 8)}
+                    </Link>
+                  </dd>
+                </>
+              ) : null}
               <dt className="text-muted-foreground">Account status</dt>
               <dd>{c.requester.accountStatus ?? "—"}</dd>
               <dt className="text-muted-foreground">Name on documents</dt>
@@ -129,7 +153,12 @@ export default async function VerificationDetailPage({
                 </>
               ) : null}
               <dt className="text-muted-foreground">Email</dt>
-              <dd>{c.contactEmail ?? c.requester.email ?? "—"}</dd>
+              <dd>
+                {c.contactEmail ??
+                  c.requester.email ??
+                  c.requestedBy?.email ??
+                  "—"}
+              </dd>
               <dt className="text-muted-foreground">Phone</dt>
               <dd>{c.contactPhone ?? "—"}</dd>
             </dl>

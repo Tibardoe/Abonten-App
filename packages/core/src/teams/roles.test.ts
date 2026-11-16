@@ -49,6 +49,8 @@ describe("team roles", () => {
       expect(teamRoleCan(role, "promotions.buy")).toBe(
         role === "owner" || role === "finance",
       );
+      // The business check speaks for the business (stage 5).
+      expect(teamRoleCan(role, "verification.request")).toBe(role === "owner");
     }
     // Door staff see scan results, never the attendee list.
     expect(teamRoleCan("door", "attendees.view")).toBe(false);

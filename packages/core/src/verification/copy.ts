@@ -59,19 +59,29 @@ export const VERIFICATION_STATUS_TONE: Record<
   revoked: "warning",
 };
 
-/** What the public badge popover says. Legal-reviewed wording lives here. */
+/**
+ * What the public badge popover says. Legal-reviewed wording lives here.
+ * A team's organizer badge is the business check ("Verified business",
+ * legal item N9 extends H3).
+ */
 export function badgeExplanation(
   t: CoreTranslator,
   subjectType: VerificationSubjectType,
+  team = false,
 ): string {
-  return t(`verification.badgeExplanation.${subjectType}`);
+  return t(
+    `verification.badgeExplanation.${team && subjectType === "organizer" ? "team" : subjectType}`,
+  );
 }
 
 export function badgeLabel(
   t: CoreTranslator,
   subjectType: VerificationSubjectType,
+  team = false,
 ): string {
-  return t(`verification.badgeLabel.${subjectType}`);
+  return t(
+    `verification.badgeLabel.${team && subjectType === "organizer" ? "team" : subjectType}`,
+  );
 }
 
 /** The "why bother" panel shown before a request is started. */

@@ -22,7 +22,7 @@ export async function POST(
       params: { caseId },
       label: "POST /verification/cases/[caseId]/evidence",
     },
-    (svc, userId, data) =>
-      requestVerificationEvidenceUploadCore(svc, userId, data),
+    (svc, userId, data, personId) =>
+      requestVerificationEvidenceUploadCore(svc, userId, data, personId),
   );
 }

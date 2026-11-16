@@ -418,12 +418,14 @@ function PersonalDashboard() {
             label={t("placeDrafts2", { placeDraftCount: placeDraftCount })}
           />
         ) : null}
-        {current ? null : (
+        {!current || can("verification.request") ? (
           <NavRow
             href="/(app)/organizer/verification"
-            label={t("organizerVerification")}
+            label={
+              current ? t("businessVerification") : t("organizerVerification")
+            }
           />
-        )}
+        ) : null}
         <NavRow href="/(app)/organizer/finance" label={t("finances")} />
       </View>
 

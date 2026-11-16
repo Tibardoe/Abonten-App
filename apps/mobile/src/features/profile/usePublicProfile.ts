@@ -29,8 +29,13 @@ export type PublicProfile = {
   average_rating: number;
   total_ratings: number;
   organizer_verified: boolean;
-  /** The person's ID and a live selfie were checked (and still valid). */
+  /**
+   * The person's ID and a live selfie were checked (and still valid); for
+   * a team, one of its Owners'.
+   */
   identity_verified: boolean;
+  /** "team" for a team account (its badges speak of the team). */
+  account_kind: string;
   status_id: number | null;
   follower_count: number;
   viewer_follows: boolean;
@@ -69,6 +74,7 @@ async function fetchProfile(username: string): Promise<PublicProfile> {
     total_ratings: num(row.total_ratings),
     organizer_verified: row.organizer_verified === true,
     identity_verified: row.identity_verified === true,
+    account_kind: str(row.account_kind) ?? "person",
     status_id: typeof row.status_id === "number" ? row.status_id : null,
     follower_count: num(row.follower_count),
     viewer_follows: row.viewer_follows === true,

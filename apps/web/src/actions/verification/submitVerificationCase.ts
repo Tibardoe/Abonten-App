@@ -27,6 +27,7 @@ export const submitVerificationCase = withActionLocale(
       caller.svc,
       caller.userId,
       parsed.data,
+      caller.personId,
     );
     if (res.status === 200) revalidateAppPath("/manage", "layout");
     return res;
