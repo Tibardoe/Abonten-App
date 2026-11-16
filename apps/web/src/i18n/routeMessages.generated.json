@@ -3416,6 +3416,7 @@
         "organizerTurnOff",
         "organizerTurnOn",
         "phonePlaceholder",
+        "refundGoesToPayer",
         "sendBlockedOrganizerOff",
         "sendBlockedRestricted",
         "sendBlockedTooManyMoves",

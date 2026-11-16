@@ -40,15 +40,20 @@ export function RefundStatusPanel({
   amount,
   currency,
   transactionId,
+  paidBySomeoneElse = false,
 }: {
   transactionStatus: string | null | undefined;
   refundRequestedAt: string | null | undefined;
   amount: number | null | undefined;
   currency: string | null | undefined;
   transactionId?: string | null;
+  /** A ticket someone sent here: its refund is the payer's, so the panel
+   * says so and offers nothing to ask for. */
+  paidBySomeoneElse?: boolean;
 }) {
   const { locale } = useLocale();
   const t = useTranslations("common");
+  const tt = useTranslations("tickets");
   const tc = useTranslations("core");
   const toast = useToast();
   const request = useRequestTicketRefund();
@@ -87,10 +92,14 @@ export function RefundStatusPanel({
           style={{ marginTop: 2 }}
         />
         <AppText variant="caption" className="flex-1">
-          {t(`refundNext.${kind}`)}
+          {paidBySomeoneElse
+            ? tt("refundGoesToPayer")
+            : t(`refundNext.${kind}`)}
         </AppText>
       </View>
-      {transactionId && (kind === "failed" || kind === "none") ? (
+      {transactionId &&
+      !paidBySomeoneElse &&
+      (kind === "failed" || kind === "none") ? (
         <Pressable
           accessibilityRole="button"
           disabled={request.isPending}

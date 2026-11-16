@@ -8209,6 +8209,7 @@
     "sendBlockedOrganizerOff": "03f83ccc",
     "sendBlockedTooManyMoves": "8429d089",
     "sendBlockedRestricted": "aa9925e3",
+    "refundGoesToPayer": "19beb8d4",
     "sentToYouNoRefund": "c0fd0ac3",
     "takeBack": "eb9bdeb4",
     "sendTicket": "39a2069e",
