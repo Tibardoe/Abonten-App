@@ -23,6 +23,7 @@ export async function GET(req: Request) {
       return getContentProgramCore(svc, userId, {
         publisherId: publisher?.accountId ?? null,
         blocked: publisher?.blocked ?? false,
+        canPromote: publisher?.canPromote ?? false,
       });
     },
   );

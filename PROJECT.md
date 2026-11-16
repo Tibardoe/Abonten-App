@@ -4432,3 +4432,14 @@ Branch `feat/team-verification-2026-11-16`, migration `20261116190000_team_accou
 - Fix: "make this a team" failed (check `verification_case_organizer_is_requester`) for anyone who had ever asked for organizer verification (one production organizer); the case now moves whole, and a badge of an individual or moved under another name goes back to review.
 - Fix: seeded evidence types were shown in English in every language; they are worded from the catalogs now.
 - **Checked**: `teams-verification.integration.test.ts` (3 tests), the updated conversion and staff tests, and the full integration suite.
+
+### 75.9 Stage 5: paying to promote a Spotlight, the promoter commission, X36 (2026-11-16)
+
+Branch `feat/team-promotions-commission-2026-11-16`, migration `20261116200000_team_accounts_promotions_commission`.
+
+- Paid Spotlight promotion as a team: `CONTENT_PROMOTION_CAPABILITIES` (`content.post` + `promotions.buy`, all: Owners); `ContentPublisherChoice.canPromote`; campaign `advertiser_id` = the team, checkout `owner_id` = the member who pays (cash only); activity `content_promotion_bought` / `_pause` / `_resume` / `_cancel`; `content_campaign` notices to `promotions.buy`.
+- Promoter commission as a team: get (`promotions.buy` or `money.view`), set (`promotions.buy`), activity `promoter_commission_changed`.
+- X36: `_reward_organizer_linked(organizer, person)` (the organizer or an active member of its team) in `_reward_evaluate_event_referral`, `_reward_evaluate_promoter_commission`, `_reward_friend_decide`, `stamp_checkout_referral`, `_reward_loyalty_evaluate`; no "share and earn" offer for a member.
+- Fix: the website's Pay small small and ticket-sending switches read the person's own account while managing as a team (the app already acted for the team); they act for it with `events.manage` now and the Promotion tab shows them to Managers.
+- Fix: staff steps in a team's activity (pause, resume, a new Owner) read "Former member"; they read "Abonten staff" now, and `team.resumed` has its own words.
+- **Checked**: `teams-promotions-commission.integration.test.ts` (3 tests), the content, reward, referral, promotion, plan and sending suites.

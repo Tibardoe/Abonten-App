@@ -2,6 +2,7 @@
 
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { parseDiscoveryInput } from "@/utils/discoveryAction";
+import { actingFor } from "@/utils/teamActor";
 import { requireTicketPlanUser } from "@/utils/ticketPlanAction";
 import { getEventTicketPlanSettingCore } from "@abonten/services/ticketPlans/eventTicketPlanCore";
 import { z } from "zod";
@@ -16,6 +17,9 @@ export const getEventTicketPlanSetting = withActionLocale(
       raw,
     );
     if (input.error) return input.error;
-    return getEventTicketPlanSettingCore(caller.userId, input.data.eventId);
+    // Managing as a team: the same rule as the app (events.manage).
+    const acting = await actingFor(caller.userId, "events.manage");
+    if (acting.error) return acting.error;
+    return getEventTicketPlanSettingCore(acting.accountId, input.data.eventId);
   },
 );

@@ -367,6 +367,15 @@ from Rebates to see the projected cost first.
   promotion lot released at once; voided if the place is no longer verified
   or changed hands.
 
+**Teams (2026-11-16).** When the organizer is a team account, an active
+member of it counts as the organizer wherever the organizer is refused
+(`organizer_linked`): `public._reward_organizer_linked(organizer, person)`
+in event referrals, the promoter commission, friend invites, the referral
+stamped at checkout and the loyalty fee rebate (decision X36; migration
+`20261116200000_team_accounts_promotions_commission`). The commission a
+team's event pays comes off the team's organizer ledger, and its Owners and
+Finance set it (team-accounts.md §4i).
+
 **Switching them on:** Reward rules → Loyalty fee rebate / Promoter
 commission / Place visits → Make live. Promoter commissions also need
 Program settings → Capture referral links.

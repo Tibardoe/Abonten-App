@@ -21,6 +21,7 @@ import type { CreateContentCampaignInput } from "@abonten/validation/contentSche
 import { cancelPromotionCheckout } from "../../checkout/checkoutCancellation";
 import { requestLocale, tr } from "../../i18n/requestLocale";
 import { checkRateLimit } from "../../security/rateLimit";
+import { recordTeamMoneyEventFor } from "../../teams/teamMoney";
 import { notifyCampaign } from "../contentNotifyCore";
 import { type Envelope, FAIL } from "../contentShared";
 import { quotePromotion, undeliverableMessage } from "./contentPromotionCore";
@@ -136,21 +137,27 @@ export const CAMPAIGN_SELECT =
 /**
  * Creates a campaign in `pending_payment` with its checkout. Returns the
  * checkout the web /checkout page or the mobile payment screen pays.
+ *
+ * `userId` is the advertiser: the person, or the team whose Spotlight it is
+ * (the transport checked the person's role covers content.post and
+ * promotions.buy). `personId` pays: the checkout is theirs, paid with their
+ * own card or wallet (Spotlight promotions are cash only).
  */
 export async function createContentCampaignCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: CreateContentCampaignInput,
+  personId: string = userId,
 ): Promise<
   Envelope<{ campaign: ContentCampaign; checkout: ContentCampaignCheckout }>
 > {
-  if (!(await checkRateLimit(`content-campaign:${userId}`, 20, 3600))) {
+  if (!(await checkRateLimit(`content-campaign:${personId}`, 20, 3600))) {
     return {
       status: 429,
       message: tr("tooManyCampaignsStartedPleaseTry"),
     };
   }
-  const quote = await quotePromotion(supabase, userId, input);
+  const quote = await quotePromotion(supabase, userId, input, personId);
   if (quote.status !== 200 || !quote.data) {
     return { status: quote.status, message: quote.message };
   }
@@ -231,7 +238,8 @@ export async function createContentCampaignCore(
     .from("content_campaign_checkout")
     .insert({
       campaign_id: campaign.id,
-      owner_id: userId,
+      // The payer (a team's member pays for the team's campaign).
+      owner_id: personId,
       // Major units in the campaign's own currency: whole francs or yen,
       // pesewas, thousandths of a dinar — never a fixed ÷100.
       unit_price: toMajor(money(estimate.budgetMinor, estimate.currency)),
@@ -258,7 +266,7 @@ export async function createContentCampaignCore(
     {
       p_campaign_id: campaign.id,
       p_to: "pending_payment",
-      p_actor_id: userId,
+      p_actor_id: personId,
       p_actor_kind: "advertiser",
       p_reason: "Checkout started",
     },
@@ -304,7 +312,7 @@ export async function getContentCampaignCheckoutCore(
   const { data, error } = await supabase
     .from("content_campaign_checkout")
     .select(
-      "*, content_campaign!content_campaign_checkout_campaign_id_fkey(post_id, content_post(caption))",
+      "*, content_campaign!content_campaign_checkout_campaign_id_fkey(post_id, advertiser_id, content_post(caption))",
     )
     .eq("id", checkoutId)
     .eq("owner_id", userId)
@@ -314,9 +322,13 @@ export async function getContentCampaignCheckoutCore(
     return FAIL;
   }
   if (!data) return { status: 404, message: tr("checkoutNotFound2") };
+  // The checkout is the payer's; the campaign may be their team's.
+  const advertiserId =
+    (data.content_campaign as { advertiser_id?: string } | null)
+      ?.advertiser_id ?? userId;
   const campaign = await getContentCampaignCore(
     supabase,
-    userId,
+    advertiserId,
     data.campaign_id,
   );
   if (campaign.status !== 200 || !campaign.data) return FAIL;
@@ -476,7 +488,11 @@ export async function getContentCampaignHistoryCore(
   };
 }
 
-/** pause / resume / cancel by the advertiser. */
+/**
+ * pause / resume / cancel by the advertiser: the person, or a member of the
+ * advertising team whose role covers content.post and promotions.buy
+ * (`personId`, checked by the transport; the history records them).
+ */
 export async function advertiserCampaignActionCore(
   supabase: ServiceRoleClient,
   userId: string,
@@ -485,6 +501,7 @@ export async function advertiserCampaignActionCore(
     action: "pause" | "resume" | "cancel";
     reason?: string;
   },
+  personId: string = userId,
 ): Promise<Envelope<ContentCampaign>> {
   const { data: campaign } = await supabase
     .from("content_campaign")
@@ -503,12 +520,19 @@ export async function advertiserCampaignActionCore(
     campaign.checkout_id &&
     (campaign.status === "pending_payment" || campaign.status === "draft")
   ) {
+    // The unpaid checkout is its payer's: for a team's campaign another
+    // Owner may have started it.
+    const { data: checkout } = await supabase
+      .from("content_campaign_checkout")
+      .select("owner_id")
+      .eq("id", campaign.checkout_id)
+      .maybeSingle();
     const res = await cancelPromotionCheckout(
       supabase,
       "content_campaign_checkout",
       "content_campaign_checkout_id",
       campaign.checkout_id,
-      userId,
+      checkout?.owner_id ?? personId,
     );
     if (res.status !== 200) return { status: res.status, message: res.message };
     const { data: after } = await supabase
@@ -520,7 +544,7 @@ export async function advertiserCampaignActionCore(
       await supabase.rpc("content_campaign_transition", {
         p_campaign_id: campaign.id,
         p_to: "cancelled",
-        p_actor_id: userId,
+        p_actor_id: personId,
         p_actor_kind: "advertiser",
         p_reason: "Order cancelled before payment",
       });
@@ -536,7 +560,7 @@ export async function advertiserCampaignActionCore(
   const { error } = await supabase.rpc("content_campaign_transition", {
     p_campaign_id: input.campaignId,
     p_to: to,
-    p_actor_id: userId,
+    p_actor_id: personId,
     p_actor_kind: "advertiser",
     p_reason: (input.reason ?? null) as unknown as string,
   });
@@ -551,6 +575,12 @@ export async function advertiserCampaignActionCore(
       advertiserId: userId,
       status: "cancelled",
       reason: tr("anyUnspentBudgetCanBeRefunded"),
+    });
+  }
+  if (personId !== userId) {
+    await recordTeamMoneyEventFor(supabase, userId, personId, {
+      kind: `content_promotion_${input.action}`,
+      campaignId: input.campaignId,
     });
   }
   return getContentCampaignCore(supabase, userId, input.campaignId);

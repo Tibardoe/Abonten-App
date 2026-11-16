@@ -110,8 +110,13 @@ export function promotionOptions(
 export async function getPromotionOptionsCore(
   supabase: ServiceRoleClient,
   userId: string,
+  personId: string = userId,
 ): Promise<Envelope<ContentPromotionOptions>> {
-  const { program } = await resolveContentAccess(supabase, userId);
+  const { program } = await resolveContentAccess(
+    supabase,
+    personId,
+    promoterChoice(userId, personId),
+  );
   if (!program.spotlightPromotions) {
     return {
       status: 403,
@@ -135,22 +140,43 @@ export type PromotionQuote = {
 };
 
 /**
+ * The account a promotion is bought for (`userId`): the person, or the team
+ * they manage as. A team's promotion is only reached through a transport
+ * that checked the person's role covers content.post and promotions.buy.
+ */
+function promoterChoice(userId: string, personId: string) {
+  return userId === personId
+    ? {}
+    : { publisherId: userId, canPromote: true as const };
+}
+
+/**
  * Checks the caller may promote this post and prices the request. Used by
- * the estimate endpoints and, again, by campaign creation.
+ * the estimate endpoints and, again, by campaign creation. `userId` is the
+ * account that owns the post (the person or their team), `personId` who is
+ * signed in (the audience is theirs, and they pay).
  */
 export async function quotePromotion(
   supabase: ServiceRoleClient,
   userId: string,
   input: EstimateContentPromotionInput,
+  personId: string = userId,
 ): Promise<Envelope<PromotionQuote>> {
-  const { program, settings } = await resolveContentAccess(supabase, userId);
+  const { program, settings } = await resolveContentAccess(
+    supabase,
+    personId,
+    promoterChoice(userId, personId),
+  );
   if (!program.spotlightPromotions || !settings) {
     return {
       status: 403,
       message: tr("promotionsArenTAvailableYet"),
     };
   }
-  if (await accountIsRestricted(supabase, userId)) {
+  if (
+    (await accountIsRestricted(supabase, userId)) ||
+    (personId !== userId && (await accountIsRestricted(supabase, personId)))
+  ) {
     return {
       status: 403,
       message: tr("yourAccountHasBeenRestricted"),
@@ -228,8 +254,9 @@ export async function estimateContentPromotionCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: EstimateContentPromotionInput,
+  personId: string = userId,
 ): Promise<Envelope<ContentPromotionEstimate>> {
-  const quote = await quotePromotion(supabase, userId, input);
+  const quote = await quotePromotion(supabase, userId, input, personId);
   if (quote.status !== 200 || !quote.data) {
     return { status: quote.status, message: quote.message };
   }

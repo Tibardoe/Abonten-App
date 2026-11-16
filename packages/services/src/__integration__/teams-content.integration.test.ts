@@ -8,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Spotlights and Stories as the team, with their own uploads; the post is the
 // team's, the team's activity names who published it; they edit, delete and
 // moderate the team's posts; nobody replies to their own team's Story; paid
-// promotion stays with personal posts.
+// promotion needs a role that also pays (teams-promotions-commission).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   deleteContentCommentCore,
@@ -243,7 +243,7 @@ describe("Spotlight and Stories as a team", () => {
     await Promise.all(users.map((u) => deleteTestUser(service, u.id)));
   });
 
-  it("opens posting as the team, with its places, but not paid promotion", async () => {
+  it("opens posting as the team, with its places; paying only with promotions.buy", async () => {
     const asTeam = await getContentProgramCore(svc, content.id, {
       publisherId: teamId,
     });

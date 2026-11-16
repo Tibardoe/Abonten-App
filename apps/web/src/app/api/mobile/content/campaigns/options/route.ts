@@ -1,4 +1,6 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { CONTENT_PROMOTION_CAPABILITIES } from "@abonten/core/teams/roles";
 import { getPromotionOptionsCore } from "@abonten/services/content/campaigns/contentPromotionCore";
 import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { z } from "zod";
@@ -13,6 +15,16 @@ export async function GET(req: Request) {
       schema: z.object({}).passthrough(),
       label: "GET /content/campaigns/options",
     },
-    ({ svc, userId }) => getPromotionOptionsCore(svc, signedIn(userId)),
+    async ({ svc, userId }) => {
+      // Managing as a team: its Owners promote its Spotlights.
+      const acting = await mobileActingFor(
+        req,
+        signedIn(userId),
+        CONTENT_PROMOTION_CAPABILITIES,
+        { all: true },
+      );
+      if (acting.error) return acting.error;
+      return getPromotionOptionsCore(svc, acting.accountId, signedIn(userId));
+    },
   );
 }

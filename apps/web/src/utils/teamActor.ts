@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/config/supabase/server";
-import type { TeamCapability } from "@abonten/core/teams/roles";
+import { type TeamCapability, teamRoleCan } from "@abonten/core/teams/roles";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import {
@@ -133,7 +133,7 @@ export async function managingTargetFor(
  */
 export async function contentPublisherFor(
   personId: string,
-): Promise<{ accountId: string; blocked: boolean }> {
+): Promise<{ accountId: string; blocked: boolean; canPromote?: boolean }> {
   const teamId = await readActingTeamId();
   if (!teamId) return { accountId: personId, blocked: false };
   const resolved = await resolveActingAccount(
@@ -143,7 +143,14 @@ export async function contentPublisherFor(
     "content.post",
   );
   return resolved.ok
-    ? { accountId: resolved.actor.accountId, blocked: false }
+    ? {
+        accountId: resolved.actor.accountId,
+        blocked: false,
+        // Owners also pay to promote the team's Spotlights (stage 5).
+        canPromote:
+          !!resolved.actor.role &&
+          teamRoleCan(resolved.actor.role, "promotions.buy"),
+      }
     : { accountId: personId, blocked: true };
 }
 

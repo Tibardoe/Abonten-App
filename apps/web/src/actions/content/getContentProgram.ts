@@ -19,6 +19,7 @@ export const getContentProgram = withActionLocale(
       return await getContentProgramCore(caller.svc, caller.userId, {
         publisherId: publisher?.accountId ?? null,
         blocked: publisher?.blocked ?? false,
+        canPromote: publisher?.canPromote ?? false,
       });
     } catch {
       return { status: 200, data: DISABLED_CONTENT_PROGRAM };

@@ -14,6 +14,10 @@ export const getEventPromoterOffer = withActionLocale(
   ): Promise<{ status: number; data?: { rateBps: number } | null }> {
     if (typeof eventId !== "string") return { status: 400 };
     const supabase = await createClient();
-    return getEventPromoterOfferCore(supabase, eventId);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    // Nobody is offered a share of an event they run (X36).
+    return getEventPromoterOfferCore(supabase, eventId, user?.id ?? null);
   },
 );

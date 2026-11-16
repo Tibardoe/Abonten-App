@@ -1,4 +1,6 @@
+import { mobileActingFor } from "@/app/api/mobile/_lib/actor";
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { CONTENT_PROMOTION_CAPABILITIES } from "@abonten/core/teams/roles";
 import {
   createContentCampaignCore,
   listOwnContentCampaignsCore,
@@ -7,14 +9,24 @@ import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { createContentCampaignSchema } from "@abonten/validation/contentSchemas";
 import { z } from "zod";
 
-// GET /api/mobile/content/campaigns — own campaigns
+/** Managing as a team: its Owners promote its Spotlights; they pay. */
+async function advertiser(req: Request, userId: string) {
+  return mobileActingFor(req, userId, CONTENT_PROMOTION_CAPABILITIES, {
+    all: true,
+  });
+}
+
+// GET /api/mobile/content/campaigns — own campaigns (or the team's)
 export async function GET(req: Request) {
   bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: z.object({}).passthrough(), label: "GET /content/campaigns" },
-    ({ svc, userId, data, ip }) =>
-      listOwnContentCampaignsCore(svc, signedIn(userId)),
+    async ({ svc, userId }) => {
+      const acting = await advertiser(req, signedIn(userId));
+      if (acting.error) return acting.error;
+      return listOwnContentCampaignsCore(svc, acting.accountId);
+    },
   );
 }
 
@@ -24,7 +36,15 @@ export async function POST(req: Request) {
   return discoveryRoute(
     req,
     { schema: createContentCampaignSchema, label: "POST /content/campaigns" },
-    ({ svc, userId, data, ip }) =>
-      createContentCampaignCore(svc, signedIn(userId), data),
+    async ({ svc, userId, data }) => {
+      const acting = await advertiser(req, signedIn(userId));
+      if (acting.error) return acting.error;
+      return createContentCampaignCore(
+        svc,
+        acting.accountId,
+        data,
+        signedIn(userId),
+      );
+    },
   );
 }

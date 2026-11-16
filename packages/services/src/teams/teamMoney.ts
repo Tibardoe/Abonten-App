@@ -94,6 +94,25 @@ export type TeamMoneyEvent =
       subjectKind: "event" | "place";
       subjectId: string;
       title: string;
+    }
+  | {
+      kind: "content_promotion_bought";
+      campaignId: string;
+      amountMinor: number;
+      currency: string | null;
+    }
+  | {
+      kind:
+        | "content_promotion_pause"
+        | "content_promotion_resume"
+        | "content_promotion_cancel";
+      campaignId: string;
+    }
+  | {
+      kind: "promoter_commission_changed";
+      eventId: string;
+      /** Null when the commission was stopped. */
+      rateBps: number | null;
     };
 
 const NOTICE_OF: Partial<Record<TeamMoneyEvent["kind"], string>> = {
@@ -144,6 +163,22 @@ export async function recordTeamMoneyEventFor(
   if (event.kind === "promotion_bought") {
     details.title = event.title;
     subject = { kind: event.subjectKind, id: event.subjectId };
+  }
+  if (event.kind === "content_promotion_bought") {
+    details.amount_minor = event.amountMinor;
+    if (event.currency) details.currency = event.currency;
+    subject = { kind: "content_campaign", id: event.campaignId };
+  }
+  if (
+    event.kind === "content_promotion_pause" ||
+    event.kind === "content_promotion_resume" ||
+    event.kind === "content_promotion_cancel"
+  ) {
+    subject = { kind: "content_campaign", id: event.campaignId };
+  }
+  if (event.kind === "promoter_commission_changed") {
+    if (event.rateBps !== null) details.rate_bps = event.rateBps;
+    subject = { kind: "event", id: event.eventId };
   }
   const { error } = await svc.from("team_activity").insert({
     team_id: teamId,

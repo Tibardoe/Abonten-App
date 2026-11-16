@@ -96,6 +96,16 @@ export function teamRoleCapabilities(role: TeamRole): TeamCapability[] {
 }
 
 /**
+ * Paying to promote a team's Spotlight (stage 5): posting as the team and
+ * paying for it, both (Owners). The member pays with their own card; the
+ * campaign is the team's.
+ */
+export const CONTENT_PROMOTION_CAPABILITIES = [
+  "content.post",
+  "promotions.buy",
+] as const satisfies readonly TeamCapability[];
+
+/**
  * Roles whose members must pass the ID check (X5): the ones that can move
  * money.
  */

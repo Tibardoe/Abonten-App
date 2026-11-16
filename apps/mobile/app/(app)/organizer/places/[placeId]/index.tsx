@@ -259,7 +259,6 @@ function PlaceInsightsScreen() {
 // (verification.request, stage 5).
 function TeamPlacePanel() {
   const t = useTranslations("manage");
-  const tt = useTranslations("teams");
   const { placeId, name } = useLocalSearchParams<{
     placeId: string;
     name?: string;
@@ -325,8 +324,6 @@ function TeamPlacePanel() {
           label={t("viewPublicPlacePage")}
         />
       </View>
-
-      <AppText variant="meta">{tt("laterAsTeam")}</AppText>
     </ScrollView>
   );
 }

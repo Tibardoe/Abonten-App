@@ -48,17 +48,27 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 // Managing as a team: what the role covers (details for Managers, the
-// attendee list or check-in for those at the door, featuring for Owners and
-// Finance, sales and earnings for Owners and Finance).
+// attendee list or check-in for those at the door, featuring and the
+// promoter commission for Owners and Finance, the Pay small small and
+// sending switches for Managers, sales and earnings for Owners and Finance).
 function tabsFor(role: TeamRoleCode | null): Tab[] {
   if (!role) return ["details", "promotion", "insights"];
   const tabs: Tab[] = [];
   if (teamRoleCan(role, "events.manage")) tabs.push("details");
   if (teamRoleCan(role, "attendees.view")) tabs.push("attendees");
   else if (teamRoleCan(role, "checkin.scan")) tabs.push("checkin");
-  if (teamRoleCan(role, "promotions.buy")) tabs.push("promotion");
+  if (teamRoleCan(role, "promotions.buy") || teamRoleCan(role, "events.manage"))
+    tabs.push("promotion");
   if (teamRoleCan(role, "money.view")) tabs.push("insights");
   return tabs;
+}
+
+/** Whether the person may use this part of the event as the team. */
+function covers(
+  role: TeamRoleCode | null,
+  capability: "promotions.buy" | "events.manage",
+) {
+  return !role || teamRoleCan(role, capability);
 }
 
 // Top-level management view for a single event, tabbed across Details,
@@ -130,17 +140,25 @@ export default function ManageEventView({
 
         {activeTab === "promotion" && (
           <>
-            <ManageEventPromotionSection
-              eventId={event.id}
-              tiers={promotionTiers}
-              currentPromotion={currentPromotion}
-              eventStatus={event.status}
-              derivedStatus={derivedStatus}
-              soldOut={soldOut}
-            />
-            <PromoterCommissionCard eventId={event.id} />
-            <PaySmallSmallCard eventId={event.id} />
-            <TicketTransferOrganizerCard eventId={event.id} />
+            {covers(teamRole, "promotions.buy") ? (
+              <>
+                <ManageEventPromotionSection
+                  eventId={event.id}
+                  tiers={promotionTiers}
+                  currentPromotion={currentPromotion}
+                  eventStatus={event.status}
+                  derivedStatus={derivedStatus}
+                  soldOut={soldOut}
+                />
+                <PromoterCommissionCard eventId={event.id} />
+              </>
+            ) : null}
+            {covers(teamRole, "events.manage") ? (
+              <>
+                <PaySmallSmallCard eventId={event.id} />
+                <TicketTransferOrganizerCard eventId={event.id} />
+              </>
+            ) : null}
           </>
         )}
 

@@ -1,6 +1,6 @@
 {
   "accept": "Accepter",
-  "activity": "{action, select, team_created {{actor} a créé l'équipe} team_renamed {{actor} a renommé l'équipe} member_invited {{actor} a invité quelqu'un} member_joined {{actor} a rejoint l'équipe} member_declined {{actor} a refusé une invitation} member_invite_cancelled {{actor} a retiré une invitation} member_invite_expired {Une invitation a expiré} member_role_changed {{actor} a changé le rôle de {subject}} member_removed {{actor} a retiré {subject}} member_left {{actor} est parti} member_account_closed {{subject} est parti à la fermeture de son compte} team_frozen {L'équipe a été mise en pause} payout_account_added {{actor} a ajouté un compte de versement} payout_account_removed {{actor} a retiré un compte de versement} payout_account_default {{actor} a changé le compte de versement principal} payout_requested {{actor} a demandé un versement} event_cancelled {{actor} a annulé un événement} promotion_bought {{actor} a payé pour mettre en avant un événement ou un lieu} content_published {{actor} a publié dans Spotlight ou les Stories} team_converted {{actor} a fait de son compte organisateur cette équipe} other {{actor} a fait un changement}}",
+  "activity": "{action, select, team_created {{actor} a créé l'équipe} team_renamed {{actor} a renommé l'équipe} member_invited {{actor} a invité quelqu'un} member_joined {{actor} a rejoint l'équipe} member_declined {{actor} a refusé une invitation} member_invite_cancelled {{actor} a retiré une invitation} member_invite_expired {Une invitation a expiré} member_role_changed {{actor} a changé le rôle de {subject}} member_removed {{actor} a retiré {subject}} member_left {{actor} est parti} member_account_closed {{subject} est parti à la fermeture de son compte} team_frozen {L'équipe a été mise en pause} payout_account_added {{actor} a ajouté un compte de versement} payout_account_removed {{actor} a retiré un compte de versement} payout_account_default {{actor} a changé le compte de versement principal} payout_requested {{actor} a demandé un versement} event_cancelled {{actor} a annulé un événement} promotion_bought {{actor} a payé pour mettre en avant un événement ou un lieu} content_published {{actor} a publié dans Spotlight ou les Stories} team_converted {{actor} a fait de son compte organisateur cette équipe} team_resumed {L'équipe a repris} content_promotion_bought {{actor} a payé pour promouvoir un Spotlight} content_promotion_pause {{actor} a mis en pause la promotion d'un Spotlight} content_promotion_resume {{actor} a relancé la promotion d'un Spotlight} content_promotion_cancel {{actor} a annulé la promotion d'un Spotlight} promoter_commission_changed {{actor} a modifié ce qu'un événement verse aux promoteurs} other {{actor} a fait un changement}}",
   "activityTitle": "Activité",
   "byPhone": "Numéro de téléphone",
   "byUsername": "Nom d'utilisateur",
@@ -34,7 +34,6 @@
   "invitedByUntil": "Invitation de {name} · ouverte jusqu'au {date}",
   "joinedToast": "Vous avez rejoint l'équipe.",
   "lastOwnerHint": "Vous êtes le seul propriétaire. Nommez un autre membre propriétaire avant de partir.",
-  "laterAsTeam": "Payer pour promouvoir un Spotlight en équipe arrive bientôt.",
   "leave": "Quitter l'équipe",
   "leaveConfirmBody": "Vous perdrez l'accès à l'équipe. Un propriétaire pourra vous inviter de nouveau.",
   "leaveConfirmTitle": "Quitter {team} ?",
@@ -98,5 +97,6 @@
   "renameVerifiedTitle": "Changer le nom d'une équipe vérifiée ?",
   "renameVerifiedBody": "Le badge Vérifié désigne l'entreprise : il est retiré et repasse en examen jusqu'à ce qu'Abonten vérifie le nouveau nom. Abonten peut demander des documents au nouveau nom.",
   "renameVerifiedConfirm": "Changer le nom",
-  "convertedBadgeInReview": "Votre badge Vérifié a été transféré à l'équipe et repasse en examen : Abonten vérifie l'équipe en tant qu'entreprise avant qu'il ne réapparaisse."
+  "convertedBadgeInReview": "Votre badge Vérifié a été transféré à l'équipe et repasse en examen : Abonten vérifie l'équipe en tant qu'entreprise avant qu'il ne réapparaisse.",
+  "staffActor": "L'équipe Abonten"
 }

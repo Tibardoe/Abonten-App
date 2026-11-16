@@ -168,7 +168,6 @@ function NavRow({ href, label }: { href: string; label: string }) {
 function PersonalDashboard() {
   const { locale } = useLocale();
   const t = useTranslations("manage");
-  const tt = useTranslations("teams");
   // Managing as a team: the figures are the team's; the rows below follow
   // the person's role there.
   const { current, can } = useActingTeams();
@@ -428,19 +427,15 @@ function PersonalDashboard() {
         ) : null}
         <NavRow href="/(app)/organizer/finance" label={t("finances")} />
       </View>
-
-      {current ? <AppText variant="meta">{tt("laterAsTeam")}</AppText> : null}
     </ScrollView>
   );
 }
 
-// Managing as a team (docs/architecture/team-accounts.md, stage 2): the
-// team's events and places, as far as the person's role covers them. The
-// sales figures, payouts and verification stay on the person's own account
-// until the team's money arrives (stage 3).
+// Managing as a team (docs/architecture/team-accounts.md): the team's events
+// and places, as far as the person's role covers them, for roles without the
+// team's money (Owners and Finance get the dashboard).
 function TeamHub() {
   const t = useTranslations("manage");
-  const tt = useTranslations("teams");
   const { can } = useActingTeams();
   const canEvents = can("events.manage");
   const canPlaces = can("places.manage");
@@ -499,8 +494,6 @@ function TeamHub() {
           />
         ) : null}
       </View>
-
-      <AppText variant="meta">{tt("laterAsTeam")}</AppText>
     </ScrollView>
   );
 }

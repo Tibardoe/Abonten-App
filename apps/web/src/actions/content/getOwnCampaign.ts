@@ -6,6 +6,8 @@ import {
   parseContentInput,
   requireContentUser,
 } from "@/utils/contentAction";
+import { actingFor } from "@/utils/teamActor";
+import { CONTENT_PROMOTION_CAPABILITIES } from "@abonten/core/teams/roles";
 import {
   getContentCampaignCore,
   getContentCampaignHistoryCore,
@@ -21,9 +23,16 @@ export const getOwnCampaign = withActionLocale(async function getOwnCampaign(
   if (caller.error) return caller.error;
   const parsed = parseContentInput(contentCampaignIdSchema, input);
   if (parsed.error) return parsed.error;
+  // Managing as a team: its Owners promote its Spotlights; they pay.
+  const acting = await actingFor(
+    caller.userId,
+    CONTENT_PROMOTION_CAPABILITIES,
+    { all: true },
+  );
+  if (acting.error) return acting.error;
   const campaign = await getContentCampaignCore(
     caller.svc,
-    caller.userId,
+    acting.accountId,
     parsed.data.campaignId,
   );
   if (campaign.status !== 200 || !campaign.data) {

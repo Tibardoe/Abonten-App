@@ -234,7 +234,11 @@ function ActivityRow({ entry }: { entry: TeamActivityEntry }) {
         {t("activity", {
           // "member.joined" -> "member_joined": a select key in the catalog.
           action: entry.action.replace(/\./g, "_"),
-          actor: nameOf(entry.actor),
+          // A staff step (pause, resume, a new Owner) has no member actor.
+          actor:
+            entry.details.by === "staff"
+              ? t("staffActor")
+              : nameOf(entry.actor),
           subject: nameOf(entry.subject),
         })}
       </AppText>

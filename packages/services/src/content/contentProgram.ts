@@ -105,6 +105,11 @@ export type ContentAccess = {
 export type ContentPublisherChoice = {
   publisherId?: string | null;
   blocked?: boolean;
+  /**
+   * Posting as a team, the person's role also covers promotions.buy
+   * (Owners): they may pay to promote the team's Spotlights.
+   */
+  canPromote?: boolean;
 };
 
 /**
@@ -194,14 +199,16 @@ export async function resolveContentAccess(
         spotlight && row.spotlight_posting_enabled && canPublish,
       spotlightComments: spotlight && row.spotlight_comments_enabled,
       spotlightDownloads: spotlight && row.spotlight_downloads_enabled,
-      // Paid promotion is bought by the person for their own posts; as a
-      // team it comes later (stage 4c posts as a team, it does not buy).
+      // Paid promotion: the person for their own posts, or for a team's
+      // posts when their role covers posting and paying (content.post and
+      // promotions.buy: Owners). They pay with their own card; the campaign
+      // is the team's.
       spotlightPromotions:
         spotlight &&
         row.spotlight_promotions_enabled &&
         !isSpotlightPromotionsKillSwitchOn() &&
         canPublish &&
-        publisherId === userId,
+        (publisherId === userId || publisher.canPromote === true),
       nearby: spotlight && row.nearby_enabled,
       trending: spotlight && row.trending_enabled,
       happeningSoon: spotlight && row.happening_soon_enabled,

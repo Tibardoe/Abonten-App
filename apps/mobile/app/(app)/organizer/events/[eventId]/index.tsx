@@ -572,7 +572,7 @@ function EventInsightsScreen() {
         </View>
       ) : null}
 
-      {eventId && !current ? (
+      {eventId && (!current || can("promotions.buy")) ? (
         <PromoterCommissionSection eventId={eventId} />
       ) : null}
 
@@ -654,9 +654,9 @@ function EventInsightsScreen() {
   );
 }
 
-// Managing as a team (docs/architecture/team-accounts.md, stage 2): what the
-// role covers for this event. Sales figures, promotion and reviews stay with
-// the person's own events until the team's money and messages arrive.
+// Managing as a team (docs/architecture/team-accounts.md): what the role
+// covers for this event, for roles without the team's money (Owners and
+// Finance get the full panel above).
 function TeamEventPanel() {
   const t = useTranslations("manage");
   const tt = useTranslations("teams");
@@ -717,8 +717,6 @@ function TeamEventPanel() {
           <EventTicketTransfersSection eventId={id} />
         </>
       ) : null}
-
-      <AppText variant="meta">{tt("laterAsTeam")}</AppText>
     </ScrollView>
   );
 }
