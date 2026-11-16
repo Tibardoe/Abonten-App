@@ -226,8 +226,17 @@ export default function VerificationSection({
           submittedAt={openCase.submittedAt}
         />
 
+        {openCase.returnedToReview ? (
+          <p className="rounded-xl border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+            {t("returnedToReview")}
+          </p>
+        ) : null}
+
         {editable ? (
           <>
+            {view.team && subjectType === "organizer" ? (
+              <TeamRequirements />
+            ) : null}
             {subjectType === "organizer" ? (
               <OrganizerTypePicker
                 value={organizerType}
@@ -362,6 +371,9 @@ export default function VerificationSection({
             subjectType={subjectType}
             evidenceTypes={evidenceTypes}
           />
+          {view.team && subjectType === "organizer" ? (
+            <TeamRequirements />
+          ) : null}
           {subjectType === "organizer" ? (
             <OrganizerTypePicker
               value={organizerType}
@@ -379,6 +391,17 @@ export default function VerificationSection({
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+/** The business check for a team (stage 5): what it needs. */
+function TeamRequirements() {
+  const t = useTranslations("verification");
+  return (
+    <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
+      <p className="font-semibold">{t("teamRequirementsTitle")}</p>
+      <p className="text-muted-foreground">{t("teamRequirements")}</p>
     </div>
   );
 }

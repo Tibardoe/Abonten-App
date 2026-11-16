@@ -6,6 +6,8 @@ export const dynamic = "force-dynamic";
 
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { createClient } from "@/config/supabase/server";
+import TeamRoleBlockedNotice from "@/teams/atoms/TeamRoleBlockedNotice";
+import { actingFor } from "@/utils/teamActor";
 import VerificationSection from "@/verification/organisms/VerificationSection";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -18,8 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Organizer verification (PROJECT.md §30). There is no organizer entity in
 // this schema — an organizer is a user_info row that has created events —
-// so the subject here is always the signed-in user themselves, which the
-// service enforces rather than trusting the page.
+// so the subject here is always the account being managed: the signed-in
+// user, or the team they manage as when their role covers
+// verification.request (Owners: the business check). The service enforces
+// it rather than trusting the page.
 //
 // Verification is optional: nothing about creating or publishing an event
 // depends on it, by design.
@@ -39,9 +43,14 @@ export default async function OrganizerVerificationPage() {
     );
   }
 
+  const acting = await actingFor(user.id, "verification.request");
+  if (acting.error) return <TeamRoleBlockedNotice />;
+  const subjectId = acting.accountId;
+  const team = subjectId !== user.id;
+
   const res = await getSubjectVerification({
     subjectType: "organizer",
-    subjectId: user.id,
+    subjectId,
   });
   const verification = res.status === 200 ? (res.data ?? null) : null;
 
@@ -54,15 +63,19 @@ export default async function OrganizerVerificationPage() {
         >
           {t("backToDashboard")}
         </Link>
-        <h1 className="text-xl font-bold">{t("organizerVerification")}</h1>
+        <h1 className="text-xl font-bold">
+          {team ? t("businessVerification") : t("organizerVerification")}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          {t("showTicketBuyersThatAbontenHas")}
+          {team
+            ? t("businessVerificationIntro")
+            : t("showTicketBuyersThatAbontenHas")}
         </p>
       </div>
 
       <VerificationSection
         subjectType="organizer"
-        subjectId={user.id}
+        subjectId={subjectId}
         initial={verification}
       />
     </div>

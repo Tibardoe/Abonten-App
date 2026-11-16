@@ -4,8 +4,8 @@ purpose: How Abonten verifies places and event organizers — the data model, th
 audience: Engineering, operations, security reviewers
 scope: verification_case and its companion tables, the verification-evidence bucket, the admin review module, the owner-facing flows on web and mobile, and the relationship to place claims
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-24
+version: 1.2
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -51,6 +51,8 @@ draft ──submit──▶ pending_review ──approve──▶ approved ─�
   │                  │  └──resubmit── needs_info ◀──request_info──┘
   │                  ├──reject──▶ rejected        needs_info ──reject──▶ rejected
   └──withdraw──▶ withdrawn ◀──withdraw── pending_review | needs_info
+
+approved ──return_to_review (system)──▶ pending_review    a Verified team renamed (X42)
 ```
 
 "Not started" is the absence of a case. `rejected` and `revoked` are deliberately different: one is a request that was never granted, the other a badge taken away after it was live.
@@ -102,12 +104,18 @@ A reviewer who judges a claim's attached documents good enough can tick "Also ma
 
 Existing verified places were backfilled as approved cases with `source = 'legacy_claim'` when the migration ran.
 
+## 8a. Teams (2026-11-16)
+
+A team account (docs: [team-accounts.md](team-accounts.md) §4h) asks for verification itself: the case's subject and requester are the team, `requested_by` the Owner who asked, and only the team's Owners (`verification.request`) may act on it; `verification_transition()` checks that for every user action. The team's organizer request is **the business check**: organizer type business or organisation only, with a `business_registration` and a `director_listing` or `authorisation_letter` at submit (`verification_team_requirements`). A paused team is neither submitted nor approved. On a team the organizer badge reads "Verified business", and "ID checked" means at least one Owner has a live check (`public.account_id_checked`, the computed column `user_info.id_checked`). Wording: legal item N9. A Verified team that changes its name goes back to review (X42, `return_to_review`), and so does an organizer badge moved to a team under another name or one granted to an individual. Seeded evidence types are worded from the catalogs (`core` `verification.evidenceType.*`) in the reader's language; a type added later as a row shows its own words.
+
 ## 9. What happens automatically
 
 | Event | Behaviour |
 |---|---|
 | A verified place changes owner | System revoke (`owner_changed`); any open case is withdrawn. The new owner starts fresh. |
 | A verified organizer is banned | System revoke (`account_banned`). |
+| A Verified team changes its name | Back to review (`return_to_review`, `name_changed`); the badge comes off until approved; the Owners are told. |
+| "Make this a team" moves an organizer badge under another name, or one granted to an individual | Back to review (`team_conversion`). |
 | An organizer is suspended | The badge is hidden while the account is not active; the case is untouched. |
 | A verified place's name, address, location or category is edited | A `subject_changed` event is logged for the reviewer to see. No automatic action — decision **V4**. |
 | A place is archived or unpublished | The verification is kept; the badge is simply not visible, and a new request cannot be submitted. |
@@ -137,7 +145,7 @@ Failures log the case id and subject id only — never a file name, a note, or d
 
 | Layer | Path |
 |---|---|
-| Migration | `supabase/migrations/20260912120000_trust_verification.sql` |
+| Migration | `supabase/migrations/20260912120000_trust_verification.sql`; teams `20261116190000_team_accounts_verification.sql` |
 | State machine and copy | `packages/core/src/verification/` |
 | Types | `packages/types/src/verificationType.ts` |
 | Schemas | `packages/validation/src/verificationSchemas.ts` |
@@ -148,4 +156,4 @@ Failures log the case id and subject id only — never a file name, a note, or d
 | Web UI | `apps/web/src/verification/` |
 | Mobile UI | `apps/mobile/src/components/verification/`, `apps/mobile/src/features/verification/` |
 | Admin UI | `apps/admin/src/app/(console)/verification/` |
-| Tests | `packages/core/src/verification/stateMachine.test.ts`, `packages/services/src/verification/*.test.ts`, `packages/services/src/__integration__/verification.integration.test.ts` |
+| Tests | `packages/core/src/verification/stateMachine.test.ts`, `packages/services/src/verification/*.test.ts`, `packages/services/src/__integration__/verification.integration.test.ts`, `teams-verification.integration.test.ts` |

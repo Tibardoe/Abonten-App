@@ -8,7 +8,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // the conversations about their listings, organizer money, payout accounts
 // and organizer badge move to a new team that takes their handle, name and
 // photo; the person is its Owner with a new, generated handle; nothing moves
-// while a payout is being processed or a verification request is open.
+// while a payout is being processed or a verification request is open. An
+// organizer badge moved under another name goes back to review (X42).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   convertAccountToTeamCore,
@@ -140,6 +141,29 @@ describe("making an organizer account a team", () => {
         organizer_verified_at: new Date().toISOString(),
       })
       .eq("id", ama.id);
+    // The badge came from an approved request. Before 20261116190000 any
+    // organizer case made the conversion fail (the case moved to the team
+    // while its requester stayed the person).
+    const { data: badgeCase, error: caseError } = await service
+      .from("verification_case")
+      .insert({
+        subject_type: "organizer",
+        organizer_user_id: ama.id,
+        requester_id: ama.id,
+        status: "approved",
+        organizer_type: "business",
+        source: "owner",
+        submitted_at: new Date().toISOString(),
+        reviewed_at: new Date().toISOString(),
+      } as never)
+      .select("id")
+      .single();
+    expect(caseError).toBeNull();
+    const caseId = (badgeCase as { id: string }).id;
+    await service
+      .from("user_info")
+      .update({ organizer_verification_case_id: caseId })
+      .eq("id", ama.id);
     await service.from("follow").insert({
       follower_id: fan.id,
       target_kind: "organizer",
@@ -199,6 +223,20 @@ describe("making an organizer account a team", () => {
     const teamId = res.data.team.id;
     teamIds.push(teamId);
     expect(res.data).toMatchObject({ events: 1, places: 1, followers: 1 });
+    // X42: the badge names the business and the team took another name, so
+    // it is back in review; the case moved whole to the team.
+    expect(res.data.badgeBackInReview).toBe(true);
+    const { data: moved } = await service
+      .from("verification_case")
+      .select("organizer_user_id, requester_id, requested_by, status")
+      .eq("id", caseId)
+      .single();
+    expect(moved).toEqual({
+      organizer_user_id: teamId,
+      requester_id: teamId,
+      requested_by: ama.id,
+      status: "pending_review",
+    });
 
     const { data: team } = await service
       .from("user_info")
@@ -213,7 +251,7 @@ describe("making an organizer account a team", () => {
       bio: "Rooftop nights in Osu.",
       avatar_public_id: `user_profiles/${ama.id}/avatar`,
       account_kind: "team",
-      organizer_verified: true,
+      organizer_verified: false,
     });
     const { data: me } = await service
       .from("user_info")

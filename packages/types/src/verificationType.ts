@@ -38,6 +38,7 @@ export type VerificationEvidenceTypeKey =
   | "lease_or_tenancy"
   | "utility_bill"
   | "authorisation_letter"
+  | "director_listing"
   | "event_permit"
   | "venue_confirmation"
   | "past_event_material"
@@ -110,6 +111,11 @@ export type VerificationCaseSummary = {
   updatedAt: string;
   evidence: VerificationEvidenceSummary[];
   history: VerificationHistoryEntry[];
+  /**
+   * An approved case sent back to review by the system: a Verified team
+   * changed its name, or its badge moved to a team (decision X42).
+   */
+  returnedToReview: boolean;
 };
 
 /** Everything a subject's verification screen needs in one round trip. */
@@ -117,6 +123,12 @@ export type SubjectVerificationView = {
   subjectType: VerificationSubjectType;
   subjectId: string;
   subjectName: string | null;
+  /**
+   * The subject is a team account, or a place a team runs. A team's own
+   * request is the business check: a registered business or organisation,
+   * its registration and a paper showing the Owner may act for it.
+   */
+  team: boolean;
   /** The live approval, if any. */
   approved: VerificationCaseSummary | null;
   /** The case the owner can still act on (draft / pending / needs_info). */

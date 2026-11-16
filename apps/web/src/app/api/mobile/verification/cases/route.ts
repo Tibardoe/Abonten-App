@@ -12,6 +12,7 @@ export async function POST(req: Request) {
   return verificationRoute(
     req,
     { schema: startVerificationSchema, label: "POST /verification/cases" },
-    (svc, userId, data) => startVerificationCaseCore(svc, userId, data),
+    (svc, userId, data, personId) =>
+      startVerificationCaseCore(svc, userId, data, personId),
   );
 }

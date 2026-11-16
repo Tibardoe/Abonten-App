@@ -316,7 +316,7 @@ export async function getVerificationCaseDetailCore(
       .order("created_at", { ascending: true }),
     supabase
       .from("user_info")
-      .select("id, username, full_name, status_id")
+      .select("id, username, full_name, status_id, account_kind")
       .eq("id", row.requester_id)
       .maybeSingle(),
     supabase
@@ -332,12 +332,32 @@ export async function getVerificationCaseDetailCore(
 
   const subject = await loadSubjectDetail(supabase, row, subjectId);
 
+  // A team's request: the member who asked. A team account's own email is
+  // a placeholder on the reserved .invalid domain, so the contact is theirs.
+  const requesterIsTeam = requester?.account_kind === "team";
+  const { data: asker } = row.requested_by
+    ? await supabase
+        .from("user_info")
+        .select("id, username, full_name")
+        .eq("id", row.requested_by)
+        .maybeSingle()
+    : { data: null };
+
   let requesterEmail: string | null = null;
+  let askerEmail: string | null = null;
   if (canPii) {
-    const { data: authUser } = await supabase.auth.admin.getUserById(
-      row.requester_id,
-    );
-    requesterEmail = authUser?.user?.email ?? null;
+    if (!requesterIsTeam) {
+      const { data: authUser } = await supabase.auth.admin.getUserById(
+        row.requester_id,
+      );
+      requesterEmail = authUser?.user?.email ?? null;
+    }
+    if (asker) {
+      const { data: authUser } = await supabase.auth.admin.getUserById(
+        asker.id,
+      );
+      askerEmail = authUser?.user?.email ?? null;
+    }
   }
 
   const actorNames = await resolveNames(supabase, [
@@ -430,7 +450,16 @@ export async function getVerificationCaseDetailCore(
         fullName: requester?.full_name ?? null,
         email: requesterEmail,
         accountStatus: accountStatusName(requester?.status_id ?? null),
+        isTeam: requesterIsTeam,
       },
+      requestedBy: asker
+        ? {
+            id: asker.id,
+            username: asker.username,
+            fullName: asker.full_name,
+            email: askerEmail,
+          }
+        : null,
       evidence,
       canOpenEvidence,
       timeline,

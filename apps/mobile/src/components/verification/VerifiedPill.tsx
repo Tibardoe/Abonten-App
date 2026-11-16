@@ -14,9 +14,12 @@ import { Alert, Pressable, View } from "react-native";
 export function VerifiedPill({
   subjectType,
   variant = "inline",
+  team = false,
 }: {
   subjectType: VerificationSubjectType;
   variant?: "overlay" | "inline";
+  /** The organizer is a team: the badge is the business check. */
+  team?: boolean;
 }) {
   const t = useTranslations("verification");
   const tc = useTranslations("core");
@@ -26,13 +29,13 @@ export function VerifiedPill({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={t("whatThisMeans", {
-        item: badgeLabel(tc, subjectType),
+        item: badgeLabel(tc, subjectType, team),
       })}
       hitSlop={6}
       onPress={() =>
         Alert.alert(
-          badgeLabel(tc, subjectType),
-          badgeExplanation(tc, subjectType),
+          badgeLabel(tc, subjectType, team),
+          badgeExplanation(tc, subjectType, team),
           [{ text: t("gotIt") }],
         )
       }

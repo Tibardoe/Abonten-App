@@ -556,7 +556,9 @@
     "youHaveStartedALotOfConversations": "You have started a lot of conversations recently. Please try again later.",
     "yourAccountHasBeenRestricted": "Your account has been restricted.",
     "yourCreditBalanceIsNegative": "Your credit balance is negative",
-    "yourCreditIsOnHold": "Your credit is on hold"
+    "yourCreditIsOnHold": "Your credit is on hold",
+    "verificationNotAllowed": "verification_not_allowed",
+    "verificationTeamRequirements": "verification_team_requirements"
   },
   "defaultPaymentMethodUpdated": "Default payment method updated",
   "defaultPayoutAccountUpdated": "Default payout account updated",
@@ -1393,7 +1395,6 @@
   "teamNothingToMove": "You don't run any events or places yet. Make a new team instead.",
   "teamPayoutInProgress": "A payout is on its way to you. Try again once it has been paid.",
   "teamVerificationOpen": "Finish or withdraw your verification request first, then try again.",
-  "teamVerifiedNameLocked": "A Verified team can't change its name yet.",
   "teamAccountNotFound": "We couldn't find an account with that username.",
   "teamPhoneInvalid": "Enter a valid phone number.",
   "teamCannotText": "We can't text that number yet. Invite them by username.",
@@ -1401,5 +1402,8 @@
   "teamSmsInvite": "{team} invited you to help run it on Abonten. Sign up with this number to accept: {link}",
   "teamRoleCannot": "Your role in this team doesn't cover this.",
   "teamPayoutSignInAgain": "For your security, sign in again before you change the team's payout account, then come back here.",
-  "teamPayoutAccountTooNew": "This payout account was added less than 48 hours ago. You can ask for a payout to it once 48 hours have passed."
+  "teamPayoutAccountTooNew": "This payout account was added less than 48 hours ago. You can ask for a payout to it once 48 hours have passed.",
+  "verificationTeamRequirements": "A team is verified as a registered business or organisation, with its registration certificate and a paper showing you may act for it (a directors or partners listing, or a signed letter).",
+  "verificationTeamIsABusiness": "A team is verified as a registered business or organisation, not as an individual.",
+  "teamRenamedBadgeInReview": "Name saved. The Verified badge is back in review until Abonten checks the new name."
 }

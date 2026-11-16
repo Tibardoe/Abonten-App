@@ -23,6 +23,11 @@ export const getSubjectVerification = withActionLocale(
     if (caller.error) return caller.error;
     const parsed = parseVerificationInput(verificationSubjectSchema, input);
     if (parsed.error) return parsed.error;
-    return getSubjectVerificationCore(caller.svc, caller.userId, parsed.data);
+    return getSubjectVerificationCore(
+      caller.svc,
+      caller.userId,
+      parsed.data,
+      caller.personId,
+    );
   },
 );

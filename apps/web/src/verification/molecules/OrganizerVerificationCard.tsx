@@ -2,6 +2,7 @@
 
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { supabase } from "@/config/supabase/client";
+import { useActingContext } from "@/teams/useActingContext";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   ownerStatusCopy,
@@ -27,20 +28,29 @@ export default function OrganizerVerificationCard() {
 
   const [view, setView] = useState<SubjectVerificationView | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // Managing as a team: the team's own request (its Owners). Other roles
+  // see nothing here.
+  const acting = useActingContext();
+  const { can, isPending } = acting;
+  const teamId = acting.current?.id ?? null;
+  const allowed = can("verification.request");
 
   useEffect(() => {
     let cancelled = false;
+    if (isPending) return;
+    setView(null);
+    setLoaded(false);
     (async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) {
+      if (!user || !allowed) {
         if (!cancelled) setLoaded(true);
         return;
       }
       const res = await getSubjectVerification({
         subjectType: "organizer",
-        subjectId: user.id,
+        subjectId: teamId ?? user.id,
       }).catch(actionUnreachable);
       if (!cancelled) {
         if (res.status === 200 && res.data) setView(res.data);
@@ -50,7 +60,7 @@ export default function OrganizerVerificationCard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [teamId, allowed, isPending]);
 
   if (!loaded || !view) return null;
 

@@ -556,7 +556,9 @@
     "youHaveStartedALotOfConversations": "Iniciou muitas conversas recentemente. Tente novamente mais tarde.",
     "yourAccountHasBeenRestricted": "A sua conta foi restringida.",
     "yourCreditBalanceIsNegative": "O seu saldo de crédito é negativo",
-    "yourCreditIsOnHold": "O seu crédito está retido"
+    "yourCreditIsOnHold": "O seu crédito está retido",
+    "verificationNotAllowed": "verification_not_allowed",
+    "verificationTeamRequirements": "verification_team_requirements"
   },
   "defaultPaymentMethodUpdated": "Método de pagamento predefinido atualizado",
   "defaultPayoutAccountUpdated": "Conta de recebimento predefinida atualizada",
@@ -1393,7 +1395,6 @@
   "teamNothingToMove": "Ainda não gere eventos nem locais. Crie antes uma nova equipa.",
   "teamPayoutInProgress": "Há um pagamento a caminho. Tente novamente quando tiver sido pago.",
   "teamVerificationOpen": "Conclua ou retire primeiro o seu pedido de verificação e tente novamente.",
-  "teamVerifiedNameLocked": "Uma equipa Verificada ainda não pode mudar de nome.",
   "teamAccountNotFound": "Não encontrámos nenhuma conta com esse nome de utilizador.",
   "teamPhoneInvalid": "Introduza um número de telefone válido.",
   "teamCannotText": "Ainda não conseguimos enviar SMS para esse número. Convide a pessoa pelo nome de utilizador.",
@@ -1401,5 +1402,8 @@
   "teamSmsInvite": "{team} convidou-o para ajudar a geri-la na Abonten. Registe-se com este número para aceitar: {link}",
   "teamRoleCannot": "A sua função nesta equipa não abrange isto.",
   "teamPayoutSignInAgain": "Por segurança, inicie sessão de novo antes de mudar a conta de pagamento da equipa e depois volte aqui.",
-  "teamPayoutAccountTooNew": "Esta conta de pagamento foi adicionada há menos de 48 horas. Pode pedir um pagamento para ela quando passarem 48 horas."
+  "teamPayoutAccountTooNew": "Esta conta de pagamento foi adicionada há menos de 48 horas. Pode pedir um pagamento para ela quando passarem 48 horas.",
+  "verificationTeamRequirements": "Uma equipa é verificada como empresa ou organização registada, com a certidão de registo e um documento que mostre que pode agir em nome dela (a lista de administradores ou sócios, ou uma carta assinada).",
+  "verificationTeamIsABusiness": "Uma equipa é verificada como empresa ou organização registada, não como particular.",
+  "teamRenamedBadgeInReview": "Nome guardado. O selo Verificado voltou a análise até o Abonten verificar o novo nome."
 }

@@ -992,6 +992,10 @@
     "team_payout_requested": {
       "title": "{actor} pediu um pagamento para {team}",
       "body": "{amount} para a conta de pagamento da equipa."
+    },
+    "verification_back_in_review": {
+      "title": "O seu selo Verificado voltou a análise",
+      "body": "O nome é agora {subject}, por isso o Abonten volta a verificá-lo. O selo volta a aparecer quando for aprovado."
     }
   },
   "openStatus": {
@@ -1231,11 +1235,13 @@
   "verification": {
     "badgeExplanation": {
       "organizer": "O Abonten analisou documentos que comprovam a identidade ou o registo deste organizador e a sua ligação a esta conta. A verificação não é uma garantia de qualquer evento, da sua realização, da sua segurança ou da sua qualidade.",
-      "place": "O Abonten analisou documentos que comprovam o registo deste negócio e a sua ligação à conta que gere esta página. A verificação não é uma garantia do negócio, do seu serviço, da sua segurança ou da sua qualidade."
+      "place": "O Abonten analisou documentos que comprovam o registo deste negócio e a sua ligação à conta que gere esta página. A verificação não é uma garantia do negócio, do seu serviço, da sua segurança ou da sua qualidade.",
+      "team": "O Abonten analisou documentos que comprovam o registo desta empresa e que o proprietário que gere esta equipa pode agir em nome dela. A verificação não é uma garantia de qualquer evento, da sua realização, da sua segurança ou da sua qualidade."
     },
     "badgeLabel": {
       "organizer": "Organizador verificado",
-      "place": "Local verificado"
+      "place": "Local verificado",
+      "team": "Empresa verificada"
     },
     "chip": {
       "approved": "Verificado",
@@ -1302,6 +1308,56 @@
         "2": "As pessoas estão mais dispostas a reservar e a visitar um negócio que o Abonten analisou.",
         "3": "Alguns programas do Abonten, como o crédito de promoção por visitas, estão abertos apenas a locais verificados."
       }
+    },
+    "evidenceType": {
+      "business_registration": {
+        "label": "Certidão de registo da empresa",
+        "description": "Certidão de constituição ou de registo da denominação comercial emitida pelo Registrar General's Department."
+      },
+      "operating_permit": {
+        "label": "Licença de funcionamento",
+        "description": "A licença de funcionamento emitida pela sua assembleia distrital, municipal ou metropolitana."
+      },
+      "sector_licence": {
+        "label": "Licença ou autorização do setor",
+        "description": "Uma licença para o seu tipo de negócio, por exemplo de hotelaria, restauração ou turismo."
+      },
+      "tin_certificate": {
+        "label": "Certificado de NIF (TIN)",
+        "description": "O certificado de identificação fiscal da sua empresa."
+      },
+      "lease_or_tenancy": {
+        "label": "Contrato de arrendamento",
+        "description": "Um contrato assinado para as instalações, com o nome e a morada da empresa."
+      },
+      "utility_bill": {
+        "label": "Fatura de serviços das instalações",
+        "description": "Uma fatura recente de eletricidade, água ou semelhante dirigida à empresa nesta morada."
+      },
+      "authorisation_letter": {
+        "label": "Carta de autorização",
+        "description": "Uma carta assinada em papel timbrado da empresa ou organização que o autoriza a gerir esta conta."
+      },
+      "director_listing": {
+        "label": "Lista de administradores ou sócios",
+        "description": "O registo do Registrar General com os administradores ou sócios da empresa, onde consta quem gere esta conta."
+      },
+      "event_permit": {
+        "label": "Licença de evento ou de espaço",
+        "description": "Uma licença para um evento passado ou futuro que organizou."
+      },
+      "venue_confirmation": {
+        "label": "Confirmação de reserva de espaço",
+        "description": "Uma confirmação de reserva de um espaço para um evento que organizou."
+      },
+      "past_event_material": {
+        "label": "Material de eventos anteriores",
+        "description": "Cartazes, bilhetes, notícias ou fotos de eventos que organizou."
+      },
+      "other": {
+        "label": "Outro documento comprovativo",
+        "description": "Qualquer outro documento que mostre a sua ligação à empresa ou o seu trabalho como organizador."
+      }
     }
   },
   "weekly": {
@@ -1343,7 +1399,8 @@
   },
   "identity": {
     "badgeLabel": "Identidade verificada",
-    "badgeExplanation": "O Abonten verificou o documento de identificação oficial desta pessoa e uma selfie tirada em direto. Isso não significa que o Abonten responda por esta pessoa, pelos seus eventos ou pelos seus locais."
+    "badgeExplanation": "O Abonten verificou o documento de identificação oficial desta pessoa e uma selfie tirada em direto. Isso não significa que o Abonten responda por esta pessoa, pelos seus eventos ou pelos seus locais.",
+    "badgeExplanationTeam": "O Abonten verificou o documento de identificação oficial e uma selfie tirada em direto de pelo menos um dos proprietários desta equipa. Isso não significa que o Abonten responda pela equipa, pelos seus eventos ou pelos seus locais."
   },
   "promoDraft": {
     "code": "Introduza um código com até {max} caracteres.",

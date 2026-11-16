@@ -15,7 +15,16 @@ export function identityBadgeLabel(t: CoreTranslator): string {
   return t("identity.badgeLabel");
 }
 
-/** What the badge means, for its popover or sheet. */
-export function identityBadgeExplanation(t: CoreTranslator): string {
-  return t("identity.badgeExplanation");
+/**
+ * What the badge means, for its popover or sheet. On a team it means at
+ * least one of its Owners was checked (legal item N9 extends K3); never
+ * which one.
+ */
+export function identityBadgeExplanation(
+  t: CoreTranslator,
+  team = false,
+): string {
+  return t(
+    team ? "identity.badgeExplanationTeam" : "identity.badgeExplanation",
+  );
 }

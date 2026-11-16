@@ -12,6 +12,7 @@ export async function GET(req: Request) {
   return verificationRoute(
     req,
     { schema: verificationSubjectSchema, label: "GET /verification/subject" },
-    (svc, userId, data) => getSubjectVerificationCore(svc, userId, data),
+    (svc, userId, data, personId) =>
+      getSubjectVerificationCore(svc, userId, data, personId),
   );
 }

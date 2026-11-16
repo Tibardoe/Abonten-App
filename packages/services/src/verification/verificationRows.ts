@@ -8,7 +8,7 @@ import type {
   VerificationStatus,
   VerificationSubjectType,
 } from "@abonten/types/verificationType";
-import { tr } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 
 // Column lists, row shapes and row -> DTO mappers for Trust & Verification,
 // shared by the owner-facing cores and the admin cores so one column is
@@ -27,7 +27,7 @@ export const EVIDENCE_EXT: Record<string, string> = {
 };
 
 export const CASE_COLUMNS =
-  "id, subject_type, place_id, organizer_user_id, subject_id, requester_id, status, organizer_type, legal_name, applicant_note, contact_phone, contact_email, subject_snapshot, decision_reason, source, claim_request_id, submitted_at, info_requested_at, reviewed_by, reviewed_at, revoked_by, revoked_at, created_at, updated_at";
+  "id, subject_type, place_id, organizer_user_id, subject_id, requester_id, requested_by, status, organizer_type, legal_name, applicant_note, contact_phone, contact_email, subject_snapshot, decision_reason, source, claim_request_id, submitted_at, info_requested_at, reviewed_by, reviewed_at, revoked_by, revoked_at, created_at, updated_at";
 
 export const EVIDENCE_COLUMNS =
   "id, case_id, evidence_type, storage_path, file_name, mime_type, size_bytes, status, uploaded_by, created_at, uploaded_at";
@@ -42,6 +42,7 @@ export type CaseRow = {
   organizer_user_id: string | null;
   subject_id: string | null;
   requester_id: string;
+  requested_by: string | null;
   status: string;
   organizer_type: string | null;
   legal_name: string | null;
@@ -133,6 +134,18 @@ export function transitionError(
       message: tr("addAtLeastOneDocumentBefore"),
     };
   }
+  if (msg.includes("verification_not_allowed")) {
+    return {
+      status: 404,
+      message: tr("verificationRequestNotFound"),
+    };
+  }
+  if (msg.includes("verification_team_requirements")) {
+    return {
+      status: 422,
+      message: tr("verificationTeamRequirements"),
+    };
+  }
   if (msg.includes("verification_subject_ineligible")) {
     return {
       status: 409,
@@ -210,6 +223,7 @@ const OWNER_VISIBLE_EVENTS = new Set([
   "rejected",
   "withdrawn",
   "revoked",
+  "returned_to_review",
 ]);
 
 export function mapHistory(rows: EventRow[]): VerificationHistoryEntry[] {
@@ -253,6 +267,10 @@ export function mapCase(
     updatedAt: row.updated_at,
     evidence: evidence.map((e) => mapEvidence(e, labels)),
     history: mapHistory(events),
+    returnedToReview:
+      row.status === "pending_review" &&
+      [...events].reverse().find((e) => OWNER_VISIBLE_EVENTS.has(e.event_type))
+        ?.event_type === "returned_to_review",
   };
 }
 
@@ -276,16 +294,41 @@ export async function loadEvidenceTypes(
     applies_to: string[];
     sort_order: number;
   }[];
+  // The words come from the catalogs in the reader's language for the
+  // types Abonten seeded; a type staff add later (a row, no code) shows the
+  // table's own words until the catalogs know it.
+  const t = coreT();
   return rows
     .filter((r) => !subjectType || (r.applies_to ?? []).includes(subjectType))
-    .map((r) => ({
-      key: r.key,
-      label: r.label,
-      description: r.description,
-      appliesTo: (r.applies_to ?? []) as VerificationSubjectType[],
-      sortOrder: r.sort_order,
-    }));
+    .map((r) => {
+      const worded = WORDED_EVIDENCE_TYPES.has(r.key);
+      return {
+        key: r.key,
+        label: worded ? t(`verification.evidenceType.${r.key}.label`) : r.label,
+        description: worded
+          ? t(`verification.evidenceType.${r.key}.description`)
+          : r.description,
+        appliesTo: (r.applies_to ?? []) as VerificationSubjectType[],
+        sortOrder: r.sort_order,
+      };
+    });
 }
+
+/** Evidence types whose words are in the catalogs (core verification.evidenceType). */
+const WORDED_EVIDENCE_TYPES = new Set([
+  "business_registration",
+  "operating_permit",
+  "sector_licence",
+  "tin_certificate",
+  "lease_or_tenancy",
+  "utility_bill",
+  "authorisation_letter",
+  "director_listing",
+  "event_permit",
+  "venue_confirmation",
+  "past_event_material",
+  "other",
+]);
 
 export async function evidenceTypeLabels(
   supabase: ServiceRoleClient,

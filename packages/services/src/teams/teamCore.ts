@@ -46,7 +46,7 @@ type Fail = {
   status: 400 | 401 | 403 | 404 | 409 | 429 | 500;
   message: string;
 };
-type Ok<T> = { status: 200; data: T };
+type Ok<T> = { status: 200; message?: string; data: T };
 
 const PERSON_SELECT =
   "id, full_name, username, avatar_public_id, avatar_version";
@@ -95,7 +95,6 @@ const SQL_ERRORS: Record<string, { status: Fail["status"]; key: string }> = {
   nothing_to_move: { status: 409, key: "teamNothingToMove" },
   payout_in_progress: { status: 409, key: "teamPayoutInProgress" },
   verification_open: { status: 409, key: "teamVerificationOpen" },
-  verified_name_locked: { status: 409, key: "teamVerifiedNameLocked" },
 };
 
 /** Turns a `team:<code>` database error into an envelope. */
@@ -172,7 +171,10 @@ async function summaries(
   const ids = memberships.map((m) => m.team_id);
   const [teams, profiles, counts] = await Promise.all([
     svc.from("team").select("account_id, status").in("account_id", ids),
-    svc.from("user_info").select(PERSON_SELECT).in("id", ids),
+    svc
+      .from("user_info")
+      .select(`${PERSON_SELECT}, organizer_verified`)
+      .in("id", ids),
     svc
       .from("team_member")
       .select("team_id")
@@ -189,7 +191,11 @@ async function summaries(
     (teams.data ?? []).map((t) => [t.account_id, t.status as TeamStatus]),
   );
   const profile = new Map(
-    ((profiles.data ?? []) as PersonRow[]).map((p) => [p.id, p]),
+    (
+      (profiles.data ?? []) as (PersonRow & {
+        organizer_verified: boolean | null;
+      })[]
+    ).map((p) => [p.id, p]),
   );
   const count = new Map<string, number>();
   for (const row of counts.data ?? []) {
@@ -208,6 +214,7 @@ async function summaries(
       status: status.get(m.team_id) ?? "active",
       role: m.role as TeamRoleCode,
       memberCount: count.get(m.team_id) ?? 0,
+      verified: p.organizer_verified === true,
     });
   }
   return out;
@@ -591,6 +598,7 @@ export async function convertAccountToTeamCore(
     places?: number;
     followers?: number;
     person_username?: string;
+    badge_back_in_review?: boolean;
   };
   const summary = await summaries(svc, [
     {
@@ -609,6 +617,7 @@ export async function convertAccountToTeamCore(
       places: Number(counts.places ?? 0),
       followers: Number(counts.followers ?? 0),
       personUsername: counts.person_username ?? "",
+      badgeBackInReview: counts.badge_back_in_review === true,
     },
   };
 }
@@ -621,13 +630,26 @@ export async function renameTeamCore(
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
   }
+  // A Verified team's badge names the business: a new name goes back to
+  // review (X42; the database does it, trigger team_name_back_to_review).
+  const { data: before } = await svc
+    .from("user_info")
+    .select("full_name, organizer_verified")
+    .eq("id", input.teamId)
+    .maybeSingle();
   const { error } = await svc.rpc("team_rename", {
     p_team: input.teamId,
     p_by: userId,
     p_name: input.name,
   });
   if (error) return failFromDb(error, "renameTeamCore");
-  return { status: 200, data: { name: input.name } };
+  const backInReview =
+    before?.organizer_verified === true && before.full_name !== input.name;
+  return {
+    status: 200,
+    ...(backInReview ? { message: tr("teamRenamedBadgeInReview") } : {}),
+    data: { name: input.name },
+  };
 }
 
 // --- Invitations -------------------------------------------------------------

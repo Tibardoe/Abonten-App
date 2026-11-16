@@ -84,5 +84,8 @@
   "youHaveReachedTheLimit": "Has alcanzado el límite.",
   "yourBadgeShowsOnYourEvents": "Tu insignia se muestra en tus eventos y en tu perfil.",
   "yourDocumentsAreRemovedAndNothing": "Tus documentos se eliminan y no se revisa nada.",
-  "yourVerification": "tu verificación"
+  "yourVerification": "tu verificación",
+  "returnedToReview": "El nombre cambió, así que Abonten está revisando de nuevo la insignia de Verificado. Volverá a mostrarse cuando se apruebe.",
+  "teamRequirementsTitle": "Lo que necesita un equipo",
+  "teamRequirements": "Un equipo se verifica como empresa u organización registrada. Añade su certificado de registro y un documento que muestre que puedes actuar en su nombre: la lista de sus directores o socios, o una carta firmada con su membrete."
 }

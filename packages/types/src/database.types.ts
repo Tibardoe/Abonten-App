@@ -14245,6 +14245,7 @@ export type Database = {
           distance_unit: string | null
           full_name: string | null
           id: string
+          id_checked?: boolean | null
           identity_valid_until: string | null
           identity_verification_id: string | null
           identity_verified: boolean
@@ -14463,6 +14464,7 @@ export type Database = {
           organizer_type: string | null
           organizer_user_id: string | null
           place_id: string | null
+          requested_by: string | null
           requester_id: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -14489,6 +14491,7 @@ export type Database = {
           organizer_type?: string | null
           organizer_user_id?: string | null
           place_id?: string | null
+          requested_by?: string | null
           requester_id: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -14515,6 +14518,7 @@ export type Database = {
           organizer_type?: string | null
           organizer_user_id?: string | null
           place_id?: string | null
+          requested_by?: string | null
           requester_id?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -15672,6 +15676,7 @@ export type Database = {
       _user_timezone: { Args: { p_user_id: string }; Returns: string }
       _weekly_document_has_content: { Args: { p_doc: Json }; Returns: boolean }
       account_deletion_blockers: { Args: { p_user_id: string }; Returns: Json }
+      account_id_checked: { Args: { p_account: string }; Returns: boolean }
       account_is_restricted: { Args: never; Returns: boolean }
       account_setup_prompt_dismiss: {
         Args: never
@@ -17846,6 +17851,10 @@ export type Database = {
         Returns: number
       }
       hidden_listing_countries: { Args: never; Returns: string[] }
+      id_checked: {
+        Args: { "": Database["public"]["Tables"]["user_info"]["Row"] }
+        Returns: boolean
+      }
       identity_document_matches: {
         Args: { p_hash: string; p_person_hash: string; p_user_id: string }
         Returns: {

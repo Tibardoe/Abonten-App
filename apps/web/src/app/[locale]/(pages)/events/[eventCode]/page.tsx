@@ -88,8 +88,8 @@ const loadEvent = cache(async (eventCode: string) =>
       username,
       full_name,
       organizer_verified,
-      identity_verified,
-      identity_valid_until,
+      id_checked,
+      account_kind,
       status_id
     ),
     ticket_type(
@@ -435,14 +435,19 @@ export default async function page({
                   </Link>
                   {event.user_info.organizer_verified &&
                   event.user_info.status_id === 1 ? (
-                    <VerifiedBadgePopover subjectType="organizer" compact />
+                    <VerifiedBadgePopover
+                      subjectType="organizer"
+                      compact
+                      team={event.user_info.account_kind === "team"}
+                    />
                   ) : null}
-                  {event.user_info.identity_verified &&
-                  event.user_info.status_id === 1 &&
-                  event.user_info.identity_valid_until &&
-                  Date.parse(event.user_info.identity_valid_until) >
-                    Date.now() ? (
-                    <IdentityCheckedBadge compact />
+                  {/* A person's live ID check, or a team's (one of its
+                      Owners): public.account_id_checked. */}
+                  {event.user_info.id_checked ? (
+                    <IdentityCheckedBadge
+                      compact
+                      team={event.user_info.account_kind === "team"}
+                    />
                   ) : null}
                 </div>
                 {/* No stars at all until someone has rated them: five grey

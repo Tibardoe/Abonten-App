@@ -64,6 +64,8 @@ export default function ConvertAccountDialog({
           username: res.data.personUsername,
         }),
       );
+      // X42: the badge was an individual's, or moved under a new name.
+      if (res.data.badgeBackInReview) toast.info(t("convertedBadgeInReview"));
       onOpenChange(false);
       // The person's handle, their listings and their money all changed.
       await qc.resetQueries();

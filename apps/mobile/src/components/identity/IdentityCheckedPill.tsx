@@ -10,7 +10,12 @@ import { Alert, Pressable } from "react-native";
 // government ID and a live selfie. An icon beside the name; tapping it says
 // exactly that, in the fixed words of @abonten/core/identity/copy (the same
 // as the website's IdentityCheckedBadge), and nothing from the document.
-export function IdentityCheckedPill() {
+export function IdentityCheckedPill({
+  team = false,
+}: {
+  /** A team: at least one of its Owners was checked. */
+  team?: boolean;
+}) {
   const t = useTranslations("verification");
   const tc = useTranslations("core");
   const label = identityBadgeLabel(tc);
@@ -20,7 +25,9 @@ export function IdentityCheckedPill() {
       accessibilityLabel={label}
       hitSlop={8}
       onPress={() =>
-        Alert.alert(label, identityBadgeExplanation(tc), [{ text: t("gotIt") }])
+        Alert.alert(label, identityBadgeExplanation(tc, team), [
+          { text: t("gotIt") },
+        ])
       }
       className="active:opacity-70"
     >
@@ -29,14 +36,20 @@ export function IdentityCheckedPill() {
   );
 }
 
-/** A live check on an active account; a suspended or banned person loses it. */
+/**
+ * A live check on an active account; a suspended or banned person loses
+ * it. `id_checked` (public.account_id_checked, a person's or a team's) is
+ * the database's answer and wins when the row carries it.
+ */
 export function showsIdentityBadge(
   info: {
+    id_checked?: boolean | null;
     identity_verified?: boolean | null;
     identity_valid_until?: string | null;
     status_id?: number | null;
   } | null,
 ): boolean {
+  if (info && info.id_checked !== undefined) return info.id_checked === true;
   if (!info?.identity_verified || info.status_id !== 1) return false;
   // get_public_profile already folds the expiry into identity_verified.
   if (info.identity_valid_until === undefined) return true;

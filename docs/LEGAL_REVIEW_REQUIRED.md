@@ -173,7 +173,7 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | N6 | Entry tools | Parts 3 and 4 | The organizer decides who gets in and Abonten supplies the tools; Abonten is not responsible for crowd safety, and the capacity warning must never read as a safety promise. | Open |
 | N7 | Privacy of sending tickets and of entry | `ticket_transfer.to_phone`, the invitation text; Parts 3–6 | Texting a number a sender typed (Part 1, built): the text names the sender and the event and links to Abonten; the number is kept with the offer. Later parts: the account photo and name shown at the tent, ID cards checked in disputes, the in-and-out history kept 180 days, code lists on staff devices, wallet or card numbers used to spot resellers. | Open — Part 1 is built switched off |
 | N8 | Imported lists | Part 5 | The organizer answers for the data; Abonten uses it only for entry, never for marketing, and deletes it 30 days after the event. | Open |
-| N9 | Badge wording for teams | Part 2; extends H3 and K3 | "Verified business" and "ID checked" for a team. | Open |
+| N9 | Badge wording for teams | Part 2; extends H3 and K3 | "Verified business" and "ID checked" for a team. Drafted 2026-11-16 in `core` `verification.badgeLabel.team` / `badgeExplanation.team` and `identity.badgeExplanationTeam` ("at least one of this team's Owners"), shown only while teams are switched on. | Open |
 
 ## Specifications waiting on this register
 

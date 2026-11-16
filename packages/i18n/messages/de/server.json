@@ -556,7 +556,9 @@
     "youHaveStartedALotOfConversations": "Du hast in letzter Zeit sehr viele Unterhaltungen begonnen. Bitte versuche es später erneut.",
     "yourAccountHasBeenRestricted": "Dein Konto wurde eingeschränkt.",
     "yourCreditBalanceIsNegative": "Dein Guthaben ist negativ",
-    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt"
+    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt",
+    "verificationNotAllowed": "verification_not_allowed",
+    "verificationTeamRequirements": "verification_team_requirements"
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1393,7 +1395,6 @@
   "teamNothingToMove": "Du führst noch keine Events oder Orte. Erstelle stattdessen ein neues Team.",
   "teamPayoutInProgress": "Eine Auszahlung an dich ist unterwegs. Versuche es erneut, sobald sie ausgezahlt ist.",
   "teamVerificationOpen": "Schließe deine Verifizierungsanfrage zuerst ab oder ziehe sie zurück und versuche es dann erneut.",
-  "teamVerifiedNameLocked": "Ein verifiziertes Team kann seinen Namen noch nicht ändern.",
   "teamAccountNotFound": "Wir haben kein Konto mit diesem Benutzernamen gefunden.",
   "teamPhoneInvalid": "Gib eine gültige Telefonnummer ein.",
   "teamCannotText": "An diese Nummer können wir noch keine SMS schicken. Lade die Person über ihren Benutzernamen ein.",
@@ -1401,5 +1402,8 @@
   "teamSmsInvite": "{team} lädt dich ein, es auf Abonten mitzuführen. Registriere dich mit dieser Nummer, um anzunehmen: {link}",
   "teamRoleCannot": "Deine Rolle in diesem Team deckt das nicht ab.",
   "teamPayoutSignInAgain": "Melde dich zu deiner Sicherheit erneut an, bevor du das Auszahlungskonto des Teams änderst, und komm dann hierher zurück.",
-  "teamPayoutAccountTooNew": "Dieses Auszahlungskonto wurde vor weniger als 48 Stunden hinzugefügt. Du kannst eine Auszahlung darauf anfordern, sobald 48 Stunden vergangen sind."
+  "teamPayoutAccountTooNew": "Dieses Auszahlungskonto wurde vor weniger als 48 Stunden hinzugefügt. Du kannst eine Auszahlung darauf anfordern, sobald 48 Stunden vergangen sind.",
+  "verificationTeamRequirements": "Ein Team wird als eingetragenes Unternehmen oder eingetragene Organisation verifiziert, mit seiner Eintragungsurkunde und einem Dokument, das zeigt, dass du für es handeln darfst (eine Liste der Geschäftsführer oder Gesellschafter oder ein unterschriebener Brief).",
+  "verificationTeamIsABusiness": "Ein Team wird als eingetragenes Unternehmen oder eingetragene Organisation verifiziert, nicht als Einzelperson.",
+  "teamRenamedBadgeInReview": "Name gespeichert. Das Verifiziert-Abzeichen wird erneut geprüft, bis Abonten den neuen Namen kontrolliert hat."
 }

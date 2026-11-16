@@ -43,6 +43,11 @@ export type TeamSummary = {
   /** The caller's role in it. */
   role: TeamRoleCode;
   memberCount: number;
+  /**
+   * The team carries the organizer badge ("Verified business"); renaming it
+   * sends the badge back to review (X42).
+   */
+  verified?: boolean;
 };
 
 export type TeamMember = {
@@ -117,6 +122,11 @@ export type TeamConversion = {
   followers: number;
   /** The person's new handle (the team took theirs). */
   personUsername: string;
+  /**
+   * The organizer badge moved under another name, or had been granted to an
+   * individual: it is back in review (X42).
+   */
+  badgeBackInReview: boolean;
 };
 
 export type InviteTarget =

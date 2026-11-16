@@ -94,5 +94,9 @@
   "convertAction": "Make it a team",
   "convertConfirm": "@{handle} will belong to the team, and you will get a new @username. This can't be undone in the app.",
   "converting": "Moving…",
-  "convertedToast": "Done. {team} now runs your events and places. Your new @username is @{username}."
+  "convertedToast": "Done. {team} now runs your events and places. Your new @username is @{username}.",
+  "renameVerifiedTitle": "Change a Verified team's name?",
+  "renameVerifiedBody": "The Verified badge names the business, so it comes off and goes back to review until Abonten checks the new name. Abonten may ask for papers in the new name.",
+  "renameVerifiedConfirm": "Change the name",
+  "convertedBadgeInReview": "Your Verified badge moved to the team and is back in review: Abonten checks the team as a business before it shows again."
 }

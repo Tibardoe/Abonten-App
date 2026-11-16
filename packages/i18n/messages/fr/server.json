@@ -556,7 +556,9 @@
     "youHaveStartedALotOfConversations": "Vous avez démarré beaucoup de conversations récemment. Veuillez réessayer plus tard.",
     "yourAccountHasBeenRestricted": "Votre compte a été restreint.",
     "yourCreditBalanceIsNegative": "Votre solde de crédit est négatif",
-    "yourCreditIsOnHold": "Votre crédit est suspendu"
+    "yourCreditIsOnHold": "Votre crédit est suspendu",
+    "verificationNotAllowed": "verification_not_allowed",
+    "verificationTeamRequirements": "verification_team_requirements"
   },
   "defaultPaymentMethodUpdated": "Moyen de paiement par défaut mis à jour",
   "defaultPayoutAccountUpdated": "Compte de versement par défaut mis à jour",
@@ -1393,7 +1395,6 @@
   "teamNothingToMove": "Vous ne gérez encore aucun événement ni aucun lieu. Créez plutôt une nouvelle équipe.",
   "teamPayoutInProgress": "Un versement est en cours vers vous. Réessayez une fois qu'il aura été payé.",
   "teamVerificationOpen": "Terminez ou retirez d'abord votre demande de vérification, puis réessayez.",
-  "teamVerifiedNameLocked": "Une équipe Vérifiée ne peut pas encore changer de nom.",
   "teamAccountNotFound": "Nous n'avons trouvé aucun compte avec ce nom d'utilisateur.",
   "teamPhoneInvalid": "Saisissez un numéro de téléphone valide.",
   "teamCannotText": "Nous ne pouvons pas encore envoyer de SMS à ce numéro. Invitez la personne par son nom d'utilisateur.",
@@ -1401,5 +1402,8 @@
   "teamSmsInvite": "{team} vous invite à l'aider à gérer son compte sur Abonten. Inscrivez-vous avec ce numéro pour accepter : {link}",
   "teamRoleCannot": "Votre rôle dans cette équipe ne couvre pas cette action.",
   "teamPayoutSignInAgain": "Pour votre sécurité, reconnectez-vous avant de changer le compte de versement de l'équipe, puis revenez ici.",
-  "teamPayoutAccountTooNew": "Ce compte de versement a été ajouté il y a moins de 48 heures. Vous pourrez y demander un versement une fois les 48 heures passées."
+  "teamPayoutAccountTooNew": "Ce compte de versement a été ajouté il y a moins de 48 heures. Vous pourrez y demander un versement une fois les 48 heures passées.",
+  "verificationTeamRequirements": "Une équipe est vérifiée en tant qu'entreprise ou organisation enregistrée, avec son certificat d'enregistrement et un document montrant que vous pouvez agir en son nom (la liste de ses dirigeants ou associés, ou une lettre signée).",
+  "verificationTeamIsABusiness": "Une équipe est vérifiée en tant qu'entreprise ou organisation enregistrée, pas en tant que particulier.",
+  "teamRenamedBadgeInReview": "Nom enregistré. Le badge Vérifié repasse en examen jusqu'à ce qu'Abonten vérifie le nouveau nom."
 }

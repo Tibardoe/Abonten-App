@@ -434,8 +434,19 @@ export default function VerificationScreen({
             reason={openCase.decisionReason}
           />
 
+          {openCase.returnedToReview ? (
+            <View className="rounded-xl border border-border bg-muted p-3">
+              <AppText variant="small" tone="muted">
+                {t("returnedToReview")}
+              </AppText>
+            </View>
+          ) : null}
+
           {editable ? (
             <>
+              {view.team && subjectType === "organizer" ? (
+                <TeamRequirements />
+              ) : null}
               {subjectType === "organizer" ? (
                 <OrganizerTypePicker
                   value={organizerType || (openCase.organizerType ?? "")}
@@ -672,6 +683,10 @@ export default function VerificationScreen({
               ))}
             </View>
 
+            {view.team && subjectType === "organizer" ? (
+              <TeamRequirements />
+            ) : null}
+
             {subjectType === "organizer" ? (
               <OrganizerTypePicker
                 value={organizerType}
@@ -701,6 +716,19 @@ export default function VerificationScreen({
     >
       {body()}
     </ScrollView>
+  );
+}
+
+/** The business check for a team (stage 5): what it needs. */
+function TeamRequirements() {
+  const t = useTranslations("verification");
+  return (
+    <View className="gap-1 rounded-xl border border-border bg-card p-4">
+      <AppText variant="sectionHeading">{t("teamRequirementsTitle")}</AppText>
+      <AppText variant="small" tone="muted">
+        {t("teamRequirements")}
+      </AppText>
+    </View>
   );
 }
 

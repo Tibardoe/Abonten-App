@@ -8,7 +8,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Team accounts, staff tools (docs/admin/teams.md): a team whose last
 // Owner's account closed is paused and staff bring it back by making a
 // member an Owner; staff pause a team in a dispute and resume it only with
-// an Owner; clients cannot run the tools; a Verified team keeps its name.
+// an Owner; clients cannot run the tools; a renamed badge with nothing to
+// review comes off (X42).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   appointTeamOwnerAdminCore,
@@ -218,7 +219,9 @@ describe("staff tools for paused teams and disputes", () => {
     expect(error?.code).toBe("42501");
   });
 
-  it("keeps a Verified team's name", async () => {
+  it("takes the badge off a renamed team with nothing to review (X42)", async () => {
+    // A badge with no approved request behind it cannot go back to review
+    // (teams-verification covers the case that can): it comes off.
     const owner = await person();
     const finance = await person();
     const teamId = await teamWith(owner, finance);
@@ -233,15 +236,15 @@ describe("staff tools for paused teams and disputes", () => {
       teamId,
       name: "Another Name",
     });
-    expect(res.status).toBe(409);
-    await service
+    expect(res.status).toBe(200);
+    const { data } = await service
       .from("user_info")
-      .update({ organizer_verified: false, organizer_verified_at: null })
-      .eq("id", teamId);
-    const ok = await renameTeamCore(svc, owner.id, {
-      teamId,
-      name: "Another Name",
+      .select("full_name, organizer_verified")
+      .eq("id", teamId)
+      .single();
+    expect(data).toEqual({
+      full_name: "Another Name",
+      organizer_verified: false,
     });
-    expect(ok.status).toBe(200);
   });
 });

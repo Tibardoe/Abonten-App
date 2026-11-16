@@ -94,5 +94,9 @@
   "convertAction": "Transformar em equipa",
   "convertConfirm": "@{handle} passará a ser da equipa e receberá um novo @nome de utilizador. Isto não pode ser anulado na app.",
   "converting": "A transferir…",
-  "convertedToast": "Feito. {team} gere agora os seus eventos e locais. O seu novo @nome de utilizador é @{username}."
+  "convertedToast": "Feito. {team} gere agora os seus eventos e locais. O seu novo @nome de utilizador é @{username}.",
+  "renameVerifiedTitle": "Mudar o nome de uma equipa verificada?",
+  "renameVerifiedBody": "O selo Verificado identifica a empresa, por isso é retirado e volta a análise até o Abonten verificar o novo nome. O Abonten pode pedir documentos com o novo nome.",
+  "renameVerifiedConfirm": "Mudar o nome",
+  "convertedBadgeInReview": "O seu selo Verificado passou para a equipa e voltou a análise: o Abonten verifica a equipa como empresa antes de voltar a aparecer."
 }

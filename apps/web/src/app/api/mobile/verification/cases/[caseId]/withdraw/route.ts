@@ -18,6 +18,7 @@ export async function POST(
       params: { caseId },
       label: "POST /verification/cases/[caseId]/withdraw",
     },
-    (svc, userId, data) => withdrawVerificationCaseCore(svc, userId, data),
+    (svc, userId, data, personId) =>
+      withdrawVerificationCaseCore(svc, userId, data, personId),
   );
 }

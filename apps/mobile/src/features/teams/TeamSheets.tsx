@@ -132,6 +132,10 @@ export function ConvertAccountSheet({
             username: res.data.personUsername,
           }),
         );
+        // X42: the badge was an individual's, or moved under a new name.
+        if (res.data.badgeBackInReview) {
+          toast.info(t("convertedBadgeInReview"));
+        }
         const id = res.data.team.id;
         onClose();
         // The handle, the listings and the money all moved.

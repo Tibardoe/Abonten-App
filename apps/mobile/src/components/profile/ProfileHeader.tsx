@@ -98,9 +98,14 @@ export function ProfileHeader({
                 : (profile.full_name ?? `@${profile.username}`)}
             </AppText>
             {showsOrganizerBadge(profile) ? (
-              <VerifiedPill subjectType="organizer" />
+              <VerifiedPill
+                subjectType="organizer"
+                team={profile.account_kind === "team"}
+              />
             ) : null}
-            {showsIdentityBadge(profile) ? <IdentityCheckedPill /> : null}
+            {showsIdentityBadge(profile) ? (
+              <IdentityCheckedPill team={profile.account_kind === "team"} />
+            ) : null}
           </View>
           {/* Followers is the number people look for first on a profile —
               yours included — so it sits next to Posts. */}

@@ -83,11 +83,13 @@
     },
     "badgeLabel": {
       "place": "Verified place",
-      "organizer": "Verified organizer"
+      "organizer": "Verified organizer",
+      "team": "Verified business"
     },
     "badgeExplanation": {
       "place": "Abonten reviewed documents supporting this business's registration and its link to the account that manages this listing. Verification is not a guarantee of the business, its service, safety or quality.",
-      "organizer": "Abonten reviewed documents supporting this organizer's identity or registration and their link to this account. Verification is not a guarantee of any event, its delivery, safety or quality."
+      "organizer": "Abonten reviewed documents supporting this organizer's identity or registration and their link to this account. Verification is not a guarantee of any event, its delivery, safety or quality.",
+      "team": "Abonten reviewed documents supporting this business's registration and that the Owner who manages this team may act for it. Verification is not a guarantee of any event, its delivery, safety or quality."
     },
     "whyVerify": {
       "place": {
@@ -136,6 +138,56 @@
       "withdrawnBody": "This request was cancelled. You can start a new one any time.",
       "revokedTitle": "Verification removed",
       "revokedBody": "This verification was removed. You can send a new request."
+    },
+    "evidenceType": {
+      "business_registration": {
+        "label": "Business registration certificate",
+        "description": "Certificate of incorporation or business-name registration from the Registrar General's Department."
+      },
+      "operating_permit": {
+        "label": "Business operating permit",
+        "description": "The operating permit issued by your district, municipal or metropolitan assembly."
+      },
+      "sector_licence": {
+        "label": "Sector licence or permit",
+        "description": "A licence for your type of business, for example a hospitality, food or tourism licence."
+      },
+      "tin_certificate": {
+        "label": "TIN certificate",
+        "description": "Your business tax identification certificate."
+      },
+      "lease_or_tenancy": {
+        "label": "Lease or tenancy agreement",
+        "description": "A signed agreement for the premises, showing the business name and address."
+      },
+      "utility_bill": {
+        "label": "Utility bill for the premises",
+        "description": "A recent electricity, water or similar bill addressed to the business at this location."
+      },
+      "authorisation_letter": {
+        "label": "Authorisation letter",
+        "description": "A signed letter on the business or organisation's letterhead authorising you to manage this account."
+      },
+      "director_listing": {
+        "label": "Directors or partners listing",
+        "description": "The Registrar General's record of the business's directors or partners, showing the person who manages this account."
+      },
+      "event_permit": {
+        "label": "Event or venue permit",
+        "description": "A permit for a past or upcoming event you organised."
+      },
+      "venue_confirmation": {
+        "label": "Venue booking confirmation",
+        "description": "A booking confirmation from a venue for an event you organised."
+      },
+      "past_event_material": {
+        "label": "Past event material",
+        "description": "Flyers, tickets, press coverage or photos from events you organised."
+      },
+      "other": {
+        "label": "Other supporting document",
+        "description": "Any other document that shows your connection to the business or your work as an organizer."
+      }
     }
   },
   "weekly": {
@@ -1016,6 +1068,10 @@
     "team_payout_requested": {
       "title": "{actor} asked for a payout for {team}",
       "body": "{amount} to the team's payout account."
+    },
+    "verification_back_in_review": {
+      "title": "Your Verified badge is back in review",
+      "body": "The name is now {subject}, so Abonten checks it again. The badge shows again once it's approved."
     }
   },
   "noticeWords": {
@@ -1343,7 +1399,8 @@
   },
   "identity": {
     "badgeLabel": "ID checked",
-    "badgeExplanation": "Abonten checked this person's government ID and a live selfie. It doesn't mean Abonten vouches for them, their events or their places."
+    "badgeExplanation": "Abonten checked this person's government ID and a live selfie. It doesn't mean Abonten vouches for them, their events or their places.",
+    "badgeExplanationTeam": "Abonten checked the government ID and a live selfie of at least one of this team's Owners. It doesn't mean Abonten vouches for the team, its events or its places."
   },
   "promoDraft": {
     "code": "Enter a code of up to {max} characters.",

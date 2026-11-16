@@ -117,7 +117,7 @@ async function buildView(
         ? svc
             .from("event")
             .select(
-              "id, title, event_code, starts_at, ends_at, timezone, address, place:place_id(name, phone, whatsapp), organizer:user_info!organizer_id(username, full_name, organizer_verified, identity_verified, identity_valid_until, status_id)",
+              "id, title, event_code, starts_at, ends_at, timezone, address, place:place_id(name, phone, whatsapp), organizer:user_info!organizer_id(username, full_name, organizer_verified, id_checked, status_id)",
             )
             .eq("id", session.event_id)
             .maybeSingle()
@@ -156,8 +156,7 @@ async function buildView(
       username: string | null;
       full_name: string | null;
       organizer_verified: boolean | null;
-      identity_verified: boolean | null;
-      identity_valid_until: string | null;
+      id_checked: boolean | null;
       status_id: number | null;
     } | null;
   } | null;
@@ -208,11 +207,9 @@ async function buildView(
             organizer && (organizer.full_name || organizer.username)
               ? {
                   name: (organizer.full_name || organizer.username) as string,
-                  // The same rule as the public badge: a live check.
-                  identityChecked:
-                    !!organizer.identity_verified &&
-                    !!organizer.identity_valid_until &&
-                    Date.parse(organizer.identity_valid_until) > now,
+                  // The same rule as the public badge: a live check (for a
+                  // team, one of its Owners'): public.account_id_checked.
+                  identityChecked: organizer.id_checked === true,
                   verified: !!organizer.organizer_verified,
                 }
               : null,

@@ -21,6 +21,7 @@ export const removeVerificationEvidence = withActionLocale(
       caller.svc,
       caller.userId,
       parsed.data,
+      caller.personId,
     );
   },
 );
