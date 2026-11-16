@@ -211,6 +211,18 @@
   "paySmallSmallIsPausedRightNow": "Pay small small is paused right now. Please try again later.",
   "planCancelled": "Plan cancelled.",
   "planCancelledYourRefundIsOn": "Plan cancelled. Your refund is on its way.",
+  "shareKit": {
+    "ticketsFrom": "Tickets from {price}",
+    "ticketsAt": "Tickets {price}",
+    "freeEntry": "Free entry",
+    "ctaTickets": "Get your tickets on Abonten",
+    "ctaFree": "Reserve your spot on Abonten",
+    "ctaDetails": "See it on Abonten",
+    "ctaPlace": "Find us on Abonten",
+    "welcomeHeading": "Now on Abonten",
+    "welcomeOrganizer": "Follow us on Abonten and never miss our next event.",
+    "welcomePlace": "Find us on Abonten: see what's on and send a booking request."
+  },
   "theDeadlineToFinishPayingHas": "The deadline to finish paying has passed.",
   "thisEventIsTooSoonToPay": "This event is too soon to pay small small. Buy your tickets in full instead.",
   "thisEventWasCancelledYourPlan": "This event was cancelled. Your plan has ended and your refund is on its way.",

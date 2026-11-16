@@ -1,6 +1,7 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useEventInsights } from "@/features/organizer/useEventInsights";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
+import { ShareKitSection } from "@/features/shareKit/ShareKitSection";
 import { TeamNavRow } from "@/features/teams/ManagingAs";
 import { useActingTeams } from "@/features/teams/useTeams";
 import { EventTicketPlansSection } from "@/features/ticketPlans/EventTicketPlansSection";
@@ -570,6 +571,10 @@ function EventInsightsScreen() {
             />
           ) : null}
         </View>
+      ) : null}
+
+      {eventId && (can("events.manage") || can("promotions.buy")) ? (
+        <ShareKitSection kind="events" id={eventId} />
       ) : null}
 
       {eventId && (!current || can("promotions.buy")) ? (

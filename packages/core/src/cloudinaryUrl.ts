@@ -18,6 +18,12 @@ type CloudinaryImageOptions = {
    * none, because a placeholder must never stand in for a scannable code.
    */
   fallback?: string | null;
+  /**
+   * A fixed format instead of `f_auto`, for a reader that is not a browser:
+   * the website's share-image renderer can draw only PNG and JPEG, and
+   * `f_auto` may answer it with WebP or AVIF.
+   */
+  format?: "jpg" | "png";
 };
 
 /**
@@ -41,10 +47,13 @@ export const IMAGE_FALLBACK_ID = "branding:image-fallback.png";
 export function buildCloudinaryUrl(
   publicId: string | null | undefined,
   version: string | number | null | undefined,
-  { width, height, lossless = false, fallback }: CloudinaryImageOptions,
+  { width, height, lossless = false, fallback, format }: CloudinaryImageOptions,
 ): string {
   const targetWidth = Math.round(width * 2); // 2x for retina displays
-  const transformParts = lossless ? [] : ["q_auto", "f_auto"];
+  const transformParts = lossless
+    ? []
+    : ["q_auto", format ? `f_${format}` : "f_auto"];
+  if (lossless && format) transformParts.push(`f_${format}`);
   transformParts.push(`w_${targetWidth}`);
 
   if (height) {

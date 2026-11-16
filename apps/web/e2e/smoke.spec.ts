@@ -28,6 +28,22 @@ test("every page carries the security headers", async ({ request }) => {
   expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
 });
 
+test("share images answer 404 for anything that is not a share image", async ({
+  request,
+}) => {
+  // Checked before any database read: a wrong kind, an image an event does
+  // not have, and a key that could not be a code or a slug.
+  for (const path of [
+    "/api/share/users/someone/story",
+    "/api/share/events/ab12cd34/welcome",
+    "/api/share/places/not%20a%20slug/post",
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(404);
+    expect(response.headers()["content-type"]).toContain("text/plain");
+  }
+});
+
 test("robots.txt and sitemap.xml are public and consistent", async ({
   request,
 }) => {

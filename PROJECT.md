@@ -4480,3 +4480,13 @@ Branch `feat/team-launch-readiness-2026-11-16`, migration `20261116240000_team_t
 - Admin › Teams: Team terms (version, path), "Before opening to everyone" (terms published, counsel's approval of N4/N5/N9/K7 recorded as `launch_cleared_at` / `_by` / `launch_clearance`, ID checks for payouts shown); `updateTeamSettingsCore` refuses audience all without both and refuses removing the terms while open.
 - Help page `organizers/team-accounts` (5 languages, `listed: no`); draft wording and questions for counsel in the N4, N5, N9 and K7 register rows.
 - **Checked**: `teams-terms.integration.test.ts` (2 tests) and every team suite (53 tests).
+
+## 76. Share kit (2026-11-16)
+
+Branch `feat/share-kit-2026-11-16`, no database change. Design: `docs/architecture/share-kit.md`.
+
+- **What**: every public event and place has ready-made images its owner posts to their own socials: `story` (1080×1920) and `post` (1080×1350) for events and places, `welcome` ("Now on Abonten", 1080×1350) for places and organizer profiles. Picture, name, date or category, place, price line ("Tickets from …", "Free entry"), call to action, the listing's address and a QR code for it, the Abonten mark.
+- **How**: `GET /api/share/<events|places|profiles>/<key>/<format>?hl=` draws them with `next/og` from the anonymous (public) read, so drafts, hidden, removed and cancelled listings answer 404. CDN-cached (`s-maxage=3600`), 40 per visitor per minute after the cache, outside the proxy. Font: the receipt's Noto Sans subset (Ghanaian letters, cedi sign). Flyers are fetched as JPEG (`buildCloudinaryUrl` gained a `format` option).
+- **Where**: website `ShareKitCard` on the Promotion tab of `ManageEventView` and `ManagePlaceView`; app `ShareKitSection` on the organizer event screen and both place screens (person and team). Kinds, formats and paths: `@abonten/core/shareKit/shareKit` (unit-tested).
+- **Words**: `server.json` › `shareKit` (image text) and `manage.json` › `shareKit` (controls) in en, fr, es, de, pt; Akan carries English until translated.
+- **Checked**: images rendered from production listings on a local build (event story and post, place story and welcome, organizer welcome; English and French); 404s for unknown kinds, formats and keys (also in `e2e/smoke.spec.ts`); core unit tests; website and app type checks; `check:i18n`. Not yet seen: the website card and the app section on a signed-in screen.

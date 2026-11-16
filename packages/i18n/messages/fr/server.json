@@ -211,6 +211,18 @@
   "paySmallSmallIsPausedRightNow": "Le paiement en plusieurs fois est suspendu pour le moment. Veuillez réessayer plus tard.",
   "planCancelled": "Plan annulé.",
   "planCancelledYourRefundIsOn": "Plan annulé. Votre remboursement est en route.",
+  "shareKit": {
+    "ticketsFrom": "Billets à partir de {price}",
+    "ticketsAt": "Billets {price}",
+    "freeEntry": "Entrée gratuite",
+    "ctaTickets": "Prenez vos billets sur Abonten",
+    "ctaFree": "Réservez votre place sur Abonten",
+    "ctaDetails": "À voir sur Abonten",
+    "ctaPlace": "Retrouvez-nous sur Abonten",
+    "welcomeHeading": "Désormais sur Abonten",
+    "welcomeOrganizer": "Suivez-nous sur Abonten pour ne jamais manquer notre prochain événement.",
+    "welcomePlace": "Retrouvez-nous sur Abonten : ce qui se passe chez nous et les demandes de réservation."
+  },
   "theDeadlineToFinishPayingHas": "La date limite pour terminer le paiement est passée.",
   "thisEventIsTooSoonToPay": "Cet événement est trop proche pour payer en plusieurs fois. Achetez plutôt vos billets en une fois.",
   "thisEventWasCancelledYourPlan": "Cet événement a été annulé. Votre plan a pris fin et votre remboursement est en route.",

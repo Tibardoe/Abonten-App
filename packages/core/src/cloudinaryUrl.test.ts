@@ -34,6 +34,15 @@ describe("buildCloudinaryUrl", () => {
       buildCloudinaryUrl("x", 1, { width: 10, fallback: null }),
     ).not.toContain("d_");
   });
+
+  it("asks for a fixed format when the reader is not a browser", () => {
+    const url = buildCloudinaryUrl("event_flyers/abc", "7", {
+      width: 540,
+      format: "jpg",
+    });
+    expect(url).toContain("/q_auto,f_jpg,w_1080,c_limit,");
+    expect(url).not.toContain("f_auto");
+  });
 });
 
 describe("buildAvatarUrl", () => {

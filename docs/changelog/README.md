@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — The share kit
+
+- Every public event and place has ready-made images for its owner's Instagram, TikTok or WhatsApp Status (story, post, and "Now on Abonten" for places and organizers), drawn by the website at `/api/share/...` from public facts only, in the image's language, cached by the CDN and limited per visitor. A "Share kit" card on the Promotion tab of the event and place manage pages, and a section on the app's event and place screens. New `architecture/share-kit.md` 1.0; PROJECT.md §76.
+
 ## 2026-11-16 — Team accounts before everyone: team terms (N4), the launch gate, the help page
 
 - The mechanism for accepting team terms for a team is built and dormant until staff publish a version; a team's payouts wait until an Owner accepts. Admin › Teams refuses "Everyone" until the terms are published and counsel's approval of N4, N5, N9 and K7 is recorded. Draft wording and questions for counsel in N4, N5, N9 and K7 of the legal register. New help page `organizers/team-accounts` (en, fr, es, de, pt; not listed). `architecture/team-accounts.md` 1.13 (§4m), `admin/teams.md` 1.12, `documentation-coverage-matrix.md` 1.5. Migration `20261116240000_team_terms_and_launch_gate`; PROJECT.md §75.13.

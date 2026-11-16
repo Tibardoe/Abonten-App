@@ -195,6 +195,8 @@ export const config = {
      *   /api/safety/dispatch with the delivery token -- same as above)
      * - api/identity (the identity provider posting its verdict to
      *   /api/identity/callback/<provider>, signed, no cookie)
+     * - api/share (the share kit's public images: no cookie is needed,
+     *   and the CDN caches them)
      * - robots.txt / sitemap.xml / manifest.webmanifest (crawlers and
      *   browsers fetch them without a cookie; all three are public
      *   metadata routes, outside app/[locale], so a language rewrite would
@@ -208,7 +210,7 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/safety|api/identity|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/safety|api/identity|api/share|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

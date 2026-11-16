@@ -5,9 +5,11 @@ import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
 import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotionSection";
+import ShareKitCard from "@/shareKit/organisms/ShareKitCard";
 import PaySmallSmallCard from "@/ticketPlans/molecules/PaySmallSmallCard";
 import TicketTransferOrganizerCard from "@/ticketTransfers/molecules/TicketTransferOrganizerCard";
 import type { EventStatus } from "@abonten/core/eventStatus";
+import { hasShareImages } from "@abonten/core/shareKit/shareKit";
 import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { ManagedEvent } from "@abonten/types/managedEventType";
 import type { TeamRoleCode } from "@abonten/types/teamType";
@@ -140,6 +142,12 @@ export default function ManageEventView({
 
         {activeTab === "promotion" && (
           <>
+            <ShareKitCard
+              kind="events"
+              subjectKey={event.event_code}
+              name={event.title}
+              isPublic={hasShareImages(event)}
+            />
             {covers(teamRole, "promotions.buy") ? (
               <>
                 <ManageEventPromotionSection
