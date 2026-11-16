@@ -374,7 +374,15 @@ in event referrals, the promoter commission, friend invites, the referral
 stamped at checkout and the loyalty fee rebate (decision X36; migration
 `20261116200000_team_accounts_promotions_commission`). The commission a
 team's event pays comes off the team's organizer ledger, and its Owners and
-Finance set it (team-accounts.md §4i).
+Finance set it (team-accounts.md §4i). A team's own rewards (rebates,
+place-visit credit, milestones) are released once an active Owner of the
+active team has a verified phone (`_reward_beneficiary_phone_ok`, in
+`_reward_settle_one`; a team account has no phone of its own); its members'
+visits to its places and purchases of its tickets never count towards them
+(`place_visit_record`, `_reward_place_visits_evaluate`,
+`_reward_event_rebate_basis`). An email about a team's credit goes to its
+Owners and Finance (`trg_notification_delivery_copy_to_team`, migration
+`20261116210000_team_accounts_emails`).
 
 **Switching them on:** Reward rules → Loyalty fee rebate / Promoter
 commission / Place visits → Make live. Promoter commissions also need

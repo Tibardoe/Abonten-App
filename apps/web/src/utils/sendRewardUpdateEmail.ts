@@ -30,6 +30,13 @@ export async function sendRewardUpdateEmail(
       : words.t("rewards.subjectMany", { count: email.items.length });
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://abontenhub.com";
+  // A team's credit: the button opens the team's Finances, switching
+  // "Managing as" to the team on the way (/notifications/open).
+  const rewardsUrl = email.team
+    ? `${base}/notifications/open?id=${encodeURIComponent(
+        email.team.notificationId,
+      )}&to=${encodeURIComponent("/finances")}`
+    : `${base}/rewards`;
 
   try {
     // One-click unsubscribe (RFC 8058) for Gmail / Yahoo / Outlook's own
@@ -46,8 +53,9 @@ export async function sendRewardUpdateEmail(
       react: RewardUpdateEmailTemplate({
         words,
         items: email.items,
-        rewardsUrl: `${base}/rewards`,
+        rewardsUrl,
         unsubscribeUrl: unsubscribe.page,
+        teamName: email.team ? (email.team.name ?? "") : null,
       }),
     });
     if (error) {

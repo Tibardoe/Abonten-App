@@ -37,7 +37,10 @@
     "open": "Abrir o Abonten Rewards",
     "subjectMany": "Abonten Rewards: {count} novidades",
     "unsubscribe": "Não quer receber estes e-mails? <link>Cancelar subscrição</link>. Continuará a ver o seu crédito na aplicação.",
-    "why": "Está a receber este e-mail porque ganhou Crédito Abonten na sua conta Abonten Hub. O crédito pode ser gasto no Abonten e não pode ser trocado por dinheiro."
+    "why": "Está a receber este e-mail porque ganhou Crédito Abonten na sua conta Abonten Hub. O crédito pode ser gasto no Abonten e não pode ser trocado por dinheiro.",
+    "introTeam": "{greeting} eis as novidades do Crédito Abonten de {team}, uma equipa que ajuda a gerir.",
+    "openTeam": "Abrir {team} no Abonten",
+    "whyTeam": "Está a receber isto porque é proprietário ou membro de Finanças de {team} no Abonten Hub. O crédito pode ser usado no Abonten e não pode ser trocado por dinheiro."
   },
   "ticket": {
     "amountPaid": "Montante pago",

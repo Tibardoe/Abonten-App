@@ -20,6 +20,11 @@ interface RewardUpdateEmailProps {
   items: RewardUpdateEmailItem[];
   rewardsUrl: string;
   unsubscribeUrl: string;
+  /**
+   * A team's credit (copies of the team's notices, sent to its Owners and
+   * Finance): the email says whose. Null for the reader's own credit.
+   */
+  teamName?: string | null;
 }
 
 /**
@@ -37,8 +42,10 @@ export default function RewardUpdateEmailTemplate({
   items,
   rewardsUrl,
   unsubscribeUrl,
+  teamName = null,
 }: RewardUpdateEmailProps) {
   const { t, locale, greeting } = words;
+  const team = teamName !== null;
   const heading =
     items.length === 1 ? items[0].title : t("rewards.headingMany");
   return (
@@ -46,7 +53,13 @@ export default function RewardUpdateEmailTemplate({
       locale={locale}
       preview={items[0]?.body ?? heading}
       heading={heading}
-      intro={<EmailIntro>{t("rewards.intro", { greeting })}</EmailIntro>}
+      intro={
+        <EmailIntro>
+          {team
+            ? t("rewards.introTeam", { greeting, team: teamName })
+            : t("rewards.intro", { greeting })}
+        </EmailIntro>
+      }
     >
       <EmailDivider />
       <EmailSection>
@@ -75,10 +88,14 @@ export default function RewardUpdateEmailTemplate({
         ))}
       </EmailSection>
 
-      <EmailButton href={rewardsUrl}>{t("rewards.open")}</EmailButton>
+      <EmailButton href={rewardsUrl}>
+        {team ? t("rewards.openTeam", { team: teamName }) : t("rewards.open")}
+      </EmailButton>
 
       <EmailFooter words={words}>
-        <EmailFinePrint>{t("rewards.why")}</EmailFinePrint>
+        <EmailFinePrint>
+          {team ? t("rewards.whyTeam", { team: teamName }) : t("rewards.why")}
+        </EmailFinePrint>
         <EmailFinePrint>
           {richEmailText(t("rewards.unsubscribe"), {
             link: (chunk) => (

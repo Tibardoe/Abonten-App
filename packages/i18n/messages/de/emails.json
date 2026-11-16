@@ -37,7 +37,10 @@
     "open": "Abonten Rewards öffnen",
     "subjectMany": "Abonten Rewards: {count} Neuigkeiten",
     "unsubscribe": "Du möchtest diese E-Mails nicht? <link>Abbestellen</link>. Dein Guthaben siehst du weiterhin in der App.",
-    "why": "Du erhältst diese E-Mail, weil du in deinem Abonten-Hub-Konto Abonten-Guthaben verdient hast. Guthaben kann auf Abonten ausgegeben und nicht gegen Bargeld getauscht werden."
+    "why": "Du erhältst diese E-Mail, weil du in deinem Abonten-Hub-Konto Abonten-Guthaben verdient hast. Guthaben kann auf Abonten ausgegeben und nicht gegen Bargeld getauscht werden.",
+    "introTeam": "{greeting} das ist neu beim Abonten-Guthaben von {team}, einem Team, das du mitführst.",
+    "openTeam": "{team} auf Abonten öffnen",
+    "whyTeam": "Du bekommst diese E-Mail, weil du Inhaber oder Mitglied in Finanzen von {team} auf Abonten Hub bist. Guthaben kann auf Abonten eingesetzt, aber nicht in Geld umgetauscht werden."
   },
   "ticket": {
     "amountPaid": "Gezahlter Betrag",

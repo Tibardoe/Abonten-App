@@ -43,7 +43,10 @@
     "intro": "{greeting} here's what's new with your Abonten Credit.",
     "open": "Open Abonten Rewards",
     "why": "You're getting this because you earned Abonten Credit on your Abonten Hub account. Credit can be spent on Abonten and can't be exchanged for cash.",
-    "unsubscribe": "Don't want these emails? <link>Unsubscribe</link>. You'll still see your credit in the app."
+    "unsubscribe": "Don't want these emails? <link>Unsubscribe</link>. You'll still see your credit in the app.",
+    "introTeam": "{greeting} here's what's new with the Abonten Credit of {team}, a team you help run.",
+    "openTeam": "Open {team} on Abonten",
+    "whyTeam": "You're getting this because you're an Owner or a Finance member of {team} on Abonten Hub. Credit can be spent on Abonten and can't be exchanged for cash."
   },
   "digest": {
     "intro": "{greeting} here {count, plural, one {is a pick} other {are # picks}} based on what you asked to hear about.",

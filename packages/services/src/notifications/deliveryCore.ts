@@ -31,6 +31,12 @@ export type RewardEmail = {
   to: string;
   name: string | null;
   items: RewardEmailItem[];
+  /**
+   * The notices are copies of a team's (its credit, not the reader's): the
+   * email says whose, and its link switches "Managing as" to the team
+   * through /notifications/open (team accounts §4j).
+   */
+  team?: { id: string; name: string | null; notificationId: string } | null;
 };
 
 export type RecommendationEmailItem = {
@@ -114,6 +120,19 @@ type ClaimedRow = {
 
 const BATCH = 200;
 const PARALLEL = 5;
+
+/** A copy of a team's notice names the team (notification_fan_out_to_team). */
+function teamOf(row: {
+  data: unknown;
+}): { id: string; name: string | null } | null {
+  const data = (row.data ?? {}) as { team_id?: unknown; team_name?: unknown };
+  return typeof data.team_id === "string"
+    ? {
+        id: data.team_id,
+        name: typeof data.team_name === "string" ? data.team_name : null,
+      }
+    : null;
+}
 
 /** Compares the caller's token with the one the cron job sends. */
 export async function isDeliveryTokenValid(
@@ -208,13 +227,14 @@ export async function deliverQueuedNotificationsCore(
     else if (status === "queued") summary.retrying += ids.length;
   };
 
-  // Reward notices are batched per person; a review or a cancellation is
-  // its own push (it opens its own screen).
+  // Reward notices are batched per person (and, for copies of a team's
+  // notices, per team: one email speaks for one account's credit); a
+  // review or a cancellation is its own push (it opens its own screen).
   const groups = new Map<string, ClaimedRow[]>();
   for (const row of rows) {
     const key =
       row.source === "rewards"
-        ? `${row.channel}:${row.user_id}`
+        ? `${row.channel}:${row.user_id}:${teamOf(row)?.id ?? ""}`
         : `${row.channel}:${row.user_id}:${row.delivery_id}`;
     const list = groups.get(key) ?? [];
     list.push(row);
@@ -324,6 +344,15 @@ export async function deliverQueuedNotificationsCore(
                   body: r.body,
                   at: r.created_at,
                 })),
+              team: teamOf(group[0])
+                ? {
+                    ...(teamOf(group[0]) as {
+                      id: string;
+                      name: string | null;
+                    }),
+                    notificationId: group[0].notification_id,
+                  }
+                : null,
             });
       if (result.ok) {
         await finish(ids, "sent");

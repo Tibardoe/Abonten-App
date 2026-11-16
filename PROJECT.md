@@ -4443,3 +4443,12 @@ Branch `feat/team-promotions-commission-2026-11-16`, migration `20261116200000_t
 - Fix: the website's Pay small small and ticket-sending switches read the person's own account while managing as a team (the app already acted for the team); they act for it with `events.manage` now and the Promotion tab shows them to Managers.
 - Fix: staff steps in a team's activity (pause, resume, a new Owner) read "Former member"; they read "Abonten staff" now, and `team.resumed` has its own words.
 - **Checked**: `teams-promotions-commission.integration.test.ts` (3 tests), the content, reward, referral, promotion, plan and sending suites.
+
+### 75.10 Stage 5: emails about a team, a team's own rewards (2026-11-16)
+
+Branch `feat/team-emails-2026-11-16`, migration `20261116210000_team_accounts_emails`.
+
+- `trg_notification_delivery_copy_to_team`: an email delivery queued for a team is copied to the members' copies of the notice (same source; members' preferences apply) and the team's row closed `sent_to_members`. `deliveryCore` groups a member's reward emails per account (`RewardEmail.team`); the email names the team and links through `/notifications/open`, which now switches "Managing as" for a team's copy (web push clicks too).
+- Fix (found by the test): `_reward_settle_one` required the beneficiary's own verified phone, which a team account never has, so a team's rebates and place-visit credit stayed pending (`phone_not_verified`) and would void after 90 days; `_reward_beneficiary_phone_ok` accepts an active Owner's.
+- Fix: a team's members counted as visitors of its places and their purchases towards its rebates; `place_visit_record` (patched in place, as 20260924100200 left it), `_reward_place_visits_evaluate` and `_reward_event_rebate_basis` treat them as the team's own.
+- **Checked**: `teams-emails.integration.test.ts` (a real place-visit run for a team-run place: release, member copies, Owner email naming the team, Finance opted out, a member's visit not counted) and the rewards P8, rebates and notification-delivery suites.
