@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Field Ops for Accra/Osu, online, commissions off
+
+- Campaign "Accra online, Osu first" is active for staff online onboarding (Osu and Accra territories, two staff members), with commissions and payouts off. The Monitoring `fieldops` check no longer reads the commission sweep as late while commissions are off; the programme switch goes on once that is live. `admin/field-ops.md`, `architecture/field-ops.md`
+
 ## 2026-11-16 — Paid sales paused until live Paystack keys
 
 - Before outreach, every pilot, test and App Review sample listing was hidden (moderation "hide", audited, reversible) and Paystack checkout was paused with the `checkout.paystack` flag for everyone but the founder's and the two QA accounts; a checkout with no way to pay now says "Sales are paused" instead of showing an empty list. Opening sales is step 13 of the live cutover. `finance/paystack-live-cutover.md`

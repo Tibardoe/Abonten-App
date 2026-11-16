@@ -335,7 +335,9 @@ territory in the region and an active team lead); the same table lives in
   (`fieldops.commissions.approve` + step-up).
 - **Switch commission generation off without stopping the field work:**
   Settings › "Commissions being generated". The sweep becomes a no-op;
-  submissions and reviews carry on.
+  submissions and reviews carry on, and the Monitoring `fieldops` check
+  stops counting the sweep's age and the verified onboardings it leaves
+  waiting (it still checks for failures and commissions without a rule).
 - **Pay the team (weekly):** Admin › Field Ops › Payouts → pick the
   campaign → check the preview (it lists anyone left out for want of a
   mobile-money number) → **Build batch** → a **different** admin opens it

@@ -324,11 +324,28 @@ export async function runHealthChecksCore(
   // on, a run reported failures, work is overdue, or a successful
   // onboarding somehow has no commission behind it.
   const fieldops = await timed(async () => {
-    const { data, error } = await serviceClient.rpc("fieldops_health");
-    if (error) throw new Error(error.message);
-    return (data ?? {}) as Record<string, number | boolean>;
+    const [health, setting] = await Promise.all([
+      serviceClient.rpc("fieldops_health"),
+      serviceClient
+        .from("fieldops_program_setting")
+        .select("commission_generation_enabled")
+        .eq("id", 1)
+        .maybeSingle(),
+    ]);
+    if (health.error) throw new Error(health.error.message);
+    if (setting.error) throw new Error(setting.error.message);
+    const out: Record<string, number | boolean> = {
+      ...((health.data ?? {}) as Record<string, number | boolean>),
+      commission_generation_enabled:
+        setting.data?.commission_generation_enabled !== false,
+    };
+    return out;
   });
   const fh = fieldops.value;
+  // With commissions switched off the sweep is a deliberate no-op too (field
+  // work and reviews carry on), so neither its age nor the verified
+  // onboardings it leaves waiting mean anything.
+  const sweepRuns = fh?.commission_generation_enabled !== false;
   push(
     "fieldops",
     fieldops,
@@ -336,9 +353,9 @@ export async function runHealthChecksCore(
       // A switched-off programme is healthy by definition: the sweep is a
       // deliberate no-op, so its lag means nothing.
       (fh.enabled !== true ||
-        (Number(fh.sweep_lag_seconds ?? 0) <= 3600 &&
+        ((!sweepRuns || Number(fh.sweep_lag_seconds ?? 0) <= 3600) &&
           Number(fh.sweep_failures ?? 0) === 0 &&
-          Number(fh.due_not_swept ?? 0) === 0 &&
+          (!sweepRuns || Number(fh.due_not_swept ?? 0) === 0) &&
           Number(fh.succeeded_without_commission ?? 0) === 0 &&
           Number(fh.approved_without_rule ?? 0) === 0)),
     fh ?? undefined,
