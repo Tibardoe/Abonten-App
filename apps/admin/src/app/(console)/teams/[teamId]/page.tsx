@@ -1,11 +1,13 @@
 import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
 import { loadTeam } from "@/lib/data";
+import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
+import { TeamStaffActions } from "./TeamStaffActions";
 
 // Admin › Teams › one team: who runs it, in which role, and what each
-// member did. Read-only in stage 1 (staff settle disputes and paused teams
-// in stage 5). The console is English-only.
+// member did; with teams.manage, staff pause it in a dispute, resume it and
+// make a current or former member an Owner. The console is English-only.
 
 const ROLE: Record<string, string> = {
   owner: "Owner",
@@ -28,11 +30,29 @@ export default async function TeamPage({
 }) {
   await requirePermissionPage("teams.view");
   const { teamId } = await params;
-  const { team } = await loadTeam(teamId);
+  const { ctx, team } = await loadTeam(teamId);
   if (team.status !== 200 || !team.data) {
     return <EmptyState>{team.message ?? "Couldn't load the team."}</EmptyState>;
   }
-  const { team: row, members, activity } = team.data;
+  const { team: row, members, formerMembers, activity } = team.data;
+  const canManage = ctx.permissions.includes("teams.manage");
+  const stepUpFresh =
+    !!ctx.reauthenticatedAt &&
+    Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
+  const candidates = [
+    ...members
+      .filter((m) => m.role !== "owner")
+      .map((m) => ({
+        person: m.person,
+        current: true,
+        role: ROLE[m.role] ?? m.role,
+      })),
+    ...formerMembers.map((m) => ({
+      person: m.person,
+      current: false,
+      role: ROLE[m.role] ?? m.role,
+    })),
+  ];
 
   return (
     <div className="space-y-6">
@@ -57,7 +77,13 @@ export default async function TeamPage({
                 ? "Paused"
                 : "Closed"}
           </Badge>
-          {row.statusReason === "no_owner" ? " · no Owner left" : null}
+          {row.statusReason === "no_owner"
+            ? " · no Owner left"
+            : row.statusReason === "dispute"
+              ? " · paused for a dispute"
+              : row.statusReason === "staff"
+                ? " · paused by staff"
+                : null}
         </p>
         <p>
           Made {timeAgo(row.createdAt)}
@@ -75,6 +101,17 @@ export default async function TeamPage({
           </Link>
         </p>
       </Card>
+
+      {canManage ? (
+        <TeamStaffActions
+          teamId={row.id}
+          teamName={row.name ?? row.username ?? "this team"}
+          status={row.status}
+          hasOwner={row.owners.length > 0}
+          candidates={candidates}
+          stepUpFresh={stepUpFresh}
+        />
+      ) : null}
 
       <Card className="space-y-2 p-4">
         <p className="text-sm font-semibold">Members ({members.length})</p>

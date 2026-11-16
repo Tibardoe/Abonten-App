@@ -1393,6 +1393,7 @@
   "teamNothingToMove": "Todavía no gestionas eventos ni lugares. Crea un equipo nuevo en su lugar.",
   "teamPayoutInProgress": "Hay un cobro en camino hacia ti. Inténtalo de nuevo cuando se haya pagado.",
   "teamVerificationOpen": "Termina o retira primero tu solicitud de verificación y vuelve a intentarlo.",
+  "teamVerifiedNameLocked": "Un equipo Verificado aún no puede cambiar su nombre.",
   "teamAccountNotFound": "No encontramos ninguna cuenta con ese nombre de usuario.",
   "teamPhoneInvalid": "Introduce un número de teléfono válido.",
   "teamCannotText": "Aún no podemos enviar SMS a ese número. Invítale por su nombre de usuario.",

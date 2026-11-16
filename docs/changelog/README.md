@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts: staff tools for paused teams and disputes
+
+- Admin › Teams › a team: pause (dispute, staff hold), resume (only with an Owner), make a current or former member an Owner (an Owner-less team resumes); `teams.manage` (Operations), step-up, reason, audited. A Verified team keeps its name until teams can be reviewed (X42 interim): `architecture/team-accounts.md` 1.7 (§4g), `admin/teams.md` 1.7. Migration `20261116180000_team_accounts_staff_tools`; PROJECT.md §75.7, CLAUDE.md quick facts.
+
 ## 2026-11-16 — Team accounts: make this a team (X8)
 
 - A person turns their events and places into a team that keeps their @username, name and photo; followers, alert subscribers, conversations about the listings, organizer money, payout accounts and badges move too; the person becomes its Owner with a new @username: `architecture/team-accounts.md` 1.6 (§4f, code map), `admin/teams.md` 1.6. Migration `20261116170000_team_accounts_convert`; PROJECT.md §75.6, CLAUDE.md quick facts.

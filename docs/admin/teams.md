@@ -2,9 +2,9 @@
 title: Admin — Teams
 purpose: How to look up who runs a team, answer the common support questions about team accounts, and switch the programme on in stages.
 audience: Support, operations
-scope: Admin › Teams, the teams.view / teams.configure permissions, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire job
+scope: Admin › Teams, the teams.view / teams.configure / teams.manage permissions, pausing and resuming a team, appointing an Owner, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire job
 status: Approved
-version: 1.6
+version: 1.7
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -35,6 +35,9 @@ Search by the team's name or username. A team's page shows its status (**Active*
 - **"The invitation never came."** Invitations by username appear in the person's notifications and under Settings › Teams. One by phone to a number with no account is texted (Ghana today, at most the daily number per team); the Owner sees "We couldn't text this number" if it did not go. Invitations last a week by default.
 - **"Who answered me?"** (from a customer) Replies from a team show the team's name only. Staff can see which member wrote a message (`message_team_sender`) when a complaint needs it.
 - **"I can't see the team's messages."** The member must manage as the team (Manage › Managing as on the website, the top of Organizer in the app) and hold Owner or Content and messages.
+- **A team is paused with "no Owner left".** Its last Owner's account was closed or banned. Open the team, give a reason (the ticket and what was agreed), and use **Make Owner** on a current or former member the team agrees should run it; the team resumes at once and the person is told. Only someone whose own account is in good standing can be made an Owner. Needs `teams.manage` and a fresh sign-in.
+- **Members of a team disagree (who owns it, who gets paid).** **Pause team** with "A dispute between members" while it is sorted out: nobody can change its events or places, move its money or answer as the team. When it is settled, appoint or keep the right Owners (members remove each other in the app; staff can make someone an Owner) and **Resume team**. Every step is in the audit log with your reason.
+- **"We can't change our team's name."** A Verified team keeps its name until teams can be checked again after a rename (X42). Tell them so; nothing to do in the console.
 - **"I made my account a team and my @username changed."** That is how "make this a team" works: the team keeps the @username people know (with the events, places, followers and money); the person gets a new one, which they can change in their profile. The team's activity shows `team.converted` with who did it.
 - **"It won't let me make my account a team."** It refuses while a payout is being processed (wait until it is paid), while a verification request is open (finish or withdraw it), or when the person runs no events or places (they make a new team instead).
 - **"Who posted this?"** A team's Spotlight or Story shows the team only. The team's activity (Admin › Teams › the team) names the member who published it (`content_published`), and the upload is that member's (`content_media.owner_id`).

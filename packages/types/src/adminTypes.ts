@@ -110,7 +110,8 @@ export type AdminPermissionKey =
   | "transfers.view"
   | "transfers.configure"
   | "teams.view"
-  | "teams.configure";
+  | "teams.configure"
+  | "teams.manage";
 
 export type AdminUserStatus = "active" | "disabled";
 

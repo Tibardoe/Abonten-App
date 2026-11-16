@@ -110,6 +110,7 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "transfers.configure",
   "teams.view",
   "teams.configure",
+  "teams.manage",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -363,6 +364,7 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "plans.configure",
   "transfers.configure",
   "teams.configure",
+  "teams.manage",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

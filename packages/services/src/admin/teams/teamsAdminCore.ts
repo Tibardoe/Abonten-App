@@ -8,7 +8,12 @@ import type {
   TeamRoleCode,
   TeamStatus,
 } from "@abonten/types/teamType";
-import type { TeamSettingsInput } from "@abonten/validation/teamSchemas";
+import type {
+  AppointTeamOwnerAdminInput,
+  TeamSettingsInput,
+  TeamStatusAdminInput,
+} from "@abonten/validation/teamSchemas";
+import { noticeTeamRoleChanged } from "../../teams/teamNotices";
 import {
   isTeamsKillSwitchOn,
   mapTeamSettings,
@@ -24,9 +29,10 @@ import {
 
 // Admin › Teams (docs/architecture/team-accounts.md): the programme
 // switches and limits, and every team with its members, open invitations
-// and activity, so support can answer "who runs this organizer?". Staff do
-// not change members here yet (disputes and frozen teams come with stage
-// 5). Every settings change is audited.
+// and activity, so support can answer "who runs this organizer?". Staff
+// pause a team in a dispute, resume it, and make a current or former member
+// an Owner (a team paused because its last Owner's account closed). Every
+// change is audited.
 
 type RequestMeta = Record<string, unknown> | undefined;
 
@@ -241,6 +247,8 @@ export async function listTeamsAdminCore(
 export type TeamAdminDetail = {
   team: TeamAdminRow;
   members: { person: TeamPerson; role: TeamRoleCode; joinedAt: string }[];
+  /** People who left or were removed: staff may make one an Owner again. */
+  formerMembers: { person: TeamPerson; role: TeamRoleCode }[];
   activity: {
     id: number;
     actor: TeamPerson | null;
@@ -268,7 +276,7 @@ export async function getTeamAdminCore(
     .maybeSingle();
   if (error) return { status: 500, message: "Couldn't load the team." };
   if (!team) return { status: 404, message: "Team not found." };
-  const [members, activity] = await Promise.all([
+  const [members, activity, former] = await Promise.all([
     supabase
       .from("team_member")
       .select("user_id, role, joined_at")
@@ -283,13 +291,22 @@ export async function getTeamAdminCore(
       .eq("team_id", teamId)
       .order("created_at", { ascending: false })
       .limit(200),
+    supabase
+      .from("team_member")
+      .select("user_id, role")
+      .eq("team_id", teamId)
+      .neq("status", "active")
+      .order("updated_at", { ascending: false })
+      .limit(50),
   ]);
   const memberRows = members.data ?? [];
+  const formerRows = former.data ?? [];
   const activityRows = activity.data ?? [];
   const persons = await people(supabase, [
     teamId,
     team.created_by,
     ...memberRows.map((m) => m.user_id),
+    ...formerRows.map((m) => m.user_id),
     ...activityRows.map((a) => a.actor_user_id),
     ...activityRows
       .filter((a) => a.subject_kind === "member")
@@ -330,6 +347,14 @@ export async function getTeamAdminCore(
             joinedAt: string;
           } => !!m.person,
         ),
+      formerMembers: formerRows
+        .map((m) => ({
+          person: persons.get(m.user_id),
+          role: m.role as TeamRoleCode,
+        }))
+        .filter(
+          (m): m is { person: TeamPerson; role: TeamRoleCode } => !!m.person,
+        ),
       activity: activityRows.map((a) => ({
         id: a.id,
         actor: a.actor_user_id ? (persons.get(a.actor_user_id) ?? null) : null,
@@ -342,5 +367,130 @@ export async function getTeamAdminCore(
         createdAt: a.created_at,
       })),
     },
+  };
+}
+
+// ── Staff tools: paused teams and disputes ───────────────────────────
+
+/** The database's refusals, in the console's words (it is English-only). */
+const STAFF_ERRORS: Record<
+  string,
+  { status: 400 | 404 | 409; message: string }
+> = {
+  not_found: { status: 404, message: "Team not found." },
+  team_frozen: { status: 409, message: "The team is already paused." },
+  not_paused: { status: 409, message: "The team isn't paused." },
+  no_owner: {
+    status: 409,
+    message: "The team has no Owner. Make a member an Owner first.",
+  },
+  not_member: {
+    status: 404,
+    message: "That person has never been a member of this team.",
+  },
+  already_member: { status: 409, message: "That person is already an Owner." },
+  receiver_unavailable: {
+    status: 409,
+    message: "That person's own account isn't in good standing.",
+  },
+  bad_reason: { status: 400, message: "Choose why the team is paused." },
+  bad_status: { status: 400, message: "Choose pause or resume." },
+};
+
+function staffFailure(
+  error: { message?: string } | null,
+  where: string,
+): AdminEnvelope<never> {
+  const code = /team:([a-z_]+)/.exec(error?.message ?? "")?.[1];
+  const known = code ? STAFF_ERRORS[code] : undefined;
+  if (known) return known;
+  logger.error(`${where}: ${error?.message ?? "no error text"}`);
+  return { status: 500, message: "Couldn't change the team." };
+}
+
+/**
+ * Pauses a team (a dispute, a staff reason: nobody may act for it) or
+ * resumes it (only with an Owner). teams.manage + step-up, audited.
+ */
+export async function setTeamStatusAdminCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: TeamStatusAdminInput,
+  requestMeta?: RequestMeta,
+): Promise<AdminEnvelope<{ status: TeamStatus }>> {
+  try {
+    assertPermission(ctx, "teams.manage");
+  } catch (e) {
+    return denied(e);
+  }
+  const { data, error } = await supabase.rpc("admin_team_set_status", {
+    p_team: input.teamId,
+    p_to: input.to,
+    p_reason: input.to === "frozen" ? input.why : null,
+  } as never);
+  if (error) return staffFailure(error, "setTeamStatusAdminCore");
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: input.to === "frozen" ? "teams.pause" : "teams.resume",
+    targetType: "team",
+    targetId: input.teamId,
+    summary:
+      input.to === "frozen" ? `Team paused (${input.why})` : "Team resumed",
+    reason: input.reason,
+    before: null,
+    after: { status: data },
+    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+  });
+  return {
+    status: 200,
+    message: input.to === "frozen" ? "Team paused." : "Team resumed.",
+    data: { status: data as TeamStatus },
+  };
+}
+
+/**
+ * Makes a current or former member an Owner (their own account must be in
+ * good standing). A team paused only for having no Owner resumes at once.
+ * teams.manage + step-up, audited; the person is told.
+ */
+export async function appointTeamOwnerAdminCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: AppointTeamOwnerAdminInput,
+  requestMeta?: RequestMeta,
+): Promise<AdminEnvelope<{ resumed: boolean }>> {
+  try {
+    assertPermission(ctx, "teams.manage");
+  } catch (e) {
+    return denied(e);
+  }
+  const { data, error } = await supabase.rpc("admin_team_appoint_owner", {
+    p_team: input.teamId,
+    p_user: input.userId,
+  });
+  if (error) return staffFailure(error, "appointTeamOwnerAdminCore");
+  const resumed = data === "resumed";
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: "teams.owner.appoint",
+    targetType: "team",
+    targetId: input.teamId,
+    summary: resumed ? "Owner appointed; the team resumed" : "Owner appointed",
+    reason: input.reason,
+    before: null,
+    after: { owner: input.userId, resumed },
+    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+  });
+  await noticeTeamRoleChanged(input.teamId, input.userId, "owner").catch((e) =>
+    logger.error(`appointTeamOwnerAdminCore notice: ${e}`),
+  );
+  return {
+    status: 200,
+    message: resumed
+      ? "They are an Owner now, and the team is running again."
+      : "They are an Owner now.",
+    data: { resumed },
   };
 }

@@ -4412,3 +4412,12 @@ Branch `feat/team-accounts-convert-2026-11-16`, migration `20261116170000_team_a
 - Refused with nothing to move, a payout `processing`, or a verification request open; the service deletes the team's auth user when the move fails.
 - Website Settings › Teams card + dialog, app Settings › Teams card + sheet (`canConvert` in the overview).
 - **Checked**: `teams-convert.integration.test.ts` (3 tests) and the team, verification, content, messaging and grants suites (181 tests).
+
+### 75.7 Stage 5, first part: staff tools for paused teams and disputes (2026-11-16)
+
+Branch `feat/team-accounts-staff-tools-2026-11-16`, migration `20261116180000_team_accounts_staff_tools`.
+
+- `admin_team_set_status(team, to, reason)` (pause for a dispute or a staff hold; resume only with an Owner) and `admin_team_appoint_owner(team, user)` (a current or former member in good standing; an Owner-less team resumes), service role only; Admin › Teams › a team: Staff actions (`teams.manage`, Operations; step-up; reason; audit `teams.pause` / `teams.resume` / `teams.owner.appoint`).
+- X42 interim: `team_rename_guard_verified` keeps a Verified team's name until teams can be reviewed.
+- **Open (stage 5, second part)**: verification requests by a team and X42's review after a rename.
+- **Checked**: `teams-staff.integration.test.ts` (3 tests) and the admin, team and grants suites (109 tests).

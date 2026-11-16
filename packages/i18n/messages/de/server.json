@@ -1393,6 +1393,7 @@
   "teamNothingToMove": "Du führst noch keine Events oder Orte. Erstelle stattdessen ein neues Team.",
   "teamPayoutInProgress": "Eine Auszahlung an dich ist unterwegs. Versuche es erneut, sobald sie ausgezahlt ist.",
   "teamVerificationOpen": "Schließe deine Verifizierungsanfrage zuerst ab oder ziehe sie zurück und versuche es dann erneut.",
+  "teamVerifiedNameLocked": "Ein verifiziertes Team kann seinen Namen noch nicht ändern.",
   "teamAccountNotFound": "Wir haben kein Konto mit diesem Benutzernamen gefunden.",
   "teamPhoneInvalid": "Gib eine gültige Telefonnummer ein.",
   "teamCannotText": "An diese Nummer können wir noch keine SMS schicken. Lade die Person über ihren Benutzernamen ein.",

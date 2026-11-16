@@ -95,6 +95,7 @@ const SQL_ERRORS: Record<string, { status: Fail["status"]; key: string }> = {
   nothing_to_move: { status: 409, key: "teamNothingToMove" },
   payout_in_progress: { status: 409, key: "teamPayoutInProgress" },
   verification_open: { status: 409, key: "teamVerificationOpen" },
+  verified_name_locked: { status: 409, key: "teamVerifiedNameLocked" },
 };
 
 /** Turns a `team:<code>` database error into an envelope. */
