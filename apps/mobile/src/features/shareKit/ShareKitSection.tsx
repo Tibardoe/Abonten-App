@@ -19,6 +19,8 @@ import { Share, View } from "react-native";
 
 type Subject = { key: string; name: string; isPublic: boolean };
 
+const PREVIEW_HEIGHT = 200;
+
 /**
  * The listing's code or slug and whether it is public, read directly: the
  * owner (or a member acting for the team) may read their own listing, and
@@ -118,16 +120,23 @@ export function ShareKitSection({
         {subject.isPublic ? t("shareKit.intro") : t("shareKit.notPublic")}
       </AppText>
       {subject.isPublic ? (
-        <View className="flex-row flex-wrap gap-3">
+        <View className="flex-row flex-wrap items-end gap-3">
           {SHARE_FORMATS[kind].map((format) => (
-            <View key={format} className="w-[30%] min-w-[96px] gap-2">
+            // One height for every preview, so the buttons line up.
+            <View
+              key={format}
+              className="gap-2"
+              style={{
+                width: PREVIEW_HEIGHT * (format === "story" ? 9 / 16 : 4 / 5),
+              }}
+            >
               <Image
                 source={{
                   uri: `${PUBLIC_SITE_ORIGIN}${shareImagePath(kind, subject.key, format, locale)}`,
                 }}
                 style={{
                   width: "100%",
-                  aspectRatio: format === "story" ? 9 / 16 : 4 / 5,
+                  height: PREVIEW_HEIGHT,
                   borderRadius: 8,
                 }}
                 contentFit="cover"
@@ -153,7 +162,7 @@ export function ShareKitSection({
         </View>
       ) : null}
       <Button
-        title={t("shareKit.share")}
+        title={t("shareKit.shareLink")}
         variant="outline"
         onPress={shareLink}
       />
