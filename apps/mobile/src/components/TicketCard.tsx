@@ -122,6 +122,7 @@ export function TicketCard({
             amount={refund.amount}
             currency={refund.currency}
             transactionId={ticket.transaction_id}
+            paidBySomeoneElse={isTicketPaidBySomeoneElse(ticket)}
           />
         ) : null}
 

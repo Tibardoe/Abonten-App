@@ -75,6 +75,7 @@
   "sendBlockedOrganizerOff": "The organizer has turned off sending tickets for this event.",
   "sendBlockedTooManyMoves": "This ticket has already been sent the most times allowed.",
   "sendBlockedRestricted": "Your account can't send tickets right now.",
+  "refundGoesToPayer": "This ticket was sent to you, so any refund goes to the person who paid for it.",
   "sentToYouNoRefund": "This ticket was sent to you, so its refund belongs to the person who paid. If you can't go, send it back to them.",
   "takeBack": "Take it back",
   "sendTicket": "Send to a friend",

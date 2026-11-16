@@ -75,6 +75,7 @@
   "sendBlockedOrganizerOff": "O organizador desativou o envio de bilhetes para este evento.",
   "sendBlockedTooManyMoves": "Este bilhete já foi enviado o número máximo de vezes.",
   "sendBlockedRestricted": "A sua conta não pode enviar bilhetes de momento.",
+  "refundGoesToPayer": "Este bilhete foi-lhe enviado, por isso qualquer reembolso vai para quem o pagou.",
   "sentToYouNoRefund": "Este bilhete foi-lhe enviado, por isso o reembolso pertence a quem pagou. Se não puder ir, devolva-o a essa pessoa.",
   "takeBack": "Retirar",
   "sendTicket": "Enviar a alguém",

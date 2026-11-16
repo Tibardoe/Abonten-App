@@ -220,6 +220,7 @@ export default function TicketDetailScreen() {
             amount={refund.amount}
             currency={refund.currency}
             transactionId={ticket.transaction_id}
+            paidBySomeoneElse={sentToHolder}
           />
         ) : null}
 
