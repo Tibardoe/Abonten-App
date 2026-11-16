@@ -14,6 +14,7 @@ import {
   readActingTeamId,
 } from "@/utils/teamActor";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
+import { actorReachesPlace } from "@abonten/services/teams/actingAccount";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -120,6 +121,14 @@ export default async function page({
     return (
       <p className="p-8 text-center text-muted-foreground">
         {t("youReNotAuthorizedToManage2")}
+      </p>
+    );
+  }
+  // Front desk or Door staff limited to some of the team's places.
+  if (!actorReachesPlace(actor, placeId)) {
+    return (
+      <p className="p-8 text-center text-muted-foreground">
+        {t("teamPlaceNotYours")}
       </p>
     );
   }

@@ -71,6 +71,7 @@ import type {
   TeamDetailResult,
   TeamDoneResult,
   TeamInviteeResult,
+  TeamMemberPlacesResult,
   TeamMemberRoleResult,
   TeamsOverviewResult,
   TicketPlanOfferResult,
@@ -2967,11 +2968,22 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body, auth: true },
         );
       },
-      /** The invited person joins or says no. */
-      answerInvite(inviteId: string, action: "accept" | "decline") {
+      /**
+       * The invited person joins or says no. Joining says they are 18 or
+       * older (K7).
+       */
+      answerInvite(
+        inviteId: string,
+        action: "accept" | "decline",
+        adult?: boolean,
+      ) {
         return request<AnswerTeamInviteResult>(
           `/api/mobile/teams/invites/${encodeURIComponent(inviteId)}`,
-          { method: "POST", body: { action }, auth: true },
+          {
+            method: "POST",
+            body: action === "accept" ? { action, adult } : { action },
+            auth: true,
+          },
         );
       },
       /** An Owner withdraws an invitation still waiting. */
@@ -2985,6 +2997,16 @@ export function createApiClient(options: ApiClientOptions) {
         return request<TeamMemberRoleResult>(
           `/api/mobile/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(userId)}`,
           { method: "PATCH", body: { role }, auth: true },
+        );
+      },
+      /**
+       * An Owner limits a Front desk or Door staff member to some of the
+       * team's places; an empty list lifts the limit.
+       */
+      setMemberPlaces(teamId: string, userId: string, placeIds: string[]) {
+        return request<TeamMemberPlacesResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(userId)}/places`,
+          { method: "PUT", body: { placeIds }, auth: true },
         );
       },
       removeMember(teamId: string, userId: string) {

@@ -6,6 +6,7 @@ import {
   teamRoleCan,
   teamRoleCapabilities,
   teamRoleNeedsIdCheck,
+  teamRolePlaceLimited,
 } from "./roles";
 
 describe("team roles", () => {
@@ -60,6 +61,13 @@ describe("team roles", () => {
     expect(TEAM_ROLES.filter(teamRoleNeedsIdCheck)).toEqual([
       "owner",
       "finance",
+    ]);
+  });
+
+  it("limits only Front desk and Door staff to places (a chain)", () => {
+    expect(TEAM_ROLES.filter(teamRolePlaceLimited)).toEqual([
+      "door",
+      "front_desk",
     ]);
   });
 

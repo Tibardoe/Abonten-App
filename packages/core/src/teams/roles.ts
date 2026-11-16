@@ -106,6 +106,15 @@ export const CONTENT_PROMOTION_CAPABILITIES = [
 ] as const satisfies readonly TeamCapability[];
 
 /**
+ * Roles a team can limit to some of its places (a chain of places): they
+ * take bookings, show the visit QR or scan tickets. Mirrors
+ * public.team_role_place_limited().
+ */
+export function teamRolePlaceLimited(role: TeamRole): boolean {
+  return role === "front_desk" || role === "door";
+}
+
+/**
  * Roles whose members must pass the ID check (X5): the ones that can move
  * money.
  */

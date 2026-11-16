@@ -39,14 +39,23 @@ export const teamRoleSchema = z.enum([
   "front_desk",
 ]);
 
+/**
+ * K7: everyone who runs a team says they are 18 or older (the database
+ * also refuses a person an ID check found under 18).
+ */
+const adult = z.literal(true, {
+  errorMap: () => ({ message: "Confirm you are 18 or older." }),
+});
+
 export const createTeamSchema = z.object({
   name: teamName,
   username: teamUsername,
+  adult,
 });
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
 
 /** "Make this a team": the team takes the person's handle; only its name. */
-export const convertAccountToTeamSchema = z.object({ name: teamName });
+export const convertAccountToTeamSchema = z.object({ name: teamName, adult });
 export type ConvertAccountToTeamInput = z.infer<
   typeof convertAccountToTeamSchema
 >;
@@ -75,9 +84,22 @@ export const teamInviteIdSchema = z.object({ inviteId: uuid });
 /** "Managing as": a team id, or null for the person's own account. */
 export const actingTeamSchema = z.object({ teamId: uuid.nullable() });
 
-export const answerTeamInviteSchema = z.object({
-  inviteId: uuid,
-  action: z.enum(["accept", "decline"]),
+export const answerTeamInviteSchema = z
+  .object({
+    inviteId: uuid,
+    action: z.enum(["accept", "decline"]),
+    adult: z.boolean().optional(),
+  })
+  .refine((v) => v.action === "decline" || v.adult === true, {
+    message: "Confirm you are 18 or older.",
+    path: ["adult"],
+  });
+
+/** Limits a Front desk or Door staff member to places (empty = all). */
+export const teamMemberPlacesSchema = z.object({
+  teamId: uuid,
+  userId: uuid,
+  placeIds: z.array(uuid).max(200),
 });
 
 export const teamMemberSchema = z.object({ teamId: uuid, userId: uuid });

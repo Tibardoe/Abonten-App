@@ -4309,7 +4309,8 @@
     "aNewCodeIsOnItsWay": "4bc55ca8",
     "weLlTextACodeToThis": "18a5deca",
     "businessVerification": "2747ed62",
-    "businessVerificationIntro": "17e82bb0"
+    "businessVerificationIntro": "17e82bb0",
+    "teamPlaceNotYours": "646632da"
   },
   "messaging": {
     "a11y.messageActions": "949184b0",
@@ -7276,7 +7277,12 @@
     "teamPayoutAccountTooNew": "87278ec0",
     "verificationTeamRequirements": "3854d908",
     "verificationTeamIsABusiness": "39a9754a",
-    "teamRenamedBadgeInReview": "7b570466"
+    "teamRenamedBadgeInReview": "7b570466",
+    "teamAdultRequired": "74922f05",
+    "teamUnderAge": "42509f62",
+    "teamRoleNotLimited": "046e09a1",
+    "teamPlaceNotTeam": "d4e4907a",
+    "teamPlaceNotYours": "646632da"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -7971,7 +7977,7 @@
   },
   "teams": {
     "accept": "bb54db51",
-    "activity": "f773e7ef",
+    "activity": "3d67e054",
     "activityTitle": "81c0d915",
     "byPhone": "8961d3bf",
     "byUsername": "84c29015",
@@ -7982,7 +7988,6 @@
     "checkInTitle": "c036436f",
     "checkedIn": "4928b57c",
     "codePlaceholder": "a05c1e91",
-    "comingSoon": "da9f9cb7",
     "continue": "2e026239",
     "couldNotDo": "9ae914fa",
     "create": "6851e28f",
@@ -8069,7 +8074,19 @@
     "renameVerifiedBody": "fbd188ed",
     "renameVerifiedConfirm": "3a8c4a18",
     "convertedBadgeInReview": "159ad324",
-    "staffActor": "6abecdb0"
+    "staffActor": "6abecdb0",
+    "adultConfirm": "82a3fd1a",
+    "acceptAdultTitle": "40e7a2b0",
+    "acceptAdultBody": "75c51b82",
+    "acceptAdultConfirm": "3151b134",
+    "places": "0cd35974",
+    "placesAll": "ae3f67bb",
+    "placesSome": "05ef548d",
+    "placesTitle": "b1d58068",
+    "placesBody": "932aee4c",
+    "placesSavedToast": "16b72fa5",
+    "noPlacesYet": "7034c71e",
+    "howToManage": "c084f742"
   },
   "ticketPlans": {
     "abontenCredit": "746223a4",
@@ -8348,6 +8365,7 @@
     "chooseTheCountryThatIssuedYour": "b426ff36",
     "chooseWhichPlaceIsPosting": "6a711912",
     "chooseYourMobileMoneyNetwork": "bd0b495f",
+    "confirmYouAre18OrOlder": "db8c0ea1",
     "confirmYouHaveTheRightsTo": "c21fe07b",
     "describeTheChange": "cbff110e",
     "describeTheEventInAtLeast": "a3d61481",

@@ -51,6 +51,7 @@ describe("staff tools for paused teams and disputes", () => {
 
   async function teamWith(owner: TestUser, member: TestUser) {
     const made = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Dispute Crew",
       username: `tsd_${crypto.randomUUID().slice(0, 8)}`,
     });
@@ -68,6 +69,7 @@ describe("staff tools for paused teams and disputes", () => {
     );
     if (sent.status !== 200) throw new Error(sent.message);
     const res = await answerTeamInviteCore(svc, member.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });

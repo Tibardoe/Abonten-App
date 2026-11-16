@@ -63,14 +63,17 @@ function useTeamMutation<V, R extends { status: number }>(
   });
 }
 
+/** `adult`: they say they are 18 or older (K7). */
 export const useCreateTeam = () =>
-  useTeamMutation((body: { name: string; username: string }) =>
+  useTeamMutation((body: { name: string; username: string; adult: true }) =>
     api.teams.create(body),
   );
 
 /** "Make this a team": the person's organizer work moves to a new team. */
 export const useConvertAccountToTeam = () =>
-  useTeamMutation((body: { name: string }) => api.teams.convert(body));
+  useTeamMutation((body: { name: string; adult: true }) =>
+    api.teams.convert(body),
+  );
 
 export const useRenameTeam = () =>
   useTeamMutation((v: { teamId: string; name: string }) =>
@@ -89,9 +92,17 @@ export const useInviteTeamMember = () =>
       api.teams.invite(v.teamId, { role: v.role, target: v.target }),
   );
 
+/** Joining says they are 18 or older (K7). */
 export const useAnswerTeamInvite = () =>
-  useTeamMutation((v: { inviteId: string; action: "accept" | "decline" }) =>
-    api.teams.answerInvite(v.inviteId, v.action),
+  useTeamMutation(
+    (v: { inviteId: string; action: "accept" | "decline"; adult?: boolean }) =>
+      api.teams.answerInvite(v.inviteId, v.action, v.adult),
+  );
+
+/** An Owner limits a Front desk or Door staff member to some places. */
+export const useSetTeamMemberPlaces = () =>
+  useTeamMutation((v: { teamId: string; userId: string; placeIds: string[] }) =>
+    api.teams.setMemberPlaces(v.teamId, v.userId, v.placeIds),
   );
 
 export const useCancelTeamInvite = () =>

@@ -33,6 +33,7 @@ export const VALIDATION_SOURCE: Record<string, string> = {
     "Choose the country that issued your document",
   chooseWhichPlaceIsPosting: "Choose which place is posting",
   chooseYourMobileMoneyNetwork: "Choose your mobile money network",
+  confirmYouAre18OrOlder: "Confirm you are 18 or older.",
   confirmYouHaveTheRightsTo: "Confirm you have the rights to share this",
   describeTheChange: "Describe the change",
   describeTheEventInAtLeast: "Describe the event in at least 80 characters",

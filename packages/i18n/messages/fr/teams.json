@@ -1,6 +1,6 @@
 {
   "accept": "Accepter",
-  "activity": "{action, select, team_created {{actor} a créé l'équipe} team_renamed {{actor} a renommé l'équipe} member_invited {{actor} a invité quelqu'un} member_joined {{actor} a rejoint l'équipe} member_declined {{actor} a refusé une invitation} member_invite_cancelled {{actor} a retiré une invitation} member_invite_expired {Une invitation a expiré} member_role_changed {{actor} a changé le rôle de {subject}} member_removed {{actor} a retiré {subject}} member_left {{actor} est parti} member_account_closed {{subject} est parti à la fermeture de son compte} team_frozen {L'équipe a été mise en pause} payout_account_added {{actor} a ajouté un compte de versement} payout_account_removed {{actor} a retiré un compte de versement} payout_account_default {{actor} a changé le compte de versement principal} payout_requested {{actor} a demandé un versement} event_cancelled {{actor} a annulé un événement} promotion_bought {{actor} a payé pour mettre en avant un événement ou un lieu} content_published {{actor} a publié dans Spotlight ou les Stories} team_converted {{actor} a fait de son compte organisateur cette équipe} team_resumed {L'équipe a repris} content_promotion_bought {{actor} a payé pour promouvoir un Spotlight} content_promotion_pause {{actor} a mis en pause la promotion d'un Spotlight} content_promotion_resume {{actor} a relancé la promotion d'un Spotlight} content_promotion_cancel {{actor} a annulé la promotion d'un Spotlight} promoter_commission_changed {{actor} a modifié ce qu'un événement verse aux promoteurs} other {{actor} a fait un changement}}",
+  "activity": "{action, select, team_created {{actor} a créé l'équipe} team_renamed {{actor} a renommé l'équipe} member_invited {{actor} a invité quelqu'un} member_joined {{actor} a rejoint l'équipe} member_declined {{actor} a refusé une invitation} member_invite_cancelled {{actor} a retiré une invitation} member_invite_expired {Une invitation a expiré} member_role_changed {{actor} a changé le rôle de {subject}} member_removed {{actor} a retiré {subject}} member_left {{actor} est parti} member_account_closed {{subject} est parti à la fermeture de son compte} team_frozen {L'équipe a été mise en pause} payout_account_added {{actor} a ajouté un compte de versement} payout_account_removed {{actor} a retiré un compte de versement} payout_account_default {{actor} a changé le compte de versement principal} payout_requested {{actor} a demandé un versement} event_cancelled {{actor} a annulé un événement} promotion_bought {{actor} a payé pour mettre en avant un événement ou un lieu} content_published {{actor} a publié dans Spotlight ou les Stories} team_converted {{actor} a fait de son compte organisateur cette équipe} team_resumed {L'équipe a repris} content_promotion_bought {{actor} a payé pour promouvoir un Spotlight} content_promotion_pause {{actor} a mis en pause la promotion d'un Spotlight} content_promotion_resume {{actor} a relancé la promotion d'un Spotlight} content_promotion_cancel {{actor} a annulé la promotion d'un Spotlight} promoter_commission_changed {{actor} a modifié ce qu'un événement verse aux promoteurs} member_places_changed {{actor} a modifié les lieux de {subject}} member_under_age {{subject} a quitté l'équipe : les équipes sont réservées aux personnes de 18 ans ou plus} other {{actor} a fait un changement}}",
   "activityTitle": "Activité",
   "byPhone": "Numéro de téléphone",
   "byUsername": "Nom d'utilisateur",
@@ -11,7 +11,6 @@
   "checkInTitle": "Enregistrer les entrées",
   "checkedIn": "Entrée enregistrée.",
   "codePlaceholder": "TKT-XXXX XXXX XXXX",
-  "comingSoon": "Gérez les événements, les lieux, l'argent, les messages, les avis, les Spotlights et les Stories de l'équipe en choisissant l'équipe sous « Gérer en tant que ». Payer pour promouvoir un Spotlight en équipe arrive bientôt.",
   "continue": "Continuer",
   "couldNotDo": "Cela n'a pas fonctionné. Réessayez.",
   "create": "Créer l'équipe",
@@ -98,5 +97,17 @@
   "renameVerifiedBody": "Le badge Vérifié désigne l'entreprise : il est retiré et repasse en examen jusqu'à ce qu'Abonten vérifie le nouveau nom. Abonten peut demander des documents au nouveau nom.",
   "renameVerifiedConfirm": "Changer le nom",
   "convertedBadgeInReview": "Votre badge Vérifié a été transféré à l'équipe et repasse en examen : Abonten vérifie l'équipe en tant qu'entreprise avant qu'il ne réapparaisse.",
-  "staffActor": "L'équipe Abonten"
+  "staffActor": "L'équipe Abonten",
+  "adultConfirm": "J'ai 18 ans ou plus. Les équipes sur Abonten sont gérées par des adultes.",
+  "acceptAdultTitle": "Rejoindre {team} ?",
+  "acceptAdultBody": "Les équipes sur Abonten sont gérées par des adultes : en rejoignant, vous confirmez avoir 18 ans ou plus.",
+  "acceptAdultConfirm": "J'ai 18 ans ou plus, rejoindre",
+  "places": "Lieux",
+  "placesAll": "Tous les lieux de l'équipe",
+  "placesSome": "{count, plural, one {# lieu} other {# lieux}}",
+  "placesTitle": "Lieux de {name}",
+  "placesBody": "Choisissez les lieux où cette personne travaille. Elle ne verra que les réservations, le QR de visite et le contrôle des entrées de ces lieux. N'en choisissez aucun pour lui donner tous les lieux de l'équipe.",
+  "placesSavedToast": "Lieux enregistrés.",
+  "noPlacesYet": "L'équipe n'a pas encore de lieux.",
+  "howToManage": "Gérez les événements, les lieux, l'argent, les messages, les avis, la vérification, les Spotlights et les Stories de l'équipe en choisissant l'équipe sous « Gérer en tant que »."
 }

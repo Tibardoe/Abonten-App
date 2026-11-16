@@ -3,6 +3,7 @@ import {
   type TeamCapability,
   isTeamRole,
   teamRoleCan,
+  teamRolePlaceLimited,
 } from "@abonten/core/teams/roles";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type {
@@ -37,7 +38,38 @@ export type ActingAccount = {
   accountId: string;
   /** The person's role in the team, or null when acting for themselves. */
   role: TeamRoleCode | null;
+  /**
+   * Front desk and Door staff limited to some of the team's places (a
+   * chain): those places. Null = no limit (all the account's places).
+   */
+  placeIds?: string[] | null;
 };
+
+/** Whether the actor reaches this place (a limited member: theirs only). */
+export function actorReachesPlace(
+  actor: Pick<ActingAccount, "placeIds">,
+  placeId: string,
+): boolean {
+  return !actor.placeIds || actor.placeIds.includes(placeId);
+}
+
+/**
+ * Whether the actor reaches this event: a member limited to places reaches
+ * only the events held at them.
+ */
+export async function actorReachesEvent(
+  svc: ServiceRoleClient,
+  actor: Pick<ActingAccount, "placeIds">,
+  eventId: string,
+): Promise<boolean> {
+  if (!actor.placeIds) return true;
+  const { data } = await svc
+    .from("event")
+    .select("place_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  return !!data?.place_id && actor.placeIds.includes(data.place_id);
+}
 
 export type ActingFailure = { status: 403 | 404 | 409; message: string };
 
@@ -97,9 +129,26 @@ export async function resolveActingAccount(
       error: { status: 403, message: restrictedAccountMessage() },
     };
   }
+  // A Front desk or Door staff member may be limited to some places.
+  let placeIds: string[] | null = null;
+  if (teamRolePlaceLimited(role)) {
+    const { data: limits, error: limitError } = await svc
+      .from("team_member_place")
+      .select("place_id")
+      .eq("team_id", requestedAccountId)
+      .eq("user_id", personId);
+    if (limitError) logger.error(`resolveActingAccount: ${limitError.message}`);
+    const ids = (limits ?? []).map((l) => l.place_id as string);
+    placeIds = ids.length > 0 ? ids : null;
+  }
   return {
     ok: true,
-    actor: { personId, accountId: requestedAccountId, role: row.role },
+    actor: {
+      personId,
+      accountId: requestedAccountId,
+      role: row.role,
+      placeIds,
+    },
   };
 }
 

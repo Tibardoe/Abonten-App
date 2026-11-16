@@ -52,11 +52,19 @@ export async function actingFor(
   /** `all`: the role must cover every capability in the list. */
   options: { all?: boolean } = {},
 ): Promise<
-  | { error: null; accountId: string; role: TeamRoleCode | null }
+  | {
+      error: null;
+      accountId: string;
+      role: TeamRoleCode | null;
+      /** Front desk / Door staff limited to places: those (else null). */
+      placeIds: string[] | null;
+    }
   | { error: { status: 403; message: string } }
 > {
   const teamId = await readActingTeamId();
-  if (!teamId) return { error: null, accountId: personId, role: null };
+  if (!teamId) {
+    return { error: null, accountId: personId, role: null, placeIds: null };
+  }
   const resolved = await resolveActingAccount(
     getSupabaseServiceClient(),
     personId,
@@ -73,6 +81,7 @@ export async function actingFor(
     error: null,
     accountId: resolved.actor.accountId,
     role: resolved.actor.role,
+    placeIds: resolved.actor.placeIds ?? null,
   };
 }
 

@@ -2,6 +2,7 @@
 
 import { answerTeamInvite } from "@/actions/teams/answerTeamInvite";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatDateTime } from "@abonten/core/i18n/format";
@@ -102,7 +103,7 @@ export default function TeamsOverview() {
           </ul>
         )}
         {data.teams.length > 0 || data.program.enabled ? (
-          <p className="text-xs text-muted-foreground">{t("comingSoon")}</p>
+          <p className="text-xs text-muted-foreground">{t("howToManage")}</p>
         ) : null}
       </section>
 
@@ -132,13 +133,29 @@ function InviteRow({ invite }: { invite: TeamInviteReceived }) {
   const locale = useLocale();
   const toast = useToast();
   const refresh = useRefreshTeams();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   const answer = async (action: "accept" | "decline") => {
+    // K7: joining says they are 18 or older.
+    if (
+      action === "accept" &&
+      !(await confirm({
+        title: t("acceptAdultTitle", {
+          team: invite.team.name ?? invite.team.username ?? "",
+        }),
+        message: t("acceptAdultBody"),
+        confirmLabel: t("acceptAdultConfirm"),
+      }))
+    ) {
+      return;
+    }
     setBusy(true);
-    const res = await answerTeamInvite({ inviteId: invite.id, action }).catch(
-      actionUnreachable,
-    );
+    const res = await answerTeamInvite({
+      inviteId: invite.id,
+      action,
+      ...(action === "accept" ? { adult: true } : {}),
+    }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200) {
       toast.success(

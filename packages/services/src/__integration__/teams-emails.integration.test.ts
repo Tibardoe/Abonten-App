@@ -91,6 +91,7 @@ describe("emails about a team reach its members", () => {
     );
     if (sent.status !== 200) throw new Error(sent.message);
     const res = await answerTeamInviteCore(svc, who.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });
@@ -150,6 +151,7 @@ describe("emails about a team reach its members", () => {
       person({ phone: true, ageDays: 90 }),
     ]);
     const made = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Mail Crew",
       username: `tet_${crypto.randomUUID().slice(0, 8)}`,
     });

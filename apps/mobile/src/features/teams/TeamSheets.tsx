@@ -18,7 +18,7 @@ import {
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import {
   useConvertAccountToTeam,
   useCreateTeam,
@@ -104,6 +104,7 @@ export function ConvertAccountSheet({
   const profile = useProfile();
   const convert = useConvertAccountToTeam();
   const [name, setName] = useState("");
+  const [adult, setAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fullName = profile.data?.full_name ?? "";
   const handle = profile.data?.username ?? "";
@@ -111,6 +112,7 @@ export function ConvertAccountSheet({
   useEffect(() => {
     if (open) {
       setName(fullName);
+      setAdult(false);
       setError(null);
     }
   }, [open, fullName]);
@@ -124,7 +126,10 @@ export function ConvertAccountSheet({
   const submit = async () => {
     setError(null);
     try {
-      const res = await convert.mutateAsync({ name: name.trim() });
+      const res = await convert.mutateAsync({
+        name: name.trim(),
+        adult: true,
+      });
       if (res.status === 200 && res.data) {
         toast.success(
           t("convertedToast", {
@@ -160,7 +165,7 @@ export function ConvertAccountSheet({
           <Button
             title={convert.isPending ? t("converting") : t("convertAction")}
             loading={convert.isPending}
-            disabled={convert.isPending || !name.trim()}
+            disabled={convert.isPending || !name.trim() || !adult}
             onPress={submit}
           />
         </View>
@@ -184,6 +189,7 @@ export function ConvertAccountSheet({
         {handle ? (
           <AppText variant="meta">{t("convertConfirm", { handle })}</AppText>
         ) : null}
+        <AdultConfirm checked={adult} onChange={setAdult} />
       </View>
     </Sheet>
   );
@@ -203,11 +209,13 @@ export function CreateTeamSheet({
   const create = useCreateTeam();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const [adult, setAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const close = () => {
     setName("");
     setUsername("");
+    setAdult(false);
     setError(null);
     onClose();
   };
@@ -218,6 +226,7 @@ export function CreateTeamSheet({
       const res = await create.mutateAsync({
         name: name.trim(),
         username: username.trim().replace(/^@+/, ""),
+        adult: true,
       });
       if (res.status === 200 && res.data) {
         toast.success(t("createdToast"));
@@ -243,7 +252,9 @@ export function CreateTeamSheet({
           <Button
             title={create.isPending ? t("creating") : t("create")}
             loading={create.isPending}
-            disabled={create.isPending || !name.trim() || !username.trim()}
+            disabled={
+              create.isPending || !name.trim() || !username.trim() || !adult
+            }
             onPress={submit}
           />
         </View>
@@ -278,11 +289,12 @@ export function CreateTeamSheet({
             maxLength={31}
             returnKeyType="done"
             onSubmitEditing={() => {
-              if (name.trim() && username.trim()) void submit();
+              if (name.trim() && username.trim() && adult) void submit();
             }}
           />
           <AppText variant="meta">{t("usernameHint")}</AppText>
         </View>
+        <AdultConfirm checked={adult} onChange={setAdult} />
       </View>
     </Sheet>
   );
@@ -454,5 +466,37 @@ export function InviteMemberSheet({
         )}
       </View>
     </Sheet>
+  );
+}
+
+/**
+ * K7: whoever makes or joins a team says they are 18 or older (the server
+ * refuses without it, and refuses a person an ID check found under 18).
+ */
+export function AdultConfirm({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const t = useTranslations("teams");
+  return (
+    <Pressable
+      onPress={() => onChange(!checked)}
+      accessibilityRole="checkbox"
+      accessibilityLabel={t("adultConfirm")}
+      accessibilityState={{ checked }}
+      className="flex-row items-start gap-3"
+    >
+      <Icon
+        name={checked ? "checkbox" : "square-outline"}
+        size={22}
+        tone={checked ? "primary" : "muted"}
+      />
+      <AppText variant="small" className="flex-1">
+        {t("adultConfirm")}
+      </AppText>
+    </Pressable>
   );
 }

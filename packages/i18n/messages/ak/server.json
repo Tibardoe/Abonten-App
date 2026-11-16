@@ -1405,5 +1405,10 @@
   "teamPayoutAccountTooNew": "This payout account was added less than 48 hours ago. You can ask for a payout to it once 48 hours have passed.",
   "verificationTeamRequirements": "A team is verified as a registered business or organisation, with its registration certificate and a paper showing you may act for it (a directors or partners listing, or a signed letter).",
   "verificationTeamIsABusiness": "A team is verified as a registered business or organisation, not as an individual.",
-  "teamRenamedBadgeInReview": "Name saved. The Verified badge is back in review until Abonten checks the new name."
+  "teamRenamedBadgeInReview": "Name saved. The Verified badge is back in review until Abonten checks the new name.",
+  "teamAdultRequired": "Teams on Abonten are run by adults: confirm you are 18 or older.",
+  "teamUnderAge": "Teams on Abonten are for people 18 or older.",
+  "teamRoleNotLimited": "Only Front desk and Door staff can be limited to places.",
+  "teamPlaceNotTeam": "Choose places this team runs.",
+  "teamPlaceNotYours": "Your role in this team covers other places."
 }

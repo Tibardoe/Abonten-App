@@ -7,6 +7,7 @@ import {
   tr,
 } from "@abonten/services/i18n/requestLocale";
 import { fetchPlaceBookingsPage } from "@abonten/services/places/placeBookingsReviewsCore";
+import { actorReachesPlace } from "@abonten/services/teams/actingAccount";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 
 const VALID_STATUSES: BookingStatus[] = [
@@ -32,6 +33,10 @@ export async function GET(
 
   try {
     const { placeId } = await params;
+    // Front desk limited to some of a chain's places.
+    if (!actorReachesPlace(actor, placeId)) {
+      return apiJson({ status: 403, message: tr("teamPlaceNotYours") });
+    }
     const url = new URL(req.url);
     const statusParam = url.searchParams.get("status");
     const cursor = url.searchParams.get("cursor");

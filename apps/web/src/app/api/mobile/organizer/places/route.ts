@@ -40,6 +40,9 @@ export async function GET(req: Request) {
           pageSize && Number.isFinite(pageSize) && pageSize > 0
             ? pageSize
             : undefined,
+        // A member limited to some places sees only those (or the events
+        // held at them).
+        placeIds: actor.placeIds,
       },
     );
 

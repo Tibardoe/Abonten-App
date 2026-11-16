@@ -1405,5 +1405,10 @@
   "teamPayoutAccountTooNew": "Esta conta de pagamento foi adicionada há menos de 48 horas. Pode pedir um pagamento para ela quando passarem 48 horas.",
   "verificationTeamRequirements": "Uma equipa é verificada como empresa ou organização registada, com a certidão de registo e um documento que mostre que pode agir em nome dela (a lista de administradores ou sócios, ou uma carta assinada).",
   "verificationTeamIsABusiness": "Uma equipa é verificada como empresa ou organização registada, não como particular.",
-  "teamRenamedBadgeInReview": "Nome guardado. O selo Verificado voltou a análise até o Abonten verificar o novo nome."
+  "teamRenamedBadgeInReview": "Nome guardado. O selo Verificado voltou a análise até o Abonten verificar o novo nome.",
+  "teamAdultRequired": "As equipas no Abonten são geridas por adultos: confirme que tem 18 anos ou mais.",
+  "teamUnderAge": "As equipas no Abonten são para pessoas com 18 anos ou mais.",
+  "teamRoleNotLimited": "Só as funções Receção e Controlo de entrada podem ser limitadas a locais.",
+  "teamPlaceNotTeam": "Escolha locais geridos por esta equipa.",
+  "teamPlaceNotYours": "A sua função nesta equipa abrange outros locais."
 }

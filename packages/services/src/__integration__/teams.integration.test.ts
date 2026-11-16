@@ -66,6 +66,7 @@ describe("team accounts", () => {
 
   async function makeTeam(owner: TestUser): Promise<string> {
     const res = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Night Collective",
       username: `tmt_${crypto.randomUUID().slice(0, 8)}`,
     });
@@ -88,6 +89,7 @@ describe("team accounts", () => {
     );
     if (sent.status !== 200) throw new Error(sent.message);
     const res = await answerTeamInviteCore(svc, who.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });
@@ -112,6 +114,7 @@ describe("team accounts", () => {
     await setProgram(false);
     const owner = await person();
     const res = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Off",
       username: `tmt_${crypto.randomUUID().slice(0, 8)}`,
     });
@@ -123,6 +126,7 @@ describe("team accounts", () => {
     const owner = await person();
     const username = `tmt_${crypto.randomUUID().slice(0, 8)}`;
     const res = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Echo Nights",
       username,
     });
@@ -152,6 +156,7 @@ describe("team accounts", () => {
 
     // The handle is the team's now.
     const again = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Copy",
       username,
     });
@@ -194,6 +199,7 @@ describe("team accounts", () => {
     expect(
       (
         await answerTeamInviteCore(svc, stranger.id, {
+          adult: true,
           inviteId: sent.data.id,
           action: "accept",
         })
@@ -201,6 +207,7 @@ describe("team accounts", () => {
     ).toBe(404);
 
     const res = await answerTeamInviteCore(svc, manager.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });
@@ -322,6 +329,7 @@ describe("team accounts", () => {
     expect(
       (
         await answerTeamInviteCore(svc, other.id, {
+          adult: true,
           inviteId: first.data.id,
           action: "accept",
         })
@@ -457,6 +465,7 @@ describe("team accounts", () => {
     expect(
       (
         await answerTeamInviteCore(svc, newcomer.id, {
+          adult: true,
           inviteId: sent.data.id,
           action: "accept",
         })
@@ -546,6 +555,7 @@ describe("team accounts", () => {
     expect(
       (
         await answerTeamInviteCore(svc, invitee.id, {
+          adult: true,
           inviteId: sent.data.id,
           action: "accept",
         })

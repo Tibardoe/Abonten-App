@@ -69,6 +69,7 @@ describe("acting for a team", () => {
     );
     if (sent.status !== 200) throw new Error(sent.message);
     const res = await answerTeamInviteCore(svc, who.id, {
+      adult: true,
       inviteId: sent.data.id,
       action: "accept",
     });
@@ -91,6 +92,7 @@ describe("acting for a team", () => {
       person(),
     ]);
     const made = await createTeamCore(svc, owner.id, {
+      adult: true,
       name: "Acting Crew",
       username: `tat_${crypto.randomUUID().slice(0, 8)}`,
     });
