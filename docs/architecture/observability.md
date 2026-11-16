@@ -4,8 +4,8 @@ purpose: Describe how errors, health, request timing and incidents are captured 
 audience: Engineers, on-call responder, admins using Monitoring
 scope: apps/web observability routes, the observability tables and pg_cron health check, Sentry in web, admin and mobile
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-18
+version: 1.2
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -62,4 +62,4 @@ Preview and production are separated by the `environment` tag. The Content-Secur
 - No alerting: nobody is paged. The health panel and Sentry email digests are the only notifications (decision S1 covers who responds).
 - No retention on the observability tables (R6).
 - Web and API request performance is Sentry's job (10% trace sampling); there is no self-hosted web timing.
-- Uptime is inferred from the cron-driven `self` row, which only tells you the database could reach the web app every two minutes; there is no external uptime monitor.
+- Uptime from outside: the **uptime watch** (Google Apps Script on the founder's Workspace, every 5 minutes, outside Vercel and Supabase) emails the founder when the website, the app's API and database, the admin console or Supabase stop answering, and again when they are back ([../operations/uptime-watch.md](../operations/uptime-watch.md)). The incident emails from Admin › Monitoring are sent by the website itself, so they stop when it is down; the uptime watch covers that case (13–15 November 2026 outage).
