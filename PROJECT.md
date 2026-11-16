@@ -4403,3 +4403,12 @@ Branch `feat/team-accounts-content-2026-11-16`, migration `20261116160000_team_a
 - **Replies**: `send_story_reply` refuses a member's reply to their own team's Story; others' replies reach the team's inbox.
 - **Not yet**: paid Spotlight promotion as a team (`spotlightPromotions` is false while posting as a team).
 - **Checked**: `teams-content.integration.test.ts` (4 tests) and the content, story, field-ops content, team, messaging and grants suites (198 tests).
+
+### 75.6 Make this a team (2026-11-16, X8)
+
+Branch `feat/team-accounts-convert-2026-11-16`, migration `20261116170000_team_accounts_convert`. **Ships off**.
+
+- `convertAccountToTeamCore` → `team_convert_account()` (service role, one transaction): the team takes the person's @username, name, photo, bio, website; events and places (a place keeps its Verified badge: `verification_on_place_owner_change` skips the revoke for the conversion's own team); followers and organizer alert subscribers; the conversations about those listings; `organizer_ledger_entry`, `payout`, `payout_account`; the organizer badge and cases. The person is its Owner with a new, generated @username. Tickets, credit, posts, direct messages and the ID check stay personal.
+- Refused with nothing to move, a payout `processing`, or a verification request open; the service deletes the team's auth user when the move fails.
+- Website Settings › Teams card + dialog, app Settings › Teams card + sheet (`canConvert` in the overview).
+- **Checked**: `teams-convert.integration.test.ts` (3 tests) and the team, verification, content, messaging and grants suites (181 tests).

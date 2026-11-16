@@ -7227,6 +7227,9 @@
     "teamInviteNotForYou": "ba0ee35f",
     "teamLastOwner": "508b777c",
     "teamRemoveSelf": "b4d47410",
+    "teamNothingToMove": "e5b4b289",
+    "teamPayoutInProgress": "81cdf0d1",
+    "teamVerificationOpen": "6c75f4b7",
     "teamAccountNotFound": "f2ebceb0",
     "teamPhoneInvalid": "2e90cd95",
     "teamCannotText": "06c1ceaf",
@@ -7929,7 +7932,7 @@
   },
   "teams": {
     "accept": "bb54db51",
-    "activity": "9f8fcaeb",
+    "activity": "c0f3130b",
     "activityTitle": "81c0d915",
     "byPhone": "8961d3bf",
     "byUsername": "84c29015",
@@ -7940,7 +7943,7 @@
     "checkInTitle": "c036436f",
     "checkedIn": "4928b57c",
     "codePlaceholder": "a05c1e91",
-    "comingSoon": "e078f50b",
+    "comingSoon": "da9f9cb7",
     "continue": "2e026239",
     "couldNotDo": "9ae914fa",
     "create": "6851e28f",
@@ -8017,7 +8020,13 @@
     "you": "8af56de6",
     "yourAccount": "52725657",
     "yourRole": "936b000c",
-    "yourTeams": "3215ce6e"
+    "yourTeams": "3215ce6e",
+    "convertTitle": "4dbf7adb",
+    "convertBody": "334067ca",
+    "convertAction": "6a6a89f6",
+    "convertConfirm": "5cdc760a",
+    "converting": "09701b49",
+    "convertedToast": "be664cb8"
   },
   "ticketPlans": {
     "abontenCredit": "746223a4",

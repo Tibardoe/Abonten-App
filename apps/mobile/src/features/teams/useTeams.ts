@@ -68,6 +68,10 @@ export const useCreateTeam = () =>
     api.teams.create(body),
   );
 
+/** "Make this a team": the person's organizer work moves to a new team. */
+export const useConvertAccountToTeam = () =>
+  useTeamMutation((body: { name: string }) => api.teams.convert(body));
+
 export const useRenameTeam = () =>
   useTeamMutation((v: { teamId: string; name: string }) =>
     api.teams.rename(v.teamId, v.name),

@@ -1,6 +1,6 @@
 {
   "accept": "Aceitar",
-  "activity": "{action, select, team_created {{actor} criou a equipa} team_renamed {{actor} mudou o nome da equipa} member_invited {{actor} convidou alguém} member_joined {{actor} entrou} member_declined {{actor} recusou um convite} member_invite_cancelled {{actor} retirou um convite} member_invite_expired {Um convite expirou} member_role_changed {{actor} mudou a função de {subject}} member_removed {{actor} removeu {subject}} member_left {{actor} saiu} member_account_closed {{subject} saiu quando a conta foi fechada} team_frozen {A equipa foi pausada} payout_account_added {{actor} adicionou uma conta de pagamento} payout_account_removed {{actor} removeu uma conta de pagamento} payout_account_default {{actor} mudou a conta de pagamento principal} payout_requested {{actor} pediu um pagamento} event_cancelled {{actor} cancelou um evento} promotion_bought {{actor} pagou para destacar um evento ou um local} content_published {{actor} publicou no Spotlight ou nas Stories} other {{actor} fez uma alteração}}",
+  "activity": "{action, select, team_created {{actor} criou a equipa} team_renamed {{actor} mudou o nome da equipa} member_invited {{actor} convidou alguém} member_joined {{actor} entrou} member_declined {{actor} recusou um convite} member_invite_cancelled {{actor} retirou um convite} member_invite_expired {Um convite expirou} member_role_changed {{actor} mudou a função de {subject}} member_removed {{actor} removeu {subject}} member_left {{actor} saiu} member_account_closed {{subject} saiu quando a conta foi fechada} team_frozen {A equipa foi pausada} payout_account_added {{actor} adicionou uma conta de pagamento} payout_account_removed {{actor} removeu uma conta de pagamento} payout_account_default {{actor} mudou a conta de pagamento principal} payout_requested {{actor} pediu um pagamento} event_cancelled {{actor} cancelou um evento} promotion_bought {{actor} pagou para destacar um evento ou um local} content_published {{actor} publicou no Spotlight ou nas Stories} team_converted {{actor} transformou a sua conta de organizador nesta equipa} other {{actor} fez uma alteração}}",
   "activityTitle": "Atividade",
   "byPhone": "Número de telefone",
   "byUsername": "Nome de utilizador",
@@ -11,7 +11,7 @@
   "checkInTitle": "Registar entradas",
   "checkedIn": "Entrada registada.",
   "codePlaceholder": "TKT-XXXX XXXX XXXX",
-  "comingSoon": "Gira os eventos, os locais e o dinheiro da equipa escolhendo a equipa em «Gerir como». As mensagens, as avaliações e o Spotlight em equipa chegam em breve.",
+  "comingSoon": "Gira os eventos, os locais, o dinheiro, as mensagens, as avaliações, os Spotlights e as Stories da equipa escolhendo a equipa em «Gerir como». Pagar para promover um Spotlight em equipa chega em breve.",
   "continue": "Continuar",
   "couldNotDo": "Não funcionou. Tente novamente.",
   "create": "Criar equipa",
@@ -88,5 +88,11 @@
   "you": "você",
   "yourAccount": "A sua própria conta",
   "yourRole": "A sua função",
-  "yourTeams": "As suas equipas"
+  "yourTeams": "As suas equipas",
+  "convertTitle": "Transformar a sua conta de organizador numa equipa",
+  "convertBody": "Os seus eventos e locais, as respetivas avaliações e seguidores, as conversas sobre eles, o seu dinheiro de organizador e contas de pagamento, e os seus distintivos de Verificado passam para uma nova equipa que mantém o seu @nome de utilizador, o seu nome e a sua foto. Passa a ser o primeiro proprietário e recebe um novo @nome de utilizador. Os seus bilhetes, crédito, Spotlights, Stories e mensagens diretas continuam seus.",
+  "convertAction": "Transformar em equipa",
+  "convertConfirm": "@{handle} passará a ser da equipa e receberá um novo @nome de utilizador. Isto não pode ser anulado na app.",
+  "converting": "A transferir…",
+  "convertedToast": "Feito. {team} gere agora os seus eventos e locais. O seu novo @nome de utilizador é @{username}."
 }

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Team accounts: make this a team (X8)
+
+- A person turns their events and places into a team that keeps their @username, name and photo; followers, alert subscribers, conversations about the listings, organizer money, payout accounts and badges move too; the person becomes its Owner with a new @username: `architecture/team-accounts.md` 1.6 (§4f, code map), `admin/teams.md` 1.6. Migration `20261116170000_team_accounts_convert`; PROJECT.md §75.6, CLAUDE.md quick facts.
+
 ## 2026-11-16 — Team accounts, stage 4c (Spotlight and Stories as a team)
 
 - Owners and Content and messages post Spotlights and Stories as the team (author = the team, uploads and audience the member's, `content_published` in the team's activity); they edit, delete, see insights and remove comments on the team's posts; nobody replies to their own team's Story; paid Spotlight promotion stays personal: `architecture/team-accounts.md` 1.5 (§4e, roles, code map), `admin/teams.md` 1.5, `architecture/spotlight-and-stories.md` 1.4. Migration `20261116160000_team_accounts_content`; PROJECT.md §75.5, CLAUDE.md quick facts.

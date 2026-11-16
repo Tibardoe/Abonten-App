@@ -1,7 +1,10 @@
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { RowListSkeleton } from "@/components/skeletons";
-import { CreateTeamSheet } from "@/features/teams/TeamSheets";
+import {
+  ConvertAccountSheet,
+  CreateTeamSheet,
+} from "@/features/teams/TeamSheets";
 import {
   useAnswerTeamInvite,
   useTeamsOverview,
@@ -153,6 +156,7 @@ export default function TeamsScreen() {
   const query = useTeamsOverview();
   const view = useQueryView(query);
   const [creating, setCreating] = useState(false);
+  const [converting, setConverting] = useState(false);
   const data = query.data?.status === 200 ? query.data.data : undefined;
 
   return (
@@ -201,6 +205,21 @@ export default function TeamsScreen() {
               <AppText variant="meta">{t("comingSoon")}</AppText>
             ) : null}
           </View>
+
+          {data.program.enabled && data.canConvert ? (
+            <View className="gap-3 rounded-xl border border-border bg-card p-4">
+              <AppText variant="sectionHeading">{t("convertTitle")}</AppText>
+              <AppText variant="small" tone="muted">
+                {t("convertBody")}
+              </AppText>
+              <Button
+                title={t("convertAction")}
+                size="sm"
+                variant="outline"
+                onPress={() => setConverting(true)}
+              />
+            </View>
+          ) : null}
         </ScrollView>
       ) : (
         <QueryUnavailable
@@ -211,6 +230,11 @@ export default function TeamsScreen() {
           className="flex-1 justify-center"
         />
       )}
+      <ConvertAccountSheet
+        open={converting}
+        onClose={() => setConverting(false)}
+        onConverted={(id) => router.push(`/(app)/settings/team/${id}`)}
+      />
       <CreateTeamSheet
         open={creating}
         onClose={() => setCreating(false)}

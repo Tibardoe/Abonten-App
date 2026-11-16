@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useState } from "react";
 import TeamPersonAvatar from "../atoms/TeamPersonAvatar";
 import TeamRoleChip from "../atoms/TeamRoleChip";
+import ConvertAccountDialog from "../molecules/ConvertAccountDialog";
 import CreateTeamDialog from "../molecules/CreateTeamDialog";
 import { useRefreshTeams, useTeamsOverview } from "../useTeams";
 
@@ -25,6 +26,7 @@ export default function TeamsOverview() {
   const tc = useTranslations("core");
   const { data, isPending, isError, refetch } = useTeamsOverview();
   const [creating, setCreating] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   if (isPending) {
     return <div className="h-40 animate-pulse rounded-xl bg-muted/60" />;
@@ -104,7 +106,22 @@ export default function TeamsOverview() {
         ) : null}
       </section>
 
+      {data.program.enabled && data.canConvert ? (
+        <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+          <h2 className="font-semibold">{t("convertTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t("convertBody")}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setConverting(true)}
+          >
+            {t("convertAction")}
+          </Button>
+        </section>
+      ) : null}
+
       <CreateTeamDialog open={creating} onOpenChange={setCreating} />
+      <ConvertAccountDialog open={converting} onOpenChange={setConverting} />
     </div>
   );
 }

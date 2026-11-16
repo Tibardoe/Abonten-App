@@ -1,6 +1,6 @@
 {
   "accept": "Aceptar",
-  "activity": "{action, select, team_created {{actor} creó el equipo} team_renamed {{actor} cambió el nombre del equipo} member_invited {{actor} invitó a alguien} member_joined {{actor} se unió} member_declined {{actor} rechazó una invitación} member_invite_cancelled {{actor} retiró una invitación} member_invite_expired {Una invitación caducó} member_role_changed {{actor} cambió el rol de {subject}} member_removed {{actor} quitó a {subject}} member_left {{actor} salió} member_account_closed {{subject} salió al cerrarse su cuenta} team_frozen {El equipo quedó en pausa} payout_account_added {{actor} añadió una cuenta de cobro} payout_account_removed {{actor} quitó una cuenta de cobro} payout_account_default {{actor} cambió la cuenta de cobro principal} payout_requested {{actor} pidió un cobro} event_cancelled {{actor} canceló un evento} promotion_bought {{actor} pagó para destacar un evento o un lugar} content_published {{actor} publicó en Spotlight o en las Stories} other {{actor} hizo un cambio}}",
+  "activity": "{action, select, team_created {{actor} creó el equipo} team_renamed {{actor} cambió el nombre del equipo} member_invited {{actor} invitó a alguien} member_joined {{actor} se unió} member_declined {{actor} rechazó una invitación} member_invite_cancelled {{actor} retiró una invitación} member_invite_expired {Una invitación caducó} member_role_changed {{actor} cambió el rol de {subject}} member_removed {{actor} quitó a {subject}} member_left {{actor} salió} member_account_closed {{subject} salió al cerrarse su cuenta} team_frozen {El equipo quedó en pausa} payout_account_added {{actor} añadió una cuenta de cobro} payout_account_removed {{actor} quitó una cuenta de cobro} payout_account_default {{actor} cambió la cuenta de cobro principal} payout_requested {{actor} pidió un cobro} event_cancelled {{actor} canceló un evento} promotion_bought {{actor} pagó para destacar un evento o un lugar} content_published {{actor} publicó en Spotlight o en las Stories} team_converted {{actor} convirtió su cuenta de organizador en este equipo} other {{actor} hizo un cambio}}",
   "activityTitle": "Actividad",
   "byPhone": "Número de teléfono",
   "byUsername": "Nombre de usuario",
@@ -11,7 +11,7 @@
   "checkInTitle": "Registrar entradas",
   "checkedIn": "Entrada registrada.",
   "codePlaceholder": "TKT-XXXX XXXX XXXX",
-  "comingSoon": "Gestiona los eventos, los lugares y el dinero del equipo eligiendo el equipo en «Gestionar como». Pronto llegarán los mensajes, las reseñas y Spotlight en equipo.",
+  "comingSoon": "Gestiona los eventos, los lugares, el dinero, los mensajes, las reseñas, los Spotlights y las Stories del equipo eligiendo el equipo en «Gestionar como». Pronto podrás pagar para promocionar un Spotlight como equipo.",
   "continue": "Continuar",
   "couldNotDo": "No ha funcionado. Inténtalo de nuevo.",
   "create": "Crear equipo",
@@ -88,5 +88,11 @@
   "you": "tú",
   "yourAccount": "Tu propia cuenta",
   "yourRole": "Tu rol",
-  "yourTeams": "Tus equipos"
+  "yourTeams": "Tus equipos",
+  "convertTitle": "Convierte tu cuenta de organizador en un equipo",
+  "convertBody": "Tus eventos y lugares, sus reseñas y seguidores, las conversaciones sobre ellos, tu dinero de organizador y tus cuentas de cobro, y tus insignias de Verificado pasan a un equipo nuevo que conserva tu @nombre de usuario, tu nombre y tu foto. Serás su primer propietario y recibirás un @nombre de usuario nuevo. Tus entradas, tu crédito, tus Spotlights, tus Stories y tus mensajes directos siguen siendo tuyos.",
+  "convertAction": "Convertir en equipo",
+  "convertConfirm": "@{handle} pasará a ser del equipo y tú recibirás un @nombre de usuario nuevo. Esto no se puede deshacer en la app.",
+  "converting": "Moviendo…",
+  "convertedToast": "Listo. {team} gestiona ahora tus eventos y lugares. Tu nuevo @nombre de usuario es @{username}."
 }

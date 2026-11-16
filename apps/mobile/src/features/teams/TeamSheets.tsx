@@ -1,3 +1,4 @@
+import { useProfile } from "@/features/profile/useProfile";
 import { personName } from "@abonten/core/personName";
 import { TEAM_ROLES, teamRoleNeedsIdCheck } from "@abonten/core/teams/roles";
 import type { InviteTarget, TeamRoleCode } from "@abonten/types/teamType";
@@ -15,9 +16,11 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import {
+  useConvertAccountToTeam,
   useCreateTeam,
   useFindTeamInvitee,
   useInviteTeamMember,
@@ -81,6 +84,107 @@ export function RoleChoice({
 }
 
 /** Makes a team: its own name and @username, with the person as Owner. */
+/**
+ * "Make this a team" (X8): what moves and what stays, the team's name (the
+ * person's own by default), then the move. The team keeps the person's
+ * @username; they get a new one.
+ */
+export function ConvertAccountSheet({
+  open,
+  onClose,
+  onConverted,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConverted: (teamId: string) => void;
+}) {
+  const t = useTranslations("teams");
+  const toast = useToast();
+  const qc = useQueryClient();
+  const profile = useProfile();
+  const convert = useConvertAccountToTeam();
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const fullName = profile.data?.full_name ?? "";
+  const handle = profile.data?.username ?? "";
+
+  useEffect(() => {
+    if (open) {
+      setName(fullName);
+      setError(null);
+    }
+  }, [open, fullName]);
+
+  const close = () => {
+    if (convert.isPending) return;
+    setError(null);
+    onClose();
+  };
+
+  const submit = async () => {
+    setError(null);
+    try {
+      const res = await convert.mutateAsync({ name: name.trim() });
+      if (res.status === 200 && res.data) {
+        toast.success(
+          t("convertedToast", {
+            team: res.data.team.name ?? name.trim(),
+            username: res.data.personUsername,
+          }),
+        );
+        const id = res.data.team.id;
+        onClose();
+        // The handle, the listings and the money all moved.
+        void qc.resetQueries();
+        onConverted(id);
+      } else {
+        setError(res.message ?? t("couldNotDo"));
+      }
+    } catch {
+      setError(t("couldNotDo"));
+    }
+  };
+
+  return (
+    <Sheet
+      open={open}
+      onClose={close}
+      title={t("convertTitle")}
+      footer={
+        <View className="gap-2">
+          <SheetError error={error} />
+          <Button
+            title={convert.isPending ? t("converting") : t("convertAction")}
+            loading={convert.isPending}
+            disabled={convert.isPending || !name.trim()}
+            onPress={submit}
+          />
+        </View>
+      }
+    >
+      <View className="gap-4">
+        <AppText variant="small" tone="muted">
+          {t("convertBody")}
+        </AppText>
+        <Input
+          value={name}
+          onChangeText={(v) => {
+            setName(v);
+            setError(null);
+          }}
+          placeholder={t("nameLabel")}
+          accessibilityLabel={t("nameLabel")}
+          maxLength={80}
+          returnKeyType="done"
+        />
+        {handle ? (
+          <AppText variant="meta">{t("convertConfirm", { handle })}</AppText>
+        ) : null}
+      </View>
+    </Sheet>
+  );
+}
+
 export function CreateTeamSheet({
   open,
   onClose,
