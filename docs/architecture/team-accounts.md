@@ -1,10 +1,10 @@
 ---
 title: Team accounts — organizers and places run by several people
-purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 to 4c and "make this a team" of Part 2 of the Tickets, entry and teams plan.
+purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 to 4c, "make this a team" and the first part of stage 5 of Part 2 of the Tickets, entry and teams plan.
 audience: Engineering, operations, support and legal reviewers
 scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for(), acting_accounts() and acting_account_for(), the team_* functions, the access rules on events, places and money, the organizer money functions, the team notice fan-out, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
 status: Review required
-version: 1.6
+version: 1.7
 lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Team accounts
 
-**State (2026-11-16): stages 1 to 4c (messages, reviews, featuring, the team's credit, Spotlight and Stories) and "make this a team" built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
+**State (2026-11-16): stages 1 to 4c (messages, reviews, featuring, the team's credit, Spotlight and Stories) "make this a team" and the staff tools for paused teams built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
 
 ## 1. The model: a team is its own account
 
@@ -139,6 +139,14 @@ Notices (`@abonten/core/notifications/notices`, words in the recipient's languag
 
 **How.** `convertAccountToTeamCore` creates the team's auth user (as `createTeamCore` does) and calls `public.team_convert_account(account, person, name, max_created)` (service role only, migration `20261116170000_team_accounts_convert`), which does everything in one transaction: frees the handle, runs `team_finalize_create`, copies the public face (registering the photo in `user_image_history` for the team), moves the rows above, logs `team.converted`. If it fails, the service deletes the auth user. `verification_on_place_owner_change` skips the revoke for the conversion's own team (a transaction-local `abonten.team_conversion` setting), so a converted place keeps its badge; any other owner change still revokes it. The overview says whether the person can convert (`canConvert`).
 
+## 4g. Paused teams, disputes and the Verified name (stage 5, first part)
+
+**A team with no Owner.** When the last Owner's account closes or is banned, they leave every team and the team pauses (`team_forget_member`, status `frozen`, reason `no_owner`): nobody can act for it. Staff bring it back in Admin › Teams › the team: **Make Owner** makes a current member, or a former one whose own account is in good standing, an Owner (`admin_team_appoint_owner`); a team paused only for having no Owner resumes at once, and the person is told ("Your role in … changed").
+
+**A dispute.** Staff **pause** a team (`admin_team_set_status` → `frozen`, reason `dispute` or `staff`) so nobody acts for it while it is sorted out, and **resume** it once settled; resuming is refused while the team has no Owner. Both functions are service-role only; the console needs `teams.manage` (Operations; super admins), a fresh sign-in and a reason, and writes `teams.pause` / `teams.resume` / `teams.owner.appoint` to the audit log. The team's activity shows `team.frozen`, `team.resumed` and the role change with no member as the actor (staff did it). Migration `20261116180000_team_accounts_staff_tools`.
+
+**A Verified team keeps its name (X42, interim).** X42 sends a renamed Verified team back to review; teams cannot be reviewed yet (verification is not team-aware), and the only Verified teams are organizers who made their account a team. Until review for teams exists, a team carrying the organizer badge cannot change its name (`team_rename_guard_verified` refuses, "A Verified team can't change its name yet").
+
 ## 5. Who sees what
 
 - **Members** see the team, every member's public name, photo, role and whether they passed the ID check.
@@ -172,8 +180,9 @@ Limits in the settings row: `max_teams_created` (5), `max_members` (50), `invite
 | Featuring and credit (stage 4b) | Migration `supabase/migrations/20261116150000_team_accounts_promotions.sql`; `promotions/insertEventPromotionCheckoutCore.ts`, `fetchEventPromotionContext.ts`, `places/placePromotionCore.ts`, `rewards/creditRedemptionCore.loadPromotionOrder`, `payments/finalizePayment.reservationMatches`, `teams/teamMoney.recordTeamMoneyEventFor`; website `utils/activate{Event,Place}Promotion.ts`, the event and place Promotion tabs, `UseCreditToggle`; app routes `organizer/{events,places}/[id]/{promote,promotion}`, `rewards/promotion-credit`; app the event and place panels, Finances, `CreditSwitch`, `notificationLink` |
 | Spotlight and Stories (stage 4c) | Migration `supabase/migrations/20261116160000_team_accounts_content.sql`; `content/contentProgram.resolveContentAccess` (`publisherId`, `blocked`), `contentPostCore.ts`, `contentMediaCore.ts`, `contentEngagementCore.ts`; website `utils/teamActor.contentPublisherFor`, `teams/atoms/{PublishingAsBanner,TeamRoleBlockedNotice}.tsx`, the creator hub and composer, `getShellBootstrap`; app routes `_lib/actor.mobileContentPublisher`, `content/**`, `uploads/signature`; app `spotlight/{new,manage}.tsx`, `useContentProgram`, `useContent` |
 | Make this a team | Migration `supabase/migrations/20261116170000_team_accounts_convert.sql`; `teams/teamCore.convertAccountToTeamCore`; website `actions/teams/convertAccountToTeam.ts`, `teams/molecules/ConvertAccountDialog.tsx`, the Teams overview; app route `POST /api/mobile/teams/convert`; app `features/teams/TeamSheets.ConvertAccountSheet`, Settings › Teams |
-| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts`, `teams-messages.integration.test.ts`, `teams-promotions.integration.test.ts`, `teams-content.integration.test.ts`, `teams-convert.integration.test.ts` |
+| Staff tools (stage 5) | Migration `supabase/migrations/20261116180000_team_accounts_staff_tools.sql`; `admin/teams/teamsAdminCore.{setTeamStatusAdminCore,appointTeamOwnerAdminCore}`; admin `server/actions/teams.ts`, `app/(console)/teams/[teamId]/TeamStaffActions.tsx` |
+| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts`, `teams-messages.integration.test.ts`, `teams-promotions.integration.test.ts`, `teams-content.integration.test.ts`, `teams-convert.integration.test.ts`, `teams-staff.integration.test.ts` |
 
 ## 8. Not yet (later stages)
 
-Acting for a team on paid Spotlight promotion and the promoter commission; emails about a team to its members (the in-app notice and the push reach them; the email is not sent); the business check and badges, staff tools for disputes and paused teams, a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.
+Acting for a team on paid Spotlight promotion and the promoter commission; emails about a team to its members (the in-app notice and the push reach them; the email is not sent); the business check and badges for teams (verification requests by a team, and X42's review after a rename), a member under 18 (needs a date of birth: K7), and limiting Front desk and Door staff to one place of a chain.

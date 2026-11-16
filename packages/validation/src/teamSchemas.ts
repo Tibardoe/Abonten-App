@@ -110,3 +110,31 @@ export const teamSettingsSchema = z.object({
     .partial(),
 });
 export type TeamSettingsInput = z.infer<typeof teamSettingsSchema>;
+
+const staffReason = z
+  .string()
+  .trim()
+  .min(5, "Give a short reason for this change")
+  .max(500);
+
+/** Admin › Teams: pause a team (a dispute, a staff reason) or resume it. */
+export const teamStatusAdminSchema = z.discriminatedUnion("to", [
+  z.object({
+    teamId: uuid,
+    to: z.literal("frozen"),
+    why: z.enum(["dispute", "staff"]),
+    reason: staffReason,
+  }),
+  z.object({ teamId: uuid, to: z.literal("active"), reason: staffReason }),
+]);
+export type TeamStatusAdminInput = z.infer<typeof teamStatusAdminSchema>;
+
+/** Admin › Teams: make a current or former member an Owner. */
+export const appointTeamOwnerAdminSchema = z.object({
+  teamId: uuid,
+  userId: uuid,
+  reason: staffReason,
+});
+export type AppointTeamOwnerAdminInput = z.infer<
+  typeof appointTeamOwnerAdminSchema
+>;

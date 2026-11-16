@@ -15768,6 +15768,14 @@ export type Database = {
         }
         Returns: string
       }
+      admin_team_appoint_owner: {
+        Args: { p_team: string; p_user: string }
+        Returns: string
+      }
+      admin_team_set_status: {
+        Args: { p_reason: string | null; p_team: string; p_to: string }
+        Returns: string
+      }
       admin_transaction_refundable_amounts: {
         Args: { p_transaction_ids: string[] }
         Returns: {

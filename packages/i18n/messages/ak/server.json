@@ -1393,6 +1393,7 @@
   "teamNothingToMove": "You don't run any events or places yet. Make a new team instead.",
   "teamPayoutInProgress": "A payout is on its way to you. Try again once it has been paid.",
   "teamVerificationOpen": "Finish or withdraw your verification request first, then try again.",
+  "teamVerifiedNameLocked": "A Verified team can't change its name yet.",
   "teamAccountNotFound": "We couldn't find an account with that username.",
   "teamPhoneInvalid": "Enter a valid phone number.",
   "teamCannotText": "We can't text that number yet. Invite them by username.",
