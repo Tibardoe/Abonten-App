@@ -16,6 +16,18 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — Field Ops for Accra/Osu, online, commissions off
+
+- Campaign "Accra online, Osu first" is active for staff online onboarding (Osu and Accra territories, two staff members), with commissions and payouts off. The Monitoring `fieldops` check no longer reads the commission sweep as late while commissions are off; the programme switch goes on once that is live. `admin/field-ops.md`, `architecture/field-ops.md`
+
+## 2026-11-16 — Paid sales paused until live Paystack keys
+
+- Before outreach, every pilot, test and App Review sample listing was hidden (moderation "hide", audited, reversible) and Paystack checkout was paused with the `checkout.paystack` flag for everyone but the founder's and the two QA accounts; a checkout with no way to pay now says "Sales are paused" instead of showing an empty list. Opening sales is step 13 of the live cutover. `finance/paystack-live-cutover.md`
+
+## 2026-11-16 — Cancelling an event refunds its buyers one at a time
+
+- Paystack takes one refund request per account at a time and refused two of three when an event's buyers were refunded side by side; cancelling an event now refunds them one after another, and a refund Paystack refuses as "already being processed" is asked again after a short pause (1.5 s, 3 s, 6 s). `finance/payments-and-ticketing-runbook.md`
+
 ## 2026-11-16 — The share kit
 
 - Every public event and place has ready-made images for its owner's Instagram, TikTok or WhatsApp Status (story, post, and "Now on Abonten" for places and organizers), drawn by the website at `/api/share/...` from public facts only, in the image's language, cached by the CDN and limited per visitor. A "Share kit" card on the Promotion tab of the event and place manage pages, and a section on the app's event and place screens. New `architecture/share-kit.md` 1.0; PROJECT.md §76.

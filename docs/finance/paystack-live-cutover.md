@@ -4,8 +4,8 @@ purpose: The exact, ordered steps that move production from Paystack test mode t
 audience: Founder (holds the Paystack dashboard and Vercel), engineering
 scope: Ghana's Paystack account on the web and admin deployments; preview deployments; the Paystack dashboards' webhook settings; the mobile app (no key); the integration suites
 status: Approved
-version: 1.4
-lastReviewed: 2026-10-25
+version: 1.5
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -98,7 +98,8 @@ Prerequisite: the Paystack business is activated for live payments
 
 Prerequisite: the eight **sample events** made for App Review on
 2026-09-29 (organizer "Abonten Events", the App Review demo account) are
-removed first — three of them sell paid tickets, which live keys would
+hidden (done 2026-11-16 with every pilot and test listing, through the
+moderation "hide" action, audited and reversible) or removed first — three of them sell paid tickets, which live keys would
 turn into real charges for events that are not happening — and the App
 Review notes' "Paystack test mode" line is updated. Then remove the demo
 account's id from `apps/web/src/utils/searchIndexing.ts`, which keeps the
@@ -122,7 +123,8 @@ file or a terminal.
 | 10 | **Refund** (§5): the buyer cancels the ticket from My Tickets | Paystack refund of GH₵1.00 requested; transaction `refund_pending`; ticket cancelled | refund refused or error | Admin › Finance › Transactions → Refund (money only; see §5) |
 | 11 | **Refund verification** (§5 queries, then again after the `refund.processed` webhook) | `refunded`; ledger hold −1.00; fee retained; second request refused | — | — |
 | 12 | **Final smoke:** `production-smoke.mjs --expect-mode live` again; the health row must still show `unsettled 0` | 40 passed | — | — |
-| 13 | **Monitor** (§7) for the first day of sales | — | — | — |
+| 13 | **Open paid sales:** Admin › Markets › Flags → `checkout.paystack`: clear its rules (enabled, no rules). Until then (since 2026-11-16) only the founder's and the two QA accounts can pay, and everyone else's checkout says "Sales are paused in Ghana right now"; refunds, the webhook and the reconcile sweep do not read this flag | a signed-in non-staff account sees Mobile money and Card at checkout (within a minute: the flag is cached per server for 60 s) | still "Sales are paused" after two minutes | put the rules back (`allowSubjects` = the three accounts, `percent` 0) |
+| 14 | **Monitor** (§7) for the first day of sales | — | — | — |
 
 Do not change the Paystack keys any local `.env.local` holds: development
 and the sandbox suite stay on test keys, and the sandbox suite must not be

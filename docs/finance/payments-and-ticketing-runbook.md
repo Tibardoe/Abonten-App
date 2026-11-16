@@ -4,8 +4,8 @@ purpose: Describe, function by function, how a ticket purchase moves from select
 audience: Engineering, finance admins, support leads
 scope: Paid and free ticket checkouts, promotion checkouts, Paystack popup / direct charge / mobile-money OTP, webhook, fulfilment retry
 status: Approved
-version: 1.4
-lastReviewed: 2026-10-25
+version: 1.5
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -82,6 +82,7 @@ Same shape with `insertEventPromotionCheckoutCore` / `placePromotionCore` → `e
 - **Customer paid, no ticket** — Admin › Finance › Transactions: search the Paystack reference or email. If the transaction is `successful` and the checkout is `paid` with tickets → they are issued; resend the email or point them to My Tickets. If the attempt is `fulfillment_failed` or `processing` → have the customer press Retry, or an engineer calls `retryPaymentFulfillmentCore` (the checkout keeps its seats for seven days after the charge, so this works within that week); check Cloudinary (QR upload) and Sentry for the error. If Paystack shows success but no transaction row exists → the webhook or verify never ran; the `payment-reconcile` sweep finishes such a charge within minutes of the 35-minute mark (up to two days old); older, replay the webhook from the Paystack dashboard or call finalize with the attempt id. Never issue tickets by hand.
 - **Customer charged twice** — one Paystack reference per attempt; check both references in Finance › Transactions. A second `successful` transaction for the same checkout is impossible (`already_issued` path); a second charge would be a separate attempt for a separate checkout, or a bank authorization that will drop. Refund the duplicate via Finance › Transactions › Refund (step-up).
 - **Ticket type shows negative or wrong availability** — cannot happen after DATA-002 (`quantity >= 0` CHECK) and the CAS decrement; if a report suggests it, run the reconciliation check and inspect `ticket_checkout` expiry for that type.
+- **An event was cancelled and some refunds "couldn't be started"** — cancelling refunds the buyers one after another (`cancelEventCore`), because Paystack takes one refund request per account at a time; a request refused as "already being processed" is asked again after 1.5, 3 and 6 seconds (`paystackApi.refundTransaction`). A part still refused is `failed` in Admin › Finance › Refunds and its tickets are uncovered: press Refund there (step-up) or have the buyer press Retry refund on the ticket; nothing retries it on its own yet.
 - **Paystack is down** — health check shows Paystack down; new payments fail at init; existing pending checkouts keep their seats while an attempt is live. See `../incident-response/outages-service-email-push-third-party.md`.
 - **Webhook signature failures** — Sentry/error events from the webhook route; verify `PAYSTACK_WEBHOOK_SECRET` on Vercel matches the Paystack dashboard; client-side verify continues to finalize payments meanwhile.
 

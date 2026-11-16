@@ -208,7 +208,11 @@ export async function getCheckoutPaymentOptionsCore(
       countryCode: offers.countryCode,
       marketName: offers.marketName,
       currency: offers.currency,
-      transacting: offers.transacting,
+      // No way to pay for this person (the market's methods are off, or a
+      // `checkout.<provider>` flag holds them back, as before live keys)
+      // reads as paused too, so both apps say "Sales are paused" instead
+      // of showing an empty list.
+      transacting: offers.transacting && offers.methods.length > 0,
       methods: offers.methods,
       saved,
     },
