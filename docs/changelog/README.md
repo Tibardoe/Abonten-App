@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-16 — An outside alarm: the uptime watch
+
+- A Google Apps Script project on the founder's Workspace checks the website, the app's API and database, the admin console and Supabase every 5 minutes, outside Vercel and Supabase, and emails the founder after two failed runs and again on recovery, plus a Monday "still watching" note. Source `scripts/ops/uptime-watch.gs`. New `operations/uptime-watch.md` 1.0; `architecture/observability.md` 1.2 (Gaps).
+
 ## 2026-11-16 — Team accounts: 18 or older (K7), and Front desk and Door staff at some places
 
 - Making a team, making an account a team and accepting an invitation ask "I'm 18 or older" (recorded); the database keeps out anyone an ID check found under 18 and takes them out of their teams if such a result comes later. Owners limit Front desk and Door staff to some of a chain's places; the booking and ticket access rules, the visit QR and the organizer lists hold the limit. The team page's "coming soon" note is gone. `architecture/team-accounts.md` 1.11 (§4k), `admin/teams.md` 1.10, K7 in the legal register, the plan's Part 2 row. Migration `20261116220000_team_accounts_age_places`; PROJECT.md §75.11.
