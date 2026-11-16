@@ -996,6 +996,14 @@
     "verification_back_in_review": {
       "title": "O seu selo Verificado voltou a análise",
       "body": "O nome é agora {subject}, por isso o Abonten volta a verificá-lo. O selo volta a aparecer quando for aprovado."
+    },
+    "promoter_added": {
+      "title": "{actor} adicionou-o como promotor",
+      "body": "Partilhe {event} com a sua ligação: ganha {pct}% de cada bilhete vendido por ela, em crédito Abonten depois do evento."
+    },
+    "promoter_removed": {
+      "title": "Já não é promotor de {event}",
+      "body": "{actor} retirou-o dos promotores. O que já ganhou continua a ser seu."
     }
   },
   "openStatus": {

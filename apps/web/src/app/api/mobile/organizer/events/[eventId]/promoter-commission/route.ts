@@ -52,7 +52,8 @@ export async function GET(
 }
 
 // PUT /api/mobile/organizer/events/:eventId/promoter-commission
-// Body: { rateBps: number | null } -- null stops the offer.
+// Body: { rateBps: number | null, invitedOnly?: boolean } -- null stops the
+// offer; invitedOnly says only the promoters on the list earn (X33).
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ eventId: string }> },
@@ -69,6 +70,7 @@ export async function PUT(
     const { eventId } = await params;
     const body = (await req.json().catch(() => null)) as {
       rateBps?: unknown;
+      invitedOnly?: unknown;
     } | null;
     const rateBps =
       body?.rateBps === null
@@ -80,7 +82,13 @@ export async function PUT(
       await setEventPromoterCommissionCore(
         auth.supabase,
         actor.accountId,
-        { eventId, rateBps },
+        {
+          eventId,
+          rateBps,
+          ...(body?.invitedOnly !== undefined
+            ? { invitedOnly: body.invitedOnly as boolean }
+            : {}),
+        },
         auth.user.id,
       ),
     );

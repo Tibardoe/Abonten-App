@@ -355,6 +355,21 @@ from Rebates to see the projected cost first.
   credit ledger itself is unchanged (the lot is an ordinary `reward` lot
   funded from `reward_contingent`); tell organizer-funded credit apart by
   `reward_event.rule_key`.
+- **Invited promoters** (2026-11-16, Part 7 first slice, decisions X33 and
+  X36; migration `20261116230000_invited_promoters`): the organizer adds
+  promoters by username (`event_promoter`, service role only; at most 100
+  per event), each with their own `rate_bps` or the event's (null), and may
+  switch the offer to `event_promoter_commission.invited_only`. The
+  evaluator then uses the listed promoter's own rate, returns nothing for an
+  unlisted promoter on an invited-only event, and records `'invited'` in the
+  basis. The public offer row hides an invited-only offer
+  (`event_promoter_commission_select`); `getEventPromoterOfferCore` answers
+  each person with the service role (web `getEventPromoterOffer`, app
+  `GET /api/mobile/rewards/promoter-offer`). The promoter is told when added
+  or removed (notices `promoter_added` / `promoter_removed`); the organizer
+  sees each promoter's orders and commission
+  (`promoter_commission_promoter_stats`). Removing someone stops later sales
+  from earning; what they earned stays.
 - **Place visits** (`place_visits`): `place_visit_code(place)` →
   HMAC-SHA256(secret, `place:window`) first 10 hex chars, window = 30 s; the
   current and previous window are accepted. `place_visit_record` checks the
@@ -383,6 +398,19 @@ visits to its places and purchases of its tickets never count towards them
 `_reward_event_rebate_basis`). An email about a team's credit goes to its
 Owners and Finance (`trg_notification_delivery_copy_to_team`, migration
 `20261116210000_team_accounts_emails`).
+
+**A team's member as its promoter (X36, 2026-11-16).** A member earns the
+team's promoter commission on its event only when an **Owner** added them to
+that event's promoters: `event_promoter.owner_approved` is set by the trigger
+`event_promoter_guard` from who added the row (the organizer, or an active
+Owner of the organizing team), never by the writer; Finance may add anyone
+else, and the services refuse Finance adding a member
+(`promoterMemberOwnerOnly`). `stamp_checkout_referral` lets such a member's
+link through (`_event_promoter_approved`), `_reward_evaluate_promoter_commission`
+does not flag them `organizer_linked`, and `_reward_evaluate_event_referral`
+returns nothing for them: they earn the organizer's money, never Abonten's
+referral reward. The organizer itself can never be a promoter of its own
+event (`promoter:own_event`), nor can a team account (`promoter:team_account`).
 
 **Switching them on:** Reward rules → Loyalty fee rebate / Promoter
 commission / Place visits → Make live. Promoter commissions also need
@@ -434,4 +462,4 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **A place owner says visitors can't check in:** the code changes every 30 s — the visitor must scan the live screen, be within ~150 m with location on, and not already have checked in today (`select * from place_visit where place_id = … order by created_at desc limit 20`). The rule must be live.
 - **Reward pushes or emails aren't going out:** Admin › Rewards › Program settings shows the last 7 days (sent / waiting / skipped / failed). Then `select channel, status, detail, count(*) from notification_delivery where created_at > now() - interval '1 day' group by 1, 2, 3`, `select dispatch_url, last_dispatched_at from notification_delivery_config`, and the last `net._http_response` rows. `waiting` at night is normal for pushes; `no_device` = no app install registered; `no_email` = a phone-only account; a 401 from the route means the token in the header doesn't match the config row (never copy it anywhere else). Failed rows can be retried with `update notification_delivery set status = 'queued', attempts = 0 where status = 'failed' and …`. `opted_out` = the person stopped reward emails (`select * from notification_preference where user_id = …`).
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards) and `rewards-p8.integration.test.ts` (loyalty, promoter commissions, place visits) and `rewards-notification-delivery.integration.test.ts` (reward pushes and emails).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards) and `rewards-p8.integration.test.ts` (loyalty, promoter commissions, invited promoters and a team's member as promoter, place visits) and `rewards-notification-delivery.integration.test.ts` (reward pushes and emails).

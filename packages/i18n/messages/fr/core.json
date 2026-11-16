@@ -996,6 +996,14 @@
     "verification_back_in_review": {
       "title": "Votre badge Vérifié repasse en examen",
       "body": "Le nom est désormais {subject}, Abonten le vérifie donc de nouveau. Le badge réapparaîtra une fois approuvé."
+    },
+    "promoter_added": {
+      "title": "{actor} vous a ajouté comme promoteur",
+      "body": "Partagez {event} avec votre lien : vous gagnez {pct} % de chaque billet vendu via ce lien, en crédit Abonten après l'événement."
+    },
+    "promoter_removed": {
+      "title": "Vous n'êtes plus promoteur de {event}",
+      "body": "{actor} vous a retiré de ses promoteurs. Ce que vous avez déjà gagné vous reste acquis."
     }
   },
   "openStatus": {

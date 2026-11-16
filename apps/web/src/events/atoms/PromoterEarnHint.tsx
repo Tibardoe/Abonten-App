@@ -20,16 +20,21 @@ export default function PromoterEarnHint({ eventId }: { eventId: string }) {
     enabled: !!code,
     staleTime: 5 * 60_000,
   });
-  const rate = data?.status === 200 ? data.data?.rateBps : null;
+  const offer = data?.status === 200 ? data.data : null;
+  const rate = offer?.rateBps;
   if (!code || !rate) return null;
   return (
     <p className="mt-2 text-center text-xs text-muted-foreground">
-      {t.rich("organizerPaysPromotersRate", {
-        rate: Number((rate / 100).toFixed(2)),
-        strong: (chunks) => (
-          <span className="font-semibold text-foreground">{chunks}</span>
-        ),
-      })}
+      {/* Added by the organizer: their own rate, said as theirs (X33). */}
+      {t.rich(
+        offer?.invited ? "invitedPromoterRate" : "organizerPaysPromotersRate",
+        {
+          rate: Number((rate / 100).toFixed(2)),
+          strong: (chunks) => (
+            <span className="font-semibold text-foreground">{chunks}</span>
+          ),
+        },
+      )}
     </p>
   );
 }

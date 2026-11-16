@@ -30,6 +30,8 @@ const REWARD_TYPES = new Set([
   "milestone_reached",
   "loyalty_reward",
   "commission_pending",
+  "promoter_added",
+  "promoter_removed",
 ]);
 
 export function notificationCategory(type: string): NotificationCategory {

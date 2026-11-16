@@ -16,6 +16,8 @@ export const setEventPromoterCommission = withActionLocale(
   async function setEventPromoterCommission(input: {
     eventId: string;
     rateBps: number | null;
+    /** Only invited promoters earn (X33); left out = unchanged. */
+    invitedOnly?: boolean;
   }): Promise<{
     status: number;
     message?: string;
@@ -28,7 +30,9 @@ export const setEventPromoterCommission = withActionLocale(
     if (!user) return { status: 401, message: tr("userNotLoggedIn") };
     if (
       typeof input?.eventId !== "string" ||
-      (input.rateBps !== null && typeof input.rateBps !== "number")
+      (input.rateBps !== null && typeof input.rateBps !== "number") ||
+      (input.invitedOnly !== undefined &&
+        typeof input.invitedOnly !== "boolean")
     ) {
       return { status: 400, message: tr("invalidRequest2") };
     }

@@ -208,6 +208,9 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   team_payout_account_removed: n("team_payout_account_removed"),
   team_payout_account_default: n("team_payout_account_default"),
   team_payout_requested: n("team_payout_requested"),
+  // Invited promoters (services, X33/X36): to the promoter
+  promoter_added: n("promoter_added"),
+  promoter_removed: n("promoter_removed"),
   // SQL: rewards
   welcome_credit: n("welcome_credit"),
   referral_qualified: n("referral_qualified"),

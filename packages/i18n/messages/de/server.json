@@ -1410,5 +1410,12 @@
   "teamUnderAge": "Teams auf Abonten sind für Personen ab 18 Jahren.",
   "teamRoleNotLimited": "Nur die Rollen Empfang und Einlass können auf Orte beschränkt werden.",
   "teamPlaceNotTeam": "Wähle Orte, die dieses Team führt.",
-  "teamPlaceNotYours": "Deine Rolle in diesem Team gilt für andere Orte."
+  "teamPlaceNotYours": "Deine Rolle in diesem Team gilt für andere Orte.",
+  "promoterOfferFirst": "Biete zuerst eine Provision für dieses Event an und füge dann Promoter hinzu.",
+  "promoterOwnEvent": "Du veranstaltest dieses Event und kannst daher nicht sein Promoter sein.",
+  "promoterRestricted": "Dieses Konto kann derzeit keine Events bewerben.",
+  "promoterMemberOwnerOnly": "Nur ein Inhaber kann ein Teammitglied als Promoter hinzufügen.",
+  "promoterTooMany": "Ein Event kann höchstens {max} Promoter haben.",
+  "promoterNotOnList": "Diese Person ist kein Promoter dieses Events.",
+  "couldnTSaveThePromoter": "Der Promoter konnte nicht gespeichert werden. Bitte versuche es erneut."
 }

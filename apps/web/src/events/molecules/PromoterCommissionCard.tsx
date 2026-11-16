@@ -10,6 +10,7 @@ import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import PromoterListSection from "./PromoterListSection";
 
 const pct = (bps: number) => Number((bps / 100).toFixed(2));
 
@@ -17,7 +18,8 @@ const pct = (bps: number) => Number((bps / 100).toFixed(2));
  * Organizer-funded promoter commission on one event (Rewards Phase 8):
  * whoever's share link sells a ticket gets this share of the price as
  * Abonten Credit after the event, and it comes off the organizer's payout
- * for that sale. Hidden while commissions aren't switched on.
+ * for that sale. Hidden while commissions aren't switched on. Below the
+ * rate: the promoters the organizer added (PromoterListSection).
  */
 export default function PromoterCommissionCard({
   eventId,
@@ -73,7 +75,11 @@ export default function PromoterCommissionCard({
       <div>
         <h2 className="font-semibold">{t("promoterCommission")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          {t("rewardPeopleWhoSellYourTickets")}
+          {t(
+            offer.invitedOnly
+              ? "rewardInvitedPromoters"
+              : "rewardPeopleWhoSellYourTickets",
+          )}
         </p>
       </div>
 
@@ -129,6 +135,14 @@ export default function PromoterCommissionCard({
           {t("promoterCommissionsArePausedOnAbonten")}
         </p>
       )}
+
+      {offer.available && offer.rateBps !== null ? (
+        <PromoterListSection
+          eventId={eventId}
+          offer={offer}
+          onSaved={(res) => qc.setQueryData(key, res)}
+        />
+      ) : null}
 
       {s.sales > 0 ? (
         <dl className="grid grid-cols-2 gap-3 border-t border-border pt-3 text-sm md:grid-cols-4">

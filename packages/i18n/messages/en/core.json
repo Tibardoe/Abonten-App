@@ -1072,6 +1072,14 @@
     "verification_back_in_review": {
       "title": "Your Verified badge is back in review",
       "body": "The name is now {subject}, so Abonten checks it again. The badge shows again once it's approved."
+    },
+    "promoter_added": {
+      "title": "{actor} added you as a promoter",
+      "body": "Share {event} with your link: you earn {pct}% of every ticket sold through it, as Abonten credit after the event."
+    },
+    "promoter_removed": {
+      "title": "You're no longer a promoter for {event}",
+      "body": "{actor} took you off its promoters. What you already earned stays yours."
     }
   },
   "noticeWords": {
