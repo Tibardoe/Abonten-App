@@ -1004,6 +1004,14 @@
     "promoter_removed": {
       "title": "Já não é promotor de {event}",
       "body": "{actor} retirou-o dos promotores. O que já ganhou continua a ser seu."
+    },
+    "payment_not_through": {
+      "body": "O seu pagamento de {amount} para {event} não foi concluído: não lhe foi cobrado nada e não foram emitidos bilhetes. Pode tentar novamente na página do evento.",
+      "title": "O seu pagamento não foi concluído"
+    },
+    "payment_not_through_orders": {
+      "body": "O seu pagamento de {amount} não foi concluído: não lhe foi cobrado nada e não foram emitidos bilhetes. Pode tentar novamente na página de cada evento.",
+      "title": "O seu pagamento não foi concluído"
     }
   },
   "openStatus": {

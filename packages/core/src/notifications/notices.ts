@@ -114,6 +114,10 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   refund_failed: n("refund_failed"),
   refund_failed_credit: n("refund_failed_credit"),
   orphan_refund: n("orphan_refund"),
+  // A ticket payment that failed after the buyer left the payment screen
+  // (payments/paymentFailedNotice.ts).
+  payment_not_through: n("payment_not_through"),
+  payment_not_through_orders: n("payment_not_through_orders"),
   // Tickets and promotions (web server utilities)
   ticket_confirmed: n("ticket_confirmed"),
   ticket_sold: n("ticket_sold"),

@@ -1004,6 +1004,14 @@
     "promoter_removed": {
       "title": "Ya no eres promotor de {event}",
       "body": "{actor} te quitó de sus promotores. Lo que ya ganaste sigue siendo tuyo."
+    },
+    "payment_not_through": {
+      "body": "Tu pago de {amount} para {event} no se completó, así que no se te ha cobrado y no se emitieron entradas. Puedes volver a intentarlo desde la página del evento.",
+      "title": "Tu pago no se completó"
+    },
+    "payment_not_through_orders": {
+      "body": "Tu pago de {amount} no se completó, así que no se te ha cobrado y no se emitieron entradas. Puedes volver a intentarlo desde la página de cada evento.",
+      "title": "Tu pago no se completó"
     }
   },
   "openStatus": {

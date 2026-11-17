@@ -1004,6 +1004,14 @@
     "promoter_removed": {
       "title": "Du bist kein Promoter mehr für {event}",
       "body": "{actor} hat dich als Promoter entfernt. Was du bereits verdient hast, bleibt dir."
+    },
+    "payment_not_through": {
+      "body": "Deine Zahlung von {amount} für {event} ist nicht durchgegangen. Dir wurde nichts berechnet und es wurden keine Tickets ausgestellt. Du kannst es auf der Seite der Veranstaltung erneut versuchen.",
+      "title": "Deine Zahlung ist nicht durchgegangen"
+    },
+    "payment_not_through_orders": {
+      "body": "Deine Zahlung von {amount} ist nicht durchgegangen. Dir wurde nichts berechnet und es wurden keine Tickets ausgestellt. Du kannst es auf der Seite jeder Veranstaltung erneut versuchen.",
+      "title": "Deine Zahlung ist nicht durchgegangen"
     }
   },
   "openStatus": {
