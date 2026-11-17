@@ -19,6 +19,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 ## 2026-11-17 — Payments that did not go through are visible
 
 - Admin › Finance › **Payment attempts** lists every try at paying, including declined, cancelled and never-confirmed ones, with the reason. Buyers' order history (website and app) says what happened to an unpaid order's payment: being confirmed, received with tickets on the way, did not go through (not charged), or not completed (money returned if any left their account); `get_user_transaction_history` gains `payment_state` (migration 20261117130933). `admin/finance.md` (1.4)
+- A payment still being confirmed can be replaced: **Pay another way** on the app's payment screen and held order, and on the website's basket, after a confirmation that the first payment is refunded in full if it goes through later. Payment attempts notes a try whose order was paid on another try, or that the provider charged after it closed.
 
 ## 2026-11-17 — A payment still being confirmed says so
 

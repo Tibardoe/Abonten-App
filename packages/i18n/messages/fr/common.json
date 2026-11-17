@@ -913,5 +913,9 @@
   "aPaymentForThisOrderIsBeingConfirmed": "Un paiement pour cette commande est en cours de confirmation. Merci de ne pas payer une deuxième fois avant la fin.",
   "paymentReceivedTicketsOnTheWay": "Paiement reçu. Vos billets arrivent.",
   "weJustCheckedNotConfirmedYet": "Nous venons de vérifier : il n'est pas encore confirmé.",
-  "paymentConfirmedTicketsReady": "Paiement confirmé. Vos billets sont dans Mes billets."
+  "paymentConfirmedTicketsReady": "Paiement confirmé. Vos billets sont dans Mes billets.",
+  "payAnotherWay": "Payer autrement",
+  "payAnotherWayTitle": "Payer autrement ?",
+  "payAnotherWayBody": "Utilisez cette option si le premier paiement ne peut pas être approuvé, par exemple si la demande est partie vers le mauvais numéro. N'approuvez que le nouveau paiement : si le premier passe plus tard, il est remboursé intégralement et automatiquement.",
+  "keepWaiting": "Continuer d'attendre"
 }

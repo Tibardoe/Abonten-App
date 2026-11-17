@@ -139,5 +139,9 @@
   "checkPayment": "Comprobar el pago",
   "paymentBeingConfirmed": "Pago en confirmación",
   "yourPaymentForIsBeingConfirmed": "Tu pago de {title} se está confirmando. Por favor, no vuelvas a pagar.",
-  "paymentReceivedTicketsOnTheWay": "Pago recibido. Tus entradas están en camino."
+  "paymentReceivedTicketsOnTheWay": "Pago recibido. Tus entradas están en camino.",
+  "payAnotherWay": "Pagar de otra forma",
+  "payAnotherWayTitle": "¿Pagar de otra forma?",
+  "payAnotherWayBody": "Úsalo si no puedes aprobar el primer pago, por ejemplo si la solicitud llegó a un número equivocado. Aprueba solo el nuevo pago: si el primero se completa más tarde, se reembolsa por completo automáticamente.",
+  "keepWaiting": "Seguir esperando"
 }

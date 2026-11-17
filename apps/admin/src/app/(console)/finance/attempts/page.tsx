@@ -39,6 +39,15 @@ const PURPOSE: Record<PaymentAttemptListItem["purpose"], string> = {
   other: "Other",
 };
 
+// payment_orphan_capture.status, for a try charged after it closed.
+const LATE_CAPTURE: Record<string, string> = {
+  detected: "Charged after it closed · refund not started",
+  refund_requested: "Charged after it closed · refund under way",
+  refunded: "Charged after it closed · refunded",
+  refund_failed: "Charged after it closed · refund failed",
+  resolved: "Charged after it closed · resolved by staff",
+};
+
 const METHOD: Record<string, string> = {
   card: "Card",
   mobile_money: "Mobile money",
@@ -169,6 +178,20 @@ export default async function PaymentAttemptsPage({
                 </Td>
                 <Td>
                   <StatusBadge family="paymentAttempt" value={a.status} />
+                  {a.paidOnAnotherTry ? (
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Order paid on another try
+                    </div>
+                  ) : null}
+                  {a.lateCaptureStatus ? (
+                    <Link
+                      href="/finance/refunds"
+                      className="mt-1 block text-xs text-warning hover:underline"
+                    >
+                      {LATE_CAPTURE[a.lateCaptureStatus] ??
+                        "Charged after it closed"}
+                    </Link>
+                  ) : null}
                 </Td>
                 <Td className="max-w-[320px]">
                   {a.failureReason ? (

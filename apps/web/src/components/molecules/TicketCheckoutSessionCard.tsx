@@ -23,6 +23,9 @@ type TicketCheckoutSessionCardProps = {
   onExpired: (checkoutSessionId: string) => void;
   pendingLineIds: Set<string>;
   isRemoving: boolean;
+  /** The buyer chose to pay another way despite a payment under way. */
+  paymentSwitched?: boolean;
+  onPayAnotherWay?: (checkoutSessionId: string) => void;
 };
 
 export default function TicketCheckoutSessionCard({
@@ -35,6 +38,8 @@ export default function TicketCheckoutSessionCard({
   onExpired,
   pendingLineIds,
   isRemoving,
+  paymentSwitched = false,
+  onPayAnotherWay,
 }: TicketCheckoutSessionCardProps) {
   const locale = useLocale();
   const t = useTranslations("common");
@@ -47,7 +52,7 @@ export default function TicketCheckoutSessionCard({
   // A payment already started for this checkout (often on the phone): it
   // can't be removed or changed while the charge is open, and paying again
   // would start a second charge, so the card offers "Check payment".
-  const inProgress = session.paymentInProgress;
+  const inProgress = paymentSwitched ? null : session.paymentInProgress;
   const locked = !!inProgress;
 
   useEffect(() => {
@@ -97,7 +102,18 @@ export default function TicketCheckoutSessionCard({
               ? t("paymentReceivedTicketsOnTheWay")
               : t("aPaymentForThisOrderIsBeingConfirmed")}
           </p>
-          <CheckPaymentButton attemptId={inProgress.attemptId} />
+          <div className="flex items-center gap-3">
+            {onPayAnotherWay && inProgress.stage === "awaiting" ? (
+              <button
+                type="button"
+                onClick={() => onPayAnotherWay(session.checkoutSessionId)}
+                className="text-xs font-medium text-primary underline"
+              >
+                {t("payAnotherWay")}
+              </button>
+            ) : null}
+            <CheckPaymentButton attemptId={inProgress.attemptId} />
+          </div>
         </div>
       ) : null}
 

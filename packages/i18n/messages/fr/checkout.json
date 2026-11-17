@@ -139,5 +139,9 @@
   "checkPayment": "Vérifier le paiement",
   "paymentBeingConfirmed": "Paiement en cours de confirmation",
   "yourPaymentForIsBeingConfirmed": "Votre paiement pour {title} est en cours de confirmation. Merci de ne pas payer une deuxième fois.",
-  "paymentReceivedTicketsOnTheWay": "Paiement reçu. Vos billets arrivent."
+  "paymentReceivedTicketsOnTheWay": "Paiement reçu. Vos billets arrivent.",
+  "payAnotherWay": "Payer autrement",
+  "payAnotherWayTitle": "Payer autrement ?",
+  "payAnotherWayBody": "Utilisez cette option si le premier paiement ne peut pas être approuvé, par exemple si la demande est partie vers le mauvais numéro. N'approuvez que le nouveau paiement : si le premier passe plus tard, il est remboursé intégralement et automatiquement.",
+  "keepWaiting": "Continuer d'attendre"
 }

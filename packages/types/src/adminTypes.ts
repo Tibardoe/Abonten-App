@@ -1123,6 +1123,14 @@ export type PaymentAttemptListItem = {
   buyerName: string | null;
   /** Set once it became a payment (Transactions has the full trace). */
   transactionId: string | null;
+  /** A failed / cancelled try whose order was paid by another try. */
+  paidOnAnotherTry: boolean;
+  /**
+   * Money the provider took for this try after it closed, refunded in full
+   * (payment_orphan_capture.status: detected / refund_requested / refunded
+   * / refund_failed / resolved). Null when none.
+   */
+  lateCaptureStatus: string | null;
   createdAt: string;
   updatedAt: string | null;
 };

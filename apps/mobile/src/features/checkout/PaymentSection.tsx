@@ -136,6 +136,7 @@ export function useTicketPayment({
         // screen confirms it on its first check.
         mode: ps ? ps.mode : "direct",
         deepLink: `abonten://checkout/${sessionId}`,
+        checkoutSessionId: sessionId,
         contextTitle: eventTitle ?? t("yourOrder"),
         ...(eventId ? { eventId } : {}),
         amountLabel: ps

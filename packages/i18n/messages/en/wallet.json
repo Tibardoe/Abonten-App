@@ -111,5 +111,9 @@
   "checkAgainIn": "Check again in {seconds} s",
   "weJustCheckedNotConfirmedYet": "We just checked: it isn't confirmed yet.",
   "weakConnectionWeKeepTrying": "Your connection looks weak. We'll keep trying, and checking never charges you again.",
-  "ifYouApprovedItWeConfirmIt": "If you approved the payment, it will be confirmed here on its own and we'll let you know. Please don't pay again in the meantime."
+  "ifYouApprovedItWeConfirmIt": "If you approved the payment, it will be confirmed here on its own and we'll let you know. Please don't pay again in the meantime.",
+  "payAnotherWay": "Pay another way",
+  "payAnotherWayTitle": "Pay another way?",
+  "payAnotherWayBody": "Use this if the first payment can't be approved, for example the prompt went to the wrong number. Only approve the new payment: if the first one goes through later, it is refunded in full automatically.",
+  "keepWaiting": "Keep waiting"
 }

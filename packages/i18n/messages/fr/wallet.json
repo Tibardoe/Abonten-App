@@ -111,5 +111,9 @@
   "checkAgainIn": "Vérifier de nouveau dans {seconds} s",
   "weJustCheckedNotConfirmedYet": "Nous venons de vérifier : il n'est pas encore confirmé.",
   "weakConnectionWeKeepTrying": "Votre connexion semble faible. Nous continuons d'essayer, et vérifier ne vous débite jamais une deuxième fois.",
-  "ifYouApprovedItWeConfirmIt": "Si vous avez approuvé le paiement, il sera confirmé ici automatiquement et nous vous préviendrons. Merci de ne pas payer une deuxième fois entre-temps."
+  "ifYouApprovedItWeConfirmIt": "Si vous avez approuvé le paiement, il sera confirmé ici automatiquement et nous vous préviendrons. Merci de ne pas payer une deuxième fois entre-temps.",
+  "payAnotherWay": "Payer autrement",
+  "payAnotherWayTitle": "Payer autrement ?",
+  "payAnotherWayBody": "Utilisez cette option si le premier paiement ne peut pas être approuvé, par exemple si la demande est partie vers le mauvais numéro. N'approuvez que le nouveau paiement : si le premier passe plus tard, il est remboursé intégralement et automatiquement.",
+  "keepWaiting": "Continuer d'attendre"
 }

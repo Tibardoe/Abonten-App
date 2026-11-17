@@ -148,7 +148,22 @@ export async function listPaymentAttemptsCore(
       page.map((r) => r.checkout_session_id).filter((x): x is string => !!x),
     ),
   ];
-  const [people, checkouts] = await Promise.all([
+  // A failed or cancelled try is usually followed by one that worked (the
+  // buyer paid another way): say so, so nobody chases a settled order.
+  const closedSessionIds = [
+    ...new Set(
+      page
+        .filter((r) => r.status === "failed" || r.status === "cancelled")
+        .map((r) => r.checkout_session_id)
+        .filter((x): x is string => !!x),
+    ),
+  ];
+  // Money a provider took for a try after it closed (a late approval, a
+  // second prompt approved too): refunded in full as an orphan capture.
+  const closedAttemptIds = page
+    .filter((r) => r.status === "failed" || r.status === "cancelled")
+    .map((r) => r.id);
+  const [people, checkouts, paidLater, lateCaptures] = await Promise.all([
     userIds.length > 0
       ? supabase
           .from("user_info")
@@ -161,9 +176,42 @@ export async function listPaymentAttemptsCore(
           .select("checkout_session_id, quantity, event:event_id(title)")
           .in("checkout_session_id", sessionIds)
       : Promise.resolve({ data: [], error: null }),
+    closedSessionIds.length > 0
+      ? supabase
+          .from("payment_attempt")
+          .select("checkout_session_id, created_at")
+          .in("checkout_session_id", closedSessionIds)
+          .in("status", ["succeeded", "refunded", "fulfillment_failed"])
+      : Promise.resolve({ data: [], error: null }),
+    closedAttemptIds.length > 0
+      ? supabase
+          .from("payment_orphan_capture")
+          .select("payment_attempt_id, status")
+          .in("payment_attempt_id", closedAttemptIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (people.error) return fail(people.error.message);
   if (checkouts.error) return fail(checkouts.error.message);
+  if (paidLater.error) return fail(paidLater.error.message);
+  if (lateCaptures.error) return fail(lateCaptures.error.message);
+  const lateCaptureByAttempt = new Map<string, string>();
+  for (const c of (lateCaptures.data ?? []) as {
+    payment_attempt_id: string | null;
+    status: string;
+  }[]) {
+    if (c.payment_attempt_id) {
+      lateCaptureByAttempt.set(c.payment_attempt_id, c.status);
+    }
+  }
+  const paidAtBySession = new Map<string, string>();
+  for (const a of (paidLater.data ?? []) as {
+    checkout_session_id: string | null;
+    created_at: string;
+  }[]) {
+    if (a.checkout_session_id) {
+      paidAtBySession.set(a.checkout_session_id, a.created_at);
+    }
+  }
 
   const personById = new Map(
     (people.data ?? []).map((p) => [
@@ -213,6 +261,11 @@ export async function listPaymentAttemptsCore(
       buyerUsername: person?.username ?? null,
       buyerName: person?.name ?? null,
       transactionId: r.transaction_id,
+      paidOnAnotherTry:
+        (r.status === "failed" || r.status === "cancelled") &&
+        !!r.checkout_session_id &&
+        paidAtBySession.has(r.checkout_session_id),
+      lateCaptureStatus: lateCaptureByAttempt.get(r.id) ?? null,
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     };

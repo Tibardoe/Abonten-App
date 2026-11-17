@@ -344,7 +344,11 @@
     "checkPayment": "eecd66db",
     "paymentBeingConfirmed": "f6f19de2",
     "yourPaymentForIsBeingConfirmed": "04f42c4d",
-    "paymentReceivedTicketsOnTheWay": "dfea8034"
+    "paymentReceivedTicketsOnTheWay": "dfea8034",
+    "payAnotherWay": "4047b3a4",
+    "payAnotherWayTitle": "b0507b17",
+    "payAnotherWayBody": "d283ac66",
+    "keepWaiting": "9be1abba"
   },
   "common": {
     "aPendingCheckoutJustExpired": "4b7fe9d6",
@@ -1241,7 +1245,11 @@
     "aPaymentForThisOrderIsBeingConfirmed": "6a14959e",
     "paymentReceivedTicketsOnTheWay": "dfea8034",
     "weJustCheckedNotConfirmedYet": "d821e727",
-    "paymentConfirmedTicketsReady": "e813da66"
+    "paymentConfirmedTicketsReady": "e813da66",
+    "payAnotherWay": "4047b3a4",
+    "payAnotherWayTitle": "b0507b17",
+    "payAnotherWayBody": "d283ac66",
+    "keepWaiting": "9be1abba"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -8766,7 +8774,11 @@
     "checkAgainIn": "c8dfa010",
     "weJustCheckedNotConfirmedYet": "d821e727",
     "weakConnectionWeKeepTrying": "fc276939",
-    "ifYouApprovedItWeConfirmIt": "9b7f0da5"
+    "ifYouApprovedItWeConfirmIt": "9b7f0da5",
+    "payAnotherWay": "4047b3a4",
+    "payAnotherWayTitle": "b0507b17",
+    "payAnotherWayBody": "d283ac66",
+    "keepWaiting": "9be1abba"
   },
   "weekly": {
     "aPastEditionSomeEventsHave": "4dc15f6a",

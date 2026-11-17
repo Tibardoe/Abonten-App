@@ -109,6 +109,20 @@ function SessionCard({
   // a second charge, so the card offers "Check payment" instead.
   const inProgress = session.paymentInProgress ?? null;
 
+  // The first payment can't be approved (wrong number, refused card):
+  // back to the order. Starting the new payment closes the old one; money
+  // the old one still takes later is refunded in full.
+  function onPayAnotherWay() {
+    Alert.alert(t("payAnotherWayTitle"), t("payAnotherWayBody"), [
+      { text: t("keepWaiting"), style: "cancel" },
+      {
+        text: t("payAnotherWay"),
+        onPress: () =>
+          router.push(`/(app)/checkout/${session.checkoutSessionId}`),
+      },
+    ]);
+  }
+
   function onRelease() {
     Alert.alert(t("releaseThisCheckout"), t("theTicketsItSHoldingGo"), [
       { text: t("keep"), style: "cancel" },
@@ -224,6 +238,7 @@ function SessionCard({
                 attemptId: inProgress.attemptId,
                 kind: "ticket",
                 mode: "direct",
+                checkoutSessionId: session.checkoutSessionId,
                 contextTitle: session.eventTitle,
                 amountLabel: formatMoney(currency, session.sessionSubtotal, {
                   locale,
@@ -233,7 +248,20 @@ function SessionCard({
             })
           }
         />
-      ) : (
+      ) : null}
+      {inProgress && !isExpired ? (
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={onPayAnotherWay}
+          className="items-center"
+        >
+          <AppText variant="small" tone="primary" className="font-medium">
+            {t("payAnotherWay")}
+          </AppText>
+        </Pressable>
+      ) : null}
+      {inProgress ? null : (
         <Button
           title={isExpired ? t("expired") : t("resumeCheckout")}
           variant={isExpired ? "outline" : "primary"}
