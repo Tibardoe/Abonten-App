@@ -4,8 +4,8 @@ purpose: Product-level documentation of the Abonten Android app (Expo) — navig
 audience: Product, support, QA, engineering
 scope: apps/mobile (Expo SDK 57, Expo Router)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -22,7 +22,7 @@ complianceReviewRequired: no
 
 ## Status
 
-- **Android:** built and device-verified (EAS `preview` APK and `production`); Play Store listing pending (`ANDROID_APP_LISTED` flag hides the store link until then).
+- **Android:** built and device-verified (EAS `preview` APK and `production`); public on Google Play and the App Store since 2026-11-17 (`ANDROID_APP_LISTED` true, `APP_STORE_URL`).
 - **iOS:** the code is universal, but **no iOS build has ever been produced** (Apple Developer enrolment blocked on a D-U-N-S number). Nothing iOS-specific is claimed in user documentation.
 - Bundle/package `com.abonten.app`; scheme `abonten`; universal links `abontenhub.com/{events,places,invite}`; EAS project `@abonten-hub/abonten`.
 

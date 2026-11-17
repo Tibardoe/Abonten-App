@@ -4,7 +4,11 @@ import { createClient } from "@/config/supabase/server";
 import InviteAcceptButton from "@/rewards/molecules/InviteAcceptButton";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
-import { ANDROID_APP_LISTED, playStoreUrl } from "@abonten/core/rewards/invite";
+import {
+  ANDROID_APP_LISTED,
+  APP_STORE_URL,
+  playStoreUrl,
+} from "@abonten/core/rewards/invite";
 import { resolveReferralCodeCore } from "@abonten/services/rewards/inviteCore";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -182,6 +186,9 @@ export default async function InvitePage({
               <a href={playStoreUrl(data.code)}>{t("getTheAndroidApp")}</a>
             </Button>
           ) : null}
+          <Button asChild size="lg" variant="outline" className="w-full">
+            <a href={APP_STORE_URL}>{t("getTheIphoneApp")}</a>
+          </Button>
           <p className="text-xs text-muted-foreground">
             {t("inviteCodesWorkForNewAccounts")}
           </p>

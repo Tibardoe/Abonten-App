@@ -39,9 +39,16 @@ export const INVITE_WINDOW_DAYS = 30;
 const DAY_MS = 86_400_000;
 
 export const ANDROID_PACKAGE = "com.abonten.app";
-// Flip to true once the app is live on Google Play; until then the invite
-// page doesn't show a store link that would 404.
-export const ANDROID_APP_LISTED = false;
+// Live on Google Play since 2026-11-17 (it was false until then, so the
+// invite page showed no store link that would 404).
+export const ANDROID_APP_LISTED = true;
+
+/**
+ * The App Store listing (app 6812440895, released 2026-11-17). The App
+ * Store has no install referrer: an invite opened on an iPhone is applied
+ * by typing its code after sign-up.
+ */
+export const APP_STORE_URL = "https://apps.apple.com/app/id6812440895";
 
 export function inviteUrl(code: string, origin: string = SITE_ORIGIN): string {
   return `${origin.replace(/\/$/, "")}${INVITE_PATH}/${code}`;

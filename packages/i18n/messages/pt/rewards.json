@@ -218,5 +218,6 @@
   "promotersFull": "Este evento tem {max} promotores, o máximo possível.",
   "promoterInvitedNote": "É promotor deste evento: ganha <b>{rate}</b> de cada bilhete vendido pela sua ligação. O organizador paga-o em crédito depois do evento. Toque em Partilhar no topo.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Recompense os promotores que adicionar abaixo. Cada um que vender um bilhete pela sua ligação recebe a sua parte do preço em Crédito Abonten quando o evento terminar. É descontada do seu pagamento por essa venda, e nada é pago por bilhetes reembolsados ou cancelados."
+  "rewardInvitedPromoters": "Recompense os promotores que adicionar abaixo. Cada um que vender um bilhete pela sua ligação recebe a sua parte do preço em Crédito Abonten quando o evento terminar. É descontada do seu pagamento por essa venda, e nada é pago por bilhetes reembolsados ou cancelados.",
+  "getTheIphoneApp": "Obter a aplicação iPhone"
 }
