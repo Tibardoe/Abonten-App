@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-17 — Live cutover: refund records as they are now
+
+- The cutover runbook's refund checks now match per-ticket refunds: a `transaction_refund` part is requested at once and the `fee_refund_adjustment` row is written when the money is back. `finance/paystack-live-cutover.md` (1.6)
+
 ## 2026-11-17 — My Tickets no longer fails when a ticket's event is hidden
 
 - A ticket whose event staff hid or removed is left out of My Tickets, its tab counts and the app's ticket list instead of making the page fail; hiding an event now says so in the moderation handbook. The checkout's "Check status" and "I've approved — check now" show "Checking…" and say when the payment is still waiting. `admin/reports-and-moderation.md` (1.1)

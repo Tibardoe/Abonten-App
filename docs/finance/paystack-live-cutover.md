@@ -4,8 +4,8 @@ purpose: The exact, ordered steps that move production from Paystack test mode t
 audience: Founder (holds the Paystack dashboard and Vercel), engineering
 scope: Ghana's Paystack account on the web and admin deployments; preview deployments; the Paystack dashboards' webhook settings; the mobile app (no key); the integration suites
 status: Approved
-version: 1.5
-lastReviewed: 2026-11-16
+version: 1.6
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -225,10 +225,11 @@ the records below.
 | Record | Expected |
 |---|---|
 | Paystack refund request | partial refund of **GH₵1.00** (100 minor) of the GH₵1.05 charge; Paystack keeps its own fee; the GH₵0.05 service fee is retained by policy |
-| `transaction` | status **`refund_pending`**, `refund_requested_at` and `refund_claimed_at` set, amount unchanged 1.050 |
+| `transaction` | status **`refund_pending`**, `refund_requested_at` set, amount unchanged 1.050 |
+| `transaction_refund` | one part: amount 1.00, status `requested`, `provider_refund_id` set, `completes_payment` true |
 | `ticket` | status `cancelled`; `attendance` `cancelled`; `ticket_checkout` `cancelled`; `ticket_type.quantity` back up by 1 |
 | `organizer_ledger_entry` | a second row `refund_hold` **−1.00** (earning stays; net 0 for the organizer) |
-| `platform_fee_entry` | a second row `fee_refund_adjustment`: `ticket_revenue` −1.00, `service_fee` 0, `net_revenue` 0 (Abonten keeps the 0.05) |
+| `platform_fee_entry` | still only the `fee` row: the `fee_refund_adjustment` is written when the money is back (below) |
 | notification | "Refund requested" to the buyer |
 
 **Then, asynchronously** — Paystack processes the refund (mobile money
@@ -241,6 +242,8 @@ events are acknowledged and ignored):
 |---|---|
 | `payment_webhook_event` | a `refund.processed` row with the reference, outcome `settled` |
 | `transaction` | status **`refunded`** |
+| `transaction_refund` | the part `processed` |
+| `platform_fee_entry` | a second row `fee_refund_adjustment` for the part: `ticket_revenue` −1.00, `service_fee` 0, `net_revenue` 0 (Abonten keeps the 0.05) |
 | `payment_attempt` | status `refunded` (follows its transaction since 2026-09-25) |
 | notification | "Refund completed" |
 | Paystack dashboard | the transaction shows a refund of GH₵1.00; status may read partially refunded |
@@ -278,9 +281,9 @@ from t;
 ```
 
 Expected after the cancel: `refund_pending`, true, earning 1.00 then
-refund_hold −1.00, organizer_net 0, a `fee` and a `fee_refund_adjustment`
-row, tickets `["cancelled"]`. After the webhook: `refunded` and a
-`refund.processed` settled delivery. Then delete the throwaway event.
+refund_hold −1.00, organizer_net 0, the `fee` row only, tickets
+`["cancelled"]`. After the webhook: `refunded`, a `fee_refund_adjustment`
+row and a `refund.processed` settled delivery. Then delete the throwaway event.
 
 ## 6. Going back to test
 
