@@ -106,5 +106,10 @@
   "aNewCodeIsOnItsWay": "Ein neuer Code ist unterwegs.",
   "weLlTextACodeToThis": "Wir schicken einen Code per SMS an diese Nummer, um zu prüfen, ob sie stimmt. Für die bestätigte Telefonnummer deines Kontos ist keiner nötig.",
   "thisChecksTheNumberIsRight": "So prüfen wir, ob die Nummer stimmt, bevor sie gespeichert wird.",
-  "enterTheCodeWeSentTo": "Gib den Code ein, der an {phone} gesendet wurde"
+  "enterTheCodeWeSentTo": "Gib den Code ein, der an {phone} gesendet wurde",
+  "checkingPayment": "Wird geprüft…",
+  "checkAgainIn": "Erneut prüfen in {seconds} s",
+  "weJustCheckedNotConfirmedYet": "Gerade geprüft: Sie ist noch nicht bestätigt.",
+  "weakConnectionWeKeepTrying": "Deine Verbindung scheint schwach. Wir versuchen es weiter, und das Prüfen belastet dich nie ein zweites Mal.",
+  "ifYouApprovedItWeConfirmIt": "Wenn du die Zahlung bestätigt hast, wird sie hier automatisch bestätigt und wir sagen dir Bescheid. Bitte zahle in der Zwischenzeit nicht noch einmal."
 }

@@ -74,6 +74,8 @@ function HeldCheckout({
   }, [isExpired, onExpired]);
 
   if (isExpired || secondsLeft === null) return null;
+  // A payment already started for it: "Check payment", never a second Pay.
+  const inProgress = session.paymentInProgress ?? null;
 
   return (
     <View
@@ -88,20 +90,39 @@ function HeldCheckout({
           />
         </View>
         <View className="flex-1 gap-0.5">
-          <AppText variant="bodyStrong">{t("finishYourCheckout")}</AppText>
+          <AppText variant="bodyStrong">
+            {inProgress ? t("paymentBeingConfirmed") : t("finishYourCheckout")}
+          </AppText>
           <AppText variant="meta">
-            {t("yourTicketsForAreHeldFor", {
-              title: session.eventTitle,
-              time: formatCountdown(secondsLeft),
-            })}
+            {inProgress
+              ? inProgress.stage === "finishing"
+                ? t("paymentReceivedTicketsOnTheWay")
+                : t("yourPaymentForIsBeingConfirmed", {
+                    title: session.eventTitle,
+                  })
+              : t("yourTicketsForAreHeldFor", {
+                  title: session.eventTitle,
+                  time: formatCountdown(secondsLeft),
+                })}
           </AppText>
         </View>
       </View>
       <Button
-        title={t("resumeCheckout")}
+        title={inProgress ? t("checkPayment") : t("resumeCheckout")}
         size="sm"
         onPress={() =>
-          router.push(`/(app)/checkout/${session.checkoutSessionId}`)
+          inProgress
+            ? router.push({
+                pathname: "/(app)/payment/[attemptId]",
+                params: {
+                  attemptId: inProgress.attemptId,
+                  kind: "ticket",
+                  mode: "direct",
+                  contextTitle: session.eventTitle,
+                  eventId: session.eventId,
+                },
+              })
+            : router.push(`/(app)/checkout/${session.checkoutSessionId}`)
         }
       />
       {others > 0 ? (

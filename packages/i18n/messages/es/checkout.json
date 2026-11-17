@@ -135,5 +135,9 @@
   "yourPaymentWentThroughButThe2": "Tu pago se procesó, pero la promoción aún no ha llegado a revisión. Reintenta ahora — no se te cobrará de nuevo.",
   "yourPaymentWentThroughButWe": "Tu pago se procesó, pero aún no hemos emitido tu entrada. Reintenta ahora — no se te cobrará de nuevo.",
   "yourSeatsAreHeldForA": "Tus plazas se reservan por tiempo limitado.",
-  "haveAPromoCodeAddIt": "¿Tienes un código promocional? Añádelo con tus entradas"
+  "haveAPromoCodeAddIt": "¿Tienes un código promocional? Añádelo con tus entradas",
+  "checkPayment": "Comprobar el pago",
+  "paymentBeingConfirmed": "Pago en confirmación",
+  "yourPaymentForIsBeingConfirmed": "Tu pago de {title} se está confirmando. Por favor, no vuelvas a pagar.",
+  "paymentReceivedTicketsOnTheWay": "Pago recibido. Tus entradas están en camino."
 }

@@ -907,5 +907,11 @@
   "featured": "À la une",
   "paidPlacement": "Emplacement payant",
   "changeLocationNow": "Changer de lieu (actuellement {location})",
-  "couldNotGetDirections": "Impossible d'obtenir l'itinéraire."
+  "couldNotGetDirections": "Impossible d'obtenir l'itinéraire.",
+  "checkPayment": "Vérifier le paiement",
+  "checkAgainIn": "Vérifier de nouveau dans {seconds} s",
+  "aPaymentForThisOrderIsBeingConfirmed": "Un paiement pour cette commande est en cours de confirmation. Merci de ne pas payer une deuxième fois avant la fin.",
+  "paymentReceivedTicketsOnTheWay": "Paiement reçu. Vos billets arrivent.",
+  "weJustCheckedNotConfirmedYet": "Nous venons de vérifier : il n'est pas encore confirmé.",
+  "paymentConfirmedTicketsReady": "Paiement confirmé. Vos billets sont dans Mes billets."
 }

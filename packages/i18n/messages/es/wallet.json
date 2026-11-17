@@ -106,5 +106,10 @@
   "aNewCodeIsOnItsWay": "Un nuevo código va de camino.",
   "weLlTextACodeToThis": "Enviaremos un código por SMS a este número para comprobar que es correcto. El número verificado de tu cuenta no lo necesita.",
   "thisChecksTheNumberIsRight": "Así comprobamos que el número es correcto antes de guardarlo.",
-  "enterTheCodeWeSentTo": "Introduce el código enviado a {phone}"
+  "enterTheCodeWeSentTo": "Introduce el código enviado a {phone}",
+  "checkingPayment": "Comprobando…",
+  "checkAgainIn": "Comprobar de nuevo en {seconds} s",
+  "weJustCheckedNotConfirmedYet": "Acabamos de comprobarlo: aún no está confirmado.",
+  "weakConnectionWeKeepTrying": "Tu conexión parece débil. Seguiremos intentándolo, y comprobar nunca te vuelve a cobrar.",
+  "ifYouApprovedItWeConfirmIt": "Si aprobaste el pago, se confirmará aquí automáticamente y te avisaremos. Por favor, no vuelvas a pagar mientras tanto."
 }

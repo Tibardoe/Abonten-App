@@ -16,6 +16,7 @@ import EmailRequiredToPay, {
 import UseCreditToggle from "@/components/molecules/UseCreditToggle";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCooldown } from "@/hooks/useCooldown";
 import {
   PAYSTACK_INLINE_SCRIPT_SRC,
   useResumePaystackPopup,
@@ -589,11 +590,14 @@ export default function PaymentMethodSelector(
   // screen, which read as a button that did nothing (2026-11-17, the first
   // live mobile-money payment).
   // Its own mutation, so the background polls neither flicker its label nor
-  // swallow its answer.
+  // swallow its answer. A few seconds' rest after each press, shown on the
+  // button, so one press is visibly one check.
+  const checkCooldown = useCooldown();
   const checkNowMutation = useMutation({
     mutationFn: (primaryAttemptId: string) =>
       verifyPaystackPayment(primaryAttemptId),
     onSuccess: (response, primaryAttemptId) => {
+      if (response.status !== 200) checkCooldown.start(10);
       if (response.status === 202) {
         toast.info(
           response.data.finalized === "pending"
@@ -603,8 +607,17 @@ export default function PaymentMethodSelector(
       }
       applyVerification(response, primaryAttemptId);
     },
-    onError: () => toast.error(t("thePaymentCouldNotBeVerified")),
+    onError: () => {
+      checkCooldown.start(10);
+      toast.error(t("thePaymentCouldNotBeVerified"));
+    },
   });
+  const checkNowLabel = (idle: string) =>
+    checkNowMutation.isPending
+      ? t("checkingPayment")
+      : checkCooldown.secondsLeft > 0
+        ? t("checkAgainIn", { seconds: checkCooldown.secondsLeft })
+        : idle;
 
   const retryFulfillmentMutation = useMutation({
     mutationFn: (paymentAttemptId: string) =>
@@ -796,13 +809,13 @@ export default function PaymentMethodSelector(
           <p>{uiState.message ?? t("yourPaymentIsStillProcessingThis")}</p>
           <button
             type="button"
-            disabled={checkNowMutation.isPending}
+            disabled={
+              checkNowMutation.isPending || checkCooldown.secondsLeft > 0
+            }
             onClick={() => checkNowMutation.mutate(uiState.primaryAttemptId)}
             className="underline font-medium disabled:opacity-50"
           >
-            {checkNowMutation.isPending
-              ? t("checkingPayment")
-              : t("checkStatus")}
+            {checkNowLabel(t("checkStatus"))}
           </button>
         </div>
       </>
@@ -846,13 +859,13 @@ export default function PaymentMethodSelector(
           <p>{uiState.displayMessage ?? t("approveThisPaymentOnYourPhone")}</p>
           <button
             type="button"
-            disabled={checkNowMutation.isPending}
+            disabled={
+              checkNowMutation.isPending || checkCooldown.secondsLeft > 0
+            }
             onClick={() => checkNowMutation.mutate(primaryAttemptId)}
             className="underline font-medium disabled:opacity-50"
           >
-            {checkNowMutation.isPending
-              ? t("checkingPayment")
-              : t("iVeApprovedCheckNow")}
+            {checkNowLabel(t("iVeApprovedCheckNow"))}
           </button>
         </div>
       </>

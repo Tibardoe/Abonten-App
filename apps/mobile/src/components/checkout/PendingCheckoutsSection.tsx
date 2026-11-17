@@ -104,6 +104,10 @@ function SessionCard({
   }, [isExpired, onExpired]);
 
   const currency = session.lines[0]?.currency ?? "";
+  // A payment already started for this checkout: it cannot be released
+  // (the server refuses while a charge is open) and paying again would start
+  // a second charge, so the card offers "Check payment" instead.
+  const inProgress = session.paymentInProgress ?? null;
 
   function onRelease() {
     Alert.alert(t("releaseThisCheckout"), t("theTicketsItSHoldingGo"), [
@@ -127,19 +131,37 @@ function SessionCard({
             {session.eventDateAndTime.date} {session.eventDateAndTime.time}
           </AppText>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          disabled={release.isPending}
-          onPress={onRelease}
-          hitSlop={8}
-        >
-          <AppText variant="small" tone="error" className="font-medium">
-            {release.isPending ? t("releasing") : t("release")}
-          </AppText>
-        </Pressable>
+        {inProgress ? null : (
+          <Pressable
+            accessibilityRole="button"
+            disabled={release.isPending}
+            onPress={onRelease}
+            hitSlop={8}
+          >
+            <AppText variant="small" tone="error" className="font-medium">
+              {release.isPending ? t("releasing") : t("release")}
+            </AppText>
+          </Pressable>
+        )}
       </View>
 
-      {secondsLeft !== null ? (
+      {inProgress ? (
+        <View className="flex-row items-start gap-2 rounded-lg bg-accent p-3">
+          <Icon name="time-outline" size={16} tone="primary" />
+          <View className="flex-1 gap-0.5">
+            <AppText variant="small" className="font-semibold text-foreground">
+              {t("paymentBeingConfirmed")}
+            </AppText>
+            <AppText variant="caption">
+              {inProgress.stage === "finishing"
+                ? t("paymentReceivedTicketsOnTheWay")
+                : t("yourPaymentForIsBeingConfirmed", {
+                    title: session.eventTitle,
+                  })}
+            </AppText>
+          </View>
+        </View>
+      ) : secondsLeft !== null ? (
         <View className="flex-row items-center gap-1.5">
           <Icon
             name={isExpired || isWarning ? "alert-circle" : "time-outline"}
@@ -191,15 +213,37 @@ function SessionCard({
         </AppText>
       </View>
 
-      <Button
-        title={isExpired ? t("expired") : t("resumeCheckout")}
-        variant={isExpired ? "outline" : "primary"}
-        size="sm"
-        disabled={isExpired}
-        onPress={() =>
-          router.push(`/(app)/checkout/${session.checkoutSessionId}`)
-        }
-      />
+      {inProgress ? (
+        <Button
+          title={t("checkPayment")}
+          size="sm"
+          onPress={() =>
+            router.push({
+              pathname: "/(app)/payment/[attemptId]",
+              params: {
+                attemptId: inProgress.attemptId,
+                kind: "ticket",
+                mode: "direct",
+                contextTitle: session.eventTitle,
+                amountLabel: formatMoney(currency, session.sessionSubtotal, {
+                  locale,
+                }),
+                eventId: session.eventId,
+              },
+            })
+          }
+        />
+      ) : (
+        <Button
+          title={isExpired ? t("expired") : t("resumeCheckout")}
+          variant={isExpired ? "outline" : "primary"}
+          size="sm"
+          disabled={isExpired}
+          onPress={() =>
+            router.push(`/(app)/checkout/${session.checkoutSessionId}`)
+          }
+        />
+      )}
     </Card>
   );
 }

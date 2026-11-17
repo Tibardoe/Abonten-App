@@ -135,5 +135,9 @@
   "yourPaymentWentThroughButThe2": "Votre paiement est passé, mais la promotion n'est pas encore arrivée en validation. Réessayez maintenant — vous ne serez pas débité une seconde fois.",
   "yourPaymentWentThroughButWe": "Votre paiement est passé, mais nous n'avons pas encore émis votre billet. Réessayez maintenant — vous ne serez pas débité une seconde fois.",
   "yourSeatsAreHeldForA": "Vos places sont réservées pour une durée limitée.",
-  "haveAPromoCodeAddIt": "Vous avez un code promo ? Ajoutez-le avec vos billets"
+  "haveAPromoCodeAddIt": "Vous avez un code promo ? Ajoutez-le avec vos billets",
+  "checkPayment": "Vérifier le paiement",
+  "paymentBeingConfirmed": "Paiement en cours de confirmation",
+  "yourPaymentForIsBeingConfirmed": "Votre paiement pour {title} est en cours de confirmation. Merci de ne pas payer une deuxième fois.",
+  "paymentReceivedTicketsOnTheWay": "Paiement reçu. Vos billets arrivent."
 }
