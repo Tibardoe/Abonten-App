@@ -922,5 +922,9 @@
   "noPromptYetCheckMenu": "No prompt yet? Open your mobile money menu and look for a payment waiting for your approval.",
   "nextAutomaticCheckIn": "Next automatic check in {seconds} s",
   "automaticChecksStoppedTicket": "We've stopped checking on this screen. We'll still let you know when the payment is confirmed, or if it doesn't go through.",
-  "automaticChecksStopped": "We've stopped checking on this screen. Check again any time."
+  "automaticChecksStopped": "We've stopped checking on this screen. Check again any time.",
+  "checkLater": "Check later",
+  "checkLaterNote": "We'll let you know when it's confirmed, or if it doesn't go through.",
+  "cancelOrderTitle": "Cancel this order?",
+  "cancelOrderBody": "Your held tickets go back on sale. Don't approve the payment prompt: if you approve it anyway, the money is refunded in full automatically."
 }

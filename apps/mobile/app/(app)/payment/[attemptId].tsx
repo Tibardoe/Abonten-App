@@ -4,16 +4,24 @@ import {
   NextCheckLine,
   VerifyCountdown,
 } from "@/components/checkout/PaymentWaitTimers";
+import { useCancelCheckout } from "@/features/checkout/useCheckout";
 import {
   type PaymentKind,
   VERIFY_WINDOW_MS,
   usePaymentVerification,
 } from "@/features/checkout/usePaymentVerification";
-import { AppText, Button, Icon, OtpInput, Spinner } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Icon,
+  OtpInput,
+  Spinner,
+  useToast,
+} from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 // The one payment-status surface for every Paystack purchase. The checkout /
 // promote screens only *start* the attempt, then push here — this screen owns
@@ -53,6 +61,7 @@ export default function PaymentVerificationScreen() {
     otpSubmitting,
     checkAgain,
     submitOtp,
+    stopChecking,
     cooldown,
     checkedJustNow,
     weakConnection,
@@ -106,6 +115,62 @@ export default function PaymentVerificationScreen() {
       },
     ]);
   };
+
+  // Ticket orders can be left (we tell them the outcome later) or cancelled
+  // here. Cancelling closes the payment on our side and frees the seats; a
+  // prompt approved afterwards anyway is refunded in full (orphan capture),
+  // which the confirmation says.
+  const isOrder = p.kind === "ticket" && !!p.checkoutSessionId;
+  const cancelCheckout = useCancelCheckout();
+  const toast = useToast();
+  const cancelOrder = () => {
+    const sessionId = p.checkoutSessionId;
+    if (!sessionId) return;
+    Alert.alert(t("cancelOrderTitle"), t("cancelOrderBody"), [
+      { text: t("keepWaiting"), style: "cancel" },
+      {
+        text: t("cancelOrder"),
+        style: "destructive",
+        onPress: async () => {
+          const res = await cancelCheckout
+            .mutateAsync(sessionId)
+            .catch(() => null);
+          if (res?.status === 200) {
+            stopChecking();
+            toast.success(t("orderCancelled"));
+            if (p.eventId) router.dismissTo(`/(app)/event/${p.eventId}`);
+            else goSuccess();
+            return;
+          }
+          // 409: the payment is being confirmed this very second.
+          toast.error(res?.message ?? t("pleaseTryAgain"));
+        },
+      },
+    ]);
+  };
+  const leaveOptions = isOrder ? (
+    <View className="w-full items-center gap-2">
+      <Button
+        title={t("checkLater")}
+        variant="outline"
+        fullWidth
+        onPress={() => goSuccess()}
+      />
+      <AppText variant="small" className="text-center text-muted-foreground">
+        {t("checkLaterNote")}
+      </AppText>
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={8}
+        disabled={cancelCheckout.isPending}
+        onPress={cancelOrder}
+      >
+        <AppText variant="small" tone="error" className="font-medium">
+          {t("cancelOrder")}
+        </AppText>
+      </Pressable>
+    </View>
+  ) : null;
 
   const goSuccess = () => {
     // A plan's part returns to the plan, which shows what is left.
@@ -166,6 +231,7 @@ export default function PaymentVerificationScreen() {
               }
             />
             {weakConnection ? checkNote : null}
+            {leaveOptions}
           </View>
         ) : null}
 
@@ -267,14 +333,16 @@ export default function PaymentVerificationScreen() {
                 onPress={payAnotherWay}
               />
             ) : null}
-            <Button
-              title={p.kind === "ticket" ? t("goToTickets") : t("goBack")}
-              variant={
-                p.kind === "ticket" && p.checkoutSessionId ? "ghost" : "outline"
-              }
-              fullWidth
-              onPress={goSuccess}
-            />
+            {isOrder ? (
+              leaveOptions
+            ) : (
+              <Button
+                title={p.kind === "ticket" ? t("goToTickets") : t("goBack")}
+                variant="outline"
+                fullWidth
+                onPress={goSuccess}
+              />
+            )}
           </View>
         ) : null}
 

@@ -120,5 +120,11 @@
   "noPromptYetCheckMenu": "¿Aún no te llega la solicitud? Abre el menú de tu dinero móvil y busca un pago pendiente de tu aprobación.",
   "nextAutomaticCheckIn": "Próxima comprobación automática en {seconds} s",
   "automaticChecksStoppedTicket": "Hemos dejado de comprobar en esta pantalla. Te avisaremos igualmente cuando se confirme el pago o si no se completa.",
-  "automaticChecksStopped": "Hemos dejado de comprobar en esta pantalla. Puedes volver a comprobarlo cuando quieras."
+  "automaticChecksStopped": "Hemos dejado de comprobar en esta pantalla. Puedes volver a comprobarlo cuando quieras.",
+  "checkLater": "Comprobar más tarde",
+  "checkLaterNote": "Te avisaremos cuando se confirme, o si no se completa.",
+  "cancelOrderTitle": "¿Cancelar este pedido?",
+  "cancelOrderBody": "Tus entradas reservadas vuelven a la venta. No apruebes la solicitud de pago: si la apruebas de todos modos, el dinero se reembolsa por completo automáticamente.",
+  "cancelOrder": "Cancelar pedido",
+  "orderCancelled": "Pedido cancelado."
 }

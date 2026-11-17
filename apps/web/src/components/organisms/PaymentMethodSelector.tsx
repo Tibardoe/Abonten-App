@@ -1,5 +1,6 @@
 "use client";
 
+import cancelTicketCheckoutSession from "@/actions/cancelTicketCheckoutSession";
 import createMultiCheckoutPaymentAttempt from "@/actions/createMultiCheckoutPaymentAttempt";
 import { createPromotionPaymentAttempt } from "@/actions/createPromotionPaymentAttempt";
 import getCheckoutPaymentOptions from "@/actions/getCheckoutPaymentOptions";
@@ -20,6 +21,7 @@ import {
 import UseCreditToggle from "@/components/molecules/UseCreditToggle";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useCooldown } from "@/hooks/useCooldown";
 import {
   PAYSTACK_INLINE_SCRIPT_SRC,
@@ -45,6 +47,7 @@ import { creditMinorToMajor } from "@abonten/core/rewards/creditAmount";
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
@@ -620,6 +623,68 @@ export default function PaymentMethodSelector(
       toast.error(t("thePaymentCouldNotBeVerified"));
     },
   });
+  // Ticket orders can be left (the buyer is told the outcome later) or
+  // cancelled while a payment waits. Cancelling closes the payment on our
+  // side and frees the seats (cancelTicketCheckoutSessionCore drops the
+  // open attempt); a prompt approved afterwards anyway is refunded in full,
+  // which the confirmation says. A payment being confirmed this very second
+  // answers 409 and keeps the order.
+  const confirm = useConfirm();
+  const cancelOrderMutation = useMutation({
+    mutationFn: async (sessionIds: string[]) => {
+      const results = [];
+      for (const id of sessionIds) {
+        results.push(await cancelTicketCheckoutSession(id));
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      const refused = results.find((r) => r.status !== 200);
+      queryClient.invalidateQueries({ queryKey: PENDING_CHECKOUTS_QUERY_KEY });
+      invalidateTicketStatusQueries(queryClient);
+      if (refused) {
+        toast.error(refused.message ?? t("somethingWentWrongPleaseTryAgain2"));
+        return;
+      }
+      toast.success(t("orderCancelled"));
+      setUiState({ phase: "selecting" });
+      router.refresh();
+    },
+    onError: () => toast.error(t("somethingWentWrongPleaseTryAgain2")),
+  });
+  const cancelOrder = async () => {
+    if (props.kind !== "ticket") return;
+    const ok = await confirm({
+      title: t("cancelOrderTitle"),
+      message: t("cancelOrderBody"),
+      confirmLabel: t("cancelOrder"),
+      cancelLabel: t("keepWaiting"),
+    });
+    if (ok) cancelOrderMutation.mutate(props.checkoutSessionIds);
+  };
+  const leaveOptions =
+    props.kind === "ticket" ? (
+      <div className="space-y-2 border-t border-border pt-3">
+        <p className="text-xs">{t("checkLaterNote")}</p>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link
+            href="/manage/my-events"
+            className="text-xs font-medium text-primary underline"
+          >
+            {t("checkLater")}
+          </Link>
+          <button
+            type="button"
+            disabled={cancelOrderMutation.isPending}
+            onClick={cancelOrder}
+            className="text-xs font-medium text-destructive underline disabled:opacity-50"
+          >
+            {t("cancelOrder")}
+          </button>
+        </div>
+      </div>
+    ) : null;
+
   const checkNowLabel = (idle: string) =>
     checkNowMutation.isPending
       ? t("checkingPayment")
@@ -870,6 +935,7 @@ export default function PaymentMethodSelector(
           >
             {checkNowLabel(t("checkStatus"))}
           </button>
+          {leaveOptions}
         </div>
       </>
     );
@@ -927,6 +993,7 @@ export default function PaymentMethodSelector(
           >
             {checkNowLabel(t("iVeApprovedCheckNow"))}
           </button>
+          {leaveOptions}
         </div>
       </>
     );

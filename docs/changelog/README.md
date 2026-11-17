@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-17 — Check later or cancel while a payment waits
+
+- The app's payment screen and the website's checkout offer, while a ticket payment waits, "Check later" (with "We'll let you know when it's confirmed, or if it doesn't go through.") and "Cancel order" behind a confirmation that the held tickets go back on sale and a prompt approved anyway is refunded in full automatically. (no doc version change)
+
 ## 2026-11-17 — Card checks are refunded until the money is back
 
 - The GH₵1.00 charged to save a card is now recorded as a charge with no order and its refund is asked again by the payment-reconcile sweep when the provider refuses it (it had been best-effort and lost on a refusal), along with any late-capture refund the provider refused; ten refusals open `fin_reconciliation.orphan_refunds_refused`. `finance/payments-and-ticketing-runbook.md` (1.8)

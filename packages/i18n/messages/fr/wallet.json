@@ -120,5 +120,11 @@
   "noPromptYetCheckMenu": "Pas encore de demande ? Ouvrez le menu de votre mobile money et cherchez un paiement en attente de votre approbation.",
   "nextAutomaticCheckIn": "Prochaine vérification automatique dans {seconds} s",
   "automaticChecksStoppedTicket": "Nous avons arrêté de vérifier sur cet écran. Nous vous préviendrons quand même dès que le paiement sera confirmé, ou s'il n'aboutit pas.",
-  "automaticChecksStopped": "Nous avons arrêté de vérifier sur cet écran. Vous pouvez vérifier de nouveau à tout moment."
+  "automaticChecksStopped": "Nous avons arrêté de vérifier sur cet écran. Vous pouvez vérifier de nouveau à tout moment.",
+  "checkLater": "Vérifier plus tard",
+  "checkLaterNote": "Nous vous préviendrons dès qu'il sera confirmé, ou s'il n'aboutit pas.",
+  "cancelOrderTitle": "Annuler cette commande ?",
+  "cancelOrderBody": "Vos billets réservés sont remis en vente. N'approuvez pas la demande de paiement : si vous l'approuvez quand même, le montant est remboursé intégralement et automatiquement.",
+  "cancelOrder": "Annuler la commande",
+  "orderCancelled": "Commande annulée."
 }

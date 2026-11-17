@@ -120,5 +120,11 @@
   "noPromptYetCheckMenu": "Ainda sem pedido? Abra o menu do seu dinheiro móvel e procure um pagamento à espera da sua aprovação.",
   "nextAutomaticCheckIn": "Próxima verificação automática em {seconds} s",
   "automaticChecksStoppedTicket": "Deixámos de verificar neste ecrã. Iremos avisá-lo na mesma quando o pagamento for confirmado, ou se não for concluído.",
-  "automaticChecksStopped": "Deixámos de verificar neste ecrã. Pode verificar novamente a qualquer momento."
+  "automaticChecksStopped": "Deixámos de verificar neste ecrã. Pode verificar novamente a qualquer momento.",
+  "checkLater": "Verificar mais tarde",
+  "checkLaterNote": "Iremos avisá-lo quando for confirmado, ou se não for concluído.",
+  "cancelOrderTitle": "Cancelar esta encomenda?",
+  "cancelOrderBody": "Os seus bilhetes reservados voltam à venda. Não aprove o pedido de pagamento: se o aprovar mesmo assim, o dinheiro é reembolsado na totalidade automaticamente.",
+  "cancelOrder": "Cancelar encomenda",
+  "orderCancelled": "Encomenda cancelada."
 }
