@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-17 — My Tickets no longer fails when a ticket's event is hidden
+
+- A ticket whose event staff hid or removed is left out of My Tickets, its tab counts and the app's ticket list instead of making the page fail; hiding an event now says so in the moderation handbook. The checkout's "Check status" and "I've approved — check now" show "Checking…" and say when the payment is still waiting. `admin/reports-and-moderation.md` (1.1)
+
 ## 2026-11-16 — Refused refunds are asked for again on their own; App Review checklist
 
 - The `payment-reconcile` sweep now also asks again for refunds the provider refused or that were never sent (a cancelled ticket of a cash payment no live refund part covers), one at a time, paced, and opens `fin_reconciliation.refunds_refused` after five refusals. `finance/payments-and-ticketing-runbook.md`
