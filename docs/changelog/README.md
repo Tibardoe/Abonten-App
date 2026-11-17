@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-17 — "Your payment didn't go through" reaches a buyer who left
+
+- A ticket payment the reconcile sweep (or a late provider failure event) finds failed now tells the buyer, by push and in the app, once per payment and not when they have since got tickets for the event: "Your payment of … for … didn't go through, so you weren't charged and no tickets were issued." `finance/payments-and-ticketing-runbook.md` (1.7)
+
 ## 2026-11-17 — Payments that did not go through are visible
 
 - Admin › Finance › **Payment attempts** lists every try at paying, including declined, cancelled and never-confirmed ones, with the reason. Buyers' order history (website and app) says what happened to an unpaid order's payment: being confirmed, received with tickets on the way, did not go through (not charged), or not completed (money returned if any left their account); `get_user_transaction_history` gains `payment_state` (migration 20261117130933). `admin/finance.md` (1.4)

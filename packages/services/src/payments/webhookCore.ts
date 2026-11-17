@@ -26,6 +26,10 @@ import { type FinalizeResult, finalizePayment } from "./finalizePayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import { markOrphanCaptureRefund } from "./orphanCapture";
 import {
+  FAILED_NOTICE_AFTER_MINUTES,
+  notifyPaymentDidNotGoThrough,
+} from "./paymentFailedNotice";
+import {
   accountFromConfig,
   getPaymentProvider,
   isPaymentProviderCode,
@@ -97,7 +101,7 @@ async function handlePaymentOutcome(
 }> {
   const { data: attempt, error } = await supabase
     .from("payment_attempt")
-    .select("id")
+    .select("id, status, created_at")
     .eq("provider", provider)
     .eq("provider_reference", reference)
     .maybeSingle();
@@ -126,6 +130,17 @@ async function handlePaymentOutcome(
   }
 
   const result: FinalizeResult = await finalizePayment(attempt.id, deps);
+  // A failure the provider reports some minutes after the payment started
+  // reaches a buyer who has left the payment screen; one reported at once
+  // they saw there. Only an attempt this event closed (it was open before).
+  if (
+    result.status === "failed" &&
+    ["initiated", "pending", "processing"].includes(attempt.status) &&
+    Date.now() - new Date(attempt.created_at).getTime() >
+      FAILED_NOTICE_AFTER_MINUTES * 60_000
+  ) {
+    await notifyPaymentDidNotGoThrough(attempt.id);
+  }
   const status = webhookAckStatus(result);
   return {
     status,

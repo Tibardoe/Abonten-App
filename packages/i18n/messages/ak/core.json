@@ -1004,6 +1004,14 @@
     "promoter_removed": {
       "title": "You're no longer a promoter for {event}",
       "body": "{actor} took you off its promoters. What you already earned stays yours."
+    },
+    "payment_not_through": {
+      "body": "Your payment of {amount} for {event} didn't go through, so you weren't charged and no tickets were issued. You can try again from the event's page.",
+      "title": "Your payment didn't go through"
+    },
+    "payment_not_through_orders": {
+      "body": "Your payment of {amount} didn't go through, so you weren't charged and no tickets were issued. You can try again from each event's page.",
+      "title": "Your payment didn't go through"
     }
   },
   "openStatus": {

@@ -29,6 +29,7 @@ import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { CREDIT_PROVIDER, finalizePayment } from "./finalizePayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
+import { notifyPaymentDidNotGoThrough } from "./paymentFailedNotice";
 
 /** Past the checkout's hold, so a buyer still on the payment page is not cut off. */
 export const RECONCILE_AFTER_MINUTES = CHECKOUT_RESERVATION_MINUTES + 5;
@@ -103,6 +104,12 @@ export async function reconcilePaymentAttemptsCore(
       );
     }
     outcomes[status] = (outcomes[status] ?? 0) + 1;
+    // Past the checkout window, the buyer has left the payment screen:
+    // tell them it didn't go through (once, and not if they paid another
+    // way since).
+    if (status === "failed") {
+      await notifyPaymentDidNotGoThrough(row.id);
+    }
     if (status === "succeeded" || status === "fulfillment_failed") {
       // Settled here, not by the app or the webhook: worth knowing about.
       logger.warn(

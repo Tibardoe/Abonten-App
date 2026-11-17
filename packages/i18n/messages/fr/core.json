@@ -1004,6 +1004,14 @@
     "promoter_removed": {
       "title": "Vous n'êtes plus promoteur de {event}",
       "body": "{actor} vous a retiré de ses promoteurs. Ce que vous avez déjà gagné vous reste acquis."
+    },
+    "payment_not_through": {
+      "body": "Votre paiement de {amount} pour {event} n'a pas abouti : vous n'avez pas été débité et aucun billet n'a été émis. Vous pouvez réessayer depuis la page de l'événement.",
+      "title": "Votre paiement n'a pas abouti"
+    },
+    "payment_not_through_orders": {
+      "body": "Votre paiement de {amount} n'a pas abouti : vous n'avez pas été débité et aucun billet n'a été émis. Vous pouvez réessayer depuis la page de chaque événement.",
+      "title": "Votre paiement n'a pas abouti"
     }
   },
   "openStatus": {
