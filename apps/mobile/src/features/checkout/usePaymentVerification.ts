@@ -348,6 +348,13 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     scheduleSlowCheck,
   ]);
 
+  // The buyer cancelled the order: nothing more to ask or show.
+  const stopChecking = useCallback(() => {
+    settledRef.current = true;
+    clearTimer();
+    setNextCheckAt(null);
+  }, [clearTimer]);
+
   const submitOtp = useCallback(
     async (otp: string) => {
       const code = otp.trim();
@@ -381,6 +388,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     otpSubmitting,
     checkAgain,
     submitOtp,
+    stopChecking,
     cooldown,
     checkedJustNow,
     weakConnection,

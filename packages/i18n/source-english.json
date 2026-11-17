@@ -1254,7 +1254,11 @@
     "noPromptYetCheckMenu": "642afe04",
     "nextAutomaticCheckIn": "3c974035",
     "automaticChecksStoppedTicket": "7bc598be",
-    "automaticChecksStopped": "b29065ec"
+    "automaticChecksStopped": "b29065ec",
+    "checkLater": "4b1a948a",
+    "checkLaterNote": "df8ce936",
+    "cancelOrderTitle": "e0d45206",
+    "cancelOrderBody": "ee78f1f9"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -8792,7 +8796,13 @@
     "noPromptYetCheckMenu": "642afe04",
     "nextAutomaticCheckIn": "3c974035",
     "automaticChecksStoppedTicket": "7bc598be",
-    "automaticChecksStopped": "b29065ec"
+    "automaticChecksStopped": "b29065ec",
+    "checkLater": "4b1a948a",
+    "checkLaterNote": "df8ce936",
+    "cancelOrderTitle": "e0d45206",
+    "cancelOrderBody": "ee78f1f9",
+    "cancelOrder": "5ae39c4a",
+    "orderCancelled": "c3ca8f89"
   },
   "weekly": {
     "aPastEditionSomeEventsHave": "4dc15f6a",

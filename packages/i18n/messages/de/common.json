@@ -922,5 +922,9 @@
   "noPromptYetCheckMenu": "Noch keine Anfrage? Öffne das Menü deines Mobile-Money-Kontos und suche nach einer Zahlung, die auf deine Bestätigung wartet.",
   "nextAutomaticCheckIn": "Nächste automatische Prüfung in {seconds} s",
   "automaticChecksStoppedTicket": "Wir prüfen auf diesem Bildschirm nicht mehr. Wir sagen dir trotzdem Bescheid, sobald die Zahlung bestätigt ist oder falls sie nicht durchgeht.",
-  "automaticChecksStopped": "Wir prüfen auf diesem Bildschirm nicht mehr. Du kannst jederzeit erneut prüfen."
+  "automaticChecksStopped": "Wir prüfen auf diesem Bildschirm nicht mehr. Du kannst jederzeit erneut prüfen.",
+  "checkLater": "Später prüfen",
+  "checkLaterNote": "Wir sagen dir Bescheid, sobald sie bestätigt ist oder falls sie nicht durchgeht.",
+  "cancelOrderTitle": "Diese Bestellung stornieren?",
+  "cancelOrderBody": "Deine reservierten Tickets gehen zurück in den Verkauf. Bestätige die Zahlungsanfrage nicht: Wenn du sie trotzdem bestätigst, wird das Geld automatisch vollständig erstattet."
 }
