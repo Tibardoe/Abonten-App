@@ -443,13 +443,21 @@ export async function releasePromoUsageIfEventFullyCancelled(
   userId: string,
   eventId: string,
 ) {
-  const { data: rawActiveTickets, error: remainingTicketsError } =
-    await supabase
+  // The service role, with the person named: through the person's own
+  // rights a ticket to an event staff hid comes back without its ticket
+  // type, which made this read fail (2026-11-17) and would also hide the
+  // tickets they still hold for a hidden event.
+  const { count: remainingActiveTickets, error: remainingTicketsError } =
+    await getSupabaseServiceClient()
       .from("ticket")
-      .select("id, status, ticket_type_id(event_id)")
-      // 'used' (checked in) is still a valid, non-cancelled ticket.
+      .select("id, ticket_type:ticket_type_id!inner(event_id)", {
+        count: "exact",
+        head: true,
+      })
       .eq("user_id", userId)
-      .in("status", ["active", "used"]);
+      // 'used' (checked in) is still a valid, non-cancelled ticket.
+      .in("status", ["active", "used"])
+      .eq("ticket_type.event_id", eventId);
 
   if (remainingTicketsError) {
     logger.error(
@@ -458,13 +466,7 @@ export async function releasePromoUsageIfEventFullyCancelled(
     return;
   }
 
-  const remainingActiveTickets = (
-    (rawActiveTickets ?? []) as unknown as {
-      ticket_type_id: { event_id: string };
-    }[]
-  ).filter((t) => t.ticket_type_id.event_id === eventId);
-
-  if (remainingActiveTickets.length > 0) return;
+  if ((remainingActiveTickets ?? 0) > 0) return;
 
   const { data: promoUsage, error: promoUsageError } = await supabase
     .from("promo_code_usage")

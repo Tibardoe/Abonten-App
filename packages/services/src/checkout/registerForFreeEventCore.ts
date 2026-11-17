@@ -32,7 +32,9 @@ import { saveEventQrCodeToCloudinary } from "../tickets/saveEventQrCodeToCloudin
 
 type TicketWithEvent = {
   user_id: string;
-  ticket_type_id: { event_id: string };
+  // Null when the person may not read the ticket's event (staff hid or
+  // removed it): those tickets are not for the event being registered for.
+  ticket_type_id: { event_id: string } | null;
   status: string;
 };
 
@@ -63,7 +65,7 @@ export async function registerForFreeEventCore(
 
   const alreadyBought = ticketData?.some(
     (ticket) =>
-      ticket.ticket_type_id.event_id === eventId &&
+      ticket.ticket_type_id?.event_id === eventId &&
       (ticket.status === "active" || ticket.status === "used"),
   );
 
