@@ -1086,6 +1086,47 @@ export type TransactionListItem = {
   refundRequestedAt: string | null;
 };
 
+/** Admin › Finance › Payment attempts filter tabs. */
+export type PaymentAttemptStatusGroup =
+  | "open"
+  | "failed"
+  | "cancelled"
+  | "finishing"
+  | "succeeded";
+
+/** One try at paying, including those that never became a transaction. */
+export type PaymentAttemptListItem = {
+  id: string;
+  status: string;
+  provider: string | null;
+  providerReference: string | null;
+  amount: number;
+  currency: string;
+  /** The provider's or Abonten's reason, for a failed attempt. */
+  failureReason: string | null;
+  /** "card" | "mobile_money" | … when recorded. */
+  method: string | null;
+  /** "direct" | "popup" | "redirect" when recorded. */
+  mode: string | null;
+  purpose:
+    | "tickets"
+    | "ticket_plan"
+    | "event_promotion"
+    | "place_promotion"
+    | "spotlight_promotion"
+    | "other";
+  /** The event's title, for tickets. */
+  orderTitle: string | null;
+  ticketCount: number | null;
+  buyerId: string;
+  buyerUsername: string | null;
+  buyerName: string | null;
+  /** Set once it became a payment (Transactions has the full trace). */
+  transactionId: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
 export type PaymentAttemptView = {
   id: string;
   status: string;

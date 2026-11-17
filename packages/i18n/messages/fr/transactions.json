@@ -47,5 +47,9 @@
   "unitPrice2": "Prix unitaire",
   "unknownTransactionType": "Type de transaction inconnu.",
   "youHaveNoTransactionsYetPurchases": "Vous n'avez pas encore de transactions. Les achats et les promotions que vous payez apparaîtront ici.",
-  "yourTransactions": "vos transactions"
+  "yourTransactions": "vos transactions",
+  "paymentBeingConfirmed": "Paiement en cours de confirmation",
+  "paymentReceivedTicketsOnTheWay": "Paiement reçu. Vos billets arrivent.",
+  "paymentDidNotGoThroughNotCharged": "Le paiement n'a pas abouti. Vous n'avez pas été débité.",
+  "paymentNotCompletedMoneyReturned": "Paiement non finalisé. Si de l'argent a quitté votre compte, il vous est rendu."
 }

@@ -85,6 +85,10 @@ import {
   listTransactionsCore,
 } from "@abonten/services/admin/finance/financeAdminCore";
 import {
+  type ListPaymentAttemptsFilters,
+  listPaymentAttemptsCore,
+} from "@abonten/services/admin/finance/paymentAttemptsAdminCore";
+import {
   getIdentitySettingsCore,
   getIdentityVerificationCore,
   identitySummariesCore,
@@ -375,6 +379,10 @@ export async function loadFinanceOverview(
 export async function loadTransactions(filters: ListTransactionsFilters) {
   const ctx = await requireAdmin();
   return listTransactionsCore(getServiceClient(), ctx, filters);
+}
+export async function loadPaymentAttempts(filters: ListPaymentAttemptsFilters) {
+  const ctx = await requireAdmin();
+  return listPaymentAttemptsCore(getServiceClient(), ctx, filters);
 }
 export async function loadTransactionDetail(id: string) {
   const ctx = await requireAdmin();

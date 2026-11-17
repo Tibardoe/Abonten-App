@@ -8445,7 +8445,11 @@
     "unitPrice2": "3c6c777f",
     "unknownTransactionType": "e7a3e944",
     "youHaveNoTransactionsYetPurchases": "543ee334",
-    "yourTransactions": "7f809c5d"
+    "yourTransactions": "7f809c5d",
+    "paymentBeingConfirmed": "f6f19de2",
+    "paymentReceivedTicketsOnTheWay": "dfea8034",
+    "paymentDidNotGoThroughNotCharged": "f7597db9",
+    "paymentNotCompletedMoneyReturned": "7c3f4f61"
   },
   "validation": {
     "aValidEventIsRequired": "7c73fc69",

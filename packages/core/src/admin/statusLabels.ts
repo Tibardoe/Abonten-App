@@ -29,6 +29,7 @@ export type StatusMeta = {
 
 export type StatusFamily =
   | "transaction"
+  | "paymentAttempt"
   | "checkout"
   | "payout"
   | "payoutReview"
@@ -81,6 +82,53 @@ const TRANSACTION: Record<string, StatusMeta> = {
     icon: "undo",
     description:
       "The ticket price was returned. Abonten keeps the service fee.",
+  },
+};
+
+// One try at paying (payment_attempt): most never become a transaction.
+const PAYMENT_ATTEMPT: Record<string, StatusMeta> = {
+  initiated: {
+    label: "Started",
+    tone: "warning",
+    icon: "clock",
+    description:
+      "Sent to the provider. A payment page the buyer never finished stays here until the sweep closes it after an hour.",
+  },
+  pending: {
+    label: "Awaiting approval",
+    tone: "warning",
+    icon: "clock",
+    description:
+      "The provider has not confirmed it yet (a mobile-money prompt not approved, or no answer).",
+  },
+  processing: {
+    label: "Being confirmed",
+    tone: "info",
+    icon: "clock",
+    description: "Abonten is confirming it with the provider right now.",
+  },
+  succeeded: { label: "Paid", tone: "success", icon: "check" },
+  refunded: { label: "Paid, refunded", tone: "neutral", icon: "undo" },
+  fulfillment_failed: {
+    label: "Paid, tickets not issued",
+    tone: "danger",
+    icon: "alert",
+    description:
+      "The money was taken but issuing the tickets (or starting the promotion) failed; the reconcile sweep retries it.",
+  },
+  failed: {
+    label: "Failed",
+    tone: "danger",
+    icon: "x",
+    description:
+      "Declined or abandoned at the provider, or refused by Abonten. Nothing was charged.",
+  },
+  cancelled: {
+    label: "Cancelled",
+    tone: "neutral",
+    icon: "x",
+    description:
+      "Closed before it was paid: the buyer paid another way, cancelled the order or never opened the payment. Money taken later is refunded in full.",
   },
 };
 
@@ -499,6 +547,7 @@ export const STATUS_LABELS: Record<StatusFamily, Record<string, StatusMeta>> = {
   fieldOpsCommission: FIELD_OPS_COMMISSION,
   fieldOpsOnboarding: FIELD_OPS_ONBOARDING,
   transaction: TRANSACTION,
+  paymentAttempt: PAYMENT_ATTEMPT,
   checkout: CHECKOUT,
   payout: PAYOUT,
   payoutReview: PAYOUT_REVIEW,
