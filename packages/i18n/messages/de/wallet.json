@@ -115,5 +115,10 @@
   "payAnotherWay": "Anders bezahlen",
   "payAnotherWayTitle": "Anders bezahlen?",
   "payAnotherWayBody": "Nutze das, wenn du die erste Zahlung nicht bestätigen kannst, zum Beispiel weil die Anfrage an die falsche Nummer ging. Bestätige nur die neue Zahlung: Geht die erste später doch durch, wird sie automatisch vollständig erstattet.",
-  "keepWaiting": "Weiter warten"
+  "keepWaiting": "Weiter warten",
+  "weKeepCheckingFor": "Das dauert meist weniger als eine Minute. Wir prüfen noch {time} lang weiter.",
+  "noPromptYetCheckMenu": "Noch keine Anfrage? Öffne das Menü deines Mobile-Money-Kontos und suche nach einer Zahlung, die auf deine Bestätigung wartet.",
+  "nextAutomaticCheckIn": "Nächste automatische Prüfung in {seconds} s",
+  "automaticChecksStoppedTicket": "Wir prüfen auf diesem Bildschirm nicht mehr. Wir sagen dir trotzdem Bescheid, sobald die Zahlung bestätigt ist oder falls sie nicht durchgeht.",
+  "automaticChecksStopped": "Wir prüfen auf diesem Bildschirm nicht mehr. Du kannst jederzeit erneut prüfen."
 }

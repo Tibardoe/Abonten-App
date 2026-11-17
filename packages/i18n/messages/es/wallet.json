@@ -115,5 +115,10 @@
   "payAnotherWay": "Pagar de otra forma",
   "payAnotherWayTitle": "¿Pagar de otra forma?",
   "payAnotherWayBody": "Úsalo si no puedes aprobar el primer pago, por ejemplo si la solicitud llegó a un número equivocado. Aprueba solo el nuevo pago: si el primero se completa más tarde, se reembolsa por completo automáticamente.",
-  "keepWaiting": "Seguir esperando"
+  "keepWaiting": "Seguir esperando",
+  "weKeepCheckingFor": "Esto suele tardar menos de un minuto. Seguiremos comprobando durante {time}.",
+  "noPromptYetCheckMenu": "¿Aún no te llega la solicitud? Abre el menú de tu dinero móvil y busca un pago pendiente de tu aprobación.",
+  "nextAutomaticCheckIn": "Próxima comprobación automática en {seconds} s",
+  "automaticChecksStoppedTicket": "Hemos dejado de comprobar en esta pantalla. Te avisaremos igualmente cuando se confirme el pago o si no se completa.",
+  "automaticChecksStopped": "Hemos dejado de comprobar en esta pantalla. Puedes volver a comprobarlo cuando quieras."
 }
