@@ -218,5 +218,6 @@
   "promotersFull": "Cet événement a {max} promoteurs, le maximum possible.",
   "promoterInvitedNote": "Vous êtes promoteur de cet événement : vous gagnez <b>{rate}</b> de chaque billet vendu via votre lien. L'organisateur verse cette commission sous forme de crédit après l'événement. Touchez Partager en haut.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Récompensez les promoteurs que vous ajoutez ci-dessous. Chacun d'eux qui vend un billet via son lien reçoit sa part du prix du billet, en Crédit Abonten, une fois l'événement terminé. Elle est déduite de votre versement pour cette vente, et rien n'est versé pour les billets remboursés ou annulés."
+  "rewardInvitedPromoters": "Récompensez les promoteurs que vous ajoutez ci-dessous. Chacun d'eux qui vend un billet via son lien reçoit sa part du prix du billet, en Crédit Abonten, une fois l'événement terminé. Elle est déduite de votre versement pour cette vente, et rien n'est versé pour les billets remboursés ou annulés.",
+  "getTheIphoneApp": "Obtenir l'application iPhone"
 }

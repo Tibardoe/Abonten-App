@@ -1,4 +1,8 @@
-import { ANDROID_APP_LISTED, playStoreUrl } from "../rewards/invite";
+import {
+  ANDROID_APP_LISTED,
+  APP_STORE_URL,
+  playStoreUrl,
+} from "../rewards/invite";
 import { PUBLIC_SITE_ORIGIN } from "./socialLinks";
 
 // Short links for printed QR codes: abontenhub.com/go/<code>.
@@ -78,7 +82,7 @@ export const APP_STORE_LISTINGS: Readonly<{
   ios: string | null;
   android: string | null;
 }> = {
-  ios: null,
+  ios: APP_STORE_URL,
   android: ANDROID_APP_LISTED ? playStoreUrl() : null,
 };
 

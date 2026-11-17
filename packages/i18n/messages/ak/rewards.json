@@ -218,5 +218,6 @@
   "promotersFull": "This event has {max} promoters, the most it can have.",
   "promoterInvitedNote": "You're a promoter for this event: you earn <b>{rate}</b> of every ticket sold through your link. The organizer pays it as credit after the event. Tap share at the top.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Reward the promoters you add below. Each one who sells a ticket through their link gets their share of the ticket price as Abonten Credit once the event is over. It comes off your payout for that sale, and nothing is paid on refunded or cancelled tickets."
+  "rewardInvitedPromoters": "Reward the promoters you add below. Each one who sells a ticket through their link gets their share of the ticket price as Abonten Credit once the event is over. It comes off your payout for that sale, and nothing is paid on refunded or cancelled tickets.",
+  "getTheIphoneApp": "Get the iPhone app"
 }

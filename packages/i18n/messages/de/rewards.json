@@ -218,5 +218,6 @@
   "promotersFull": "Dieses Event hat {max} Promoter, mehr sind nicht möglich.",
   "promoterInvitedNote": "Du bist Promoter dieses Events: Du verdienst <b>{rate}</b> an jedem Ticket, das über deinen Link verkauft wird. Der Veranstalter zahlt es nach dem Event als Guthaben aus. Tippe oben auf Teilen.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Belohne die Promoter, die du unten hinzufügst. Wer von ihnen ein Ticket über den eigenen Link verkauft, erhält nach dem Event seinen Anteil am Ticketpreis als Abonten-Guthaben. Er wird von deiner Auszahlung für diesen Verkauf abgezogen, und für erstattete oder stornierte Tickets wird nichts gezahlt."
+  "rewardInvitedPromoters": "Belohne die Promoter, die du unten hinzufügst. Wer von ihnen ein Ticket über den eigenen Link verkauft, erhält nach dem Event seinen Anteil am Ticketpreis als Abonten-Guthaben. Er wird von deiner Auszahlung für diesen Verkauf abgezogen, und für erstattete oder stornierte Tickets wird nichts gezahlt.",
+  "getTheIphoneApp": "iPhone-App holen"
 }

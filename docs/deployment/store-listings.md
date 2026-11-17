@@ -4,8 +4,8 @@ purpose: What Abonten's App Store and Google Play listings say, where each word,
 audience: Engineers, founder, compliance
 scope: App Store Connect app 6812440895 (com.abonten.app); Google Play app com.abonten.app (developer account "Abonten Hub"); apps/mobile/store; the store images outside the repository
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-21
+version: 1.3
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -127,6 +127,8 @@ Nothing is used to track people across other companies' apps and nothing is sold
 The app only has listings in Ghana, but people visiting Ghana carry phones registered elsewhere, so it is offered widely. The EU is left out for two reasons: Apple will not distribute there until the account's "trader status" (a public business address, phone and email under the EU Digital Services Act) is declared, and selling to people in the EU brings the EU's own privacy and consumer rules, which the draft legal pages have not been checked against. China needs a local licence number. Add countries in App Store Connect › Pricing and Availability and Play Console › Production › Countries / regions once those are dealt with.
 
 ## Before the app is public
+
+**Done 2026-11-17.** Paystack went live and the samples were hidden on 2026-11-16/17; iOS 1.0.0 was released (`asc versions release`, Ready for Sale) and Google Play's 11 changes were published the same afternoon; the store links below went on the same day. The steps are kept for the record and for a second market.
 
 Approval does not publish the app. Do these, in order, then release:
 

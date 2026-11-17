@@ -4,8 +4,8 @@ purpose: How printed and digital marketing pieces link into the product, how to 
 audience: Founder, marketing, field team leads, engineering
 scope: The /go/<code> short links (apps/web), the collateral set kept in the brand workspace (Desktop\Abonten-Brand\07-collateral), and the rules for printing it. Not the brand identity itself (PROJECT.md §48).
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-18
+version: 1.4
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -34,7 +34,7 @@ Printed pieces (flyers, rack cards, stickers, posters, signs) cannot be changed 
 | `places` | place-owner flyer | `/help/place-owners/managing-your-place` |
 | `owner` | welcome card left with a new place owner | `/manage/places` (sign-in first when signed out) |
 | `tickets` | ticket-check sign at event entrances | `/help/customers/your-tickets` |
-| `app` | "Get the app" pieces (apps edition, held) | iPhone → App Store, Android → Google Play once `APP_STORE_LISTINGS` has that listing (Android follows `ANDROID_APP_LISTED` in `packages/core/src/rewards/invite.ts`); otherwise `/` |
+| `app` | "Get the app" pieces (apps edition) | iPhone → App Store, Android → Google Play once `APP_STORE_LISTINGS` has that listing (Android follows `ANDROID_APP_LISTED` in `packages/core/src/rewards/invite.ts`); otherwise `/` |
 
 Per-place stickers and counter cards use the place's own page, `/places/<slug>`; the slug is fixed when the place is created (`postPlaceCore.ts`) and is not changed by edits. Per-event pieces use `/events/<code>`.
 
@@ -47,6 +47,8 @@ Per-place stickers and counter cards use the place's own page, `/places/<slug>`;
 Never delete or rename a code that has been printed. The unit test lists the printed codes and fails if one disappears.
 
 ## Procedure — the apps go live
+
+Done 2026-11-17: both apps are public, `ANDROID_APP_LISTED` is true and `APP_STORE_LISTINGS.ios` is `https://apps.apple.com/app/id6812440895` (`APP_STORE_URL` in `packages/core/src/rewards/invite.ts`); the invite page shows both stores. The apps edition may be released once a `/go/app` scan on each phone type has been checked.
 
 1. When the Android app is public on Google Play, set `ANDROID_APP_LISTED = true` (this also turns on the store link on the invite page).
 2. When the iPhone app is public on the App Store, set `APP_STORE_LISTINGS.ios` to its App Store URL.

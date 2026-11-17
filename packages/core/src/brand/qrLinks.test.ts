@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  APP_STORE_LISTINGS,
   QR_LINKS,
   qrLinkDestination,
   qrLinkTarget,
@@ -74,6 +75,17 @@ describe("QR short links", () => {
       expect(qrLinkTarget("APP", android, listed)).toBe(listed.android);
       expect(qrLinkTarget("app", desktop, listed)).toBe("/");
       expect(qrLinkTarget("app", null, listed)).toBe("/");
+    });
+
+    it("uses the published listings by default (both live since 2026-11-17)", () => {
+      expect(APP_STORE_LISTINGS.ios).toBe(
+        "https://apps.apple.com/app/id6812440895",
+      );
+      expect(APP_STORE_LISTINGS.android).toBe(
+        "https://play.google.com/store/apps/details?id=com.abonten.app",
+      );
+      expect(qrLinkTarget("app", iphone)).toBe(APP_STORE_LISTINGS.ios);
+      expect(qrLinkTarget("app", android)).toBe(APP_STORE_LISTINGS.android);
     });
 
     it("leaves every other code alone", () => {

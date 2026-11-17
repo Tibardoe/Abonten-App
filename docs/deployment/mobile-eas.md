@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.10
-lastReviewed: 2026-11-16
+version: 1.11
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -51,7 +51,7 @@ iOS specifics (2026-09-15): the app is **iPhone only** since 1.0.0 (`ios.support
 
 ## Stores
 
-Both listings, their declarations and the first submissions are described in [store-listings.md](store-listings.md): 1.0.0 was sent to App Review (build 20) and to Google Play review (version code 6) on 2026-10-04, each held from publishing until someone releases it. Android: Play listing not yet public (`ANDROID_APP_LISTED` false hides the store link on the invite page) — the Data safety form must match the Privacy Policy (legal F2); the Android build is uploaded through the Play Console because the only Play service account is read-only. iOS: Apple Developer enrolment complete (2026-09-15, team `KDDBR5P4D6`); the first production build needs one interactive `eas build --platform ios --profile production` from a terminal so EAS can sign in to Apple (two-factor), register the App ID `com.abonten.app` with Push Notifications + Associated Domains and create the EAS-managed distribution certificate, provisioning profile and push key — after that non-interactive builds work. Apple sign-in needs eas-cli ≥ 24.5.0 (older versions fail with "iTunes service key is empty"). Builds go to TestFlight (internal testing); the first external beta review (0.2.0 (6), 2026-09-15) was rejected under Guideline 2.1(a) because no demo account was given, which "App Review sign-in" below answers. Submitted to the App Store on 2026-10-04 (1.0.0, manual release).
+Both listings, their declarations and the first submissions are described in [store-listings.md](store-listings.md): 1.0.0 was sent to App Review (build 20) and to Google Play review (version code 6) on 2026-10-04, each held from publishing until someone releases it. Both apps were released on 2026-11-17 (iOS 1.0.0 Ready for Sale; Play's production release published); Android: the Play listing is public (`ANDROID_APP_LISTED` true) — the Data safety form must match the Privacy Policy (legal F2); the Android build is uploaded through the Play Console because the only Play service account is read-only. iOS: Apple Developer enrolment complete (2026-09-15, team `KDDBR5P4D6`); the first production build needs one interactive `eas build --platform ios --profile production` from a terminal so EAS can sign in to Apple (two-factor), register the App ID `com.abonten.app` with Push Notifications + Associated Domains and create the EAS-managed distribution certificate, provisioning profile and push key — after that non-interactive builds work. Apple sign-in needs eas-cli ≥ 24.5.0 (older versions fail with "iTunes service key is empty"). Builds go to TestFlight (internal testing); the first external beta review (0.2.0 (6), 2026-09-15) was rejected under Guideline 2.1(a) because no demo account was given, which "App Review sign-in" below answers. Submitted to the App Store on 2026-10-04 (1.0.0, manual release).
 
 ## App Review sign-in
 
