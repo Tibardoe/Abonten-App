@@ -201,3 +201,84 @@ export async function markOrphanCaptureRefund(input: {
   }
   return "matched";
 }
+
+/**
+ * The small charge made to save a card (cardVerificationCore), given back in
+ * full. Recorded first as a charge with no order (source
+ * `card_verification`), so a refund the provider refuses — "Insufficient
+ * balance to process refund" on a new live account — is asked again by the
+ * payment-reconcile sweep (orphanRefundRetryCore) instead of being lost, and
+ * Finance sees it. Never throws: saving the card goes on either way.
+ */
+export async function refundCardCheck(input: {
+  provider: PaymentProvider;
+  account: ProviderAccount;
+  verification: VerificationResult;
+  userId: string;
+}): Promise<OrphanCaptureOutcome> {
+  const { provider, account, verification, userId } = input;
+  const supabase = getSupabaseServiceClient();
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("payment_orphan_capture")
+    .insert({
+      provider: account.provider,
+      country_code: account.countryCode,
+      provider_reference: verification.reference,
+      provider_transaction_id: verification.providerTransactionId,
+      payment_attempt_id: null,
+      user_id: userId,
+      amount: toMajor(verification.amount),
+      currency: verification.amount.currency,
+      attempt_status: null,
+      source: "card_verification",
+      note: "Card check when saving a card",
+    })
+    .select("id")
+    .maybeSingle();
+  if (insertError) {
+    // Recorded already (a repeated confirm): that call owns the refund.
+    if (insertError.code === "23505") return { status: "refund_requested" };
+    logger.error(`cardCheck: record failed (${insertError.message})`);
+  }
+  const rowId = inserted?.id ?? null;
+
+  const now = () => new Date().toISOString();
+  try {
+    await provider.refund(account, {
+      reference: verification.reference,
+      providerTransactionId: verification.providerTransactionId,
+      amount: null,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(
+      `cardCheck: refund of ${verification.reference} refused (${message}); the reconcile sweep asks again`,
+    );
+    if (rowId) {
+      await supabase
+        .from("payment_orphan_capture")
+        .update({
+          status: "refund_failed",
+          last_error: message,
+          attempts: 1,
+          updated_at: now(),
+        })
+        .eq("id", rowId);
+    }
+    return { status: "refund_failed", message };
+  }
+
+  if (rowId) {
+    await supabase
+      .from("payment_orphan_capture")
+      .update({
+        status: "refund_requested",
+        refund_requested_at: now(),
+        attempts: 1,
+        updated_at: now(),
+      })
+      .eq("id", rowId);
+  }
+  return { status: "refund_requested" };
+}

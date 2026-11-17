@@ -1,5 +1,6 @@
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import { retryOrphanRefundsCore } from "@abonten/services/payments/orphanRefundRetryCore";
 import {
   isReconcileTokenValid,
   reconcilePaymentAttemptsCore,
@@ -44,8 +45,29 @@ export async function POST(req: Request) {
     failed = true;
     logger.error("maintenance/payment-reconcile: refund retry failed", e);
   }
+  // Charges with no order (a card check, a payment taken after its order
+  // closed) whose refund was refused or never sent.
+  let chargesWithNoOrder: Awaited<
+    ReturnType<typeof retryOrphanRefundsCore>
+  > | null = null;
+  try {
+    chargesWithNoOrder = await retryOrphanRefundsCore({
+      deadline: started + 45_000,
+    });
+  } catch (e) {
+    failed = true;
+    logger.error(
+      "maintenance/payment-reconcile: orphan refund retry failed",
+      e,
+    );
+  }
   if (failed) {
     return NextResponse.json({ status: 500 }, { status: 500 });
   }
-  return NextResponse.json({ status: 200, ...summary, refunds });
+  return NextResponse.json({
+    status: 200,
+    ...summary,
+    refunds,
+    chargesWithNoOrder,
+  });
 }
