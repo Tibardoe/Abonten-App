@@ -4,6 +4,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
+import { refundCardCheck } from "./orphanCapture";
 import { marketClosedForSales } from "./paymentChoice";
 import {
   type AddPaymentMethodResult,
@@ -195,19 +196,10 @@ export async function confirmCardVerificationCore(
     };
   }
 
-  try {
-    await provider.refund(account, {
-      reference,
-      providerTransactionId: verification.providerTransactionId,
-      amount: null,
-    });
-  } catch (error) {
-    // Best-effort only — the token is already captured and safe to save
-    // regardless of whether the refund succeeds.
-    logger.error(
-      `Card verification refund failed for reference ${reference}: ${error}`,
-    );
-  }
+  // Given back in full; a refusal is recorded and asked again by the
+  // payment-reconcile sweep (refundCardCheck). The token is already
+  // captured, so saving the card goes on either way.
+  await refundCardCheck({ provider, account, verification, userId });
 
   return addPaymentMethodCore(supabase, userId, {
     type: "card",

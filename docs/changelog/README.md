@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-17 — Card checks are refunded until the money is back
+
+- The GH₵1.00 charged to save a card is now recorded as a charge with no order and its refund is asked again by the payment-reconcile sweep when the provider refuses it (it had been best-effort and lost on a refusal), along with any late-capture refund the provider refused; ten refusals open `fin_reconciliation.orphan_refunds_refused`. `finance/payments-and-ticketing-runbook.md` (1.8)
+
 ## 2026-11-17 — Waiting for a payment shows how long
 
 - While a payment is checked, the app and the website show a bar with the time the quick checks still run ("This usually takes under a minute. We'll keep checking for 01:12."), a hint after 25 seconds of waiting for a mobile-money approval ("No prompt yet? Open your mobile money menu…"), then "Next automatic check in 12 s" every 20 seconds for ten minutes, and finally that checking on the screen has stopped and the buyer will still be told the outcome. The website now keeps checking for ten minutes as the app does (it stopped after one). (no doc version change)

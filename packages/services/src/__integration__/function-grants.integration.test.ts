@@ -109,6 +109,11 @@ const SESSION_CALLABLE: Call[] = [
 // with real fixtures in money-path-lockdown, so they are not repeated here.)
 const SERVICE_ROLE_ONLY: Call[] = [
   {
+    name: "orphan_refund_retry_candidates",
+    args: { p_limit: 1 },
+    why: "read by the payment-reconcile sweep only: it lists charges with no order (card checks, late captures) owed back to people (2026-11-17)",
+  },
+  {
     name: "refund_retry_candidates",
     args: { p_limit: 1 },
     why: "read by the payment-reconcile sweep only: it lists other people's payments that are owed a refund (2026-11-16)",

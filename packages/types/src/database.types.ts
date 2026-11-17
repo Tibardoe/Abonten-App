@@ -18507,6 +18507,18 @@ export type Database = {
         Args: { p_ticket_ids: string[]; p_transaction_id: string }
         Returns: number
       }
+      orphan_refund_retry_candidates: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          country_code: string
+          currency: string
+          id: string
+          provider: string
+          provider_reference: string
+          provider_transaction_id: string
+        }[]
+      }
       refund_retry_candidates: {
         Args: { p_limit?: number }
         Returns: {
