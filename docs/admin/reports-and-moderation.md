@@ -4,8 +4,8 @@ purpose: Work the report queue — triage, investigate, act on content, resolve 
 audience: moderator, operations, super_admin
 scope: /reports, /reports/[id], grouped view, bulk resolution
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -62,4 +62,4 @@ Expected result: target state changed (visible in Content); report terminal; aud
 
 ## Dangerous actions
 
-Remove on an event with sold tickets does not cancel it or refund anyone — if the event is fraudulent, coordinate with finance: cancel the event (refunds) and ban the organizer, and hold their payout. Hiding a place hides its bookings and reviews from the public too.
+Remove on an event with sold tickets does not cancel it or refund anyone — if the event is fraudulent, coordinate with finance: cancel the event (refunds) and ban the organizer, and hold their payout. Hide or Remove also takes the event off its ticket holders' My Tickets lists (web and app), because a holder may not read a hidden event; their tickets stay valid and nothing is refunded, so tell holders or refund them through Admin › Finance. Hiding a place hides its bookings and reviews from the public too.

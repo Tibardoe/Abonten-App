@@ -583,6 +583,29 @@ export default function PaymentMethodSelector(
       }),
   });
 
+  // "Check status" / "I've approved — check now": the same verification the
+  // polling runs, but a person pressed it, so it says something. A payment
+  // the provider still calls pending used to come back to the very same
+  // screen, which read as a button that did nothing (2026-11-17, the first
+  // live mobile-money payment).
+  // Its own mutation, so the background polls neither flicker its label nor
+  // swallow its answer.
+  const checkNowMutation = useMutation({
+    mutationFn: (primaryAttemptId: string) =>
+      verifyPaystackPayment(primaryAttemptId),
+    onSuccess: (response, primaryAttemptId) => {
+      if (response.status === 202) {
+        toast.info(
+          response.data.finalized === "pending"
+            ? t("yourMobileMoneyPaymentIsStill")
+            : t("weReFinishingUpYourPayment"),
+        );
+      }
+      applyVerification(response, primaryAttemptId);
+    },
+    onError: () => toast.error(t("thePaymentCouldNotBeVerified")),
+  });
+
   const retryFulfillmentMutation = useMutation({
     mutationFn: (paymentAttemptId: string) =>
       retryPaymentFulfillment(paymentAttemptId),
@@ -773,10 +796,13 @@ export default function PaymentMethodSelector(
           <p>{uiState.message ?? t("yourPaymentIsStillProcessingThis")}</p>
           <button
             type="button"
-            onClick={() => verifyMutation.mutate(uiState.primaryAttemptId)}
-            className="underline font-medium"
+            disabled={checkNowMutation.isPending}
+            onClick={() => checkNowMutation.mutate(uiState.primaryAttemptId)}
+            className="underline font-medium disabled:opacity-50"
           >
-            {t("checkStatus")}
+            {checkNowMutation.isPending
+              ? t("checkingPayment")
+              : t("checkStatus")}
           </button>
         </div>
       </>
@@ -820,10 +846,13 @@ export default function PaymentMethodSelector(
           <p>{uiState.displayMessage ?? t("approveThisPaymentOnYourPhone")}</p>
           <button
             type="button"
-            onClick={() => verifyMutation.mutate(primaryAttemptId)}
-            className="underline font-medium"
+            disabled={checkNowMutation.isPending}
+            onClick={() => checkNowMutation.mutate(primaryAttemptId)}
+            className="underline font-medium disabled:opacity-50"
           >
-            {t("iVeApprovedCheckNow")}
+            {checkNowMutation.isPending
+              ? t("checkingPayment")
+              : t("iVeApprovedCheckNow")}
           </button>
         </div>
       </>

@@ -80,11 +80,14 @@ export default withActionLocale(async function getMyEventsTabCounts(): Promise<{
     // Held tickets (active + checked-in), with just the event fields needed
     // to split active vs past. Capped high enough that no real attendee hits
     // it; a truncated count is still a sane badge if one somehow does.
+    // Every count here leaves out tickets whose event this person may not
+    // see (`!inner`, as the lists do through TICKET_WITH_EVENT_SELECT), so a
+    // badge never counts a ticket its tab cannot show.
     supabase
       .from("ticket")
       .select(
-        `ticket_type:ticket_type_id (
-          event:event_id (
+        `ticket_type:ticket_type_id!inner (
+          event:event_id!inner (
             status, starts_at, ends_at,
             occurrences:event_occurrence ( id, starts_at, ends_at )
           )
@@ -95,15 +98,18 @@ export default withActionLocale(async function getMyEventsTabCounts(): Promise<{
       .limit(2000),
     supabase
       .from("ticket")
-      .select("id", { count: "exact", head: true })
+      .select(
+        "id, ticket_type:ticket_type_id!inner(event:event_id!inner(id))",
+        { count: "exact", head: true },
+      )
       .eq("user_id", user.id)
       .eq("status", "cancelled"),
     supabase
       .from("ticket")
-      .select("id, transaction:transaction_id!inner(amount)", {
-        count: "exact",
-        head: true,
-      })
+      .select(
+        "id, transaction:transaction_id!inner(amount), ticket_type:ticket_type_id!inner(event:event_id!inner(id))",
+        { count: "exact", head: true },
+      )
       .eq("user_id", user.id)
       .eq("status", "cancelled")
       .gt("transaction.amount", 0),

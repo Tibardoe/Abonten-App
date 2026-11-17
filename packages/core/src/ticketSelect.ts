@@ -4,6 +4,13 @@
  * refunded ticket by ticket — read with refundStatus.ticketRefundState). Used by every fetcher that needs to produce
  * a `UserTicketType` (My Events list, the ticket PDF/email attachment) so
  * they can never drift into fetching different shapes of the same ticket.
+ *
+ * `ticket_type` and `event` are `!inner`: a ticket whose event the reader may
+ * not see (staff hid or removed the listing, so the event's access rule,
+ * which the ticket type's rule reads through, refuses it) is left out of the
+ * result instead of arriving with `ticket_type: null`, which every caller
+ * reads straight through (`ticket.ticket_type.event`). On 2026-11-17 the
+ * hidden pilot events made My Tickets fail for everyone holding one.
  */
 export const TICKET_WITH_EVENT_SELECT = `
   *,
@@ -11,9 +18,9 @@ export const TICKET_WITH_EVENT_SELECT = `
   refund_parts:transaction_refund_ticket (
     refund:refund_id ( status, amount, currency, created_at, tickets:transaction_refund_ticket ( ticket_id ) )
   ),
-  ticket_type:ticket_type_id (
+  ticket_type:ticket_type_id!inner (
     *,
-    event:event_id (
+    event:event_id!inner (
       *,
       occurrences:event_occurrence (*)
     )
@@ -33,9 +40,9 @@ export const TICKET_REFUND_SELECT = `
   refund_parts:transaction_refund_ticket (
     refund:refund_id ( status, amount, currency, created_at, tickets:transaction_refund_ticket ( ticket_id ) )
   ),
-  ticket_type:ticket_type_id (
+  ticket_type:ticket_type_id!inner (
     *,
-    event:event_id (
+    event:event_id!inner (
       *,
       occurrences:event_occurrence (*)
     )
