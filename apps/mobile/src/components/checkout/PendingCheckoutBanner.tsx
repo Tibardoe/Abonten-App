@@ -118,6 +118,7 @@ function HeldCheckout({
                   attemptId: inProgress.attemptId,
                   kind: "ticket",
                   mode: "direct",
+                  checkoutSessionId: session.checkoutSessionId,
                   contextTitle: session.eventTitle,
                   eventId: session.eventId,
                 },

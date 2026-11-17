@@ -7,6 +7,11 @@ import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleto
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import {
+  ORDER_PAYMENT_STATE_MESSAGE,
+  ORDER_PAYMENT_STATE_TONE,
+  orderPaymentState,
+} from "@abonten/core/orderPaymentState";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTransactionRow } from "@abonten/types/transactions";
@@ -49,6 +54,13 @@ function getRefundSummary(
 
   return { text: parts.join(" · "), className: badge?.className };
 }
+
+const PAYMENT_STATE_CLASS = {
+  warning: "text-warning",
+  info: "text-primary",
+  danger: "text-destructive",
+  muted: "text-muted-foreground",
+} as const;
 
 function TransactionsListSkeleton() {
   const t = useTranslations("transactions");
@@ -106,6 +118,7 @@ export default function TransactionsHistoryList({
             ? t("subscription")
             : t("ticketPurchase"));
         const refundSummary = getRefundSummary(item, t, tc);
+        const paymentState = orderPaymentState(item.payment_state);
 
         return (
           <Link
@@ -129,6 +142,13 @@ export default function TransactionsHistoryList({
                   className={`text-xs font-semibold ${refundSummary.className ?? "text-muted-foreground"}`}
                 >
                   {refundSummary.text}
+                </p>
+              )}
+              {paymentState && (
+                <p
+                  className={`text-xs font-semibold ${PAYMENT_STATE_CLASS[ORDER_PAYMENT_STATE_TONE[paymentState]]}`}
+                >
+                  {t(ORDER_PAYMENT_STATE_MESSAGE[paymentState])}
                 </p>
               )}
             </div>

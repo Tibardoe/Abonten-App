@@ -2,10 +2,10 @@
 title: Admin › Finance
 purpose: Map of the Finance module — what each screen shows and which procedure in docs/finance applies.
 audience: finance_admin, analyst (view), super_admin
-scope: /finance, /finance/transactions, /finance/transactions/[id], /finance/refunds, /finance/payouts, /finance/organizers/[id]
+scope: /finance, /finance/transactions, /finance/transactions/[id], /finance/attempts, /finance/refunds, /finance/payouts, /finance/organizers/[id]
 status: Approved
-version: 1.3
-lastReviewed: 2026-09-25
+version: 1.4
+lastReviewed: 2026-11-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -14,12 +14,13 @@ complianceReviewRequired: yes
 
 # Admin › Finance
 
-Source: `packages/services/src/admin/finance/financeAdminCore.ts` (reads), `financeActionsCore.ts` (writes). Procedures: `../finance/`.
+Source: `packages/services/src/admin/finance/financeAdminCore.ts` and `paymentAttemptsAdminCore.ts` (reads), `financeActionsCore.ts` (writes). Procedures: `../finance/`.
 
 | Screen | Shows | Actions |
 |---|---|---|
 | **Overview** (period control: today, 7/30/90 days, this year, custom; a currency switcher once a second currency has activity — figures are one currency at a time) | Customer payments in the period with the change against the period before — total charged, gross ticket sales, service-fee revenue, net platform revenue (`platform_fee_entry` rows of type `fee`, before refunds); refunds awaiting action (right now) and cash refunded in the period; organizer money as it stands — earnings booked, refunds deducted, paid out, still owed with **payable today** against **still settling**, payouts in flight (`admin_finance_overview()` → `admin_organizer_balance()`); the fee rate in force. Every figure carries its definition behind the ⓘ | none |
 | **Transactions** | Search by status, provider reference, email (PII), date. Detail = full trace: transaction, every payment attempt, **refund parts** (a cash payment is refunded ticket by ticket: one `transaction_refund` row per part, its status, amount and ticket count), fee entry, ledger entries, tickets, checkouts, refundable amount now (less the parts already refunded) | **Refund** (`finance.refund`, step-up, reason) — `../finance/refunds-and-cancellations.md` §C |
+| **Payment attempts** (`transactions.view`) | Every try at paying (`payment_attempt`), newest first, including the ones that never became a transaction: tabs **Failed** (declined or abandoned at the provider; nothing charged), **Cancelled** (closed before it was paid; money taken later is refunded in full as a charge with no order), **Not confirmed yet** (initiated / pending / processing), **Paid, not issued** (`fulfillment_failed`, retried by the reconcile sweep) and **Paid**. Each row: buyer, what it was for (the event for tickets), amount, method and provider, the provider's or Abonten's reason, and the provider reference, linked to the transaction once it became one. Search by provider reference or the buyer's username / name. A failed or cancelled try notes **Order paid on another try** when a later try paid the same order (the buyer paid another way), and **Charged after it closed** with the refund's state when the provider took money for it anyway (a late approval; refunded in full, listed under Refunds › Charges with no order). Use it for "I paid but got nothing" (an open or paid-not-issued attempt) and "it keeps failing" (the reasons) | none |
 | **Refunds** | Transactions in `refund_pending` / `refunded` — a payment refunded one ticket at a time joins the list when its last tickets are refunded — charged vs refundable; the **Ticket refunds** tab lists every refund part (amount, tickets, status, the provider's failure reason) newest first, linked to its transaction (the refundable amounts for the whole page come from one call to `admin_transaction_refundable_amounts()`, which evaluates the same `get_transaction_refundable_amount()` per row) | none (retry via Transactions › Refund). Below it, **Charges with no order** (`payment_orphan_capture`): money a provider took after its checkout closed, refunded in full automatically — `markets.md` |
 | **Payouts** | Every payout with organizer, masked destination, status, review status, transfer status | **Settle…** completed / failed / cancelled (`finance.payout`, step-up); **Clear review**; (Send via Paystack — not built, flag off) — `../finance/settlement-ledger-and-payouts.md` |
 | **Organizers › [id]** | Earnings booked, refunds deducted, paid out, **payable today** (what a payout is checked against) with the amount still settling, still owed; other currencies listed separately; payout accounts, recent ledger and payouts with human status labels | **Create payout** (`finance.payout`, step-up) |

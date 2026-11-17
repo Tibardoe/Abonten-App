@@ -111,5 +111,9 @@
   "checkAgainIn": "Erneut prüfen in {seconds} s",
   "weJustCheckedNotConfirmedYet": "Gerade geprüft: Sie ist noch nicht bestätigt.",
   "weakConnectionWeKeepTrying": "Deine Verbindung scheint schwach. Wir versuchen es weiter, und das Prüfen belastet dich nie ein zweites Mal.",
-  "ifYouApprovedItWeConfirmIt": "Wenn du die Zahlung bestätigt hast, wird sie hier automatisch bestätigt und wir sagen dir Bescheid. Bitte zahle in der Zwischenzeit nicht noch einmal."
+  "ifYouApprovedItWeConfirmIt": "Wenn du die Zahlung bestätigt hast, wird sie hier automatisch bestätigt und wir sagen dir Bescheid. Bitte zahle in der Zwischenzeit nicht noch einmal.",
+  "payAnotherWay": "Anders bezahlen",
+  "payAnotherWayTitle": "Anders bezahlen?",
+  "payAnotherWayBody": "Nutze das, wenn du die erste Zahlung nicht bestätigen kannst, zum Beispiel weil die Anfrage an die falsche Nummer ging. Bestätige nur die neue Zahlung: Geht die erste später doch durch, wird sie automatisch vollständig erstattet.",
+  "keepWaiting": "Weiter warten"
 }

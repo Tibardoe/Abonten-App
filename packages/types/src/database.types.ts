@@ -17961,6 +17961,7 @@ export type Database = {
           currency: string
           id: string
           kind: string
+          payment_state: string
           quantity: number
           reference: string
           refund_requested_at: string

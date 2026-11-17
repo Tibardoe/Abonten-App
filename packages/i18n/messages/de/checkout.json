@@ -139,5 +139,9 @@
   "checkPayment": "Zahlung prüfen",
   "paymentBeingConfirmed": "Zahlung wird bestätigt",
   "yourPaymentForIsBeingConfirmed": "Deine Zahlung für {title} wird bestätigt. Bitte zahle nicht noch einmal.",
-  "paymentReceivedTicketsOnTheWay": "Zahlung erhalten. Deine Tickets sind unterwegs."
+  "paymentReceivedTicketsOnTheWay": "Zahlung erhalten. Deine Tickets sind unterwegs.",
+  "payAnotherWay": "Anders bezahlen",
+  "payAnotherWayTitle": "Anders bezahlen?",
+  "payAnotherWayBody": "Nutze das, wenn du die erste Zahlung nicht bestätigen kannst, zum Beispiel weil die Anfrage an die falsche Nummer ging. Bestätige nur die neue Zahlung: Geht die erste später doch durch, wird sie automatisch vollständig erstattet.",
+  "keepWaiting": "Weiter warten"
 }

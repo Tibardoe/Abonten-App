@@ -4,6 +4,7 @@ import Link from "next/link";
 const TABS = [
   { href: "/finance", label: "Overview" },
   { href: "/finance/transactions", label: "Transactions" },
+  { href: "/finance/attempts", label: "Payment attempts" },
   { href: "/finance/refunds", label: "Refunds" },
   { href: "/finance/payouts", label: "Payouts" },
 ];

@@ -16,6 +16,7 @@ import PaymentMethodSelector, {
 } from "@/components/organisms/PaymentMethodSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
 import { actionUnreachable } from "@/utils/actionUnreachable";
@@ -64,10 +65,26 @@ export default function PendingCheckoutsBasket({
   });
 
   const sessions = data ?? [];
-  // Checkouts whose payment is already under way are never selected for
+  // Checkouts whose payment is already under way are not selected for
   // paying (that would start a second charge); their cards offer "Check
-  // payment" instead.
-  const payable = sessions.filter((s) => !s.paymentInProgress);
+  // payment", and "Pay another way" when the first payment can't be
+  // approved (the new one closes it; money it still takes is refunded).
+  const [switchedIds, setSwitchedIds] = useState<Set<string>>(new Set());
+  const payable = sessions.filter(
+    (s) => !s.paymentInProgress || switchedIds.has(s.checkoutSessionId),
+  );
+  const confirm = useConfirm();
+  const payAnotherWay = async (checkoutSessionId: string) => {
+    const confirmed = await confirm({
+      title: t("payAnotherWayTitle"),
+      message: t("payAnotherWayBody"),
+      confirmLabel: t("payAnotherWay"),
+      cancelLabel: t("keepWaiting"),
+    });
+    if (!confirmed) return;
+    setSwitchedIds((prev) => new Set(prev).add(checkoutSessionId));
+    setSelectedIds((prev) => new Set(prev).add(checkoutSessionId));
+  };
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     () =>
@@ -121,7 +138,9 @@ export default function PendingCheckoutsBasket({
     setSelectedIds((prev) => {
       const next = new Set(prev);
       let changed = false;
-      const payableNow = sessions.filter((s) => !s.paymentInProgress);
+      const payableNow = sessions.filter(
+        (s) => !s.paymentInProgress || switchedIds.has(s.checkoutSessionId),
+      );
       for (const session of payableNow) {
         if (!next.has(session.checkoutSessionId)) {
           next.add(session.checkoutSessionId);
@@ -136,7 +155,7 @@ export default function PendingCheckoutsBasket({
       }
       return changed ? next : prev;
     });
-  }, [sessions]);
+  }, [sessions, switchedIds]);
 
   const toggleSelected = (checkoutSessionId: string) => {
     setSelectedIds((prev) => {
@@ -615,6 +634,8 @@ export default function PendingCheckoutsBasket({
           onExpired={handleExpired}
           pendingLineIds={pendingLineIds}
           isRemoving={removingSessionIds.has(session.checkoutSessionId)}
+          paymentSwitched={switchedIds.has(session.checkoutSessionId)}
+          onPayAnotherWay={payAnotherWay}
         />
       ))}
 

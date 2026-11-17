@@ -8,7 +8,7 @@ import { AppText, Button, Icon, OtpInput, Spinner } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 
 // The one payment-status surface for every Paystack purchase. The checkout /
 // promote screens only *start* the attempt, then push here — this screen owns
@@ -31,6 +31,8 @@ type Params = {
   eventId?: string;
   /** "1": success goes back to the screen that started the payment. */
   successBack?: string;
+  /** Ticket orders: the held checkout, for "Pay another way". */
+  checkoutSessionId?: string;
 };
 
 export default function PaymentVerificationScreen() {
@@ -79,6 +81,22 @@ export default function PaymentVerificationScreen() {
       {t("weJustCheckedNotConfirmedYet")}
     </AppText>
   ) : null;
+
+  // The prompt went to the wrong number, the card was refused at the bank:
+  // back to the order to pay another way. The server closes this attempt
+  // when the new one starts, and money this one still takes later is
+  // refunded in full (orphan capture), so say exactly that first.
+  const payAnotherWay = () => {
+    const sessionId = p.checkoutSessionId;
+    if (!sessionId) return;
+    Alert.alert(t("payAnotherWayTitle"), t("payAnotherWayBody"), [
+      { text: t("keepWaiting"), style: "cancel" },
+      {
+        text: t("payAnotherWay"),
+        onPress: () => router.dismissTo(`/(app)/checkout/${sessionId}`),
+      },
+    ]);
+  };
 
   const goSuccess = () => {
     // A plan's part returns to the plan, which shows what is left.
@@ -219,9 +237,19 @@ export default function PaymentVerificationScreen() {
               disabled={checking || cooldown > 0}
               onPress={checkAgain}
             />
+            {p.kind === "ticket" && p.checkoutSessionId ? (
+              <Button
+                title={t("payAnotherWay")}
+                variant="outline"
+                fullWidth
+                onPress={payAnotherWay}
+              />
+            ) : null}
             <Button
               title={p.kind === "ticket" ? t("goToTickets") : t("goBack")}
-              variant="outline"
+              variant={
+                p.kind === "ticket" && p.checkoutSessionId ? "ghost" : "outline"
+              }
               fullWidth
               onPress={goSuccess}
             />

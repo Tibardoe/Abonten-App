@@ -47,5 +47,9 @@
   "unitPrice2": "Preço unitário",
   "unknownTransactionType": "Tipo de transação desconhecido.",
   "youHaveNoTransactionsYetPurchases": "Ainda não tem transações. As compras e promoções que pagar aparecerão aqui.",
-  "yourTransactions": "as suas transações"
+  "yourTransactions": "as suas transações",
+  "paymentBeingConfirmed": "Pagamento a ser confirmado",
+  "paymentReceivedTicketsOnTheWay": "Pagamento recebido. Os seus bilhetes estão a caminho.",
+  "paymentDidNotGoThroughNotCharged": "O pagamento não foi concluído. Não lhe foi cobrado nada.",
+  "paymentNotCompletedMoneyReturned": "Pagamento não concluído. Se saiu dinheiro da sua conta, ele é-lhe devolvido."
 }

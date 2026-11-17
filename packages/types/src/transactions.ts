@@ -58,4 +58,9 @@ export interface UserTransactionRow {
   // How much of `total_paid` was Abonten Credit rather than cash (0 when
   // none). Optional: rows from before migration credit_ticket_redemption.
   credit_used?: number | null;
+  // An order not paid (yet): what happened to its latest try at paying
+  // ("awaiting" | "finishing" | "failed" | "not_completed"; read it with
+  // @abonten/core/orderPaymentState). Null when paid, free or never
+  // started; absent from servers before migration 20261117130933.
+  payment_state?: string | null;
 }

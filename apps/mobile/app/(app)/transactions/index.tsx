@@ -8,6 +8,11 @@ import { useQueryView } from "@/lib/useQueryView";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatDate } from "@abonten/core/i18n/format";
 import {
+  ORDER_PAYMENT_STATE_MESSAGE,
+  type OrderPaymentState,
+  orderPaymentState,
+} from "@abonten/core/orderPaymentState";
+import {
   type TransactionPeriod,
   transactionPeriodLabel,
 } from "@abonten/core/transactionsDateRange";
@@ -44,6 +49,29 @@ const PERIODS: TransactionPeriod[] = [
   "last3Months",
   "all",
 ];
+
+const PAYMENT_STATE_ICON: Record<
+  OrderPaymentState,
+  | "time-outline"
+  | "hourglass-outline"
+  | "close-circle-outline"
+  | "remove-circle-outline"
+> = {
+  awaiting: "time-outline",
+  finishing: "hourglass-outline",
+  failed: "close-circle-outline",
+  not_completed: "remove-circle-outline",
+};
+
+const ORDER_PAYMENT_STATE_ICON_TONE: Record<
+  OrderPaymentState,
+  "warning" | "primary" | "destructive" | "muted"
+> = {
+  awaiting: "warning",
+  finishing: "primary",
+  failed: "destructive",
+  not_completed: "muted",
+};
 
 function money(amount: number, currency: string) {
   return formatMoney(currency, Number(amount ?? 0), {
@@ -89,6 +117,8 @@ function TransactionRow({
         : row.refund_status === "successful" && row.refund_requested_at
           ? t("refundFailed")
           : undefined;
+  // An order not paid (yet): what became of its latest try at paying.
+  const paymentState = orderPaymentState(row.payment_state);
 
   return (
     <Pressable
@@ -148,6 +178,19 @@ function TransactionRow({
           {formatDate(row.created_at, locale)}
         </AppText>
       </View>
+      {paymentState ? (
+        <View className="flex-row items-start gap-1.5">
+          <Icon
+            name={PAYMENT_STATE_ICON[paymentState]}
+            size={14}
+            tone={ORDER_PAYMENT_STATE_ICON_TONE[paymentState]}
+            style={{ marginTop: 1 }}
+          />
+          <AppText variant="caption" className="flex-1">
+            {t(ORDER_PAYMENT_STATE_MESSAGE[paymentState])}
+          </AppText>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
