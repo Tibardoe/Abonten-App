@@ -1249,7 +1249,12 @@
     "payAnotherWay": "4047b3a4",
     "payAnotherWayTitle": "b0507b17",
     "payAnotherWayBody": "d283ac66",
-    "keepWaiting": "9be1abba"
+    "keepWaiting": "9be1abba",
+    "weKeepCheckingFor": "26ac65e1",
+    "noPromptYetCheckMenu": "642afe04",
+    "nextAutomaticCheckIn": "3c974035",
+    "automaticChecksStoppedTicket": "7bc598be",
+    "automaticChecksStopped": "b29065ec"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -8782,7 +8787,12 @@
     "payAnotherWay": "4047b3a4",
     "payAnotherWayTitle": "b0507b17",
     "payAnotherWayBody": "d283ac66",
-    "keepWaiting": "9be1abba"
+    "keepWaiting": "9be1abba",
+    "weKeepCheckingFor": "26ac65e1",
+    "noPromptYetCheckMenu": "642afe04",
+    "nextAutomaticCheckIn": "3c974035",
+    "automaticChecksStoppedTicket": "7bc598be",
+    "automaticChecksStopped": "b29065ec"
   },
   "weekly": {
     "aPastEditionSomeEventsHave": "4dc15f6a",

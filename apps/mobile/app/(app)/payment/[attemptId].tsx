@@ -1,7 +1,12 @@
 import { RecommendationPromptCard } from "@/components/alerts/RecommendationPromptCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import {
+  NextCheckLine,
+  VerifyCountdown,
+} from "@/components/checkout/PaymentWaitTimers";
+import {
   type PaymentKind,
+  VERIFY_WINDOW_MS,
   usePaymentVerification,
 } from "@/features/checkout/usePaymentVerification";
 import { AppText, Button, Icon, OtpInput, Spinner } from "@abonten/ui-native";
@@ -51,6 +56,10 @@ export default function PaymentVerificationScreen() {
     cooldown,
     checkedJustNow,
     weakConnection,
+    verifyStartedAt,
+    nextCheckAt,
+    backgroundChecking,
+    autoChecksOver,
   } = usePaymentVerification({
     attemptId: p.attemptId,
     kind: p.kind ?? "ticket",
@@ -149,6 +158,13 @@ export default function PaymentVerificationScreen() {
             <AppText variant="muted" className="text-center">
               {state.note ?? p.displayMessage ?? t("thisCanTakeAFewSeconds")}
             </AppText>
+            <VerifyCountdown
+              startedAt={verifyStartedAt}
+              windowMs={VERIFY_WINDOW_MS}
+              awaitingPhone={
+                p.mode === "direct" && p.chargeStatus === "pay_offline"
+              }
+            />
             {weakConnection ? checkNote : null}
           </View>
         ) : null}
@@ -230,6 +246,12 @@ export default function PaymentVerificationScreen() {
               {t("ifYouApprovedItWeConfirmIt")}
             </AppText>
             {checkNote}
+            <NextCheckLine
+              nextCheckAt={nextCheckAt}
+              checking={backgroundChecking && !checking}
+              over={autoChecksOver}
+              ticket={p.kind === "ticket"}
+            />
             <Button
               title={checkLabel(t("checkAgain"))}
               fullWidth

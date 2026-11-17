@@ -54,6 +54,8 @@ const MAX_POLLS = 20;
 // app comes back to the front — usually from the wallet's approval prompt.
 const SLOW_POLL_MS = 20_000;
 const MAX_SLOW_POLLS = 30;
+/** How long the first, quick checks run before "Still confirming". */
+export const VERIFY_WINDOW_MS = POLL_MS * MAX_POLLS;
 // A pressed "Check again" rests this long before it can be pressed again:
 // every press asks the provider, and a button that gave no sign of life
 // invited tapping it over and over.
@@ -97,6 +99,13 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
   const [checkedJustNow, setCheckedJustNow] = useState(false);
   /** The last request never reached Abonten (offline, weak signal). */
   const [weakConnection, setWeakConnection] = useState(false);
+  // For the screen's timers: when the quick checks began (so it can show
+  // how long they still run), when the next background check is due, and
+  // whether one is being asked right now or they have all been used up.
+  const [verifyStartedAt, setVerifyStartedAt] = useState<number | null>(null);
+  const [nextCheckAt, setNextCheckAt] = useState<number | null>(null);
+  const [backgroundChecking, setBackgroundChecking] = useState(false);
+  const [autoChecksOver, setAutoChecksOver] = useState(false);
 
   const pollsRef = useRef(0);
   const slowPollsRef = useRef(0);
@@ -200,8 +209,13 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
   // The slow checks while the "still confirming" screen is open.
   const scheduleSlowCheck = useCallback(() => {
     clearTimer();
+    setNextCheckAt(null);
     if (settledRef.current || !aliveRef.current) return;
-    if (slowPollsRef.current >= MAX_SLOW_POLLS) return;
+    if (slowPollsRef.current >= MAX_SLOW_POLLS) {
+      setAutoChecksOver(true);
+      return;
+    }
+    setNextCheckAt(Date.now() + SLOW_POLL_MS);
     timerRef.current = setTimeout(() => {
       void backgroundCheckRef.current();
     }, SLOW_POLL_MS);
@@ -211,10 +225,16 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     if (settledRef.current || !aliveRef.current) return;
     if (phaseRef.current !== "pending") return;
     slowPollsRef.current += 1;
-    const res = await ask("verify");
-    if (settledRef.current || !aliveRef.current) return;
-    if (applyVerifyResult(res, { fromRetry: false }) === "continue") {
-      scheduleSlowCheck();
+    setNextCheckAt(null);
+    setBackgroundChecking(true);
+    try {
+      const res = await ask("verify");
+      if (settledRef.current || !aliveRef.current) return;
+      if (applyVerifyResult(res, { fromRetry: false }) === "continue") {
+        scheduleSlowCheck();
+      }
+    } finally {
+      setBackgroundChecking(false);
     }
   }, [ask, applyVerifyResult, scheduleSlowCheck]);
   backgroundCheckRef.current = backgroundCheck;
@@ -234,6 +254,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
       // payment settled, so "Check again" silently did nothing.)
       setPhase({ status: "pending", note: t(PENDING_NOTE[kind]) });
       slowPollsRef.current = 0;
+      setAutoChecksOver(false);
       scheduleSlowCheck();
       return;
     }
@@ -244,6 +265,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     settledRef.current = false;
     pollsRef.current = 0;
     setPhase({ status: "verifying" });
+    setVerifyStartedAt(Date.now());
     clearTimer();
     void poll();
   }, [poll, clearTimer, setPhase]);
@@ -267,6 +289,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
       }
       if (!aliveRef.current) return;
       if (mode === "direct" && chargeStatus === "send_otp") return;
+      setVerifyStartedAt(Date.now());
       void poll();
     })();
     return () => {
@@ -361,5 +384,9 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     cooldown,
     checkedJustNow,
     weakConnection,
+    verifyStartedAt,
+    nextCheckAt,
+    backgroundChecking,
+    autoChecksOver,
   };
 }

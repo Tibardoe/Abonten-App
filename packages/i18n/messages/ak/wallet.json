@@ -115,5 +115,10 @@
   "payAnotherWay": "Pay another way",
   "payAnotherWayTitle": "Pay another way?",
   "payAnotherWayBody": "Use this if the first payment can't be approved, for example the prompt went to the wrong number. Only approve the new payment: if the first one goes through later, it is refunded in full automatically.",
-  "keepWaiting": "Keep waiting"
+  "keepWaiting": "Keep waiting",
+  "weKeepCheckingFor": "This usually takes under a minute. We'll keep checking for {time}.",
+  "noPromptYetCheckMenu": "No prompt yet? Open your mobile money menu and look for a payment waiting for your approval.",
+  "nextAutomaticCheckIn": "Next automatic check in {seconds} s",
+  "automaticChecksStoppedTicket": "We've stopped checking on this screen. We'll still let you know when the payment is confirmed, or if it doesn't go through.",
+  "automaticChecksStopped": "We've stopped checking on this screen. Check again any time."
 }

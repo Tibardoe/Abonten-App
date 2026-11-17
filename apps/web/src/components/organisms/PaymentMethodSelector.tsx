@@ -13,6 +13,10 @@ import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
 import EmailRequiredToPay, {
   useNeedsEmailToPay,
 } from "@/components/molecules/EmailRequiredToPay";
+import {
+  NextCheckText,
+  WaitCountdown,
+} from "@/components/molecules/PaymentWaitTimers";
 import UseCreditToggle from "@/components/molecules/UseCreditToggle";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,7 +47,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 type PayChoice = { paymentMethodId: string | null; method: string | null };
 
@@ -126,8 +130,12 @@ const DIRECT_CHARGE_POLL_INTERVAL_MS = 4000;
 
 // "We're finishing up your payment" (the webhook was issuing the tickets at
 // that moment, or mobile money is waiting on the phone) is asked again on
-// its own for about a minute; "Check status" stays for after that.
-const PENDING_POLL_MAX_TRIES = 15;
+// its own: every 4 s for the first 80 s (the app's schedule too), then every
+// 20 s for ten minutes; "Check status" stays for any time. The page shows
+// which of these is running, so the buyer knows how long to wait.
+const QUICK_CHECKS_MS = 80_000;
+const SLOW_CHECK_MS = 20_000;
+const CHECK_FOR_MS = 10 * 60_000;
 
 /**
  * Shared "select a payment method and pay" step for ticket and promotion
@@ -700,31 +708,61 @@ export default function PaymentMethodSelector(
     return () => clearInterval(interval);
   }, [uiState]);
 
-  // Each 202 answer sets a fresh pending state, which restarts this effect,
-  // so the tries are counted per attempt in a ref rather than per run.
-  const pendingPolls = useRef<{ attemptId: string; tries: number } | null>(
-    null,
-  );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: as above, only uiState drives polling.
+  // When the wait for this payment began (awaiting the phone, then pending),
+  // and whether it is a mobile-money approval: the clock behind the timers.
+  // Each 202 answer sets a fresh pending state, so it is kept per attempt.
+  const [waitStart, setWaitStart] = useState<{
+    attemptId: string;
+    at: number;
+    awaitingPhone: boolean;
+  } | null>(null);
+  const [nextCheckAt, setNextCheckAt] = useState<number | null>(null);
+  const [checksOver, setChecksOver] = useState(false);
   useEffect(() => {
-    if (uiState.phase !== "pending") return;
-    const attemptId = uiState.primaryAttemptId;
-    if (pendingPolls.current?.attemptId !== attemptId) {
-      pendingPolls.current = { attemptId, tries: 0 };
+    if (uiState.phase !== "awaiting-direct" && uiState.phase !== "pending") {
+      return;
     }
-    const interval = setInterval(() => {
-      const polls = pendingPolls.current;
-      if (!polls || polls.tries >= PENDING_POLL_MAX_TRIES) {
-        clearInterval(interval);
-        return;
-      }
-      if (verifyMutation.isPending) return;
-      polls.tries += 1;
-      verifyMutation.mutate(attemptId);
-    }, DIRECT_CHARGE_POLL_INTERVAL_MS);
-
-    return () => clearInterval(interval);
+    const attemptId = uiState.primaryAttemptId;
+    setWaitStart((prev) =>
+      prev?.attemptId === attemptId
+        ? prev
+        : {
+            attemptId,
+            at: Date.now(),
+            awaitingPhone:
+              uiState.phase === "awaiting-direct" &&
+              uiState.chargeStatus === "pay_offline",
+          },
+    );
   }, [uiState]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: as above, only uiState (and the wait's start) drives polling.
+  useEffect(() => {
+    if (uiState.phase !== "pending") {
+      setNextCheckAt(null);
+      return;
+    }
+    const attemptId = uiState.primaryAttemptId;
+    const started =
+      waitStart?.attemptId === attemptId ? waitStart.at : Date.now();
+    const elapsed = Date.now() - started;
+    if (elapsed >= CHECK_FOR_MS) {
+      setNextCheckAt(null);
+      setChecksOver(true);
+      return;
+    }
+    setChecksOver(false);
+    const delay =
+      elapsed < QUICK_CHECKS_MS
+        ? DIRECT_CHARGE_POLL_INTERVAL_MS
+        : SLOW_CHECK_MS;
+    setNextCheckAt(elapsed < QUICK_CHECKS_MS ? null : Date.now() + delay);
+    const timer = setTimeout(() => {
+      setNextCheckAt(null);
+      verifyMutation.mutate(attemptId);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [uiState, waitStart]);
 
   // No email on the account (a phone sign-up): every payment is refused
   // without one, so ask for it here instead of failing on "Pay".
@@ -807,6 +845,21 @@ export default function PaymentMethodSelector(
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
           <p>{uiState.message ?? t("yourPaymentIsStillProcessingThis")}</p>
+          {waitStart?.attemptId === uiState.primaryAttemptId &&
+          Date.now() - waitStart.at < QUICK_CHECKS_MS ? (
+            <WaitCountdown
+              startedAt={waitStart.at}
+              windowMs={QUICK_CHECKS_MS}
+              awaitingPhone={waitStart.awaitingPhone}
+            />
+          ) : (
+            <NextCheckText
+              nextCheckAt={nextCheckAt}
+              checking={verifyMutation.isPending}
+              over={checksOver}
+              ticket={props.kind === "ticket"}
+            />
+          )}
           <button
             type="button"
             disabled={
@@ -857,6 +910,13 @@ export default function PaymentMethodSelector(
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
           <p>{uiState.displayMessage ?? t("approveThisPaymentOnYourPhone")}</p>
+          {waitStart?.attemptId === primaryAttemptId ? (
+            <WaitCountdown
+              startedAt={waitStart.at}
+              windowMs={QUICK_CHECKS_MS}
+              awaitingPhone={waitStart.awaitingPhone}
+            />
+          ) : null}
           <button
             type="button"
             disabled={

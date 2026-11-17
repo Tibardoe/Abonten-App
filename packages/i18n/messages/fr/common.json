@@ -917,5 +917,10 @@
   "payAnotherWay": "Payer autrement",
   "payAnotherWayTitle": "Payer autrement ?",
   "payAnotherWayBody": "Utilisez cette option si le premier paiement ne peut pas être approuvé, par exemple si la demande est partie vers le mauvais numéro. N'approuvez que le nouveau paiement : si le premier passe plus tard, il est remboursé intégralement et automatiquement.",
-  "keepWaiting": "Continuer d'attendre"
+  "keepWaiting": "Continuer d'attendre",
+  "weKeepCheckingFor": "Cela prend généralement moins d'une minute. Nous continuons de vérifier pendant {time}.",
+  "noPromptYetCheckMenu": "Pas encore de demande ? Ouvrez le menu de votre mobile money et cherchez un paiement en attente de votre approbation.",
+  "nextAutomaticCheckIn": "Prochaine vérification automatique dans {seconds} s",
+  "automaticChecksStoppedTicket": "Nous avons arrêté de vérifier sur cet écran. Nous vous préviendrons quand même dès que le paiement sera confirmé, ou s'il n'aboutit pas.",
+  "automaticChecksStopped": "Nous avons arrêté de vérifier sur cet écran. Vous pouvez vérifier de nouveau à tout moment."
 }
