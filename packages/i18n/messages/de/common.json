@@ -907,5 +907,11 @@
   "featured": "Hervorgehoben",
   "paidPlacement": "Bezahlte Platzierung",
   "changeLocationNow": "Ort ändern (derzeit {location})",
-  "couldNotGetDirections": "Die Route konnte nicht geladen werden."
+  "couldNotGetDirections": "Die Route konnte nicht geladen werden.",
+  "checkPayment": "Zahlung prüfen",
+  "checkAgainIn": "Erneut prüfen in {seconds} s",
+  "aPaymentForThisOrderIsBeingConfirmed": "Eine Zahlung für diese Bestellung wird bestätigt. Bitte zahle nicht noch einmal, bis sie abgeschlossen ist.",
+  "paymentReceivedTicketsOnTheWay": "Zahlung erhalten. Deine Tickets sind unterwegs.",
+  "weJustCheckedNotConfirmedYet": "Gerade geprüft: Sie ist noch nicht bestätigt.",
+  "paymentConfirmedTicketsReady": "Zahlung bestätigt. Deine Tickets findest du unter Meine Tickets."
 }

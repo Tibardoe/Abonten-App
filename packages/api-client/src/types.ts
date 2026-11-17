@@ -612,6 +612,16 @@ export type PendingCheckoutSession = {
   promoCode: string | null;
   lines: PendingCheckoutSessionLine[];
   sessionSubtotal: number;
+  /**
+   * A payment already started for this checkout and not settled yet
+   * ("finishing": paid, tickets still being issued). Absent from servers
+   * older than 2026-11-17.
+   */
+  paymentInProgress?: {
+    attemptId: string;
+    stage: "awaiting" | "finishing";
+    startedAt: string;
+  } | null;
 };
 
 // ---- payment methods ---------------------------------------------------

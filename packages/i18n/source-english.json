@@ -340,7 +340,11 @@
     "yourOrder": "d2467b40",
     "paidWithAmountCredit": "78c4589a",
     "viewMyTickets": "af510cfa",
-    "haveAPromoCodeAddIt": "37db4ede"
+    "haveAPromoCodeAddIt": "37db4ede",
+    "checkPayment": "eecd66db",
+    "paymentBeingConfirmed": "f6f19de2",
+    "yourPaymentForIsBeingConfirmed": "04f42c4d",
+    "paymentReceivedTicketsOnTheWay": "dfea8034"
   },
   "common": {
     "aPendingCheckoutJustExpired": "4b7fe9d6",
@@ -1231,7 +1235,13 @@
     "featured": "ae31ad5d",
     "paidPlacement": "b0b68f68",
     "changeLocationNow": "cef8e096",
-    "couldNotGetDirections": "6d7207c7"
+    "couldNotGetDirections": "6d7207c7",
+    "checkPayment": "eecd66db",
+    "checkAgainIn": "c8dfa010",
+    "aPaymentForThisOrderIsBeingConfirmed": "6a14959e",
+    "paymentReceivedTicketsOnTheWay": "dfea8034",
+    "weJustCheckedNotConfirmedYet": "d821e727",
+    "paymentConfirmedTicketsReady": "e813da66"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -8747,7 +8757,12 @@
     "aNewCodeIsOnItsWay": "4bc55ca8",
     "weLlTextACodeToThis": "18a5deca",
     "thisChecksTheNumberIsRight": "e1ae6e71",
-    "enterTheCodeWeSentTo": "14ee73a7"
+    "enterTheCodeWeSentTo": "14ee73a7",
+    "checkingPayment": "820d6004",
+    "checkAgainIn": "c8dfa010",
+    "weJustCheckedNotConfirmedYet": "d821e727",
+    "weakConnectionWeKeepTrying": "fc276939",
+    "ifYouApprovedItWeConfirmIt": "9b7f0da5"
   },
   "weekly": {
     "aPastEditionSomeEventsHave": "4dc15f6a",

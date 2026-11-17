@@ -907,5 +907,11 @@
   "featured": "Featured",
   "paidPlacement": "Paid placement",
   "changeLocationNow": "Change location (now {location})",
-  "couldNotGetDirections": "Could not get directions."
+  "couldNotGetDirections": "Could not get directions.",
+  "checkPayment": "Check payment",
+  "checkAgainIn": "Check again in {seconds} s",
+  "aPaymentForThisOrderIsBeingConfirmed": "A payment for this order is being confirmed. Please don't pay again until it's done.",
+  "paymentReceivedTicketsOnTheWay": "Payment received. Your tickets are on their way.",
+  "weJustCheckedNotConfirmedYet": "We just checked: it isn't confirmed yet.",
+  "paymentConfirmedTicketsReady": "Payment confirmed. Your tickets are in My Tickets."
 }

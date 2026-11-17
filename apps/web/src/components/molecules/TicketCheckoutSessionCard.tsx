@@ -1,6 +1,7 @@
 "use client";
 
 import type { PendingCheckoutSession } from "@/actions/getUserPendingTicketCheckouts";
+import CheckPaymentButton from "@/components/atoms/CheckPaymentButton";
 import QuantityStepper from "@/components/atoms/QuantityStepper";
 import {
   formatCountdown,
@@ -43,6 +44,11 @@ export default function TicketCheckoutSessionCard({
     session.expiresAt,
   );
   const hasNotifiedExpiry = useRef(false);
+  // A payment already started for this checkout (often on the phone): it
+  // can't be removed or changed while the charge is open, and paying again
+  // would start a second charge, so the card offers "Check payment".
+  const inProgress = session.paymentInProgress;
+  const locked = !!inProgress;
 
   useEffect(() => {
     if (isExpired && !hasNotifiedExpiry.current) {
@@ -57,9 +63,10 @@ export default function TicketCheckoutSessionCard({
         <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={selected}
+            checked={selected && !locked}
+            disabled={locked}
             onChange={onToggleSelected}
-            className="mt-1 w-4 h-4 accent-primary"
+            className="mt-1 w-4 h-4 accent-primary disabled:opacity-40"
           />
           <div>
             <h2 className="font-semibold text-lg text-card-foreground">
@@ -71,15 +78,28 @@ export default function TicketCheckoutSessionCard({
           </div>
         </label>
 
-        <button
-          type="button"
-          disabled={isRemoving}
-          onClick={() => onRemoveSession(session.checkoutSessionId)}
-          className="text-xs text-destructive underline disabled:opacity-40 whitespace-nowrap"
-        >
-          {isRemoving ? t("removing") : t("removeCheckout")}
-        </button>
+        {locked ? null : (
+          <button
+            type="button"
+            disabled={isRemoving}
+            onClick={() => onRemoveSession(session.checkoutSessionId)}
+            className="text-xs text-destructive underline disabled:opacity-40 whitespace-nowrap"
+          >
+            {isRemoving ? t("removing") : t("removeCheckout")}
+          </button>
+        )}
       </div>
+
+      {inProgress ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm">
+          <p className="flex-1 min-w-[12rem]">
+            {inProgress.stage === "finishing"
+              ? t("paymentReceivedTicketsOnTheWay")
+              : t("aPaymentForThisOrderIsBeingConfirmed")}
+          </p>
+          <CheckPaymentButton attemptId={inProgress.attemptId} />
+        </div>
+      ) : null}
 
       <div
         className={
@@ -117,7 +137,7 @@ export default function TicketCheckoutSessionCard({
                 <p>{ticketTypeLabel(tc, line.type)}</p>
                 <button
                   type="button"
-                  disabled={isLinePending}
+                  disabled={isLinePending || locked}
                   onClick={() => onDeleteLine(line.ticketCheckoutId)}
                   className="hover:opacity-70 transition-opacity disabled:opacity-40"
                   aria-label={t("removeTickets", {
@@ -133,7 +153,7 @@ export default function TicketCheckoutSessionCard({
                 quantity={line.quantity}
                 minQuantity={1}
                 maxQuantity={maxQuantity}
-                disabled={isLinePending}
+                disabled={isLinePending || locked}
                 onIncrement={() =>
                   onQuantityChange(line.ticketCheckoutId, line.quantity + 1)
                 }

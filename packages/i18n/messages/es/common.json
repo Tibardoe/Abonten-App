@@ -907,5 +907,11 @@
   "featured": "Destacado",
   "paidPlacement": "Espacio de pago",
   "changeLocationNow": "Cambiar ubicación (ahora {location})",
-  "couldNotGetDirections": "No se pudo obtener la ruta."
+  "couldNotGetDirections": "No se pudo obtener la ruta.",
+  "checkPayment": "Comprobar el pago",
+  "checkAgainIn": "Comprobar de nuevo en {seconds} s",
+  "aPaymentForThisOrderIsBeingConfirmed": "Se está confirmando un pago de este pedido. Por favor, no vuelvas a pagar hasta que termine.",
+  "paymentReceivedTicketsOnTheWay": "Pago recibido. Tus entradas están en camino.",
+  "weJustCheckedNotConfirmedYet": "Acabamos de comprobarlo: aún no está confirmado.",
+  "paymentConfirmedTicketsReady": "Pago confirmado. Tus entradas están en Mis entradas."
 }

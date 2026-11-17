@@ -106,5 +106,10 @@
   "aNewCodeIsOnItsWay": "A new code is on its way.",
   "weLlTextACodeToThis": "We'll text a code to this number to check it's right. The verified phone number on your account doesn't need one.",
   "thisChecksTheNumberIsRight": "This makes sure the number is right before it's saved.",
-  "enterTheCodeWeSentTo": "Enter the code we sent to {phone}"
+  "enterTheCodeWeSentTo": "Enter the code we sent to {phone}",
+  "checkingPayment": "Checking…",
+  "checkAgainIn": "Check again in {seconds} s",
+  "weJustCheckedNotConfirmedYet": "We just checked: it isn't confirmed yet.",
+  "weakConnectionWeKeepTrying": "Your connection looks weak. We'll keep trying, and checking never charges you again.",
+  "ifYouApprovedItWeConfirmIt": "If you approved the payment, it will be confirmed here on its own and we'll let you know. Please don't pay again in the meantime."
 }

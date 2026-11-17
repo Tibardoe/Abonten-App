@@ -40,16 +40,45 @@ export default function PaymentVerificationScreen() {
   const router = useRouter();
   const [otp, setOtp] = useState("");
 
-  const { state, checking, otpSubmitting, checkAgain, submitOtp } =
-    usePaymentVerification({
-      attemptId: p.attemptId,
-      kind: p.kind ?? "ticket",
-      mode: p.mode === "direct" ? "direct" : "popup",
-      authorizationUrl: p.authorizationUrl,
-      deepLink: p.deepLink,
-      chargeStatus: p.chargeStatus,
-      displayMessage: p.displayMessage,
-    });
+  const {
+    state,
+    checking,
+    otpSubmitting,
+    checkAgain,
+    submitOtp,
+    cooldown,
+    checkedJustNow,
+    weakConnection,
+  } = usePaymentVerification({
+    attemptId: p.attemptId,
+    kind: p.kind ?? "ticket",
+    mode: p.mode === "direct" ? "direct" : "popup",
+    authorizationUrl: p.authorizationUrl,
+    deepLink: p.deepLink,
+    chargeStatus: p.chargeStatus,
+    displayMessage: p.displayMessage,
+  });
+
+  // "Check again" / "Retry": a spinner while asking, then a short rest
+  // with the seconds shown, so one press is visibly one check.
+  const checkLabel = (idle: string) =>
+    checking
+      ? t("checkingPayment")
+      : cooldown > 0
+        ? t("checkAgainIn", { seconds: cooldown })
+        : idle;
+  const checkNote = weakConnection ? (
+    <View className="flex-row items-start gap-1.5">
+      <Icon name="cloud-offline-outline" size={15} tone="warning" />
+      <AppText variant="small" className="flex-1 text-muted-foreground">
+        {t("weakConnectionWeKeepTrying")}
+      </AppText>
+    </View>
+  ) : checkedJustNow ? (
+    <AppText variant="small" className="text-center text-muted-foreground">
+      {t("weJustCheckedNotConfirmedYet")}
+    </AppText>
+  ) : null;
 
   const goSuccess = () => {
     // A plan's part returns to the plan, which shows what is left.
@@ -102,6 +131,7 @@ export default function PaymentVerificationScreen() {
             <AppText variant="muted" className="text-center">
               {state.note ?? p.displayMessage ?? t("thisCanTakeAFewSeconds")}
             </AppText>
+            {weakConnection ? checkNote : null}
           </View>
         ) : null}
 
@@ -175,11 +205,18 @@ export default function PaymentVerificationScreen() {
             <AppText variant="muted" className="text-center">
               {state.note}
             </AppText>
+            <AppText
+              variant="small"
+              className="text-center text-muted-foreground"
+            >
+              {t("ifYouApprovedItWeConfirmIt")}
+            </AppText>
+            {checkNote}
             <Button
-              title={t("checkAgain")}
+              title={checkLabel(t("checkAgain"))}
               fullWidth
               loading={checking}
-              disabled={checking}
+              disabled={checking || cooldown > 0}
               onPress={checkAgain}
             />
             <Button
@@ -200,11 +237,12 @@ export default function PaymentVerificationScreen() {
             <AppText variant="muted" className="text-center">
               {state.message}
             </AppText>
+            {checkNote}
             <Button
-              title={t("retry")}
+              title={checkLabel(t("retry"))}
               fullWidth
               loading={checking}
-              disabled={checking}
+              disabled={checking || cooldown > 0}
               onPress={checkAgain}
             />
           </View>

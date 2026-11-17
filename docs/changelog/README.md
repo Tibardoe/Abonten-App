@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-17 — A payment still being confirmed says so
+
+- A held checkout whose payment is under way (approved on a phone, the provider not answered yet, or paid with the tickets still being issued) now says "Payment being confirmed" with "Check payment" on the app's Tickets and Home, the event page and the website's basket, instead of "Resume checkout" and "Release". The app's payment screen keeps checking in the background and when the app comes back to the front, says when the connection is weak, and "Check again" shows "Checking…" then rests ten seconds with the seconds shown; it had done nothing at all once the first minute of checks ran out. The website's "Check status" rests the same way. (no doc version change)
+
 ## 2026-11-17 — Live cutover: refund records as they are now
 
 - The cutover runbook's refund checks now match per-ticket refunds: a `transaction_refund` part is requested at once and the `fee_refund_adjustment` row is written when the money is back. `finance/paystack-live-cutover.md` (1.6)

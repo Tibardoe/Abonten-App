@@ -64,9 +64,18 @@ export default function PendingCheckoutsBasket({
   });
 
   const sessions = data ?? [];
+  // Checkouts whose payment is already under way are never selected for
+  // paying (that would start a second charge); their cards offer "Check
+  // payment" instead.
+  const payable = sessions.filter((s) => !s.paymentInProgress);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set((initialSessions ?? []).map((s) => s.checkoutSessionId)),
+    () =>
+      new Set(
+        (initialSessions ?? [])
+          .filter((s) => !s.paymentInProgress)
+          .map((s) => s.checkoutSessionId),
+      ),
   );
   const [pendingLineIds, setPendingLineIds] = useState<Set<string>>(new Set());
   const [removingSessionIds, setRemovingSessionIds] = useState<Set<string>>(
@@ -112,14 +121,15 @@ export default function PendingCheckoutsBasket({
     setSelectedIds((prev) => {
       const next = new Set(prev);
       let changed = false;
-      for (const session of sessions) {
+      const payableNow = sessions.filter((s) => !s.paymentInProgress);
+      for (const session of payableNow) {
         if (!next.has(session.checkoutSessionId)) {
           next.add(session.checkoutSessionId);
           changed = true;
         }
       }
       for (const id of next) {
-        if (!sessions.some((s) => s.checkoutSessionId === id)) {
+        if (!payableNow.some((s) => s.checkoutSessionId === id)) {
           next.delete(id);
           changed = true;
         }
@@ -141,14 +151,14 @@ export default function PendingCheckoutsBasket({
   };
 
   const allSelected =
-    sessions.length > 0 &&
-    sessions.every((s) => selectedIds.has(s.checkoutSessionId));
+    payable.length > 0 &&
+    payable.every((s) => selectedIds.has(s.checkoutSessionId));
 
   const toggleSelectAll = () => {
     setSelectedIds((prev) =>
-      prev.size === sessions.length
+      prev.size === payable.length
         ? new Set()
-        : new Set(sessions.map((s) => s.checkoutSessionId)),
+        : new Set(payable.map((s) => s.checkoutSessionId)),
     );
   };
 

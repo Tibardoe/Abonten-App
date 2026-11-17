@@ -135,5 +135,9 @@
   "yourPaymentWentThroughButThe2": "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButWe": "Your payment went through, but we haven't issued your ticket yet. Retry now — you won't be charged again.",
   "yourSeatsAreHeldForA": "Your seats are held for a limited time.",
-  "haveAPromoCodeAddIt": "Have a promo code? Add it with your tickets"
+  "haveAPromoCodeAddIt": "Have a promo code? Add it with your tickets",
+  "checkPayment": "Check payment",
+  "paymentBeingConfirmed": "Payment being confirmed",
+  "yourPaymentForIsBeingConfirmed": "Your payment for {title} is being confirmed. Please don't pay again.",
+  "paymentReceivedTicketsOnTheWay": "Payment received. Your tickets are on their way."
 }
