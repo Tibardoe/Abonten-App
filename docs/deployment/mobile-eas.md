@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.9
-lastReviewed: 2026-11-09
+version: 1.10
+lastReviewed: 2026-11-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -63,7 +63,19 @@ App Review (TestFlight external testing and the App Store) needs a demo account 
 - **Rotation** — change the code in Vercel and in App Store Connect together. Remove both settings when no review is pending if you prefer; a pending review then fails to sign in.
 - Since 2026-11-09 a phone sign-in on a second device no longer signs the first out (the account's sign-in password stays the same), so two reviewers at once do not bump each other, and signing out ends that device's session only. Reviewers act in production: remove any test listing they create.
 - **Every sign-in spends one of the number's codes** (five an hour, ten a day), and a reviewer who meets the limit sees "Too many codes" — so staff should not sign in to the demo account casually while a review is pending.
-- **Sample content (2026-09-29):** production had no upcoming events, so the demo account (named "Abonten Events") organizes eight sample events in Accra, Kumasi and Cape Coast (10 October – 21 November 2026; five free, three paid) with original typographic flyers, each description ending "This is a sample event while Abonten gets ready to launch." It also holds one free ticket (Accra Tech Meetup). **Remove the sample events before switching Paystack to live keys** ([../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md)) and before public launch.
+- **Sample content (2026-09-29, hidden 2026-11-16):** production had no upcoming events, so the demo account (named "Abonten Events") organizes eight sample events in Accra, Kumasi and Cape Coast (10 October – 21 November 2026; five free, three paid) with original typographic flyers, each description ending "This is a sample event while Abonten gets ready to launch." It also holds one free ticket (Accra Tech Meetup). On 2026-11-16, before public outreach, they were **hidden** with every other pilot and test listing (moderation "hide", audited, reversible). Their dates have passed: do not unhide them for a review.
+
+### Before a submission (TestFlight external beta or App Store)
+
+1. **Agreements.** An App Store Connect agreement waiting for the Account Holder blocks every App Store Connect API call account-wide (`asc` answers "A required agreement is missing or has expired"; seen 2026-11-16). The Account Holder accepts it at https://appstoreconnect.apple.com/agreements first.
+2. **What a reviewer will find.** Open https://abontenhub.com/explore signed out (or count the visible listings: `select count(*) from event where published_at is not null and status = 'published' and moderation_state is distinct from 'hidden' and moderation_state is distinct from 'removed' and ends_at > now()`, the same for `place`). Listings from real organizers and places are the content. When there are none, the notes send the reviewer down the "create your own free event" path below; never publish new sample events for a review.
+3. **Payments.** While paid checkout is paused (`checkout.paystack` flag, [../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md) step 13), the notes say ticket sales are paused and give no card. After live keys the notes never give a test card: a reviewer buys nothing; the free-event path shows the ticket flow.
+4. **Demo account.** `APP_REVIEW_PHONE_E164` / `APP_REVIEW_OTP_CODE` are set on the web project's Production environment, and the same number and code are in TestFlight's Beta App Review Information and in the version's App Review Information.
+5. **The notes** (paste, adjusting the payments sentence):
+
+   > Sign in: tap "Continue with phone", choose Ghana (+233), enter the number above, then the six-digit code given as the password. Abonten lists events and places in Ghana; Explore shows the ones near the chosen city. Ticket sales are paused until our payment provider goes live, so a paid ticket cannot be bought yet. To try the whole flow: Menu › Create event, choose a venue in Ghana, add a Free ticket and publish, then open the event and tap Reserve spot; the ticket appears under Account › My Tickets. Please delete the event afterwards.
+
+6. **After the review:** delete any listing the reviewer created (Admin › Content, or ask the demo account's sign-in owner).
 
 ## After an update
 
