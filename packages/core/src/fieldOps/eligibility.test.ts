@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { t } from "../i18n/testTranslator";
-import { type EligibilitySnapshot, evaluateEligibility } from "./eligibility";
+import {
+  type EligibilitySnapshot,
+  type EventEligibilitySnapshot,
+  evaluateEligibility,
+  evaluateEventEligibility,
+} from "./eligibility";
 
 const good: EligibilitySnapshot = {
   mode: "offline",
@@ -172,6 +177,61 @@ describe("evaluateEligibility", () => {
       settings,
     );
     expect(r.hard).toContain("lead_verified");
+    expect(r.pass).toBe(false);
+  });
+});
+
+const goodEvent: EventEligibilitySnapshot = {
+  ownerPhoneVerified: true,
+  ownerIsTeamMember: false,
+  eventStatus: "published",
+  eventModerationState: "none",
+  eventOwnerMatches: true,
+  hasFlyer: true,
+  descriptionChars: 300,
+  insideTerritory: true,
+  reviewVerified: true,
+  eventStarted: true,
+};
+
+describe("evaluateEventEligibility", () => {
+  it("passes a published event that has started", () => {
+    const r = evaluateEventEligibility(t, goodEvent, {
+      ...rule,
+      release_policy: "event_started",
+    });
+    expect(r.pass).toBe(true);
+  });
+
+  it("never asks an event for photos, opening hours or a contact", () => {
+    const r = evaluateEventEligibility(t, goodEvent, rule);
+    const keys = r.checks.map((c) => c.key);
+    expect(keys).not.toContain("photos");
+    expect(keys).not.toContain("opening_hours");
+    expect(keys).not.toContain("contact");
+    expect(keys).toContain("event_published");
+    expect(keys).toContain("flyer");
+  });
+
+  it("is pending, not failed, before the event starts", () => {
+    const r = evaluateEventEligibility(
+      t,
+      { ...goodEvent, eventStarted: false },
+      rule,
+    );
+    const started = r.checks.find((c) => c.key === "event_started");
+    expect(started?.ok).toBe(false);
+    expect(started?.severity).toBe("info");
+    expect(r.hard).toEqual([]);
+  });
+
+  it("fails a hidden event", () => {
+    const r = evaluateEventEligibility(
+      t,
+      { ...goodEvent, eventModerationState: "hidden" },
+      rule,
+    );
+    expect(r.hard).toContain("event_not_moderated");
     expect(r.pass).toBe(false);
   });
 });

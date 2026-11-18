@@ -23,7 +23,7 @@ import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { FieldOpsOnboardingDraft } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 // Onboarding an event. Shorter than the business wizard because an event
 // has no opening hours, no gallery and no duplicate problem worth a whole
@@ -87,15 +87,24 @@ export default function EventOnboardingWizard({
   );
   const [type, setType] = useState(eventCategoriesAndTypes[0]?.types[0] ?? "");
   const [address, setAddress] = useState("");
-  const [startsAt, setStartsAt] = useState("");
-  const [endsAt, setEndsAt] = useState("");
+  // One row per date: a single start and end, or several days (a festival,
+  // a weekly night) that become the event's dates.
+  const rowId = useRef(0);
+  const nextId = () => {
+    rowId.current += 1;
+    return rowId.current;
+  };
+  const [dates, setDates] = useState([{ id: 0, start: "", end: "" }]);
   const [capacity, setCapacity] = useState("");
   const [freeEvent, setFreeEvent] = useState(true);
   // A free event can take registrations (a free QR ticket each, so the
   // organiser sees who is coming and checks them in) or just be open.
   // On by default: it is what the outreach messages offer organisers.
   const [requireRegistration, setRequireRegistration] = useState(true);
-  const [price, setPrice] = useState("");
+  // One price, or several named ticket types (Early bird, Regular, VIP).
+  const [tiers, setTiers] = useState([
+    { id: 0, name: "", price: "", quantity: "" },
+  ]);
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [flyer, setFlyer] = useState<{
     publicId: string;
@@ -193,15 +202,36 @@ export default function EventOnboardingWizard({
           types: [type],
           address: address.trim(),
           location: pin,
-          startsAt: toIso(startsAt),
-          endsAt: toIso(endsAt),
+          startsAt: toIso(dates[0].start),
+          endsAt: toIso(dates[0].end),
+          specificDates:
+            dates.length > 1
+              ? dates.map((d) => ({
+                  startsAt: toIso(d.start),
+                  endsAt: toIso(d.end),
+                }))
+              : null,
           capacity: capacity ? Number(capacity) : null,
           websiteUrl: null,
           requireRegistration: freeEvent && requireRegistration,
           freeEvent,
-          singleTicket: freeEvent
-            ? null
-            : { price: Number(price), quantity: null },
+          singleTicket:
+            freeEvent || tiers.length > 1
+              ? null
+              : {
+                  price: Number(tiers[0].price),
+                  quantity: tiers[0].quantity
+                    ? Number(tiers[0].quantity)
+                    : null,
+                },
+          multipleTickets:
+            !freeEvent && tiers.length > 1
+              ? tiers.map((tier) => ({
+                  type: tier.name.trim(),
+                  price: Number(tier.price),
+                  quantity: tier.quantity ? Number(tier.quantity) : null,
+                }))
+              : null,
           flyer,
         },
         submissionLocation: here ? { lat: here.lat, lng: here.lng } : null,
@@ -215,16 +245,24 @@ export default function EventOnboardingWizard({
       }
     });
 
+  const datesReady = dates.every(
+    (d) => d.start && d.end && new Date(d.end) > new Date(d.start),
+  );
+  const ticketsReady =
+    freeEvent ||
+    tiers.every(
+      (tier) =>
+        Number(tier.price) > 0 &&
+        (tiers.length === 1 || tier.name.trim().length > 0),
+    );
   const detailsReady =
     title.trim().length >= 3 &&
     description.trim().length >= 80 &&
     address.trim().length >= 3 &&
-    Boolean(startsAt) &&
-    Boolean(endsAt) &&
-    new Date(endsAt) > new Date(startsAt) &&
+    datesReady &&
     Boolean(pin) &&
     Boolean(type) &&
-    (freeEvent || Number(price) > 0);
+    ticketsReady;
 
   return (
     <div className="flex flex-col gap-4">
@@ -260,6 +298,8 @@ export default function EventOnboardingWizard({
             onFullName={setOwnerName}
             onPhone={setOwnerPhone}
             dialCode={draft.dialCode}
+            codeSent={Boolean(o.ownerPhoneMasked) && !o.ownerVerified}
+            initialConsentPath={draft.ownerOtp.consentPath}
           />
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={withdraw}>
@@ -351,23 +391,74 @@ export default function EventOnboardingWizard({
                 onChange={(e) => setCapacity(e.target.value.replace(/\D/g, ""))}
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="e-start">{t("starts")}</Label>
-              <Input
-                id="e-start"
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="e-end">{t("ends")}</Label>
-              <Input
-                id="e-end"
-                type="datetime-local"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-              />
+          </div>
+          <div className="flex flex-col gap-3">
+            {dates.map((d, i) => {
+              const startId = i === 0 ? "e-start" : `e-start-${d.id}`;
+              const endId = i === 0 ? "e-end" : `e-end-${d.id}`;
+              const setRow = (patch: { start?: string; end?: string }) =>
+                setDates((rows) =>
+                  rows.map((r) => (r.id === d.id ? { ...r, ...patch } : r)),
+                );
+              return (
+                <div key={d.id} className="flex flex-col gap-2">
+                  {dates.length > 1 ? (
+                    <p className="text-sm font-medium">
+                      {t("dateNumber", { number: i + 1 })}
+                    </p>
+                  ) : null}
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor={startId}>{t("starts")}</Label>
+                      <Input
+                        id={startId}
+                        type="datetime-local"
+                        value={d.start}
+                        onChange={(e) => setRow({ start: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor={endId}>{t("ends")}</Label>
+                      <Input
+                        id={endId}
+                        type="datetime-local"
+                        value={d.end}
+                        onChange={(e) => setRow({ end: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  {i > 0 ? (
+                    <div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setDates((rows) => rows.filter((r) => r.id !== d.id))
+                        }
+                      >
+                        {t("removeThisDate")}
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setDates((rows) => [
+                    ...rows,
+                    { id: nextId(), start: "", end: "" },
+                  ])
+                }
+                disabled={dates.length >= 30}
+              >
+                {t("addAnotherDate")}
+              </Button>
             </div>
           </div>
           <div className="flex flex-col gap-1">
@@ -377,7 +468,6 @@ export default function EventOnboardingWizard({
                 can place it. "Use where I am" stays for in-person work. */}
             <PostAutoComplete
               address={{ address: setAddress }}
-              value={address}
               onSelectCoordinates={(loc) =>
                 setPin({ lat: loc.lat, lng: loc.lng })
               }
@@ -385,6 +475,18 @@ export default function EventOnboardingWizard({
                 text: t("searchForTheVenue"),
                 svgUrl: "/assets/images/location.svg",
               }}
+            />
+          </div>
+          {/* The search fills this with the place's name; the member can add
+              what helps people find it ("opposite the DVLA head office"). It
+              is what the listing shows; the pin stays where the search put it. */}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="e-addr">{t("addressShownOnTheListing")}</Label>
+            <Input
+              id="e-addr"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              maxLength={300}
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -421,14 +523,100 @@ export default function EventOnboardingWizard({
             </label>
           ) : null}
           {!freeEvent ? (
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="e-price">{t("ticketPriceGh")}</Label>
-              <Input
-                id="e-price"
-                inputMode="decimal"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
+            <div className="flex flex-col gap-3">
+              {tiers.length > 1 ? (
+                <p className="text-sm font-medium">{t("ticketTypes")}</p>
+              ) : null}
+              {tiers.map((tier, i) => {
+                const setTier = (patch: {
+                  name?: string;
+                  price?: string;
+                  quantity?: string;
+                }) =>
+                  setTiers((rows) =>
+                    rows.map((r) =>
+                      r.id === tier.id ? { ...r, ...patch } : r,
+                    ),
+                  );
+                const priceId = i === 0 ? "e-price" : `e-price-${tier.id}`;
+                return (
+                  <div
+                    key={tier.id}
+                    className="grid gap-3 rounded-md md:grid-cols-3"
+                  >
+                    {tiers.length > 1 ? (
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor={`e-tier-${tier.id}`}>
+                          {t("ticketTypeName")}
+                        </Label>
+                        <Input
+                          id={`e-tier-${tier.id}`}
+                          value={tier.name}
+                          placeholder={t("ticketTypeNamePlaceholder")}
+                          onChange={(e) => setTier({ name: e.target.value })}
+                          maxLength={60}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor={priceId}>{t("ticketPriceGh")}</Label>
+                      <Input
+                        id={priceId}
+                        inputMode="decimal"
+                        value={tier.price}
+                        onChange={(e) => setTier({ price: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor={`e-qty-${tier.id}`}>
+                        {t("ticketQuantityOptional")}
+                      </Label>
+                      <Input
+                        id={`e-qty-${tier.id}`}
+                        inputMode="numeric"
+                        value={tier.quantity}
+                        onChange={(e) =>
+                          setTier({
+                            quantity: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                      />
+                    </div>
+                    {i > 0 ? (
+                      <div className="md:col-span-3">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setTiers((rows) =>
+                              rows.filter((r) => r.id !== tier.id),
+                            )
+                          }
+                        >
+                          {t("removeThisTicketType")}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setTiers((rows) => [
+                      ...rows,
+                      { id: nextId(), name: "", price: "", quantity: "" },
+                    ])
+                  }
+                  disabled={tiers.length >= 10}
+                >
+                  {t("addAnotherTicketType")}
+                </Button>
+              </div>
             </div>
           ) : null}
           <div className="flex justify-between">

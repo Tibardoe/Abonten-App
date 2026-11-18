@@ -37,6 +37,7 @@ export const VALIDATION_SOURCE: Record<string, string> = {
   confirmYouHaveTheRightsTo: "Confirm you have the rights to share this",
   describeTheChange: "Describe the change",
   describeTheEventInAtLeast: "Describe the event in at least 80 characters",
+  eachDateHasToEndAfter: "Each date has to end after it starts",
   enterAValidEmailAddress: "Enter a valid email address",
   enterAValidMobileMoneyNumber: "Enter a valid mobile money number",
   enterAValidWebsiteUrl: "Enter a valid website URL.",
@@ -80,6 +81,7 @@ export const VALIDATION_SOURCE: Record<string, string> = {
     "Name can only contain letters, spaces, apostrophes, full stops or hyphens",
   nameCanOnlyContainLettersSpaces2:
     "Name can only contain letters, spaces, apostrophes, or hyphens",
+  nameEachTicketType: "Name each ticket type",
   nameIsRequired: "Name is required.",
   nameMustBe80CharactersOr: "Name must be 80 characters or fewer.",
   nameMustBeAtLeast2: "Name must be at least 2 characters",

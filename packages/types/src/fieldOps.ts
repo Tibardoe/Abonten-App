@@ -518,6 +518,19 @@ export type FieldOpsOnboardingDetail = {
     hasContact: boolean;
     ownerMatches: boolean;
   } | null;
+  /** An event onboarding's event (`place` is null then). */
+  event?: {
+    id: string;
+    title: string;
+    /** Public code, as in /events/<code>. */
+    code: string;
+    status: string;
+    description: string;
+    firstStartsAt: string | null;
+    /** How many dates it has (1 for a single start and end). */
+    dates: number;
+    ownerMatches: boolean;
+  } | null;
   checks: FieldOpsEligibilityCheck[];
   /** The rule that would pay this onboarding right now, if one is live. */
   rule: {
@@ -558,6 +571,8 @@ export type FieldOpsEvidenceUploadTicket = {
 
 /** What the public consent page shows the owner (no member/campaign PII). */
 export type FieldOpsConsentView = {
+  /** What is being listed, so the page says "event" or "business". */
+  kind: "place" | "event";
   businessName: string | null;
   ownerPhoneMasked: string | null;
   verified: boolean;

@@ -51,8 +51,13 @@ export type SubmitEventOnboardingInput = {
     capacity?: number | null;
     websiteUrl?: string | null;
     requireRegistration: boolean;
+    /** Every date of an event on several days, the first included. */
+    specificDates?: { startsAt: string; endsAt: string }[] | null;
     freeEvent: boolean;
     singleTicket?: { price: number; quantity: number | null } | null;
+    multipleTickets?:
+      | { type: string; price: number; quantity: number | null }[]
+      | null;
     flyer: { publicId: string; version: string };
   };
   submissionLocation?: { lat: number; lng: number } | null;
@@ -137,8 +142,15 @@ export async function submitEventOnboardingCore(
     };
   }
 
-  const startsAt = new Date(input.event.startsAt);
-  if (Number.isNaN(startsAt.getTime()) || startsAt.getTime() <= Date.now()) {
+  // Several dates: every one of them has to be ahead, not just the first.
+  const dates =
+    input.event.specificDates && input.event.specificDates.length > 1
+      ? input.event.specificDates
+      : null;
+  const firstStart = dates
+    ? Math.min(...dates.map((d) => new Date(d.startsAt).getTime()))
+    : new Date(input.event.startsAt).getTime();
+  if (Number.isNaN(firstStart) || firstStart <= Date.now()) {
     return {
       status: 400,
       message: tr("anEventHasToStartIn"),
@@ -180,12 +192,20 @@ export async function submitEventOnboardingCore(
       capacity: input.event.capacity ?? null,
       websiteUrl: input.event.websiteUrl ?? null,
       requireRegistration: input.event.requireRegistration,
-      startsAt: input.event.startsAt,
-      endsAt: input.event.endsAt,
+      ...(dates
+        ? {
+            specificDates: dates.map((d) => ({
+              start: d.startsAt,
+              end: d.endsAt,
+            })),
+          }
+        : { startsAt: input.event.startsAt, endsAt: input.event.endsAt }),
       freeEvent: input.event.freeEvent,
-      singleTicket: input.event.freeEvent
-        ? null
-        : (input.event.singleTicket ?? null),
+      ...(input.event.freeEvent
+        ? { singleTicket: null }
+        : input.event.multipleTickets && input.event.multipleTickets.length > 1
+          ? { multipleTickets: input.event.multipleTickets }
+          : { singleTicket: input.event.singleTicket ?? null }),
       flyerPublicId: input.event.flyer.publicId,
       flyerVersion: input.event.flyer.version,
       clientRequestId: row.client_request_id,
@@ -267,7 +287,9 @@ export async function submitEventOnboardingCore(
     status: "submitted",
     actorUserId: userId,
     actorKind: "member",
-    note: TIMELINE_NOTE.eventListedFor(startsAt.toISOString().slice(0, 10)),
+    note: TIMELINE_NOTE.eventListedFor(
+      new Date(firstStart).toISOString().slice(0, 10),
+    ),
     details: { eventId },
   });
 

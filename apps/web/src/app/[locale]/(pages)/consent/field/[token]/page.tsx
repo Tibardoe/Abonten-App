@@ -21,19 +21,25 @@ export default async function FieldConsentPage({
   const res = await getFieldOpsConsentView(token);
   if (res.status !== 200 || !res.data) notFound();
   const v = res.data;
+  const isEvent = v.kind === "event";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
       <div>
         <PageTitle>
           {t("listBusinessOnAbonten", {
-            name: v.businessName ?? t("yourBusiness"),
+            name:
+              v.businessName ?? (isEvent ? t("yourEvent") : t("yourBusiness")),
           })}
         </PageTitle>
         <SupportingText>
-          {t("teamMemberIsAddingYourBusiness", {
-            phone: v.ownerPhoneMasked ?? t("yourPhone"),
-          })}
+          {isEvent
+            ? t("teamMemberIsAddingYourEvent", {
+                phone: v.ownerPhoneMasked ?? t("yourPhone"),
+              })
+            : t("teamMemberIsAddingYourBusiness", {
+                phone: v.ownerPhoneMasked ?? t("yourPhone"),
+              })}
         </SupportingText>
       </div>
       {v.verified ? (
@@ -45,16 +51,24 @@ export default async function FieldConsentPage({
           {t("thisLinkHasExpiredAskThe")}
         </p>
       ) : (
-        <ConsentForm token={token} />
+        <ConsentForm token={token} kind={v.kind} />
       )}
       <p className="text-xs text-muted-foreground">
-        {t.rich("byEnteringTheCodeYouAgree", {
-          link: (chunks) => (
-            <Link href="/legal/terms" className="underline underline-offset-4">
-              {chunks}
-            </Link>
-          ),
-        })}
+        {t.rich(
+          isEvent
+            ? "byEnteringTheCodeYouAgreeEvent"
+            : "byEnteringTheCodeYouAgree",
+          {
+            link: (chunks) => (
+              <Link
+                href="/legal/terms"
+                className="underline underline-offset-4"
+              >
+                {chunks}
+              </Link>
+            ),
+          },
+        )}
       </p>
     </div>
   );

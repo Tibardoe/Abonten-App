@@ -1150,7 +1150,13 @@
     "duplicateDifferent": "member said it's a different business",
     "duplicateUnacknowledged": "unacknowledged match",
     "leadVerified": "Team lead verified",
-    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed"
+    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed",
+    "eventPublished": "Event is published",
+    "noEventYet": "no event yet",
+    "eventNotModerated": "Event is not hidden or removed",
+    "eventOwnerMatches": "Event is still under the verified organiser",
+    "flyer": "A flyer is uploaded",
+    "eventStarted": "The event has started"
   },
   "eventCategories": {
     "musicAndConcerts": "Music & Concerts",

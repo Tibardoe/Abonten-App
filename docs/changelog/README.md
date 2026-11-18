@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-18 — Field onboarding polish after the first organisers
+
+- From the first three onboardings: a new organiser account takes the name typed in the field form, and event pages (web and app) show that full name while the username is still a generated placeholder (`@abonten/core/hostDisplayName`). The field event form takes several dates and several ticket types, keeps the address text typed after picking a venue, and keeps the code box and link after a reload. The consent page speaks of an event when it is one and tells people who can't enter the code there to reply with it; the code boxes fit 320 px phones. The submission page judges an event onboarding on the event (`evaluateEventEligibility`), not on place photos and opening hours. Known gap noted: the commission sweep ignores events with several dates. `field-operations/onboarding-organizers-and-events.md` (1.2)
+
 ## 2026-11-18 — Field event onboarding works by phone
 
 - The field event wizard's "Set the location" threw on every click (a hook called inside the click handler); it now works, and only appears for in-person work. The venue is found with an address search that sets the pin, so an online member can place it, and a free event can take registrations ("People register and get a free ticket with a QR code", on by default; it was always off). `field-operations/onboarding-organizers-and-events.md` (1.1)

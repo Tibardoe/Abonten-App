@@ -9,7 +9,13 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 /** The owner enters the code on their own phone (online onboarding). */
-export default function ConsentForm({ token }: { token: string }) {
+export default function ConsentForm({
+  token,
+  kind,
+}: {
+  token: string;
+  kind: "place" | "event";
+}) {
   const t = useTranslations("fieldOps");
 
   const [code, setCode] = useState("");
@@ -30,7 +36,9 @@ export default function ConsentForm({ token }: { token: string }) {
   if (done) {
     return (
       <p className="rounded-xl border bg-emerald-500/10 p-4 text-sm">
-        {t("thankYouYourBusinessCanNow")}
+        {kind === "event"
+          ? t("thankYouYourEventCanNow")
+          : t("thankYouYourBusinessCanNow")}
       </p>
     );
   }
@@ -47,9 +55,18 @@ export default function ConsentForm({ token }: { token: string }) {
           onClick={submit}
           disabled={pending || code.length < DEFAULT_PHONE_OTP_CODE_LENGTH}
         >
-          {pending ? t("checking") : t("iAgreeListMyBusiness")}
+          {pending
+            ? t("checking")
+            : kind === "event"
+              ? t("iAgreeListMyEvent")
+              : t("iAgreeListMyBusiness")}
         </Button>
       </div>
+      {/* If the boxes won't take the code on their phone, the team member
+          who sent the link can enter it for them. */}
+      <p className="text-xs text-muted-foreground">
+        {t("cantEnterTheCodeHere")}
+      </p>
     </div>
   );
 }

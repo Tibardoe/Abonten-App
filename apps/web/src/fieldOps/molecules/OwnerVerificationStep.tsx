@@ -30,6 +30,8 @@ export default function OwnerVerificationStep({
   onFullName,
   onPhone,
   dialCode,
+  codeSent = false,
+  initialConsentPath = null,
 }: {
   campaignId: string;
   onboardingId: string;
@@ -43,13 +45,22 @@ export default function OwnerVerificationStep({
   phone: string;
   onFullName: (v: string) => void;
   onPhone: (v: string) => void;
+  /**
+   * A code already went out for this onboarding (from the saved draft), so
+   * the code box shows after a reload instead of only after "Send the code".
+   */
+  codeSent?: boolean;
+  /** The saved consent link for that code (online mode). */
+  initialConsentPath?: string | null;
 }) {
   const t = useTranslations("fieldOps");
 
   const toast = useToast();
   const [pending, start] = useTransition();
-  const [sent, setSent] = useState(false);
-  const [consentPath, setConsentPath] = useState<string | null>(null);
+  const [sent, setSent] = useState(codeSent);
+  const [consentPath, setConsentPath] = useState<string | null>(
+    initialConsentPath,
+  );
   const [code, setCode] = useState("");
 
   const send = () =>

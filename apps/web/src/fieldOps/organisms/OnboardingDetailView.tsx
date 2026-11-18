@@ -1,6 +1,7 @@
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { eventPath } from "@abonten/core/seo/paths";
 import type { FieldOpsOnboardingDetail } from "@abonten/types/fieldOps";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -141,6 +142,29 @@ export default function OnboardingDetailView({
                   </>
                 ) : null}
               </>
+            ) : detail.event ? (
+              <>
+                <Link
+                  href={eventPath(detail.event.code)}
+                  target="_blank"
+                  className="text-primary hover:underline"
+                >
+                  {detail.event.title}
+                </Link>
+                {" · "}
+                {t("eventDatesCount", { count: detail.event.dates })}
+                {detail.event.firstStartsAt ? (
+                  <>
+                    {" · "}
+                    {t("firstDate", {
+                      date: format.dateTime(
+                        new Date(detail.event.firstStartsAt),
+                        { dateStyle: "medium", timeStyle: "short" },
+                      ),
+                    })}
+                  </>
+                ) : null}
+              </>
             ) : (
               t("notCreatedYet")
             )}
@@ -205,6 +229,13 @@ export default function OnboardingDetailView({
             · {detail.place.address ?? t("noAddress")}
           </p>
           <p className="mt-2 whitespace-pre-wrap">{detail.place.description}</p>
+        </section>
+      ) : null}
+
+      {detail.event ? (
+        <section className="rounded-xl border p-4 text-sm">
+          <p className="font-medium">{t("listingDetails")}</p>
+          <p className="mt-2 whitespace-pre-wrap">{detail.event.description}</p>
         </section>
       ) : null}
 
