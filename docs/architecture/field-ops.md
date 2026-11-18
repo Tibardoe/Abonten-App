@@ -237,7 +237,11 @@ is true.
    member's or any teammate's). The owner types it on the member's phone,
    or — online mode — opens the consent link `/consent/field/<token>` on
    their own phone. Their Abonten account is created/found right there and
-   will own the listing.
+   will own the listing. The link (HMAC-signed onboarding + phone) lasts a
+   day; a code lasts 5 minutes, so the page's **Send me a new code**
+   (`resendConsentCodeCore`) sends a fresh one to the link's phone only,
+   under the usual per-number cooldown plus 5 an hour per onboarding, and
+   only while the onboarding is a draft or needs changes.
 4. Details (category, description, address, contacts, opening hours) and
    photos (cover + gallery to Cloudinary; storefront + interior evidence to
    the private bucket with GPS — required for in-person work).

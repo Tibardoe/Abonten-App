@@ -1433,5 +1433,6 @@
   "teamTermsRequired": "Akzeptiere die Team-Bedingungen, um ein Team zu erstellen.",
   "teamTermsChanged": "Die Team-Bedingungen haben sich geändert. Lies sie erneut und akzeptiere sie dann.",
   "teamTermsNone": "Derzeit gibt es keine Team-Bedingungen zu akzeptieren.",
-  "teamTermsPending": "Ein Inhaber des Teams muss die Team-Bedingungen akzeptieren, bevor sein Geld bewegt werden kann."
+  "teamTermsPending": "Ein Inhaber des Teams muss die Team-Bedingungen akzeptieren, bevor sein Geld bewegt werden kann.",
+  "weSentANewCodeTo": "Wir haben einen neuen Code an {phone} gesendet."
 }

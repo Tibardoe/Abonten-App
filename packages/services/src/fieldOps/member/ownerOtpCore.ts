@@ -50,7 +50,11 @@ import { TIMELINE_NOTE } from "../shared/timelineNotes";
 // the code never passes through the worker.
 
 const OTP_PURPOSE = "fieldops-owner" as const;
-const CONSENT_TTL_MS = 30 * 60 * 1000;
+// The link lives a day while a code lives minutes: owners often open the
+// link hours after it was sent, and the page sends them a fresh code
+// itself (resendConsentCodeCore). The code, not the link, proves the phone.
+const CONSENT_TTL_MS = 24 * 60 * 60 * 1000;
+const OWNER_RESENDS_PER_HOUR = 5;
 const FIELD_ROLES = ["offline_member", "online_member"] as const;
 
 async function ownDraft(
@@ -121,6 +125,38 @@ export function consentPathFor(
 }
 
 // ── Request ─────────────────────────────────────────────────
+
+/** Sends the owner a code and leaves it pending for the verify step. */
+async function sendOwnerCode(
+  phone: string,
+  deps: { sendOtp?: (phoneE164: string) => Promise<OtpSendResult> },
+): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+  // Tests inject a fake sender; production routes by the number's market.
+  let providerCode: OtpSenderCode = "hubtel";
+  let send = deps.sendOtp;
+  if (!send) {
+    const route = await routeOtpForPhone(phone);
+    if (!route.ok) return { ok: false, status: 400, message: route.message };
+    providerCode = route.provider.code;
+    const provider = route.provider;
+    send = (p) => provider.send(p, route.countryCode);
+  }
+  // The same atomic claim as a sign-in code (cooldown across purposes,
+  // per-number caps, the send log the country ceiling reads).
+  const claim = await claimOtpSend(phone, null);
+  if (!claim.ok)
+    return { ok: false, status: claim.status, message: claim.message };
+  const sent = await send(phone);
+  if (!sent.ok) return { ok: false, status: 502, message: sent.message };
+  await recordOtpSent(
+    OTP_PURPOSE,
+    phone,
+    sent.requestId,
+    sent.prefix,
+    providerCode,
+  );
+  return { ok: true };
+}
 
 export type OwnerOtpRequestInput = {
   campaignId: string;
@@ -203,29 +239,8 @@ export async function requestOwnerOtpCore(
       message: tr("tooManyCodesRequestedThisHour"),
     };
   }
-  // Tests inject a fake sender; production routes by the number's market.
-  let providerCode: OtpSenderCode = "hubtel";
-  let send = deps.sendOtp;
-  if (!send) {
-    const route = await routeOtpForPhone(phone);
-    if (!route.ok) return { status: 400, message: route.message };
-    providerCode = route.provider.code;
-    const provider = route.provider;
-    send = (p) => provider.send(p, route.countryCode);
-  }
-  // The same atomic claim as a sign-in code (cooldown across purposes,
-  // per-number caps, the send log the country ceiling reads).
-  const claim = await claimOtpSend(phone, null);
-  if (!claim.ok) return { status: claim.status, message: claim.message };
-  const sent = await send(phone);
-  if (!sent.ok) return { status: 502, message: sent.message };
-  await recordOtpSent(
-    OTP_PURPOSE,
-    phone,
-    sent.requestId,
-    sent.prefix,
-    providerCode,
-  );
+  const sent = await sendOwnerCode(phone, deps);
+  if (!sent.ok) return { status: sent.status, message: sent.message };
 
   const { error } = await supabase
     .from("fieldops_onboarding")
@@ -459,6 +474,60 @@ export async function getConsentViewCore(
       verified: data.owner_user_id !== null,
       expired: parsed.expired,
     },
+  };
+}
+
+/**
+ * The owner asks the consent page for a fresh code: theirs ran out (codes
+ * last minutes, the link a day) or never came. Only to the phone the link
+ * names, under the same send caps as any code, plus a cap per onboarding.
+ */
+export async function resendConsentCodeCore(
+  supabase: ServiceRoleClient,
+  input: { token: string },
+  deps: { sendOtp?: (phoneE164: string) => Promise<OtpSendResult> } = {},
+): Promise<FieldOpsEnvelope<{ resendInSeconds: number }>> {
+  const parsed = readConsentToken(input.token);
+  if (!parsed) return { status: 404, message: tr("thisLinkIsnTValid") };
+  if (parsed.expired)
+    return { status: 410, message: tr("thisLinkHasExpiredAskFor") };
+  const { data } = await supabase
+    .from("fieldops_onboarding")
+    .select("id, status, owner_phone_e164, owner_user_id")
+    .eq("id", parsed.onboardingId)
+    .maybeSingle();
+  if (!data || data.owner_phone_e164 !== parsed.phoneE164) {
+    return { status: 404, message: tr("thisLinkIsnTValid") };
+  }
+  if (data.owner_user_id)
+    return { status: 409, message: tr("alreadyVerified") };
+  // Withdrawn (or otherwise closed) onboardings take no more codes.
+  if (data.status !== "draft" && data.status !== "needs_changes")
+    return { status: 410, message: tr("thisLinkHasExpiredAskFor") };
+  const allowed = await checkRateLimit(
+    `fieldops-consent-resend:${data.id}`,
+    OWNER_RESENDS_PER_HOUR,
+    3600,
+  );
+  if (!allowed)
+    return { status: 429, message: tr("tooManyCodesRequestedThisHour") };
+
+  const sent = await sendOwnerCode(parsed.phoneE164, deps);
+  if (!sent.ok) return { status: sent.status, message: sent.message };
+  await appendTimeline(supabase, {
+    onboardingId: data.id,
+    status: data.status,
+    actorUserId: null,
+    actorKind: "system",
+    note: TIMELINE_NOTE.ownerCodeSent,
+    details: { phone: maskPhoneNumber(parsed.phoneE164), by: "owner" },
+  });
+  return {
+    status: 200,
+    message: tr("weSentANewCodeTo", {
+      phone: maskPhoneNumber(parsed.phoneE164),
+    }),
+    data: { resendInSeconds: 60 },
   };
 }
 

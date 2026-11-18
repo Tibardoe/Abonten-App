@@ -1316,15 +1316,25 @@
       ]
     },
     "consent": {
-      "common": ["digitOf", "verificationCode"],
+      "common": [
+        "digitOf",
+        "resendCode",
+        "resendCodeIn",
+        "resending",
+        "verificationCode"
+      ],
       "fieldOps": [
         "cantEnterTheCodeHere",
         "checking",
+        "couldNotSendANewCode",
         "iAgreeListMyBusiness",
         "iAgreeListMyEvent",
+        "noCodeOrDidItRunOut",
+        "sendMeANewCode",
         "thankYouYourBusinessCanNow",
         "thankYouYourEventCanNow",
-        "thatCodeDidnTWork"
+        "thatCodeDidnTWork",
+        "weSentYouANewCode"
       ]
     },
     "events": {

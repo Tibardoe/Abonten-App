@@ -563,5 +563,9 @@
   "addAnotherTicketType": "Ajouter un autre type de billet",
   "removeThisTicketType": "Supprimer ce type de billet",
   "eventDatesCount": "{count, plural, one {# date} other {# dates}}",
-  "firstDate": "première date {date}"
+  "firstDate": "première date {date}",
+  "noCodeOrDidItRunOut": "Pas de code, ou il a expiré ?",
+  "sendMeANewCode": "M'envoyer un nouveau code",
+  "weSentYouANewCode": "Nous vous avons envoyé un nouveau code.",
+  "couldNotSendANewCode": "Impossible d'envoyer un nouveau code. Réessayez dans une minute."
 }

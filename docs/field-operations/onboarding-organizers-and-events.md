@@ -4,7 +4,7 @@ purpose: How the event branch of the wizard works, the organizer-consent rule, a
 audience: Field members
 scope: /field/onboard/[id] (event branch)
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-11-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -19,7 +19,7 @@ Choose the **event** branch when the person you meet runs events rather than a f
 ## Steps
 
 1. **Organizer** — name and phone; the same **owner-consent** step as for places (OTP to their phone, or consent link). The organizer's Abonten account exists from that moment, and a new account takes the name you typed, so the event reads "Hosted by <name>" until they choose a username. If the page reloads after "Send the code", the code box and the link are still there.
-   - **Working by phone:** the easiest path is to ask them to reply with the 6-digit code and type it in yourself. The link page says the same, for anyone whose phone won't take the code there.
+   - **Working by phone:** offer both ways in one message: open the link and enter the code there, or reply with the code and you type it in. Some people would rather not pass a code on; others find replying easier. The link lasts a day and its page sends them a fresh code (**Send me a new code**) when theirs has run out, so a late answer needs nothing from you.
 2. **The event** — title, description, category and type, date(s) and times, venue and pin, ticket types (free or priced). An event that **starts in the past is refused**.
    - **Venue and pin:** search for the venue or address and pick it; that sets the pin. In person you can also use "Set the location" while standing at the venue (offline mode only: working by phone, your own position is not the venue).
    - **Address shown on the listing:** the search fills it with the place's name; add what helps people find it ("opposite the DVLA head office"). The pin stays where the search put it.

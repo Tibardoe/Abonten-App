@@ -4,8 +4,8 @@ purpose: State precisely, from the enforced rules, what members, content creator
 audience: Field team, leads, field_ops_manager
 scope: fieldops_team_member roles; RLS and triggers on fieldops_* tables; admin permissions fieldops.*
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-11-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -30,7 +30,7 @@ Roles are recorded on the team membership (`fieldops_team_member.role`): **team_
 
 ## Online member
 
-Same as offline, without GPS check-in and evidence photos; the owner consents by **opening a consent link** on their own phone (30-minute token) or by OTP.
+Same as offline, without GPS check-in and evidence photos; the owner consents by **opening a consent link** on their own phone (the link lasts a day and can send them a fresh code) or by OTP.
 
 ## Content creator
 

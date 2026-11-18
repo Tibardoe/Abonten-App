@@ -1433,5 +1433,6 @@
   "teamTermsRequired": "Aceite os termos das equipas para criar uma equipa.",
   "teamTermsChanged": "Os termos das equipas mudaram. Leia-os novamente e depois aceite.",
   "teamTermsNone": "De momento não há termos das equipas para aceitar.",
-  "teamTermsPending": "Um Proprietário da equipa tem de aceitar os termos das equipas antes de o seu dinheiro poder ser movimentado."
+  "teamTermsPending": "Um Proprietário da equipa tem de aceitar os termos das equipas antes de o seu dinheiro poder ser movimentado.",
+  "weSentANewCodeTo": "Enviámos um código novo para o {phone}."
 }
