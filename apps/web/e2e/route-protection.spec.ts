@@ -10,7 +10,6 @@ const PRIVATE = [
   "/admin",
   "/balance",
   "/checkout",
-  "/consent",
   "/field",
   "/finances",
   "/for-you",
@@ -39,6 +38,9 @@ const PUBLIC = [
   "/auth/signin",
   "/notifications/open",
   "/account-restricted",
+  // A business owner opens the field team's consent link without an
+  // account; an unknown token is a 404, never a bounce to sign-in.
+  "/consent/field/not-a-token",
 ];
 
 for (const path of PRIVATE) {

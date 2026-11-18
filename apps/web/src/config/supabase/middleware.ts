@@ -35,7 +35,9 @@ const PROTECTED_PREFIXES = [
   "/admin",
   "/balance",
   "/checkout",
-  "/consent",
+  // Not "/consent": the field team's consent link is opened by a business
+  // owner who may have no account yet. The signed, 30-minute token and the
+  // SMS code are its gate (and the page is noindex + in robots.txt).
   "/field",
   "/finances",
   "/for-you",

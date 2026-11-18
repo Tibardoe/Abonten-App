@@ -20,6 +20,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - From the first three onboardings: a new organiser account takes the name typed in the field form, and event pages (web and app) show that full name while the username is still a generated placeholder (`@abonten/core/hostDisplayName`). The field event form takes several dates and several ticket types, keeps the address text typed after picking a venue, and keeps the code box and link after a reload. The consent page speaks of an event when it is one and tells people who can't enter the code there to reply with it; the code boxes fit 320 px phones. The submission page judges an event onboarding on the event (`evaluateEventEligibility`), not on place photos and opening hours. Known gap noted: the commission sweep ignores events with several dates. `field-operations/onboarding-organizers-and-events.md` (1.2)
 - Follow-up: the checklist counts a listing with no moderation state as visible (as the sweep does), and an event that has not started yet as waiting, not failed. (no doc version change)
+- Fix: the field team's consent link (`/consent/field/<token>`) was on the website's signed-in list since 2026-09-19, so a business owner without an account was sent to sign in instead of the code page ("I can't enter"). It is public again; the signed 30-minute token and the SMS code are its gate. (no doc version change)
 
 ## 2026-11-18 — Field event onboarding works by phone
 
