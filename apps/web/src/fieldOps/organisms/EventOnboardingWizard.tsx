@@ -3,6 +3,7 @@
 import { submitFieldOpsEventOnboarding } from "@/actions/fieldOps/submitFieldOpsEventOnboarding";
 import { withdrawFieldOpsOnboarding } from "@/actions/fieldOps/withdrawFieldOpsOnboarding";
 import getEventFlyerUploadSignature from "@/actions/getEventFlyerUploadSignature";
+import PostAutoComplete from "@/components/atoms/PostAutoComplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -90,6 +91,10 @@ export default function EventOnboardingWizard({
   const [endsAt, setEndsAt] = useState("");
   const [capacity, setCapacity] = useState("");
   const [freeEvent, setFreeEvent] = useState(true);
+  // A free event can take registrations (a free QR ticket each, so the
+  // organiser sees who is coming and checks them in) or just be open.
+  // On by default: it is what the outreach messages offer organisers.
+  const [requireRegistration, setRequireRegistration] = useState(true);
   const [price, setPrice] = useState("");
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [flyer, setFlyer] = useState<{
@@ -97,9 +102,10 @@ export default function EventOnboardingWizard({
     version: string;
   } | null>(null);
 
-  const usePin = () => {
-    const t = useTranslations("fieldOps");
-    return start(async () => {
+  // Not named use…: it is a click handler, and the old name let a hook be
+  // called inside it (React threw on every click of "Set the location").
+  const pinFromHere = () =>
+    start(async () => {
       try {
         const p = await currentPosition();
         setPin({ lat: p.lat, lng: p.lng });
@@ -108,7 +114,6 @@ export default function EventOnboardingWizard({
         toast.error((e as Error).message);
       }
     });
-  };
 
   const uploadFlyer = (file: File) =>
     start(async () => {
@@ -192,7 +197,7 @@ export default function EventOnboardingWizard({
           endsAt: toIso(endsAt),
           capacity: capacity ? Number(capacity) : null,
           websiteUrl: null,
-          requireRegistration: false,
+          requireRegistration: freeEvent && requireRegistration,
           freeEvent,
           singleTicket: freeEvent
             ? null
@@ -366,21 +371,34 @@ export default function EventOnboardingWizard({
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="e-addr">{t("where")}</Label>
-            <Input
-              id="e-addr"
+            <Label>{t("where")}</Label>
+            {/* Search sets the pin from the venue itself, which is the only
+                way an online member (working by phone, not at the venue)
+                can place it. "Use where I am" stays for in-person work. */}
+            <PostAutoComplete
+              address={{ address: setAddress }}
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              maxLength={300}
+              onSelectCoordinates={(loc) =>
+                setPin({ lat: loc.lat, lng: loc.lng })
+              }
+              placeholderText={{
+                text: t("searchForTheVenue"),
+                svgUrl: "/assets/images/location.svg",
+              }}
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" onClick={usePin}>
-              {pin ? t("updateThePin") : t("setTheLocation")}
-            </Button>
+            {isOffline ? (
+              <Button type="button" variant="outline" onClick={pinFromHere}>
+                {pin ? t("updateThePin") : t("setTheLocation")}
+              </Button>
+            ) : null}
             {pin ? (
               <span className="text-xs text-muted-foreground">
-                {pin.lat.toFixed(5)}, {pin.lng.toFixed(5)}
+                {t("pinAt", {
+                  toFixed: pin.lat.toFixed(5),
+                  toFixed2: pin.lng.toFixed(5),
+                })}
               </span>
             ) : null}
           </div>
@@ -392,6 +410,16 @@ export default function EventOnboardingWizard({
             />
             {t("freeToAttend")}
           </label>
+          {freeEvent ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={requireRegistration}
+                onChange={(e) => setRequireRegistration(e.target.checked)}
+              />
+              {t("peopleRegisterForAFreeTicket")}
+            </label>
+          ) : null}
           {!freeEvent ? (
             <div className="flex flex-col gap-1">
               <Label htmlFor="e-price">{t("ticketPriceGh")}</Label>

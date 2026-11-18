@@ -4,8 +4,8 @@ purpose: How the event branch of the wizard works, the organizer-consent rule, a
 audience: Field members
 scope: /field/onboard/[id] (event branch)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-11-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -20,6 +20,8 @@ Choose the **event** branch when the person you meet runs events rather than a f
 
 1. **Organizer** — name and phone; the same **owner-consent** step as for places (OTP to their phone, or consent link). The organizer's Abonten account exists from that moment.
 2. **The event** — title, description, category and type, date(s) and times, venue and pin, ticket types (free or priced). An event that **starts in the past is refused**.
+   - **Venue and pin:** search for the venue or address and pick it; that sets the pin. In person you can also use "Set the location" while standing at the venue (offline mode only: working by phone, your own position is not the venue).
+   - **Free events:** "People register and get a free ticket with a QR code" is ticked by default, so the organiser sees who is coming and checks them in. Untick it only for an open event with no list at the door.
 3. **Flyer** — uploaded under your signed folder (a flyer from anywhere else is refused).
 4. **Submit** — the event is created through the normal event path **under the organizer's account**; the onboarding is submitted for the lead's review.
 
