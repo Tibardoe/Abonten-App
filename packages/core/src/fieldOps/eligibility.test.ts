@@ -220,7 +220,7 @@ describe("evaluateEventEligibility", () => {
       rule,
     );
     const started = r.checks.find((c) => c.key === "event_started");
-    expect(started?.ok).toBe(false);
+    expect(started?.ok).toBeNull();
     expect(started?.severity).toBe("info");
     expect(r.hard).toEqual([]);
   });
@@ -233,5 +233,27 @@ describe("evaluateEventEligibility", () => {
     );
     expect(r.hard).toContain("event_not_moderated");
     expect(r.pass).toBe(false);
+  });
+});
+
+describe("moderation state", () => {
+  it("counts a listing with no moderation state as visible, as the sweep does", () => {
+    const place = evaluateEligibility(
+      t,
+      { ...good, placeModerationState: null },
+      rule,
+      settings,
+    );
+    expect(place.checks.find((c) => c.key === "place_not_moderated")?.ok).toBe(
+      true,
+    );
+    const event = evaluateEventEligibility(
+      t,
+      { ...goodEvent, eventModerationState: null },
+      rule,
+    );
+    expect(event.checks.find((c) => c.key === "event_not_moderated")?.ok).toBe(
+      true,
+    );
   });
 });
