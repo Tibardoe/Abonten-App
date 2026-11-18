@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-18 — Field event onboarding works by phone
+
+- The field event wizard's "Set the location" threw on every click (a hook called inside the click handler); it now works, and only appears for in-person work. The venue is found with an address search that sets the pin, so an online member can place it, and a free event can take registrations ("People register and get a free ticket with a QR code", on by default; it was always off). `field-operations/onboarding-organizers-and-events.md` (1.1)
+
 ## 2026-11-17 — Both apps are public; the website links to the stores
 
 - iOS 1.0.0 released on the App Store and the Google Play production release published. `ANDROID_APP_LISTED` is true and `APP_STORE_LISTINGS.ios` is the App Store link, so `/go/app` sends phones to their store and the invite page offers both. `deployment/store-listings.md` (1.3), `operations/marketing-collateral-and-qr-links.md` (1.4), `deployment/mobile-eas.md` (1.11), `mobile/README.md` (1.1)

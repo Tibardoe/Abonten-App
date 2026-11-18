@@ -2106,8 +2106,14 @@
     "field": {
       "common": [
         "digitOf",
+        "failedToFetchPlaceDetails",
+        "geolocationIsNotSupported",
+        "loadingLocationSearch",
         "loadingOptions",
+        "noAddressFound",
+        "unableToRetrieveLocation",
         "uploadFailed2",
+        "useMyCurrentLocation",
         "verificationCode"
       ],
       "core": ["eventCategories", "eventTypes", "placeCategories"],
@@ -2296,6 +2302,7 @@
         "ownerVerifiedOwns",
         "ownerVerifiedPhoneOwns",
         "partOf",
+        "peopleRegisterForAFreeTicket",
         "phoneCall",
         "phoneInternational",
         "phoneNumber",
@@ -2321,6 +2328,7 @@
         "save",
         "saveChanges",
         "saved",
+        "searchForTheVenue",
         "sendAnotherCode",
         "sendForReview",
         "sendInAPost",
