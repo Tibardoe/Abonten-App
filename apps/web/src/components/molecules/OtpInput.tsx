@@ -104,11 +104,14 @@ export default function OtpInput({
     distribute(event.clipboardData.getData("text"), 0);
   };
 
+  // Six 44 px boxes with 8 px gaps (304 px) fit a 320 px phone inside the
+  // page's 16 px gutters; 50 px boxes with 12 px gaps (360 px) are wider
+  // than a small Android phone's content area.
   return (
     <div className="flex flex-col gap-3 items-center">
       <fieldset
         aria-label={t("verificationCode")}
-        className="flex gap-3 w-full justify-center border-0 p-0 m-0 min-w-0"
+        className="flex gap-2 sm:gap-3 w-full justify-center border-0 p-0 m-0 min-w-0"
         onPaste={handlePaste}
       >
         {digits.map((digit, index) => (
@@ -117,7 +120,7 @@ export default function OtpInput({
               // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length digit boxes, index is a stable identity here
               index
             }`}
-            className="w-[50px] h-[56px] md:w-[60px] md:h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl border border-input ring-1 ring-transparent transition-shadow focus-within:ring-2 focus-within:ring-ring"
+            className="w-[44px] h-[52px] sm:w-[50px] sm:h-[56px] md:w-[60px] md:h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl border border-input ring-1 ring-transparent transition-shadow focus-within:ring-2 focus-within:ring-ring"
           >
             <input
               type="text"

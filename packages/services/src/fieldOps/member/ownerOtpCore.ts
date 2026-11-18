@@ -1,3 +1,4 @@
+import { logger } from "@abonten/core/logger";
 import { otpMessage } from "@abonten/core/otpMessages";
 import { maskPhoneNumber } from "@abonten/core/phone/phone";
 import type {
@@ -358,6 +359,22 @@ export async function attachOwnerCore(
     return dbErr(error, tr("couldNotRecordTheOwner"));
   }
   if (!data) return { status: 409, message: tr("theOwnerWasAlreadyRecorded") };
+  // An account made a moment ago has only a made-up username, so its listing
+  // would read "Hosted by user16673156". Give it the name the owner gave the
+  // team member; a name the person set themselves is never overwritten.
+  const ownerName = row.owner_full_name?.trim();
+  if (ownerName) {
+    const { error: nameError } = await supabase
+      .from("user_info")
+      .update({ full_name: ownerName } as never)
+      .eq("id", ownerUserId)
+      .is("full_name", null);
+    if (nameError) {
+      logger.warn(
+        `attachOwnerCore: owner name not saved (${nameError.message})`,
+      );
+    }
+  }
   await appendTimeline(supabase, {
     onboardingId: row.id,
     status: row.status,
@@ -427,7 +444,7 @@ export async function getConsentViewCore(
   if (!parsed) return { status: 404, message: tr("thisLinkIsnTValid") };
   const { data } = await supabase
     .from("fieldops_onboarding")
-    .select("id, business_name, owner_phone_e164, owner_user_id, status")
+    .select("id, kind, business_name, owner_phone_e164, owner_user_id, status")
     .eq("id", parsed.onboardingId)
     .maybeSingle();
   if (!data || data.owner_phone_e164 !== parsed.phoneE164) {
@@ -436,6 +453,7 @@ export async function getConsentViewCore(
   return {
     status: 200,
     data: {
+      kind: data.kind === "event" ? "event" : "place",
       businessName: data.business_name,
       ownerPhoneMasked: maskPhoneNumber(parsed.phoneE164),
       verified: data.owner_user_id !== null,

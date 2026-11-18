@@ -183,6 +183,10 @@ export function evaluateEligibility(
     );
   }
 
+  return summarise(checks);
+}
+
+function summarise(checks: EligibilityCheck[]): EligibilityResult {
   const hard = checks
     .filter((c) => c.severity === "hard" && c.ok === false)
     .map((c) => c.key);
@@ -198,4 +202,86 @@ export function evaluateEligibility(
     hard,
     soft,
   };
+}
+
+/** What an event onboarding is judged on: the event, not a place. */
+export type EventEligibilitySnapshot = {
+  ownerPhoneVerified: boolean;
+  ownerIsTeamMember: boolean;
+  /** event.status / moderation_state / organiser match; null = no event yet. */
+  eventStatus: string | null;
+  eventModerationState: string | null;
+  eventOwnerMatches: boolean | null;
+  hasFlyer: boolean | null;
+  descriptionChars: number;
+  insideTerritory: boolean | null;
+  /** null = the lead has not decided yet. */
+  reviewVerified: boolean | null;
+  /** null = no event yet; false = its first date is still ahead. */
+  eventStarted: boolean | null;
+};
+
+/**
+ * The checklist for an event onboarding. Mirrors the sweep's
+ * `event_started` policy: the commission waits until the event has
+ * started and was neither cancelled nor moderated away -- so there are no
+ * photo, opening-hours or contact checks, which only make sense for a
+ * place.
+ */
+export function evaluateEventEligibility(
+  t: CoreTranslator,
+  s: EventEligibilitySnapshot,
+  rule: EligibilityRule,
+): EligibilityResult {
+  const checks: EligibilityCheck[] = [];
+  const e = (key: string, values?: TranslationValues) =>
+    t(`fieldOpsEligibility.${key}`, values);
+  const add = (
+    key: string,
+    label: string,
+    ok: boolean | null,
+    severity: EligibilityCheck["severity"],
+    detail: string | null = null,
+  ) => checks.push({ key, label, ok, severity, detail });
+
+  if (rule.require_owner_phone_verified !== false) {
+    add("owner_verified", e("ownerVerified"), s.ownerPhoneVerified, "hard");
+  }
+  add("owner_not_member", e("ownerNotMember"), !s.ownerIsTeamMember, "hard");
+  add(
+    "event_published",
+    e("eventPublished"),
+    s.eventStatus === null ? null : s.eventStatus === "published",
+    "hard",
+    s.eventStatus
+      ? e("placeStatus", { status: s.eventStatus })
+      : e("noEventYet"),
+  );
+  add(
+    "event_not_moderated",
+    e("eventNotModerated"),
+    s.eventModerationState === null
+      ? null
+      : !HIDDEN.has(s.eventModerationState),
+    "hard",
+    s.eventModerationState
+      ? e("moderation", { state: s.eventModerationState })
+      : null,
+  );
+  add("owner_matches", e("eventOwnerMatches"), s.eventOwnerMatches, "hard");
+  add("flyer", e("flyer"), s.hasFlyer, "soft");
+  const minChars = rule.min_description_chars ?? 80;
+  add(
+    "description",
+    e("description", { count: minChars }),
+    s.descriptionChars >= minChars,
+    "soft",
+    e("descriptionChars", { count: s.descriptionChars }),
+  );
+  if (rule.require_inside_territory !== false) {
+    add("inside_territory", e("insideTerritory"), s.insideTerritory, "soft");
+  }
+  add("lead_verified", e("leadVerified"), s.reviewVerified, "hard");
+  add("event_started", e("eventStarted"), s.eventStarted, "info");
+  return summarise(checks);
 }

@@ -343,6 +343,8 @@
     "explore:waze",
     "fieldOps:briefs",
     "fieldOps:commissionsCount",
+    "fieldOps:dateNumber",
+    "fieldOps:eventDatesCount",
     "fieldOps:fieldOps",
     "fieldOps:latitude",
     "fieldOps:longitude",

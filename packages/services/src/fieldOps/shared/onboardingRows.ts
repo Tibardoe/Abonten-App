@@ -3,6 +3,7 @@ import {
   type EligibilityRule,
   type EligibilitySnapshot,
   evaluateEligibility,
+  evaluateEventEligibility,
 } from "@abonten/core/fieldOps/eligibility";
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
@@ -465,11 +466,26 @@ type PlaceDetailRow = {
   place_opening_hours: { count: number }[];
 };
 
+type EventDetailRow = {
+  id: string;
+  title: string;
+  event_code: string;
+  status: string;
+  moderation_state: string;
+  description: string | null;
+  organizer_id: string;
+  starts_at: string | null;
+  flyer_public_id: string | null;
+  event_occurrence: { starts_at: string }[];
+};
+
 export async function buildOnboardingDetail(
   supabase: ServiceRoleClient,
   row: OnboardingRow,
   opts: { revealOwnerPhone: boolean },
 ): Promise<FieldOpsOnboardingDetail> {
+  if (row.kind === "event")
+    return buildEventOnboardingDetail(supabase, row, opts);
   const [evidence, timeline, settings, placeRes, memberPhone] =
     await Promise.all([
       loadEvidence(supabase, row.id, { sign: true }),
@@ -587,6 +603,114 @@ export async function buildOnboardingDetail(
           hasOpeningHours,
           hasContact,
           ownerMatches: placeRow.owner_id === row.owner_user_id,
+        }
+      : null,
+    checks,
+    rule: rule
+      ? {
+          id: rule.id,
+          amountMinor: rule.amountMinor,
+          currency: rule.currency,
+          holdingDays:
+            rule.eligibility.holding_days ?? num(settings.default_holding_days),
+        }
+      : null,
+  };
+}
+
+/**
+ * The same detail for an event onboarding: judged on the event (published,
+ * still the organiser's, a flyer, started) rather than on a place's photos,
+ * opening hours and contacts, which an event never has.
+ */
+async function buildEventOnboardingDetail(
+  supabase: ServiceRoleClient,
+  row: OnboardingRow,
+  opts: { revealOwnerPhone: boolean },
+): Promise<FieldOpsOnboardingDetail> {
+  const [evidence, timeline, settings, eventRes, memberPhone] =
+    await Promise.all([
+      loadEvidence(supabase, row.id, { sign: true }),
+      loadTimeline(supabase, row.id),
+      readProgramSettings(supabase),
+      row.event_id
+        ? supabase
+            .from("event")
+            .select(
+              "id, title, event_code, status, moderation_state, description, organizer_id, starts_at, flyer_public_id, event_occurrence(starts_at)",
+            )
+            .eq("id", row.event_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      row.owner_phone_e164
+        ? supabase.rpc("fieldops_phone_belongs_to_member", {
+            p_phone_e164: row.owner_phone_e164,
+          })
+        : Promise.resolve({ data: false }),
+    ]);
+  const ev = (eventRes.data as unknown as EventDetailRow | null) ?? null;
+  // A single-date event keeps its start on the row; one with several dates
+  // keeps them as occurrences and leaves starts_at empty.
+  const firstStart = ev
+    ? (ev.starts_at ??
+      ev.event_occurrence
+        .map((o) => o.starts_at)
+        .sort()
+        .at(0) ??
+      null)
+    : null;
+
+  const activityKey =
+    row.activity_key ??
+    (row.mode === "offline"
+      ? "event_onboarding_offline"
+      : "event_onboarding_online");
+  const rule = await liveRuleFor(supabase, row.campaign_id, activityKey);
+  const eligibility: EligibilityRule = rule?.eligibility ?? {
+    holding_days: num(settings.default_holding_days),
+    require_owner_phone_verified: true,
+    require_inside_territory: true,
+    min_description_chars: 80,
+    release_policy: "event_started",
+  };
+  const checks: FieldOpsEligibilityCheck[] = evaluateEventEligibility(
+    coreT(),
+    {
+      ownerPhoneVerified: row.owner_user_id !== null,
+      ownerIsTeamMember: memberPhone.data === true,
+      eventStatus: ev?.status ?? null,
+      eventModerationState: ev?.moderation_state ?? null,
+      eventOwnerMatches: ev ? ev.organizer_id === row.owner_user_id : null,
+      hasFlyer: ev ? Boolean(ev.flyer_public_id) : null,
+      descriptionChars: ev?.description?.length ?? 0,
+      insideTerritory: row.inside_territory,
+      reviewVerified: ["verified", "flagged", "succeeded"].includes(row.status)
+        ? true
+        : ["rejected", "withdrawn"].includes(row.status)
+          ? false
+          : null,
+      eventStarted: firstStart
+        ? new Date(firstStart).getTime() <= Date.now()
+        : null,
+    },
+    eligibility,
+  ).checks;
+
+  return {
+    onboarding: mapOnboarding(row, opts),
+    evidence,
+    timeline,
+    place: null,
+    event: ev
+      ? {
+          id: ev.id,
+          title: ev.title,
+          code: ev.event_code,
+          status: ev.status,
+          description: ev.description ?? "",
+          firstStartsAt: firstStart,
+          dates: ev.starts_at ? 1 : ev.event_occurrence.length,
+          ownerMatches: ev.organizer_id === row.owner_user_id,
         }
       : null,
     checks,

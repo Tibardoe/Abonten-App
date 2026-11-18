@@ -50,6 +50,7 @@ import { resolveEventCta } from "@abonten/core/eventCta";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { hostDisplayName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
@@ -439,7 +440,7 @@ export default function EventDetailScreen() {
                     numberOfLines={1}
                     className="shrink"
                   >
-                    {event.user_info.username}
+                    {hostDisplayName(event.user_info)}
                   </AppText>
                   {showsOrganizerBadge(event.user_info) ? (
                     <VerifiedPill

@@ -668,8 +668,32 @@ export const fieldOpsEventSubmitSchema = z
       capacity: z.number().int().min(1).max(1_000_000).nullable().optional(),
       websiteUrl: z.string().trim().url().max(500).nullable().optional(),
       requireRegistration: z.boolean(),
+      // An event on several days (a festival, a weekly night): every date,
+      // the first one included. startsAt/endsAt still carry the first.
+      specificDates: z
+        .array(
+          z.object({
+            startsAt: z.string().datetime({ offset: true }),
+            endsAt: z.string().datetime({ offset: true }),
+          }),
+        )
+        .min(2)
+        .max(30)
+        .nullable()
+        .optional(),
       freeEvent: z.boolean(),
       singleTicket: eventTicket.nullable().optional(),
+      // More than one ticket type ("Early bird", "Regular", "VIP").
+      multipleTickets: z
+        .array(
+          eventTicket.extend({
+            type: z.string().trim().min(1, "Name each ticket type").max(60),
+          }),
+        )
+        .min(2)
+        .max(10)
+        .nullable()
+        .optional(),
       flyer: z.object({
         publicId: z.string().trim().min(1).max(300),
         version: z.string().trim().min(1).max(50),
@@ -688,10 +712,26 @@ export const fieldOpsEventSubmitSchema = z
     message: "The event has to end after it starts",
     path: ["event", "endsAt"],
   })
-  .refine((v) => v.event.freeEvent || Boolean(v.event.singleTicket), {
-    message: "Set a ticket price, or mark the event free",
-    path: ["event", "singleTicket"],
-  });
+  .refine(
+    (v) =>
+      (v.event.specificDates ?? []).every(
+        (d) => new Date(d.endsAt) > new Date(d.startsAt),
+      ),
+    {
+      message: "Each date has to end after it starts",
+      path: ["event", "specificDates"],
+    },
+  )
+  .refine(
+    (v) =>
+      v.event.freeEvent ||
+      Boolean(v.event.singleTicket) ||
+      Boolean(v.event.multipleTickets?.length),
+    {
+      message: "Set a ticket price, or mark the event free",
+      path: ["event", "singleTicket"],
+    },
+  );
 
 export type FieldOpsClaimAssistInput = z.infer<
   typeof fieldOpsClaimAssistSchema

@@ -11,7 +11,7 @@ import { type QueryClient, useQuery } from "@tanstack/react-query";
 // published/canceled events, so no RPC or endpoint is needed.
 const EVENT_DETAIL_SELECT = `
   *,
-  user_info!organizer_id ( avatar_public_id, avatar_version, username, organizer_verified, id_checked, account_kind, status_id ),
+  user_info!organizer_id ( avatar_public_id, avatar_version, username, full_name, username_is_generated, organizer_verified, id_checked, account_kind, status_id ),
   ticket_type ( id, type, price, currency, quantity, available_from, available_until ),
   event_occurrence ( id, starts_at, ends_at ),
   place:place_id ( id, name, slug )
@@ -44,6 +44,9 @@ export type EventDetail = {
     avatar_public_id: string;
     avatar_version: string;
     username: string;
+    full_name: string | null;
+    /** Still the made-up username: show full_name instead (hostDisplayName). */
+    username_is_generated: boolean | null;
     organizer_verified: boolean | null;
     /** A person's live ID check, or a team's (one of its Owners). */
     id_checked: boolean | null;

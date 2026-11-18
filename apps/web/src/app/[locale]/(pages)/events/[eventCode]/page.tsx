@@ -32,6 +32,7 @@ import {
 import { readEventAddress } from "@abonten/core/eventAddress";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { hostDisplayName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
@@ -87,6 +88,7 @@ const loadEvent = cache(async (eventCode: string) =>
       avatar_version,
       username,
       full_name,
+      username_is_generated,
       organizer_verified,
       id_checked,
       account_kind,
@@ -416,7 +418,7 @@ export default async function page({
                     event.user_info.avatar_version,
                     { width: 56, height: 56 },
                   )}
-                  alt={event.user_info.username ?? t("organizer")}
+                  alt={hostDisplayName(event.user_info) || t("organizer")}
                   width={56}
                   height={56}
                   className="rounded-full border-2 border-border"
@@ -431,7 +433,7 @@ export default async function page({
                     href={`/user/${event.user_info.username}/posts`}
                     className="text-lg font-semibold text-card-foreground truncate hover:underline"
                   >
-                    {event.user_info.username}
+                    {hostDisplayName(event.user_info)}
                   </Link>
                   {event.user_info.organizer_verified &&
                   event.user_info.status_id === 1 ? (
