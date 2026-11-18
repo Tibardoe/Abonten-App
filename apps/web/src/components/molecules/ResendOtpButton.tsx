@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 type Props = {
   onResend: () => unknown | Promise<unknown>;
   cooldownSeconds?: number;
+  /** Seconds before the first resend; defaults to a full cooldown, for
+   *  screens shown right after a code went out. */
+  initialSecondsLeft?: number;
   disabled?: boolean;
   readyLabel?: string;
   cooldownLabel?: (secondsLeft: number) => string;
@@ -16,6 +19,7 @@ type Props = {
 export default function ResendOtpButton({
   onResend,
   cooldownSeconds = 60,
+  initialSecondsLeft,
   disabled = false,
   readyLabel: readyLabelProp,
   cooldownLabel: cooldownLabelProp,
@@ -26,7 +30,9 @@ export default function ResendOtpButton({
     cooldownLabelProp ??
     ((secondsLeft: number) => t("resendCodeIn", { seconds: secondsLeft }));
 
-  const [secondsLeft, setSecondsLeft] = useState(cooldownSeconds);
+  const [secondsLeft, setSecondsLeft] = useState(
+    initialSecondsLeft ?? cooldownSeconds,
+  );
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {

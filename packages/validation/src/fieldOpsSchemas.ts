@@ -422,6 +422,10 @@ export const fieldOpsOwnerOtpVerifySchema = z.object({
 });
 
 /** The public consent page: the token identifies the onboarding. */
+export const fieldOpsConsentResendSchema = z.object({
+  token: z.string().min(20).max(600),
+});
+
 export const fieldOpsConsentVerifySchema = z.object({
   token: z.string().min(20).max(600),
   code: z

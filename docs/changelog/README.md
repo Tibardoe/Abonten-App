@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-18 — The consent link sends its own fresh code
+
+- An owner who opened the field team's consent link more than 5 minutes after the code went out had an expired code and no way to get another without going back to the sender. The page now has **Send me a new code** (same phone only; 60-second cooldown per phone, 5 an hour per onboarding, only while the onboarding is open), and the link lasts a day instead of 30 minutes, since the code, not the link, proves the phone. Members offer both ways: open the link, or reply with the code. `field-operations/onboarding-places.md` (1.1), `field-operations/roles-and-permissions.md` (1.1), `field-operations/onboarding-organizers-and-events.md` (1.3), `architecture/field-ops.md`
+
 ## 2026-11-18 — Field onboarding polish after the first organisers
 
 - From the first three onboardings: a new organiser account takes the name typed in the field form, and event pages (web and app) show that full name while the username is still a generated placeholder (`@abonten/core/hostDisplayName`). The field event form takes several dates and several ticket types, keeps the address text typed after picking a venue, and keeps the code box and link after a reload. The consent page speaks of an event when it is one and tells people who can't enter the code there to reply with it; the code boxes fit 320 px phones. The submission page judges an event onboarding on the event (`evaluateEventEligibility`), not on place photos and opening hours. Known gap noted: the commission sweep ignores events with several dates. `field-operations/onboarding-organizers-and-events.md` (1.2)

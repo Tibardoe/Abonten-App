@@ -27,6 +27,7 @@ import {
   attachOwnerCore,
   readConsentToken,
   requestOwnerOtpCore,
+  resendConsentCodeCore,
   signConsentToken,
   verifyOwnerOtpCore,
 } from "../fieldOps/member/ownerOtpCore";
@@ -465,8 +466,85 @@ describe("start + owner", () => {
     const read = readConsentToken(token, 2_000);
     expect(read?.onboardingId).toBe(onboardingId);
     expect(read?.expired).toBe(false);
-    expect(readConsentToken(token, 1_000 + 31 * 60 * 1000)?.expired).toBe(true);
+    // The link lives a day; the code it carries is what proves the phone.
+    expect(readConsentToken(token, 1_000 + 31 * 60 * 1000)?.expired).toBe(
+      false,
+    );
+    expect(readConsentToken(token, 1_000 + 25 * 60 * 60 * 1000)?.expired).toBe(
+      true,
+    );
     expect(readConsentToken(`${token}x`)).toBeNull();
+  });
+
+  it("lets the owner ask the consent page for a fresh code, only while the onboarding is open", async () => {
+    const draft = await startOnboardingCore(svc, other.id, {
+      campaignId,
+      territoryId,
+    });
+    expect(draft.status, draft.message).toBe(200);
+    const id = draft.data?.id as string;
+    const ownerPhone = `+23324${uniq}`;
+    await svc
+      .from("fieldops_onboarding")
+      .update({
+        owner_full_name: "Esi",
+        owner_phone_e164: ownerPhone,
+      } as never)
+      .eq("id", id);
+    const token = signConsentToken(id, ownerPhone);
+
+    const forged = await resendConsentCodeCore(
+      svc,
+      { token: `${token}x` },
+      { sendOtp: fakeSend },
+    );
+    expect(forged.status).toBe(404);
+    const otherPhone = await resendConsentCodeCore(
+      svc,
+      { token: signConsentToken(id, `+23325${uniq}`) },
+      { sendOtp: fakeSend },
+    );
+    expect(otherPhone.status).toBe(404);
+    const stale = await resendConsentCodeCore(
+      svc,
+      { token: signConsentToken(id, ownerPhone, 1_000) },
+      { sendOtp: fakeSend },
+    );
+    expect(stale.status).toBe(410);
+
+    const sent = await resendConsentCodeCore(
+      svc,
+      { token },
+      { sendOtp: fakeSend },
+    );
+    expect(sent.status, sent.message).toBe(200);
+    const { data: events } = await svc
+      .from("fieldops_onboarding_event")
+      .select("actor_kind, details")
+      .eq("onboarding_id", id)
+      .eq("note", "Owner code sent");
+    expect(events).toHaveLength(1);
+    expect(events?.[0]?.actor_kind).toBe("system");
+    expect((events?.[0]?.details as { by?: string }).by).toBe("owner");
+
+    // The per-number cooldown applies to the owner as to anyone.
+    const tooSoon = await resendConsentCodeCore(
+      svc,
+      { token },
+      { sendOtp: fakeSend },
+    );
+    expect(tooSoon.status).toBe(429);
+
+    await withdrawOnboardingCore(svc, other.id, {
+      campaignId,
+      onboardingId: id,
+    });
+    const closed = await resendConsentCodeCore(
+      svc,
+      { token },
+      { sendOtp: fakeSend },
+    );
+    expect(closed.status).toBe(410);
   });
 });
 

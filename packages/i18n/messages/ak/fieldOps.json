@@ -563,5 +563,9 @@
   "addAnotherTicketType": "Add another ticket type",
   "removeThisTicketType": "Remove this ticket type",
   "eventDatesCount": "{count, plural, one {# date} other {# dates}}",
-  "firstDate": "first date {date}"
+  "firstDate": "first date {date}",
+  "noCodeOrDidItRunOut": "No code, or did it run out?",
+  "sendMeANewCode": "Send me a new code",
+  "weSentYouANewCode": "We've sent you a new code.",
+  "couldNotSendANewCode": "We couldn't send a new code. Try again in a minute."
 }

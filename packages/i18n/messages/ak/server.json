@@ -1433,5 +1433,6 @@
   "teamTermsRequired": "Accept the team terms to make a team.",
   "teamTermsChanged": "The team terms have changed. Read them again, then accept.",
   "teamTermsNone": "There are no team terms to accept right now.",
-  "teamTermsPending": "An Owner of the team needs to accept the team terms before its money can move."
+  "teamTermsPending": "An Owner of the team needs to accept the team terms before its money can move.",
+  "weSentANewCodeTo": "We've sent a new code to {phone}."
 }

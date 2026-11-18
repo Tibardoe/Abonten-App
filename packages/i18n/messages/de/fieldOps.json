@@ -563,5 +563,9 @@
   "addAnotherTicketType": "Weitere Ticketart hinzufügen",
   "removeThisTicketType": "Diese Ticketart entfernen",
   "eventDatesCount": "{count, plural, one {# Termin} other {# Termine}}",
-  "firstDate": "erster Termin {date}"
+  "firstDate": "erster Termin {date}",
+  "noCodeOrDidItRunOut": "Kein Code angekommen oder abgelaufen?",
+  "sendMeANewCode": "Neuen Code senden",
+  "weSentYouANewCode": "Wir haben Ihnen einen neuen Code gesendet.",
+  "couldNotSendANewCode": "Wir konnten keinen neuen Code senden. Versuchen Sie es in einer Minute erneut."
 }

@@ -3558,7 +3558,11 @@
     "addAnotherTicketType": "e5ab58fc",
     "removeThisTicketType": "fdd80e4e",
     "eventDatesCount": "2da0d511",
-    "firstDate": "a88cd0df"
+    "firstDate": "a88cd0df",
+    "noCodeOrDidItRunOut": "83255091",
+    "sendMeANewCode": "cd19b596",
+    "weSentYouANewCode": "a1617a70",
+    "couldNotSendANewCode": "35687a48"
   },
   "finances": {
     "account": "85dfa32c",
@@ -7431,7 +7435,8 @@
     "teamTermsRequired": "3d3d92b1",
     "teamTermsChanged": "3855e73d",
     "teamTermsNone": "760ededb",
-    "teamTermsPending": "a5ed4144"
+    "teamTermsPending": "a5ed4144",
+    "weSentANewCodeTo": "896416a4"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
