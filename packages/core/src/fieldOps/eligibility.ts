@@ -98,12 +98,15 @@ export function evaluateEligibility(
       ? e("placeStatus", { status: s.placeStatus })
       : e("noListingYet"),
   );
+  // An unmoderated listing has no moderation state at all; like the SQL
+  // sweep (coalesce(moderation_state, 'visible')), that counts as visible.
+  // Only a listing that doesn't exist yet leaves the check pending.
   add(
     "place_not_moderated",
     e("placeNotModerated"),
-    s.placeModerationState === null
+    s.placeStatus === null
       ? null
-      : !HIDDEN.has(s.placeModerationState),
+      : !HIDDEN.has(s.placeModerationState ?? "visible"),
     "hard",
     s.placeModerationState
       ? e("moderation", { state: s.placeModerationState })
@@ -260,9 +263,9 @@ export function evaluateEventEligibility(
   add(
     "event_not_moderated",
     e("eventNotModerated"),
-    s.eventModerationState === null
+    s.eventStatus === null
       ? null
-      : !HIDDEN.has(s.eventModerationState),
+      : !HIDDEN.has(s.eventModerationState ?? "visible"),
     "hard",
     s.eventModerationState
       ? e("moderation", { state: s.eventModerationState })
@@ -282,6 +285,7 @@ export function evaluateEventEligibility(
     add("inside_territory", e("insideTerritory"), s.insideTerritory, "soft");
   }
   add("lead_verified", e("leadVerified"), s.reviewVerified, "hard");
-  add("event_started", e("eventStarted"), s.eventStarted, "info");
+  // Not started yet is waiting, not a failure: pending until it starts.
+  add("event_started", e("eventStarted"), s.eventStarted ? true : null, "info");
   return summarise(checks);
 }
