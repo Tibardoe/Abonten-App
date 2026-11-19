@@ -485,6 +485,7 @@
     "go-karting": "Go-karting",
     "entertainment": "Entertainment",
     "recreation": "Recreation",
+    "gallery": "Gallery",
     "other": "Other"
   },
   "eventDates": {

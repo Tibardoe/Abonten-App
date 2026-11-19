@@ -47,7 +47,10 @@ export function eventTypeLabel(t: CoreTranslator, name: string): string {
   return key ? t(`eventTypes.${key}`) : name;
 }
 
-/** The slugs seeded into place_category (20260820090000_add_places_feature). */
+/**
+ * The slugs in place_category: seeded by 20260820090000_add_places_feature,
+ * plus "gallery" (20261119140000_place_category_gallery).
+ */
 export const PLACE_CATEGORY_SLUGS: readonly string[] = [
   "restaurant",
   "food-spot",
@@ -62,6 +65,7 @@ export const PLACE_CATEGORY_SLUGS: readonly string[] = [
   "go-karting",
   "entertainment",
   "recreation",
+  "gallery",
   "other",
 ] as const;
 
