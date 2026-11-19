@@ -50,6 +50,8 @@ as $$
 $$;
 
 revoke all on function public.event_has_live_tickets(uuid) from public;
+-- Supabase's default privileges also hand new functions to anon.
+revoke execute on function public.event_has_live_tickets(uuid) from anon;
 grant execute on function public.event_has_live_tickets(uuid)
   to authenticated, service_role;
 
