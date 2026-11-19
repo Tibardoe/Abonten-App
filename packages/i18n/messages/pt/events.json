@@ -454,5 +454,11 @@
   "refundClosed": {
     "noRefunds": "Este evento não oferece reembolsos.",
     "cutoffPassed": "Os reembolsos deste evento terminaram em {when}."
-  }
+  },
+  "groupPrices": "Preços de grupo",
+  "groupPricesEditableAnyTime": "Descontos para encomendas maiores. Pode alterá-los a qualquer momento; as encomendas já feitas mantêm o preço.",
+  "saveGroupPrices": "Guardar os preços de grupo",
+  "groupPricesTitle": "Preços de grupo",
+  "groupPriceTier": "A partir de {count} bilhetes: {percent} de desconto",
+  "groupPricesAppliedAtCheckout": "Aplicado no pagamento; não é preciso escrever nada."
 }

@@ -22,6 +22,8 @@ const ticketSchema = z.object({
   category: z.string().optional(),
   price: z.number(),
   quantity: z.number().nullable().optional(),
+  // People one purchase admits (a Couple: 2).
+  admits: z.number().int().min(1).max(20).nullable().optional(),
   availableFrom: z.coerce.date().optional(),
   availableUntil: z.coerce.date().optional(),
 });
@@ -59,6 +61,15 @@ export const eventDraftPayloadSchema = z.object({
   singleTicket: z.number().nullable().optional(),
   singleTicketQuantity: z.number().nullable().optional(),
   multipleTickets: z.array(ticketSchema).optional(),
+  groupDiscounts: z
+    .array(
+      z.object({
+        minTickets: z.number().int(),
+        percentOff: z.number().int(),
+      }),
+    )
+    .max(10)
+    .optional(),
   promoCodes: z.array(promoCodeSchema).optional(),
   requireRegistration: z.boolean().optional(),
   featured: z.boolean().optional(),

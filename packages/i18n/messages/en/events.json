@@ -454,5 +454,11 @@
   "refundClosed": {
     "noRefunds": "This event doesn't offer refunds.",
     "cutoffPassed": "Refunds for this event closed on {when}."
-  }
+  },
+  "groupPrices": "Group prices",
+  "groupPricesEditableAnyTime": "Discounts for bigger orders. You can change them at any time; orders already made keep their price.",
+  "saveGroupPrices": "Save group prices",
+  "groupPricesTitle": "Group prices",
+  "groupPriceTier": "{count} or more tickets: {percent} off",
+  "groupPricesAppliedAtCheckout": "Applied at checkout; there's nothing to type."
 }

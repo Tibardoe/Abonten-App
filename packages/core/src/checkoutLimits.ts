@@ -36,11 +36,18 @@ export function validateCheckoutQuantities(
   quantities: {
     [ticketTypeId: string]: number;
   },
+  /**
+   * People one purchase of each type admits (group tickets). The limits
+   * count tickets, so a Couple purchase counts 2. Absent = 1 each, the
+   * cheap first check before the types are read.
+   */
+  admitsById?: { [ticketTypeId: string]: number } | null,
 ): CheckoutQuantityError {
   let total = 0;
 
-  for (const [ticketTypeId, quantity] of Object.entries(quantities)) {
-    if (quantity <= 0) continue;
+  for (const [ticketTypeId, purchases] of Object.entries(quantities)) {
+    if (purchases <= 0) continue;
+    const quantity = purchases * Math.max(1, admitsById?.[ticketTypeId] ?? 1);
 
     if (quantity > MAX_TICKETS_PER_TICKET_TYPE) {
       return {

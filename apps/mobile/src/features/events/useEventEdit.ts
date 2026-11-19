@@ -1,4 +1,5 @@
 import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplete";
+import { useSetEventGroupPrices } from "@/features/events/useSetEventGroupPrices";
 import { useUpdateEvent } from "@/features/events/useUpdateEvent";
 import { useUpdateEventTicketTypes } from "@/features/events/useUpdateEventTicketTypes";
 import { api } from "@/lib/api";
@@ -17,6 +18,11 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
+import {
+  groupDiscountTiersProblem,
+  groupPricingProblemMessage,
+  sortGroupDiscountTiers,
+} from "@abonten/core/groupPricing";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import {
   DEFAULT_REFUND_POLICY,
@@ -46,11 +52,13 @@ import {
 } from "@abonten/core/ticketTiers";
 import { useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
-import type {
-  OccurrenceDraft,
-  ScheduleMode,
-  TicketMode,
-  TicketTier,
+import {
+  type GroupPriceDraft,
+  type OccurrenceDraft,
+  type ScheduleMode,
+  type TicketMode,
+  type TicketTier,
+  admitsOf,
 } from "./useEventWizard";
 
 // Mobile echo of the web useEventEditForm hook. Edits the core, non-ticketing
@@ -89,6 +97,7 @@ export function useEventEdit(eventId: string) {
   const autocomplete = usePlacesAutocomplete();
   const update = useUpdateEvent();
   const updateTickets = useUpdateEventTicketTypes();
+  const updateGroupPrices = useSetEventGroupPrices();
   const eventSchema = useMemo(
     () =>
       getEventSchema(
@@ -162,6 +171,10 @@ export function useEventEdit(eventId: string) {
   const [tiers, setTiers] = useState<TicketTier[]>([]);
   // Filled from the event (its market's currency) once it loads.
   const [ticketCurrency, setTicketCurrency] = useState("");
+
+  // Automatic group prices — their own save, editable any time.
+  const [groupPrices, setGroupPrices] = useState<GroupPriceDraft[]>([]);
+  const [savedGroupPrices, setSavedGroupPrices] = useState("[]");
 
   const seededAddress = useRef<string>("");
   // The schedule as loaded: dates left as they were need no notice.
@@ -261,10 +274,23 @@ export function useEventEdit(eventId: string) {
           id: t.id,
           name: t.type,
           price: String(t.price),
+          // Purchases left (a Couple counts once), as the server returns it.
           quantity: t.quantity != null ? String(t.quantity) : "",
+          admits: String(t.admits ?? 1),
         })),
       );
     }
+    const seededGroups = (event.event_group_discount ?? []).map((g) => ({
+      id: `${g.min_tickets}`,
+      minTickets: String(g.min_tickets),
+      percentOff: String(g.percent_off),
+    }));
+    setGroupPrices(seededGroups);
+    setSavedGroupPrices(
+      JSON.stringify(
+        seededGroups.map((g) => [Number(g.minTickets), Number(g.percentOff)]),
+      ),
+    );
 
     setPrefilled(true);
 
@@ -533,8 +559,12 @@ export function useEventEdit(eventId: string) {
           },
         ]
       : ticketMode === "multiple"
-        ? tiers.map((t) => ({
-            quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+        ? // A group type (a Couple) takes `admits` places per ticket.
+          tiers.map((t) => ({
+            quantity:
+              t.quantity.trim() === ""
+                ? null
+                : Number(t.quantity) * admitsOf(t),
           }))
         : [];
   const capacityProblem =
@@ -587,6 +617,7 @@ export function useEventEdit(eventId: string) {
       type: t.name.trim(),
       price: Number(t.price),
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+      admits: admitsOf(t),
     }));
     if (parsed.length === 0) {
       toast.error(t("addATicketType"), {
@@ -622,6 +653,45 @@ export function useEventEdit(eventId: string) {
       multipleTickets: parsed,
     });
   }
+
+  // Group prices as the server takes them, and why they can't be saved.
+  const groupTiers = sortGroupDiscountTiers(
+    groupPrices
+      .map((g) => ({
+        minTickets: Number(g.minTickets),
+        percentOff: Number(g.percentOff),
+      }))
+      .filter(
+        (g) => Number.isInteger(g.minTickets) && Number.isInteger(g.percentOff),
+      ),
+  );
+  const groupPriceIssue = groupDiscountTiersProblem(groupTiers);
+  const groupPriceProblem = groupPriceIssue
+    ? groupPricingProblemMessage(tc, groupPriceIssue)
+    : null;
+  const groupPricesChanged =
+    JSON.stringify(groupTiers.map((g) => [g.minTickets, g.percentOff])) !==
+    savedGroupPrices;
+
+  async function saveGroupPrices() {
+    if (groupPriceProblem) {
+      toast.error(groupPriceProblem);
+      return null;
+    }
+    const res = await updateGroupPrices.mutateAsync({
+      eventId,
+      tiers: groupTiers,
+    });
+    if (res.status === 200) {
+      setSavedGroupPrices(
+        JSON.stringify(groupTiers.map((g) => [g.minTickets, g.percentOff])),
+      );
+    }
+    return res;
+  }
+
+  const eventData =
+    query.data?.status === 200 ? query.data.data.event : undefined;
 
   return {
     isLoading: query.isLoading,
@@ -708,6 +778,14 @@ export function useEventEdit(eventId: string) {
     ticketCurrency,
     saveTicketTypes,
     isSavingTicketTypes: updateTickets.isPending,
+    // group prices
+    groupPricingEnabled: !!eventData?.group_pricing_enabled,
+    groupPrices,
+    setGroupPrices,
+    groupPriceProblem,
+    groupPricesChanged,
+    saveGroupPrices,
+    isSavingGroupPrices: updateGroupPrices.isPending,
     // submit
     save,
     isSaving: update.isPending,

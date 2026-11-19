@@ -1,5 +1,6 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TimeField, prettyTime } from "@/components/datetime/TimeField";
+import { GroupPricesEditor } from "@/components/events/GroupPricesEditor";
 import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
@@ -28,6 +29,7 @@ import { ActivityIndicator, Pressable, Switch, View } from "react-native";
 
 export default function EditEventScreen() {
   const t = useTranslations("manage");
+  const tCommon = useTranslations("common");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -73,6 +75,19 @@ export default function EditEventScreen() {
     } else {
       toast.error(t("couldnTSave"), {
         description: res.message ?? t("pleaseTryAgain"),
+      });
+    }
+  }
+
+  async function onSaveGroupPrices() {
+    const res = await w.saveGroupPrices();
+    if (!res) return;
+    if (res.status === 200) {
+      toast.success(res.message ?? tCommon("groupPricesSaved"));
+    } else {
+      toast.error(res.message ?? t("couldnTSave"), {
+        description: t("yourChangesAreStillOnScreen"),
+        action: { label: t("retry"), onPress: onSaveGroupPrices },
       });
     }
   }
@@ -571,6 +586,25 @@ export default function EditEventScreen() {
                         />
                       </View>
                     </View>
+                    {w.groupPricingEnabled || Number(tier.admits) > 1 ? (
+                      <Field
+                        label={tCommon("peoplePerTicket")}
+                        hint={tCommon("peoplePerTicketHint")}
+                      >
+                        <Input
+                          value={tier.admits}
+                          onChangeText={(v) =>
+                            w.setTiers((prev) =>
+                              prev.map((x, idx) =>
+                                idx === i ? { ...x, admits: v } : x,
+                              ),
+                            )
+                          }
+                          keyboardType="number-pad"
+                          placeholder="1"
+                        />
+                      </Field>
+                    ) : null}
                   </View>
                 ))}
                 <Button
@@ -580,7 +614,13 @@ export default function EditEventScreen() {
                   onPress={() =>
                     w.setTiers((prev) => [
                       ...prev,
-                      { id: makeId(), name: "", price: "", quantity: "" },
+                      {
+                        id: makeId(),
+                        name: "",
+                        price: "",
+                        quantity: "",
+                        admits: "1",
+                      },
                     ])
                   }
                 />
@@ -617,6 +657,31 @@ export default function EditEventScreen() {
           </>
         )}
       </View>
+
+      {/* Automatic group prices: their own save, editable after the first
+          sale too (a checkout is priced when it is made). */}
+      {!w.savedFree && (w.groupPricingEnabled || w.groupPrices.length > 0) ? (
+        <View className="gap-3">
+          <GroupPricesEditor
+            value={w.groupPrices}
+            onChange={w.setGroupPrices}
+            problem={w.groupPriceProblem}
+          />
+          <Button
+            title={
+              w.isSavingGroupPrices ? t("saving") : tCommon("saveGroupPrices")
+            }
+            variant="secondary"
+            loading={w.isSavingGroupPrices}
+            disabled={
+              w.isSavingGroupPrices ||
+              !w.groupPricesChanged ||
+              !!w.groupPriceProblem
+            }
+            onPress={onSaveGroupPrices}
+          />
+        </View>
+      ) : null}
 
       <MapPickerSheet
         open={mapOpen}

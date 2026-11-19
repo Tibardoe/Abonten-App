@@ -17,6 +17,8 @@ type PendingCheckoutRow = {
   event_id: string;
   ticket_type_id: string;
   quantity: number;
+  admits: number;
+  group_discount_percent: number | null;
   unit_price: number;
   discount: number;
   discounted_units: number;
@@ -43,8 +45,15 @@ export type PendingCheckoutSessionLine = {
   ticketCheckoutId: string;
   ticketTypeId: string;
   type: string;
+  /** The price of one purchase (a Couple ticket admitting two). */
   unitPrice: number;
+  /** Tickets on the line (people). */
   quantity: number;
+  /** People one purchase admits; purchases = quantity / admits. */
+  admits: number;
+  purchases: number;
+  /** The event's group price applied to this line, or null. */
+  groupDiscountPercent: number | null;
   discount: number;
   discountedUnits: number;
   amount: number;
@@ -97,7 +106,8 @@ export async function getUserPendingTicketCheckoutsCore(
   const { data, error } = await supabase
     .from("ticket_checkout")
     .select(
-      `id, checkout_session_id, event_id, ticket_type_id, quantity, unit_price,
+      `id, checkout_session_id, event_id, ticket_type_id, quantity, admits,
+       group_discount_percent, unit_price,
        discount, discounted_units, total_price, promo_code, expires_at,
        event:event_id(title, event_code, starts_at, ends_at, timezone, event_occurrence(id, starts_at, ends_at)),
        ticket_type:ticket_type_id(type, currency, quantity)`,
@@ -146,6 +156,9 @@ export async function getUserPendingTicketCheckoutsCore(
       type: row.ticket_type.type,
       unitPrice: row.unit_price,
       quantity: row.quantity,
+      admits: Math.max(1, row.admits ?? 1),
+      purchases: row.quantity / Math.max(1, row.admits ?? 1),
+      groupDiscountPercent: row.group_discount_percent ?? null,
       discount: row.discount,
       discountedUnits: row.discounted_units,
       amount: row.total_price,

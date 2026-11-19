@@ -926,5 +926,22 @@
   "checkLater": "Verificar mais tarde",
   "checkLaterNote": "Iremos avisá-lo quando for confirmado, ou se não for concluído.",
   "cancelOrderTitle": "Cancelar esta encomenda?",
-  "cancelOrderBody": "Os seus bilhetes reservados voltam à venda. Não aprove o pedido de pagamento: se o aprovar mesmo assim, o dinheiro é reembolsado na totalidade automaticamente."
+  "cancelOrderBody": "Os seus bilhetes reservados voltam à venda. Não aprove o pedido de pagamento: se o aprovar mesmo assim, o dinheiro é reembolsado na totalidade automaticamente.",
+  "peoplePerTicket": "Pessoas por bilhete",
+  "peoplePerTicketHint": "Um bilhete Casal dá entrada a 2 pessoas. Cada uma recebe o seu próprio bilhete e código QR.",
+  "admitsPeople": "{count, plural, one {Dá entrada a # pessoa} other {Dá entrada a # pessoas}}",
+  "admitsPeopleEachOwnTicket": "{count, plural, one {Dá entrada a # pessoa} other {Dá entrada a # pessoas, cada uma com o seu bilhete}}",
+  "groupPrices": "Preços de grupo",
+  "groupPricesHint": "Descontos automáticos para encomendas maiores, por exemplo 10 % a partir de 10 bilhetes. Um código promocional nunca se soma: cada bilhete recebe o maior desconto.",
+  "groupPriceLine": "A partir de {count} bilhetes: {percent} de desconto",
+  "groupPriceFromTickets": "A partir de (bilhetes)",
+  "groupPricePercentOff": "Desconto (%)",
+  "removeGroupPrice": "Remover este preço de grupo",
+  "addGroupPrice": "Adicionar um preço de grupo",
+  "groupPriceApplied": "Preço de grupo: {percent} de desconto na sua encomenda",
+  "groupPriceNextTier": "{count, plural, one {Mais # bilhete} other {Mais # bilhetes}} para {percent} de desconto",
+  "groupPriceBeatsPromo": "O seu preço de grupo é melhor do que este código, por isso o código não é usado.",
+  "groupDiscount": "Desconto de grupo",
+  "saveGroupPrices": "Guardar os preços de grupo",
+  "groupPricesSaved": "Preços de grupo guardados"
 }

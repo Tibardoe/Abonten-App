@@ -216,9 +216,14 @@ export default function PendingCheckoutsBasket({
       queryClient.setQueryData<PendingCheckoutSession[]>(QUERY_KEY, (old) =>
         old?.map((session) => ({
           ...session,
+          // newQuantity counts purchases; the line stores tickets.
           lines: session.lines.map((line) =>
             line.ticketCheckoutId === ticketCheckoutId
-              ? { ...line, quantity: newQuantity }
+              ? {
+                  ...line,
+                  purchases: newQuantity,
+                  quantity: newQuantity * Math.max(1, line.admits ?? 1),
+                }
               : line,
           ),
         })),
@@ -276,7 +281,13 @@ export default function PendingCheckoutsBasket({
             }
             const lines = session.lines.map((line) =>
               line.ticketCheckoutId === ticketCheckoutId
-                ? { ...line, quantity, discount, amount }
+                ? {
+                    ...line,
+                    purchases: quantity,
+                    quantity: quantity * Math.max(1, line.admits ?? 1),
+                    discount,
+                    amount,
+                  }
                 : line,
             );
             return {
@@ -439,7 +450,11 @@ export default function PendingCheckoutsBasket({
 
   const selectedLines = selectedSessions.flatMap((s) => s.lines);
   const selectedGrossSubtotal = selectedLines.reduce(
-    (sum, line) => sum + line.quantity * line.unitPrice,
+    // unitPrice is one purchase's price (a Couple ticket admitting two).
+    (sum, line) =>
+      sum +
+      (line.purchases ?? line.quantity / Math.max(1, line.admits ?? 1)) *
+        line.unitPrice,
     0,
   );
   const selectedDiscount = selectedLines.reduce(

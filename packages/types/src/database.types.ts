@@ -3322,6 +3322,35 @@ export type Database = {
           },
         ]
       }
+      event_group_discount: {
+        Row: {
+          created_at: string
+          event_id: string
+          min_tickets: number
+          percent_off: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          min_tickets: number
+          percent_off: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          min_tickets?: number
+          percent_off?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_group_discount_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_media: {
         Row: {
           created_at: string
@@ -13385,6 +13414,7 @@ export type Database = {
       }
       ticket_checkout: {
         Row: {
+          admits: number
           checkout_session_id: string | null
           completed_at: string | null
           created_at: string | null
@@ -13392,6 +13422,7 @@ export type Database = {
           discounted_units: number
           event_id: string | null
           expires_at: string | null
+          group_discount_percent: number | null
           id: string
           occurrence_id: string | null
           promo_code: string | null
@@ -13408,6 +13439,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          admits?: number
           checkout_session_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -13415,6 +13447,7 @@ export type Database = {
           discounted_units?: number
           event_id?: string | null
           expires_at?: string | null
+          group_discount_percent?: number | null
           id?: string
           occurrence_id?: string | null
           promo_code?: string | null
@@ -13431,6 +13464,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          admits?: number
           checkout_session_id?: string | null
           completed_at?: string | null
           created_at?: string | null
@@ -13438,6 +13472,7 @@ export type Database = {
           discounted_units?: number
           event_id?: string | null
           expires_at?: string | null
+          group_discount_percent?: number | null
           id?: string
           occurrence_id?: string | null
           promo_code?: string | null
@@ -13978,6 +14013,7 @@ export type Database = {
       }
       ticket_type: {
         Row: {
+          admits: number
           available_from: string | null
           available_until: string | null
           created_at: string | null
@@ -13989,6 +14025,7 @@ export type Database = {
           type: string | null
         }
         Insert: {
+          admits?: number
           available_from?: string | null
           available_until?: string | null
           created_at?: string | null
@@ -14000,6 +14037,7 @@ export type Database = {
           type?: string | null
         }
         Update: {
+          admits?: number
           available_from?: string | null
           available_until?: string | null
           created_at?: string | null

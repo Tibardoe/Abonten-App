@@ -276,6 +276,7 @@
     "adjustmentRequestNotFound": "Solicitud de ajuste no encontrada",
     "adminAuditLogIsAppendOnly": "admin_audit_log is append-only",
     "adminNoteRowsAreImmutableCreateA": "Las filas de admin_note son inmutables; crea una fila nueva con supersedes_id",
+    "anEventCanHaveAtMost3": "Un evento puede tener como máximo 3 precios de grupo.",
     "anEventIsRequired": "Se necesita un evento",
     "anIdempotencyKeyIsRequired": "Se necesita una clave de idempotencia",
     "anItemIsMarkedPaidOrFailed": "Una partida se marca como pagada o fallida",
@@ -504,10 +505,12 @@
     "thisReviewIsNoLongerAvailable": "Esta reseña ya no está disponible.",
     "thisReviewIsnTAvailableToYou": "Esta reseña no está disponible para ti.",
     "thisStoryIsNoLongerAvailable": "Esta Story ya no está disponible.",
+    "thisTicketTypeHasBeenSoldSo": "Este tipo de entrada ya se ha vendido, así que el número de personas que admite ya no puede cambiar.",
     "ticketCodeAndQrAreRequired": "se necesitan el código de la entrada y el QR",
     "ticketCurrencyMustMatchTheEventCurrency": "La moneda de la entrada {0} debe coincidir con la moneda del evento {1}",
     "ticketDataMismatchExpectedUnitsGot": "Los datos de las entradas no coinciden (se esperaban {0} unidades, se recibieron {1})",
     "ticketDataMismatchForCheckoutRow": "Los datos de las entradas no coinciden para la fila de compra {0}",
+    "ticketDataMismatchForType": "Los datos de las entradas no coinciden para el tipo {0}",
     "ticketExpiryIsRequired": "se necesita el vencimiento de la entrada",
     "ticketForThisEventAlreadyBought": "Ya se compró una entrada para este evento",
     "ticketOfTypeNotFound": "Entrada de tipo {0} no encontrada",
@@ -1441,5 +1444,7 @@
   "teamTermsChanged": "Las condiciones de los equipos han cambiado. Vuelve a leerlas y acéptalas.",
   "teamTermsNone": "Ahora mismo no hay condiciones de los equipos que aceptar.",
   "teamTermsPending": "Un Propietario del equipo tiene que aceptar las condiciones de los equipos antes de que su dinero pueda moverse.",
-  "weSentANewCodeTo": "Hemos enviado un código nuevo al {phone}."
+  "weSentANewCodeTo": "Hemos enviado un código nuevo al {phone}.",
+  "groupPriceOrderChange": "Este pedido tiene un precio de grupo, así que su número de entradas no puede cambiar aquí. Quítalo y vuelve a elegir tus entradas.",
+  "groupPricesSaved": "Precios de grupo guardados."
 }

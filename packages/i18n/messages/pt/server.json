@@ -276,6 +276,7 @@
     "adjustmentRequestNotFound": "Pedido de ajuste não encontrado",
     "adminAuditLogIsAppendOnly": "admin_audit_log is append-only",
     "adminNoteRowsAreImmutableCreateA": "As linhas de admin_note são imutáveis; crie uma nova linha com supersedes_id",
+    "anEventCanHaveAtMost3": "Um evento pode ter no máximo 3 preços de grupo.",
     "anEventIsRequired": "É necessário um evento",
     "anIdempotencyKeyIsRequired": "É necessária uma chave de idempotência",
     "anItemIsMarkedPaidOrFailed": "Um item é marcado como pago ou falhado",
@@ -504,10 +505,12 @@
     "thisReviewIsNoLongerAvailable": "Esta avaliação já não está disponível.",
     "thisReviewIsnTAvailableToYou": "Esta avaliação não está disponível para si.",
     "thisStoryIsNoLongerAvailable": "Esta Story já não está disponível.",
+    "thisTicketTypeHasBeenSoldSo": "Este tipo de bilhete já foi vendido, por isso o número de pessoas a que dá entrada já não pode mudar.",
     "ticketCodeAndQrAreRequired": "são necessários o código do bilhete e o QR",
     "ticketCurrencyMustMatchTheEventCurrency": "A moeda do bilhete {0} tem de corresponder à moeda do evento {1}",
     "ticketDataMismatchExpectedUnitsGot": "Os dados dos bilhetes não coincidem (esperadas {0} unidades, recebidas {1})",
     "ticketDataMismatchForCheckoutRow": "Os dados dos bilhetes não coincidem para a linha de compra {0}",
+    "ticketDataMismatchForType": "Os dados dos bilhetes não coincidem para o tipo {0}",
     "ticketExpiryIsRequired": "é necessária a validade do bilhete",
     "ticketForThisEventAlreadyBought": "Já foi comprado um bilhete para este evento",
     "ticketOfTypeNotFound": "Bilhete do tipo {0} não encontrado",
@@ -1441,5 +1444,7 @@
   "teamTermsChanged": "Os termos das equipas mudaram. Leia-os novamente e depois aceite.",
   "teamTermsNone": "De momento não há termos das equipas para aceitar.",
   "teamTermsPending": "Um Proprietário da equipa tem de aceitar os termos das equipas antes de o seu dinheiro poder ser movimentado.",
-  "weSentANewCodeTo": "Enviámos um código novo para o {phone}."
+  "weSentANewCodeTo": "Enviámos um código novo para o {phone}.",
+  "groupPriceOrderChange": "Esta encomenda tem um preço de grupo, por isso o número de bilhetes não pode mudar aqui. Remova-a e escolha os bilhetes de novo.",
+  "groupPricesSaved": "Preços de grupo guardados."
 }

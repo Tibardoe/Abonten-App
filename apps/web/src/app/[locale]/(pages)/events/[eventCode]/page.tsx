@@ -14,6 +14,7 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
 import EventViewLogger from "@/events/atoms/EventViewLogger";
+import GroupPricesNote from "@/events/atoms/GroupPricesNote";
 import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { languageAlternates } from "@/i18n/alternates";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
@@ -101,8 +102,13 @@ const loadEvent = cache(async (eventCode: string) =>
       price,
       currency,
       quantity,
+      admits,
       available_from,
       available_until
+    ),
+    event_group_discount(
+      min_tickets,
+      percent_off
     ),
     event_occurrence(
       id,
@@ -551,6 +557,8 @@ export default async function page({
                 ticketTypes={event.ticket_type}
                 initialCount={attendanceCount}
               />
+
+              <GroupPricesNote tiers={event.event_group_discount} />
 
               <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
                 <OutlinedShareBtn

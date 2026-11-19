@@ -276,6 +276,7 @@
     "adjustmentRequestNotFound": "Anpassungsanfrage nicht gefunden",
     "adminAuditLogIsAppendOnly": "admin_audit_log is append-only",
     "adminNoteRowsAreImmutableCreateA": "admin_note-Zeilen sind unveränderlich; erstelle eine neue Zeile mit supersedes_id",
+    "anEventCanHaveAtMost3": "Eine Veranstaltung kann höchstens 3 Gruppenpreise haben.",
     "anEventIsRequired": "Ein Event ist erforderlich",
     "anIdempotencyKeyIsRequired": "Ein Idempotenzschlüssel ist erforderlich",
     "anItemIsMarkedPaidOrFailed": "Ein Posten wird als bezahlt oder fehlgeschlagen markiert",
@@ -504,10 +505,12 @@
     "thisReviewIsNoLongerAvailable": "Diese Bewertung ist nicht mehr verfügbar.",
     "thisReviewIsnTAvailableToYou": "Diese Bewertung ist für dich nicht verfügbar.",
     "thisStoryIsNoLongerAvailable": "Diese Story ist nicht mehr verfügbar.",
+    "thisTicketTypeHasBeenSoldSo": "Dieser Tickettyp wurde bereits verkauft, daher kann sich die Zahl der Personen, für die er gilt, nicht mehr ändern.",
     "ticketCodeAndQrAreRequired": "Ticketcode und QR sind erforderlich",
     "ticketCurrencyMustMatchTheEventCurrency": "Die Ticketwährung {0} muss mit der Eventwährung {1} übereinstimmen",
     "ticketDataMismatchExpectedUnitsGot": "Ticketdaten stimmen nicht überein ({0} Einheiten erwartet, {1} erhalten)",
     "ticketDataMismatchForCheckoutRow": "Ticketdaten stimmen für die Zeile {0} des Bezahlvorgangs nicht überein",
+    "ticketDataMismatchForType": "Ticketdaten stimmen für den Typ {0} nicht überein",
     "ticketExpiryIsRequired": "Das Ablaufdatum des Tickets ist erforderlich",
     "ticketForThisEventAlreadyBought": "Für dieses Event wurde bereits ein Ticket gekauft",
     "ticketOfTypeNotFound": "Ticket vom Typ {0} nicht gefunden",
@@ -1441,5 +1444,7 @@
   "teamTermsChanged": "Die Team-Bedingungen haben sich geändert. Lies sie erneut und akzeptiere sie dann.",
   "teamTermsNone": "Derzeit gibt es keine Team-Bedingungen zu akzeptieren.",
   "teamTermsPending": "Ein Inhaber des Teams muss die Team-Bedingungen akzeptieren, bevor sein Geld bewegt werden kann.",
-  "weSentANewCodeTo": "Wir haben einen neuen Code an {phone} gesendet."
+  "weSentANewCodeTo": "Wir haben einen neuen Code an {phone} gesendet.",
+  "groupPriceOrderChange": "Für diese Bestellung gilt ein Gruppenpreis, daher lässt sich die Ticketanzahl hier nicht ändern. Entferne sie und wähle deine Tickets neu.",
+  "groupPricesSaved": "Gruppenpreise gespeichert."
 }

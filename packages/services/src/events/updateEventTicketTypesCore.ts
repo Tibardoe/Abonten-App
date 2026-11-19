@@ -1,3 +1,4 @@
+import { groupPricingProblemMessage } from "@abonten/core/groupPricing";
 import { logger } from "@abonten/core/logger";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
@@ -12,6 +13,7 @@ import { coreT, tr } from "../i18n/requestLocale";
 import { requireVerifiedIdentity } from "../identity/identityCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
+import { groupPricingProblem } from "./groupPricingAccess";
 
 // Post-auth body of updateEventTicketTypes, lifted so the
 // PUT /api/mobile/organizer/events/:id/ticket-types route runs the exact
@@ -67,14 +69,17 @@ export type UpdateEventTicketTypesCoreInput = {
   multipleTickets: {
     type: string;
     price: number;
+    /** Purchases on sale (a Couple counts once); null = no limit. */
     quantity: number | null;
+    /** People one purchase admits (a Couple: 2). Default 1. */
+    admits?: number | null;
     availableFrom?: DateInput | null;
     availableUntil?: DateInput | null;
   }[];
 };
 
 export type UpdateEventTicketTypesCoreResult = {
-  status: 200 | 400 | 404 | 409 | 500;
+  status: 200 | 400 | 403 | 404 | 409 | 500;
   message: string;
 };
 
@@ -100,6 +105,23 @@ export async function updateEventTicketTypesCore(
       }
     }
   }
+
+  // Group tickets: valid, and switched on for this organizer when used.
+  const groupProblem = await groupPricingProblem(userId, {
+    freeEvent,
+    tiers: multipleTickets,
+  });
+  if (groupProblem) {
+    return {
+      status: groupProblem === "not_enabled" ? 403 : 400,
+      message: groupPricingProblemMessage(coreT(), groupProblem),
+    };
+  }
+  // Quantities are stored as places (people): purchases x admits.
+  const places = (tier: { quantity: number | null; admits?: number | null }) =>
+    tier.quantity == null
+      ? null
+      : tier.quantity * Math.max(1, tier.admits ?? 1);
 
   const { data: event, error: eventError } = await supabase
     .from("event")
@@ -168,7 +190,7 @@ export async function updateEventTicketTypesCore(
   if (!freeEvent) {
     const capacityProblem = ticketCapacityProblem(coreT(), event.capacity, [
       ...(singleTicket ? [singleTicket] : []),
-      ...multipleTickets,
+      ...multipleTickets.map((tier) => ({ ...tier, quantity: places(tier) })),
     ]);
     if (capacityProblem) return { status: 400, message: capacityProblem };
   }
@@ -180,6 +202,7 @@ export async function updateEventTicketTypesCore(
           price: 0,
           currency,
           quantity: event.capacity ?? null,
+          admits: 1,
           available_from: null,
           available_until: null,
         },
@@ -192,6 +215,7 @@ export async function updateEventTicketTypesCore(
                 price: singleTicket.price,
                 currency,
                 quantity: singleTicket.quantity,
+                admits: 1,
                 available_from: null,
                 available_until: null,
               },
@@ -200,7 +224,8 @@ export async function updateEventTicketTypesCore(
         ...multipleTickets.map((ticket) => ({
           type: ticket.type,
           price: ticket.price,
-          quantity: ticket.quantity,
+          quantity: places(ticket),
+          admits: Math.max(1, ticket.admits ?? 1),
           available_from: toIso(ticket.availableFrom),
           available_until: toIso(ticket.availableUntil),
           currency,

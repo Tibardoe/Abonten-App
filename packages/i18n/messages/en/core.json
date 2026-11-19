@@ -1452,5 +1452,15 @@
     "eventFree": "{count, plural, one {Your place for this event is given back for someone else to take.} other {Your # places for this event are given back for others to take.}}",
     "eventOtherEvents": "Some of these tickets were paid for in one payment with tickets for another event, so they can only be cancelled with those. Cancel them from one of those tickets instead.",
     "confirmEvent": "{count, plural, one {Cancel # ticket} other {Cancel all # tickets}}"
+  },
+  "groupPricing": {
+    "admitsRange": "A ticket can admit from 1 to {max} people.",
+    "freeAdmits": "A free registration admits one person.",
+    "tooManyTiers": "An event can have at most {max} group prices.",
+    "tierRange": "A group price starts at {min} to {max} tickets and gives 1% to {maxPercent}% off.",
+    "tierDuplicate": "Two group prices start at the same number of tickets.",
+    "tierNotBetter": "A bigger group must get a bigger discount.",
+    "freeEventTiers": "Group prices aren't available on a free event.",
+    "notEnabled": "Group tickets and group prices aren't switched on for your account yet. Ask Abonten to switch them on."
   }
 }

@@ -1452,5 +1452,15 @@
     "eventFree": "{count, plural, one {Dein Platz für dieses Event wird für jemand anderen frei.} other {Deine # Plätze für dieses Event werden für andere frei.}}",
     "eventOtherEvents": "Einige dieser Tickets wurden zusammen mit Tickets für ein anderes Event bezahlt und können nur mit diesen storniert werden. Storniere sie stattdessen über eines dieser Tickets.",
     "confirmEvent": "{count, plural, one {# Ticket stornieren} other {Alle # Tickets stornieren}}"
+  },
+  "groupPricing": {
+    "admitsRange": "Ein Ticket kann für 1 bis {max} Personen gelten.",
+    "freeAdmits": "Eine kostenlose Anmeldung gilt für eine Person.",
+    "tooManyTiers": "Eine Veranstaltung kann höchstens {max} Gruppenpreise haben.",
+    "tierRange": "Ein Gruppenpreis beginnt bei {min} bis {max} Tickets und gibt 1 % bis {maxPercent} % Rabatt.",
+    "tierDuplicate": "Zwei Gruppenpreise beginnen bei derselben Ticketanzahl.",
+    "tierNotBetter": "Eine größere Gruppe muss einen höheren Rabatt erhalten.",
+    "freeEventTiers": "Gruppenpreise sind bei einer kostenlosen Veranstaltung nicht verfügbar.",
+    "notEnabled": "Gruppentickets und Gruppenpreise sind für dein Konto noch nicht freigeschaltet. Bitte Abonten, sie freizuschalten."
   }
 }

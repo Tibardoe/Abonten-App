@@ -183,7 +183,18 @@ export default function TransactionDetailScreen() {
                   : null
               }
             />
-            <Row label={t("quantity")} value={data.quantity} />
+            {/* unit_price is one purchase's price; a Couple purchase is
+                two tickets (admits). */}
+            <Row
+              label={t("quantity")}
+              value={data.quantity / Math.max(1, data.admits ?? 1)}
+            />
+            {(data.admits ?? 1) > 1 ? (
+              <Row
+                label={tCommon("peoplePerTicket")}
+                value={data.admits ?? 1}
+              />
+            ) : null}
             <Row
               label={t("unitPrice2")}
               value={formatMoney(currency, data.unit_price, { locale })}

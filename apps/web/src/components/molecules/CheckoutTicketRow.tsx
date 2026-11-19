@@ -12,7 +12,11 @@ type Ticket = NonNullable<
 
 type CheckoutTicketRowProps = {
   ticket: Ticket;
+  /** Purchases picked (a Couple counts once). */
   quantity: number;
+  /** Purchases still on sale (null = no limit). */
+  purchasesLeft: number | null;
+  /** Tickets the promo code covers on this line. */
   eligibleUnits: number;
   discountedUnitPrice: number | null;
   hasAppliedPromo: boolean;
@@ -23,6 +27,7 @@ type CheckoutTicketRowProps = {
 export default function CheckoutTicketRow({
   ticket,
   quantity,
+  purchasesLeft,
   eligibleUnits,
   discountedUnitPrice,
   hasAppliedPromo,
@@ -35,6 +40,9 @@ export default function CheckoutTicketRow({
   const tc = useTranslations("core");
   // "Standard ticket" / "Free" for the tiers the system names itself.
   const tierName = ticketTypeLabel(tc, ticket.type);
+  // A group ticket (a Couple) admits several people, one ticket each.
+  const admits = Math.max(1, ticket.admits ?? 1);
+  const tickets = quantity * admits;
 
   return (
     <div
@@ -48,7 +56,7 @@ export default function CheckoutTicketRow({
         <QuantityStepper
           label={t("ticketsOfType", { type: tierName })}
           quantity={quantity}
-          maxQuantity={ticket.quantity}
+          maxQuantity={purchasesLeft}
           onIncrement={onIncrement}
           onDecrement={onDecrement}
         />
@@ -75,28 +83,37 @@ export default function CheckoutTicketRow({
               )}
             </p>
 
-            {quantity > 0 && hasAppliedPromo && eligibleUnits < quantity && (
-              <p className="text-xs text-muted-foreground">
-                {t("discountAppliesToOf", {
-                  eligibleUnits: eligibleUnits,
-                  quantity: quantity,
-                })}
+            {admits > 1 && (
+              <p className="text-xs font-normal text-muted-foreground">
+                {t("admitsPeopleEachOwnTicket", { count: admits })}
               </p>
             )}
+
+            {quantity > 0 &&
+              hasAppliedPromo &&
+              eligibleUnits > 0 &&
+              eligibleUnits < tickets && (
+                <p className="text-xs text-muted-foreground">
+                  {t("discountAppliesToOf", {
+                    eligibleUnits: eligibleUnits,
+                    quantity: tickets,
+                  })}
+                </p>
+              )}
           </div>
 
           <p
             className={
-              ticket.quantity === 0
+              purchasesLeft === 0
                 ? "text-destructive font-semibold"
                 : "text-sm text-muted-foreground"
             }
           >
-            {ticket.quantity === null
+            {purchasesLeft === null
               ? t("unlimited")
-              : ticket.quantity === 0
+              : purchasesLeft === 0
                 ? t("soldOut")
-                : t("left", { quantity: ticket.quantity })}
+                : t("left", { quantity: purchasesLeft })}
           </p>
         </div>
 

@@ -3,7 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
-import { computeLineAmount } from "@abonten/core/checkoutPricing";
+import { priceOrder } from "@abonten/core/checkoutPricing";
 import { logger } from "@abonten/core/logger";
 import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
 import {
@@ -17,6 +17,7 @@ type CheckoutRow = {
   event_id: string;
   ticket_type_id: string;
   quantity: number;
+  admits: number;
   unit_price: number;
   discounted_units: number;
   promo_code: string | null;
@@ -30,6 +31,12 @@ type CheckoutRow = {
  * row granularity deleteTicketSummaryCheckout already uses. newQuantity < 1
  * is rejected: removing a line entirely is deleteTicketSummaryCheckout's job,
  * not this action's.
+ *
+ * newQuantity counts purchases, as the buyer sees them: a group type (a
+ * Couple) is `admits` tickets per purchase, and the row stores tickets. An
+ * order on an event with group prices is not edited here (the price of
+ * every line depends on the whole order): the buyer removes it and chooses
+ * again (docs/architecture/group-tickets-and-prices.md).
  *
  * Promo eligibility uses a "sticky, delta-only" rule rather than
  * reallocating the whole session on every edit: units the row already had
@@ -67,7 +74,7 @@ export default withActionLocale(async function updateTicketCheckoutQuantity(
   const { data: rawCheckout, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, event_id, ticket_type_id, quantity, unit_price, discounted_units, promo_code, status, ticket_type:ticket_type_id(currency)",
+      "id, event_id, ticket_type_id, quantity, admits, unit_price, discounted_units, promo_code, status, ticket_type:ticket_type_id(currency)",
     )
     .eq("id", ticketCheckoutId)
     .eq("user_id", user.id)
@@ -87,12 +94,30 @@ export default withActionLocale(async function updateTicketCheckoutQuantity(
   }
 
   const checkout = rawCheckout as CheckoutRow;
+  const admits = Math.max(1, checkout.admits ?? 1);
+  // Tickets, as stored: whole purchases of the type.
+  const newTickets = newQuantity * admits;
   const oldQuantity = checkout.quantity;
   const oldDiscountedUnits = checkout.discounted_units;
-  const delta = newQuantity - oldQuantity;
+  const delta = newTickets - oldQuantity;
 
   if (delta === 0) {
     return { status: 200 };
+  }
+
+  const { count: groupPriceCount, error: groupPriceError } =
+    await getSupabaseServiceClient()
+      .from("event_group_discount")
+      .select("event_id", { count: "exact", head: true })
+      .eq("event_id", checkout.event_id);
+
+  if (groupPriceError) {
+    logger.error(`Failed reading group prices: ${groupPriceError.message}`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+
+  if ((groupPriceCount ?? 0) > 0) {
+    return { status: 409, message: tr("groupPriceOrderChange") };
   }
 
   // Resolve the promo row once up front (if any) so every later step
@@ -139,7 +164,7 @@ export default withActionLocale(async function updateTicketCheckoutQuantity(
         maxUses === null ? delta : Math.max(0, maxUses - timesUsed);
       newDiscountedUnits = oldDiscountedUnits + Math.min(delta, poolCapacity);
     } else {
-      newDiscountedUnits = Math.min(newQuantity, oldDiscountedUnits);
+      newDiscountedUnits = Math.min(newTickets, oldDiscountedUnits);
     }
   }
   const promoUnitsDelta = newDiscountedUnits - oldDiscountedUnits;
@@ -189,18 +214,29 @@ export default withActionLocale(async function updateTicketCheckoutQuantity(
   // Service role: clients can't write ticket_checkout (its price is priced
   // here, from the row's own unit_price and the promo code, never taken
   // from the caller).
-  const { discount, amount } = computeLineAmount(
-    newQuantity,
-    checkout.unit_price,
-    discountPercentage,
-    newDiscountedUnits,
-    checkout.ticket_type?.currency ?? "",
-  );
+  const [{ discount, amount }] = priceOrder(
+    [
+      {
+        id: checkout.ticket_type_id,
+        purchases: newQuantity,
+        admits,
+        unitPrice: checkout.unit_price,
+        currency: checkout.ticket_type?.currency ?? "",
+      },
+    ],
+    {
+      // The sticky rule above already decided how many tickets the code
+      // covers; priceOrder discounts exactly those.
+      promo: promoCodeRowId
+        ? { percent: discountPercentage, remainingUses: newDiscountedUnits }
+        : null,
+    },
+  ).lines;
 
   const { data: updated, error: updateError } = await getSupabaseServiceClient()
     .from("ticket_checkout")
     .update({
-      quantity: newQuantity,
+      quantity: newTickets,
       discount,
       discounted_units: newDiscountedUnits,
       total_price: amount,

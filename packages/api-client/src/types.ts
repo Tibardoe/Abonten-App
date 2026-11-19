@@ -510,11 +510,16 @@ export type EventCreateBody = {
     | {
         type: string;
         price: number;
+        /** Purchases on sale (a Couple counts once); null = no limit. */
         quantity: number | null;
+        /** People one purchase admits (a Couple: 2). Default 1. */
+        admits?: number | null;
         availableFrom?: string | null;
         availableUntil?: string | null;
       }[]
     | null;
+  /** Automatic group prices (needs the organizer's group pricing switch). */
+  groupDiscounts?: GroupDiscountTierBody[] | null;
   promoCodes?:
     | {
         promoCode: string;
@@ -565,7 +570,12 @@ export type CheckoutSessionRow = {
   event_id: string;
   ticket_type_id: string;
   checkout_session_id: string;
+  /** Tickets on the line (people). */
   quantity: number;
+  /** People one purchase admits (servers before 2026-11-19 leave it out = 1). */
+  admits?: number;
+  group_discount_percent?: number | null;
+  /** The price of one purchase. */
   unit_price: number;
   promo_code: string | null;
   discount: number;
@@ -596,8 +606,15 @@ export type PendingCheckoutSessionLine = {
   ticketCheckoutId: string;
   ticketTypeId: string;
   type: string;
+  /** The price of one purchase (a Couple ticket admitting two). */
   unitPrice: number;
+  /** Tickets on the line (people). */
   quantity: number;
+  /** People one purchase admits; absent from servers before 2026-11-19. */
+  admits?: number;
+  /** quantity / admits. */
+  purchases?: number;
+  groupDiscountPercent?: number | null;
   discount: number;
   discountedUnits: number;
   amount: number;
@@ -878,6 +895,8 @@ export type EventDraftTicket = {
   category?: string;
   price: number;
   quantity?: number | null;
+  /** People one purchase admits (a Couple: 2). */
+  admits?: number | null;
   availableFrom?: string;
   availableUntil?: string;
 };
@@ -912,6 +931,7 @@ export type EventDraftPayload = {
   singleTicket?: number | null;
   singleTicketQuantity?: number | null;
   multipleTickets?: EventDraftTicket[];
+  groupDiscounts?: GroupDiscountTierBody[];
   promoCodes?: EventDraftPromoCode[];
   requireRegistration?: boolean;
   featured?: boolean;
@@ -1165,12 +1185,19 @@ export type EventForEditData = {
         id: string;
         type: string;
         price: number;
+        /** Purchases left (a Couple counts once). */
         quantity: number | null;
+        /** People one purchase admits; absent from servers before 2026-11-19. */
+        admits?: number;
         currency: string | null;
         available_from: string | null;
         available_until: string | null;
       }[]
     | null;
+  /** Automatic group prices, smallest group first. */
+  event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
+  /** Group tickets and group prices are switched on for this organizer. */
+  group_pricing_enabled?: boolean;
 };
 
 export type EventEditContextResult =
@@ -1218,7 +1245,10 @@ export type UpdateEventTicketTypesBody = {
     | {
         type: string;
         price: number;
+        /** Purchases on sale (a Couple counts once); null = no limit. */
         quantity: number | null;
+        /** People one purchase admits (a Couple: 2). Default 1. */
+        admits?: number | null;
         availableFrom?: string | null;
         availableUntil?: string | null;
       }[]
@@ -1227,7 +1257,21 @@ export type UpdateEventTicketTypesBody = {
 
 export type UpdateEventTicketTypesResult =
   | { status: 200; message?: string }
-  | { status: 400 | 401 | 404 | 409 | 500; message: string };
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+// ---- group prices -------------------------------------------------------
+// An event's automatic group prices ("10 or more tickets: 10% off"), up to
+// three, a bigger group always getting more off. Editable any time (a
+// checkout is priced when it is made). PUT .../group-prices replaces them;
+// an empty list removes them. 403 = not switched on for this organizer.
+
+export type GroupDiscountTierBody = { minTickets: number; percentOff: number };
+
+export type SetEventGroupPricesBody = { tiers: GroupDiscountTierBody[] };
+
+export type SetEventGroupPricesResult =
+  | { status: 200; message?: string; data: GroupDiscountTierBody[] }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
 
 // ---- per-event promotion (paid "Feature this event") ----------------
 

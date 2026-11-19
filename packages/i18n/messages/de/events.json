@@ -454,5 +454,11 @@
   "refundClosed": {
     "noRefunds": "Für dieses Event gibt es keine Erstattungen.",
     "cutoffPassed": "Erstattungen für dieses Event waren bis {when} möglich."
-  }
+  },
+  "groupPrices": "Gruppenpreise",
+  "groupPricesEditableAnyTime": "Rabatte für größere Bestellungen. Du kannst sie jederzeit ändern; bereits aufgegebene Bestellungen behalten ihren Preis.",
+  "saveGroupPrices": "Gruppenpreise speichern",
+  "groupPricesTitle": "Gruppenpreise",
+  "groupPriceTier": "Ab {count} Tickets: {percent} Rabatt",
+  "groupPricesAppliedAtCheckout": "Wird an der Kasse abgezogen; du musst nichts eingeben."
 }

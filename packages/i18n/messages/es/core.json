@@ -1452,5 +1452,15 @@
     "eventFree": "{count, plural, one {Tu plaza para este evento queda libre para otra persona.} other {Tus # plazas para este evento quedan libres para otras personas.}}",
     "eventOtherEvents": "Algunas de estas entradas se pagaron junto con entradas para otro evento, así que solo se pueden cancelar con ellas. Cancélalas desde una de esas entradas.",
     "confirmEvent": "{count, plural, one {Cancelar # entrada} other {Cancelar las # entradas}}"
+  },
+  "groupPricing": {
+    "admitsRange": "Una entrada puede admitir de 1 a {max} personas.",
+    "freeAdmits": "Una inscripción gratuita admite a una persona.",
+    "tooManyTiers": "Un evento puede tener como máximo {max} precios de grupo.",
+    "tierRange": "Un precio de grupo empieza entre {min} y {max} entradas y da de un 1 % a un {maxPercent} % de descuento.",
+    "tierDuplicate": "Dos precios de grupo empiezan con el mismo número de entradas.",
+    "tierNotBetter": "Un grupo más grande debe tener un descuento mayor.",
+    "freeEventTiers": "Los precios de grupo no están disponibles en un evento gratuito.",
+    "notEnabled": "Las entradas de grupo y los precios de grupo aún no están activados en tu cuenta. Pide a Abonten que los active."
   }
 }

@@ -1,6 +1,7 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { TICKET_MODE } from "@/events/ticketMode";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { MAX_TICKET_ADMITS } from "@abonten/core/groupPricing";
 import type { Ticket } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -20,6 +21,11 @@ type TicketInputProp = {
   multipleTickets?: Ticket[];
   handleMultipleTickets?: (tickets: Ticket[]) => void;
   handleSingleTicketQuantity?: (quantity: number | null) => void;
+  /**
+   * Group tickets are switched on for this organizer: a ticket type may
+   * admit several people (a Couple: 2), each getting their own ticket.
+   */
+  groupTicketsEnabled?: boolean;
 };
 
 // A cleared quantity field means "no stock limit of its own" (null), not 0:
@@ -38,6 +44,7 @@ export default function TicketInputs({
   handleSingleTicketQuantity,
   multipleTickets = [],
   handleMultipleTickets,
+  groupTicketsEnabled = false,
 }: TicketInputProp) {
   const locale = useLocale();
   const t = useTranslations("common");
@@ -48,6 +55,8 @@ export default function TicketInputs({
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
 
   const [quantity, setQuantity] = useState<number | null>(null);
+
+  const [admits, setAdmits] = useState(1);
 
   const [newCategory, setNewCategory] = useState("");
 
@@ -85,6 +94,7 @@ export default function TicketInputs({
         category: newCategory.toUpperCase(),
         price: newPrice,
         quantity: quantity,
+        admits: groupTicketsEnabled ? admits : 1,
         availableFrom: date,
         availableUntil: endDate,
       };
@@ -96,6 +106,7 @@ export default function TicketInputs({
       // Clear input fields
       setNewCategory("");
       setQuantity(null);
+      setAdmits(1);
       setNewPrice(null);
       setDate(undefined);
       setEndDate(undefined);
@@ -185,6 +196,38 @@ export default function TicketInputs({
               />
             </div>
 
+            {groupTicketsEnabled && (
+              <div className="space-y-1">
+                <label
+                  htmlFor="ticket-admits"
+                  className="text-sm text-muted-foreground"
+                >
+                  {t("peoplePerTicket")}
+                </label>
+                <Input
+                  id="ticket-admits"
+                  type="number"
+                  min={1}
+                  max={MAX_TICKET_ADMITS}
+                  value={admits}
+                  onChange={(e) => {
+                    const value = e.target.valueAsNumber;
+                    setAdmits(
+                      Number.isFinite(value)
+                        ? Math.min(
+                            MAX_TICKET_ADMITS,
+                            Math.max(1, Math.floor(value)),
+                          )
+                        : 1,
+                    );
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t("peoplePerTicketHint")}
+                </p>
+              </div>
+            )}
+
             <div className="grid gap-3 sm:grid-cols-2">
               <InlineDateField
                 label={t("availableFrom")}
@@ -240,6 +283,13 @@ export default function TicketInputs({
                     <span>{t("quantity")}</span>
                     <p>{ticket.quantity ?? t("noLimitOfItsOwn")}</p>
                   </div>
+
+                  {(ticket.admits ?? 1) > 1 && (
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{t("peoplePerTicket")}</span>
+                      <p>{t("admitsPeople", { count: ticket.admits ?? 1 })}</p>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground flex items-center gap-2">

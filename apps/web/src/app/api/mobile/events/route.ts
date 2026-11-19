@@ -15,7 +15,8 @@ import {
 //   { title, description, category, types[], address, latitude, longitude,
 //     requireRegistration, currency, flyerPublicId, flyerVersion,
 //     clientRequestId, capacity?, websiteUrl?, startsAt?, endsAt?,
-//     specificDates?, freeEvent?, singleTicket?, multipleTickets?,
+//     specificDates?, freeEvent?, singleTicket?, multipleTickets? (each
+//     with admits?), groupDiscounts?,
 //     promoCodes?, placeId? }
 //
 // Publishes an event. The flyer is uploaded from the device first (signed
@@ -115,6 +116,20 @@ export async function POST(req: Request) {
           : null,
       multipleTickets: Array.isArray(body.multipleTickets)
         ? (body.multipleTickets as PostEventCoreInput["multipleTickets"])
+        : null,
+      groupDiscounts: Array.isArray(body.groupDiscounts)
+        ? (body.groupDiscounts as unknown[])
+            .filter(
+              (t): t is { minTickets: number; percentOff: number } =>
+                !!t &&
+                typeof (t as { minTickets?: unknown }).minTickets ===
+                  "number" &&
+                typeof (t as { percentOff?: unknown }).percentOff === "number",
+            )
+            .map((t) => ({
+              minTickets: t.minTickets,
+              percentOff: t.percentOff,
+            }))
         : null,
       promoCodes: Array.isArray(body.promoCodes)
         ? (body.promoCodes as PostEventCoreInput["promoCodes"])

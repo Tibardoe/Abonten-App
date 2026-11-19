@@ -23,6 +23,7 @@ Every specification ends with an **Approval required before implementation** sec
 
 | Specification | Gap it addresses | Blocking items |
 |---|---|---|
+| [shows-seats-and-pricing.md](shows-seats-and-pricing.md) | Group tickets and group prices (built), one listing for a run of shows, assigned seats, passes, complimentary tickets, copying a listing | Decisions Y1–Y12 (Y1–Y4, Y8 decided) |
 | [cookie-consent.md](cookie-consent.md) | No consent banner; attribution and abuse-detection cookies set on first visit | Legal B4 · decision S5 |
 | [age-gate.md](age-gate.md) | No minimum age, no date of birth, no age check | Legal B7 · decision O6 |
 | [data-export.md](data-export.md) | No self-service data export; access requests are manual | Legal B5 · decision O3 · decision O2 |

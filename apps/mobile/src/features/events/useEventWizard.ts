@@ -14,12 +14,19 @@ import type {
   EventDraftPayload,
   SaveEventDraftResult,
 } from "@abonten/api-client";
+import type { GroupDiscountTier } from "@abonten/core/checkoutPricing";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
+import {
+  MAX_TICKET_ADMITS,
+  groupDiscountTiersProblem,
+  groupPricingProblemMessage,
+  sortGroupDiscountTiers,
+} from "@abonten/core/groupPricing";
 import {
   DEFAULT_REFUND_POLICY,
   refundPolicyChoice,
@@ -92,8 +99,23 @@ export type TicketTier = {
   id: string;
   name: string;
   price: string;
+  /** Purchases on sale (a Couple counts once); "" = no limit. */
   quantity: string;
+  /** People one purchase admits (a Couple: "2"). */
+  admits: string;
 };
+/** An automatic group price being edited ("10" tickets, "10" % off). */
+export type GroupPriceDraft = {
+  id: string;
+  minTickets: string;
+  percentOff: string;
+};
+
+/** People one purchase of a tier admits: 1 unless a whole number 2–20. */
+export function admitsOf(tier: Pick<TicketTier, "admits">): number {
+  const n = Number(tier.admits);
+  return Number.isInteger(n) && n >= 1 && n <= MAX_TICKET_ADMITS ? n : 1;
+}
 export type PromoDraft = {
   id: string;
   promoCode: string;
@@ -230,6 +252,9 @@ export function useEventWizard(
 
   // promo codes
   const [promos, setPromos] = useState<PromoDraft[]>([]);
+
+  // automatic group prices (docs/architecture/group-tickets-and-prices.md)
+  const [groupPrices, setGroupPrices] = useState<GroupPriceDraft[]>([]);
 
   const categoryTypes = useMemo(
     () =>
@@ -500,6 +525,16 @@ export function useEventWizard(
           name: t.category ?? "",
           price: String(t.price),
           quantity: t.quantity != null ? String(t.quantity) : "",
+          admits: String(t.admits ?? 1),
+        })),
+      );
+    }
+    if (p.groupDiscounts?.length) {
+      setGroupPrices(
+        p.groupDiscounts.map((g) => ({
+          id: uuidv4(),
+          minTickets: String(g.minTickets),
+          percentOff: String(g.percentOff),
         })),
       );
     }
@@ -575,7 +610,12 @@ export function useEventWizard(
               category: t.name.trim() || undefined,
               price: Number(t.price) || 0,
               quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+              admits: admitsOf(t),
             }))
+          : undefined,
+      groupDiscounts:
+        groupPrices.length > 0
+          ? (buildGroupDiscounts() ?? undefined)
           : undefined,
       promoCodes:
         promos.length > 0
@@ -690,8 +730,12 @@ export function useEventWizard(
           },
         ]
       : ticketMode === "multiple"
-        ? tiers.map((t) => ({
-            quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+        ? // A group type (a Couple) takes `admits` places per ticket.
+          tiers.map((t) => ({
+            quantity:
+              t.quantity.trim() === ""
+                ? null
+                : Number(t.quantity) * admitsOf(t),
           }))
         : [];
   const capacityProblem =
@@ -747,6 +791,7 @@ export function useEventWizard(
       type: t.name.trim(),
       price: Number(t.price),
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+      admits: admitsOf(t),
     }));
     if (parsed.length === 0) {
       return { ok: false, message: t("addAtLeastOneTicketType") };
@@ -776,6 +821,27 @@ export function useEventWizard(
     if (capacityProblem) return { ok: false, message: capacityProblem };
     return { ok: true, body: { multipleTickets: parsed } };
   }
+
+  /** The tiers as the server takes them; null when none are complete. */
+  function buildGroupDiscounts(): GroupDiscountTier[] | null {
+    if (ticketMode === "free") return null;
+    const cleaned = groupPrices
+      .map((g) => ({
+        minTickets: Number(g.minTickets),
+        percentOff: Number(g.percentOff),
+      }))
+      .filter(
+        (g) => Number.isInteger(g.minTickets) && Number.isInteger(g.percentOff),
+      );
+    return cleaned.length > 0 ? sortGroupDiscountTiers(cleaned) : null;
+  }
+
+  // Why the drafted group prices can't be saved, worded for the organizer.
+  const groupPriceProblem = (() => {
+    const tiersNow = buildGroupDiscounts();
+    const problem = tiersNow ? groupDiscountTiersProblem(tiersNow) : null;
+    return problem ? groupPricingProblemMessage(tc, problem) : null;
+  })();
 
   function buildPromos(): EventCreateBody["promoCodes"] {
     if (ticketMode === "free") return null;
@@ -883,6 +949,7 @@ export function useEventWizard(
         endsAt: schedule.endsAt ?? null,
         specificDates: schedule.specificDates ?? null,
         ...tickets.body,
+        groupDiscounts: buildGroupDiscounts(),
         promoCodes: buildPromos(),
         placeId: venuePlace?.id ?? null,
         // A free event has nothing to refund: it keeps the default.
@@ -948,11 +1015,19 @@ export function useEventWizard(
       case 3:
         return !!address && !!coords;
       case 4:
-        return !capacityProblem;
+        return !capacityProblem && !groupPriceProblem;
       default:
         return true;
     }
-  }, [step, flyerUri, scheduleValid, address, coords, capacityProblem]);
+  }, [
+    step,
+    flyerUri,
+    scheduleValid,
+    address,
+    coords,
+    capacityProblem,
+    groupPriceProblem,
+  ]);
 
   return {
     step,
@@ -1049,6 +1124,10 @@ export function useEventWizard(
     // promos
     promos,
     setPromos,
+    // group prices
+    groupPrices,
+    setGroupPrices,
+    groupPriceProblem,
     // submit
     submit,
     uploadProgress,

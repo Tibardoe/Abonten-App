@@ -3,6 +3,9 @@ type TicketTypeQuantity = {
   // quantity at all. Both mean "this tier imposes no known stock limit", so
   // neither can make an event look sold out.
   quantity?: number | null;
+  // People one purchase admits (a Couple: 2). A type with fewer places
+  // left than one purchase needs can sell nothing more.
+  admits?: number | null;
 };
 
 /**
@@ -40,7 +43,9 @@ export function getEventSoldOutStatus({
 
   // A null quantity means "unlimited stock for this tier", so the event can
   // never be sold out on stock while one of those is on sale.
-  return ticketTypes.every((t) => t.quantity != null && t.quantity <= 0);
+  return ticketTypes.every(
+    (t) => t.quantity != null && t.quantity < Math.max(1, t.admits ?? 1),
+  );
 }
 
 /**

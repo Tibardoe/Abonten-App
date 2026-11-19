@@ -926,5 +926,22 @@
   "checkLater": "Vérifier plus tard",
   "checkLaterNote": "Nous vous préviendrons dès qu'il sera confirmé, ou s'il n'aboutit pas.",
   "cancelOrderTitle": "Annuler cette commande ?",
-  "cancelOrderBody": "Vos billets réservés sont remis en vente. N'approuvez pas la demande de paiement : si vous l'approuvez quand même, le montant est remboursé intégralement et automatiquement."
+  "cancelOrderBody": "Vos billets réservés sont remis en vente. N'approuvez pas la demande de paiement : si vous l'approuvez quand même, le montant est remboursé intégralement et automatiquement.",
+  "peoplePerTicket": "Personnes par billet",
+  "peoplePerTicketHint": "Un billet Couple fait entrer 2 personnes. Chacune reçoit son propre billet et son code QR.",
+  "admitsPeople": "{count, plural, one {Fait entrer # personne} other {Fait entrer # personnes}}",
+  "admitsPeopleEachOwnTicket": "{count, plural, one {Fait entrer # personne} other {Fait entrer # personnes, chacune avec son propre billet}}",
+  "groupPrices": "Prix de groupe",
+  "groupPricesHint": "Des réductions automatiques pour les grosses commandes, par exemple 10 % dès 10 billets. Un code promo ne s'y ajoute jamais : chaque billet reçoit la plus forte réduction.",
+  "groupPriceLine": "À partir de {count} billets : {percent} de réduction",
+  "groupPriceFromTickets": "À partir de (billets)",
+  "groupPricePercentOff": "Réduction (%)",
+  "removeGroupPrice": "Retirer ce prix de groupe",
+  "addGroupPrice": "Ajouter un prix de groupe",
+  "groupPriceApplied": "Prix de groupe : {percent} de réduction sur votre commande",
+  "groupPriceNextTier": "{count, plural, one {Encore # billet} other {Encore # billets}} pour {percent} de réduction",
+  "groupPriceBeatsPromo": "Votre prix de groupe est plus avantageux que ce code, le code n'est donc pas utilisé.",
+  "groupDiscount": "Réduction de groupe",
+  "saveGroupPrices": "Enregistrer les prix de groupe",
+  "groupPricesSaved": "Prix de groupe enregistrés"
 }

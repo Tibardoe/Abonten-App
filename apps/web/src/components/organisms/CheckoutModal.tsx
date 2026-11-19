@@ -14,13 +14,14 @@ import PaySmallSmallChoice, {
 } from "@/ticketPlans/molecules/PaySmallSmallChoice";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
-  allocatePromoEligibility,
   computeCheckoutFee,
-  computeLineAmount,
+  priceOrder,
+  purchasesLeft,
 } from "@abonten/core/checkoutPricing";
+import { formatPercent } from "@abonten/core/i18n/format";
 import { tryFromMajor } from "@abonten/core/money/money";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
@@ -52,6 +53,7 @@ export default function CheckoutModal({
 }: CheckoutProp) {
   const t = useTranslations("common");
   const tp = useTranslations("ticketPlans");
+  const locale = useLocale();
 
   const [promoCodeInput, setPromoCodeInput] = useState("");
 
@@ -115,6 +117,13 @@ export default function CheckoutModal({
       : null;
 
   const ticketList = useMemo(() => ticketData?.tickets ?? [], [ticketData]);
+  const groupTiers = useMemo(
+    () => ticketData?.groupDiscounts ?? [],
+    [ticketData],
+  );
+  // Stock is places (people); a Couple ticket takes two.
+  const purchasesLeftOf = (ticket: (typeof ticketList)[number]) =>
+    purchasesLeft(ticket.quantity, ticket.admits);
 
   // If a live refetch drops a ticket type's availability below what the user
   // already selected, clamp the selection down instead of letting them try to
@@ -128,8 +137,9 @@ export default function CheckoutModal({
 
       for (const ticket of ticketList) {
         const selected = next[ticket.id] || 0;
-        if (ticket.quantity !== null && selected > ticket.quantity) {
-          next[ticket.id] = Math.max(ticket.quantity, 0);
+        const left = purchasesLeft(ticket.quantity, ticket.admits);
+        if (left !== null && selected > left) {
+          next[ticket.id] = Math.max(left, 0);
           changed = true;
         }
       }
@@ -165,64 +175,67 @@ export default function CheckoutModal({
     promoMutation.reset();
   };
 
-  // How many of the selected ticket units the applied promo actually covers.
-  // Uses the same allocatePromoEligibility function validateCheckout.ts runs
-  // server-side (checkoutPricing.ts), fed with lines in ticketList order —
-  // this is a live preview only, the server recomputes and persists the
-  // authoritative numbers at "Continue to payment".
+  // The whole order, priced by the same rule the server applies at
+  // "Continue to payment" (@abonten/core/checkoutPricing priceOrder): group
+  // tickets, the event's group price and the promo code, never added
+  // together. A live preview only; the server recomputes and stores it.
+  const order = useMemo(
+    () =>
+      priceOrder(
+        ticketList
+          .filter((ticket) => (quantities[ticket.id] || 0) > 0)
+          .map((ticket) => ({
+            id: ticket.id,
+            purchases: quantities[ticket.id] || 0,
+            admits: ticket.admits,
+            unitPrice: ticket.price ?? 0,
+            currency: ticket.currency,
+          })),
+        {
+          promo: appliedPromo
+            ? {
+                percent: appliedPromo.discountPercentage,
+                remainingUses: appliedPromo.remainingUses,
+              }
+            : null,
+          groupTiers,
+        },
+      ),
+    [ticketList, quantities, appliedPromo, groupTiers],
+  );
+
   const promoEligibility = useMemo(() => {
     if (!appliedPromo) return null;
-
-    const lines = ticketList.map((ticket) => ({
-      id: ticket.id,
-      quantity: quantities[ticket.id] || 0,
-    }));
-
-    const totalQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
-
-    const eligibleUnitsByTicket = allocatePromoEligibility(
-      lines,
-      appliedPromo.remainingUses,
-    );
-
-    const eligibleTotal = Object.values(eligibleUnitsByTicket).reduce(
-      (sum, units) => sum + units,
+    const eligibleTotal = order.lines.reduce(
+      (sum, line) => sum + line.discountedUnits,
       0,
     );
-
     return {
-      totalQuantity,
+      totalQuantity: order.tickets,
       eligibleTotal,
-      eligibleUnitsByTicket,
-      isPartial: eligibleTotal < totalQuantity,
+      eligibleUnitsByTicket: Object.fromEntries(
+        order.lines.map((line) => [line.id, line.discountedUnits]),
+      ),
+      isPartial: eligibleTotal < order.tickets,
     };
-  }, [appliedPromo, ticketList, quantities]);
+  }, [appliedPromo, order]);
 
-  const subTotal = ticketList.reduce((acc, ticket) => {
-    const qty = quantities[ticket.id] || 0;
-    if (qty === 0) return acc;
-
-    const eligibleUnits =
-      promoEligibility?.eligibleUnitsByTicket[ticket.id] ?? 0;
-
-    const { amount } = computeLineAmount(
-      qty,
-      ticket.price ?? 0,
-      appliedPromo?.discountPercentage ?? 0,
-      eligibleUnits,
-      ticket.currency,
-    );
-
-    return acc + amount;
-  }, 0);
+  const subTotal = order.lines.reduce((acc, line) => acc + line.amount, 0);
+  // The code is not used when the group price is at least as good.
+  const groupBeatsPromo =
+    !!appliedPromo && order.tickets > 0 && !order.promoApplied;
+  // "3 more tickets for 10% off": the next group price the order can reach.
+  const nextGroupTier =
+    [...groupTiers]
+      .filter((tier) => tier.minTickets > order.tickets)
+      .sort((a, b) => a.minTickets - b.minTickets)[0] ?? null;
 
   const hasSelectedTickets = Object.values(quantities).some((qty) => qty > 0);
 
-  const hasUnavailableSelection = ticketList.some(
-    (ticket) =>
-      ticket.quantity !== null &&
-      (quantities[ticket.id] || 0) > ticket.quantity,
-  );
+  const hasUnavailableSelection = ticketList.some((ticket) => {
+    const left = purchasesLeftOf(ticket);
+    return left !== null && (quantities[ticket.id] || 0) > left;
+  });
 
   const serviceFeeRate = useServiceFeeRate(
     ticketList[0]?.currency ?? undefined,
@@ -234,7 +247,8 @@ export default function CheckoutModal({
   );
 
   const total = subTotal + fee;
-  const ticketCount = Object.values(quantities).reduce((a, b) => a + b, 0);
+  // Tickets, as a plan counts them: a Couple purchase is two.
+  const ticketCount = order.tickets;
   const totalMinor = ticketList[0]?.currency
     ? (tryFromMajor(total, ticketList[0].currency)?.amountMinor ?? 0)
     : 0;
@@ -359,17 +373,28 @@ export default function CheckoutModal({
                 const eligibleUnits =
                   promoEligibility?.eligibleUnitsByTicket[ticket.id] ?? 0;
                 const ticketPrice = ticket.price ?? 0;
-                // Same per-unit rounding as the server (the ticket's own
-                // currency's minor units), not a fixed two decimals.
+                // One purchase at the code's price, rounded like the server
+                // (the ticket's own currency's minor units). Not shown when
+                // the group price wins.
                 const discountedUnitPrice =
-                  appliedPromo && ticket.currency
-                    ? computeLineAmount(
-                        1,
-                        ticketPrice,
-                        appliedPromo.discountPercentage,
-                        1,
-                        ticket.currency,
-                      ).amount
+                  appliedPromo && ticket.currency && !groupBeatsPromo
+                    ? priceOrder(
+                        [
+                          {
+                            id: ticket.id,
+                            purchases: 1,
+                            admits: ticket.admits,
+                            unitPrice: ticketPrice,
+                            currency: ticket.currency,
+                          },
+                        ],
+                        {
+                          promo: {
+                            percent: appliedPromo.discountPercentage,
+                            remainingUses: null,
+                          },
+                        },
+                      ).lines[0].amount
                     : null;
 
                 return (
@@ -377,6 +402,7 @@ export default function CheckoutModal({
                     key={ticket.id}
                     ticket={ticket}
                     quantity={qty}
+                    purchasesLeft={purchasesLeftOf(ticket)}
                     eligibleUnits={eligibleUnits}
                     discountedUnitPrice={discountedUnitPrice}
                     hasAppliedPromo={!!appliedPromo}
@@ -397,6 +423,32 @@ export default function CheckoutModal({
               })}
             </>
           )}
+
+          {/* Group price: what the order gets, or how close the next is. */}
+          {order.groupDiscountPercent > 0 ? (
+            <p className="text-sm font-medium text-primary">
+              {t("groupPriceApplied", {
+                percent: formatPercent(order.groupDiscountPercent, locale, {
+                  maximumFractionDigits: 0,
+                }),
+              })}
+            </p>
+          ) : null}
+          {nextGroupTier && !paySmallSmall ? (
+            <p className="text-sm text-muted-foreground">
+              {t("groupPriceNextTier", {
+                count: nextGroupTier.minTickets - order.tickets,
+                percent: formatPercent(nextGroupTier.percentOff, locale, {
+                  maximumFractionDigits: 0,
+                }),
+              })}
+            </p>
+          ) : null}
+          {groupBeatsPromo ? (
+            <p className="text-xs text-muted-foreground">
+              {t("groupPriceBeatsPromo")}
+            </p>
+          ) : null}
 
           {planOffer ? (
             <PaySmallSmallChoice
