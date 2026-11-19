@@ -1471,5 +1471,17 @@
     "badDuration": "Una función dura de 15 minutos a 24 horas.",
     "noneAhead": "Ninguna de estas funciones es futura.",
     "tooMany": "Son más de {max} funciones. Añádelas por partes."
+  },
+  "seating": {
+    "planName": "Ponle al plano un nombre de hasta 80 caracteres.",
+    "noSections": "Añade al menos una sección.",
+    "tooManySections": "Un plano puede tener como máximo {max} secciones.",
+    "sectionName": "Ponle a cada sección un nombre de hasta 60 caracteres.",
+    "duplicateSection": "Dos secciones tienen el mismo nombre.",
+    "noRows": "Cada sección necesita al menos una fila.",
+    "tooManyRows": "Una sección puede tener como máximo {max} filas.",
+    "rowLabel": "Cada fila necesita una etiqueta de hasta 6 caracteres.",
+    "duplicateRow": "Dos filas de una sección tienen la misma etiqueta.",
+    "rowSeats": "Una fila tiene de 1 a {max} asientos."
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
+import ManageEventSeatingCard from "@/events/molecules/ManageEventSeatingCard";
 import ManageEventShowsCard from "@/events/molecules/ManageEventShowsCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
@@ -140,6 +141,11 @@ export default function ManageEventView({
               hasConfirmedParticipation={hasConfirmedParticipation}
               onSaved={refresh}
             />
+            {event.status === "published" && (
+              <div className="mt-8">
+                <ManageEventSeatingCard eventId={event.id} />
+              </div>
+            )}
             {event.status === "published" && (
               <div className="mt-8">
                 <ManageEventShowsCard

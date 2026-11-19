@@ -147,6 +147,13 @@ export default function TicketModal({
                 </span>
               </p>
 
+              {/* An assigned seat (docs/architecture/assigned-seats.md). */}
+              {event.seat_number ? (
+                <p className="text-sm font-semibold mb-2">
+                  {tt("seat", { seat_number: event.seat_number })}
+                </p>
+              ) : null}
+
               <TicketCodeReveal code={event.ticket_code} />
 
               <p className="text-sm text-muted-foreground mb-4">

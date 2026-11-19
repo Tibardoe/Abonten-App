@@ -1471,5 +1471,17 @@
     "badDuration": "Uma sessão dura de 15 minutos a 24 horas.",
     "noneAhead": "Nenhuma destas sessões é futura.",
     "tooMany": "São mais de {max} sessões. Adicione-as por partes."
+  },
+  "seating": {
+    "planName": "Dê à planta um nome com até 80 caracteres.",
+    "noSections": "Adicione pelo menos uma secção.",
+    "tooManySections": "Uma planta pode ter no máximo {max} secções.",
+    "sectionName": "Dê a cada secção um nome com até 60 caracteres.",
+    "duplicateSection": "Duas secções têm o mesmo nome.",
+    "noRows": "Cada secção precisa de pelo menos uma fila.",
+    "tooManyRows": "Uma secção pode ter no máximo {max} filas.",
+    "rowLabel": "Cada fila precisa de uma etiqueta com até 6 caracteres.",
+    "duplicateRow": "Duas filas de uma secção têm a mesma etiqueta.",
+    "rowSeats": "Uma fila tem de 1 a {max} lugares."
   }
 }

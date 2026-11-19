@@ -1382,7 +1382,12 @@ export type AttendanceRow = {
     price: number | null;
     currency: string | null;
   } | null;
-  ticket: { status: string | null; used_at: string | null } | null;
+  ticket: {
+    status: string | null;
+    used_at: string | null;
+    /** An assigned seat ("Stalls · C12"); absent before 2026-11-19. */
+    seat_number?: string | null;
+  } | null;
   auth: { email: string | null; phone: string | null } | null;
 };
 

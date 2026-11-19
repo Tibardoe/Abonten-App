@@ -183,7 +183,12 @@ export type AttendanceRow =
       price: number | null;
       currency: string | null;
     } | null;
-    ticket: { status: string; used_at: string | null } | null;
+    ticket: {
+      status: string;
+      used_at: string | null;
+      /** An assigned seat ("Stalls · C12"), or null. */
+      seat_number?: string | null;
+    } | null;
     auth?: {
       user_id: string;
       email: string | null;
@@ -224,7 +229,7 @@ export async function fetchEventAttendanceListPage(
   let query = supabase
     .from("attendance")
     .select(
-      "*, user_info:user_id(username, full_name), ticket_type(type, price, currency), ticket:ticket_id(status, used_at)",
+      "*, user_info:user_id(username, full_name), ticket_type(type, price, currency), ticket:ticket_id(status, used_at, seat_number)",
     )
     .eq("event_id", eventId)
     .order("created_at", { ascending: false })

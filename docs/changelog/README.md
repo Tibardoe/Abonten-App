@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-19 — Assigned seats
+
+- Organizers describe a venue once as a seating plan (sections, rows front first, seats per row) and choose which section each ticket type sells (website Manage › Details › Seating). When a ticket is issued by any path, the database gives it the best seat left — next to its order's seats, else the run closest to the middle of the frontmost row with room for the whole order — writes it on the ticket ("Stalls · C12") and records it in `ticket_seat` (a seat cannot be given twice). Cancelled tickets free their seat; sent tickets keep it. A section never sells more than its seats (deferred guard). Seats show on the web and app tickets and attendee lists. Migration `20261119220000_assigned_seats`. New: `architecture/assigned-seats.md` (1.0); Y8, Y9 decided.
+
 ## 2026-11-19 — Runs of shows and copying a listing
 
 - An organizer turns a listing into a run of shows (days of the week, times, first and last day, length; up to 60 shows a request) or makes a separate copy on a new date. Each show is a whole event in a run (`event_series`, `event.series_id`, made by `event_add_show` with the listing's details, ticket types at full stock, group prices, refund policy, running promo codes, promoter terms and switches), so seats, door, payout 48 hours after each show and cancellation are per show with nothing new on the money path. Explore, every event list, search and suggestions show a run once (its earliest matching show); each show's page lists the run's shows (`get_event_shows`). Website Manage › Details › Shows; app Shows and copies. Migration `20261119210000_show_runs`. New: `architecture/show-runs.md` (1.0); `specifications/shows-seats-and-pricing.md`, `OPERATIONAL_DECISIONS_REQUIRED.md` (Y5–Y7, Y12 decided).
