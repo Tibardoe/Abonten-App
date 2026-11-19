@@ -104,6 +104,7 @@ const PLACE_SCHEMA_TYPES: Record<string, string> = {
   skating: "SportsActivityLocation",
   "go-karting": "SportsActivityLocation",
   entertainment: "EntertainmentBusiness",
+  gallery: "ArtGallery",
 };
 
 export function placeSchemaType(categorySlug: string | null | undefined) {
