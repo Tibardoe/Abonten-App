@@ -438,6 +438,23 @@
   "invitedPromoterRate": "You're a promoter for this event: you earn <strong>{rate}%</strong> of every ticket sold through your link, as credit after the event.",
   "promoterUsernamePlaceholder": "@username",
   "rewardInvitedPromoters": "Reward the promoters you add below. Each one who sells a ticket through their link gets their share of the ticket price as Abonten Credit once the event is over. It comes off your payout for that sale, and nothing is paid on refunded or cancelled tickets.",
+  "refundPolicy": {
+    "label": "Refunds",
+    "help": "Until when buyers can cancel a paid ticket and get the ticket price back. The service fee is never refunded.",
+    "untilStart": "Until the event starts",
+    "untilCutoff": "Until {days, plural, one {# day} other {# days}} before",
+    "none": "No refunds",
+    "lockedNote": "People already hold tickets, so you can only make refunds more generous."
+  },
+  "refundPolicyLine": {
+    "untilStart": "You can cancel a paid ticket for a refund of the ticket price until the event starts.",
+    "untilCutoff": "You can cancel a paid ticket for a refund of the ticket price until {days, plural, one {# day} other {# days}} before the event.",
+    "none": "No refunds: paid tickets can't be cancelled."
+  },
+  "refundClosed": {
+    "noRefunds": "This event doesn't offer refunds.",
+    "cutoffPassed": "Refunds for this event closed on {when}."
+  },
   "groupPrices": "Group prices",
   "groupPricesEditableAnyTime": "Discounts for bigger orders. You can change them at any time; orders already made keep their price.",
   "saveGroupPrices": "Save group prices",

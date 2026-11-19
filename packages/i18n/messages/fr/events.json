@@ -438,6 +438,23 @@
   "invitedPromoterRate": "Vous êtes promoteur de cet événement : vous gagnez <strong>{rate} %</strong> de chaque billet vendu via votre lien, sous forme de crédit après l'événement.",
   "promoterUsernamePlaceholder": "@username",
   "rewardInvitedPromoters": "Récompensez les promoteurs que vous ajoutez ci-dessous. Chacun d'eux qui vend un billet via son lien reçoit sa part du prix du billet, en Crédit Abonten, une fois l'événement terminé. Elle est déduite de votre versement pour cette vente, et rien n'est versé pour les billets remboursés ou annulés.",
+  "refundPolicy": {
+    "label": "Remboursements",
+    "help": "Jusqu'à quand les acheteurs peuvent annuler un billet payant et récupérer le prix du billet. Les frais de service ne sont jamais remboursés.",
+    "untilStart": "Jusqu'au début de l'événement",
+    "untilCutoff": "Jusqu'à {days, plural, one {# jour} other {# jours}} avant",
+    "none": "Aucun remboursement",
+    "lockedNote": "Des personnes ont déjà des billets : vous pouvez seulement rendre les remboursements plus généreux."
+  },
+  "refundPolicyLine": {
+    "untilStart": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'au début de l'événement.",
+    "untilCutoff": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'à {days, plural, one {# jour} other {# jours}} avant l'événement.",
+    "none": "Aucun remboursement : les billets payants ne peuvent pas être annulés."
+  },
+  "refundClosed": {
+    "noRefunds": "Cet événement ne propose pas de remboursement.",
+    "cutoffPassed": "Les remboursements pour cet événement ont pris fin le {when}."
+  },
   "groupPrices": "Prix de groupe",
   "groupPricesEditableAnyTime": "Des réductions pour les grosses commandes. Vous pouvez les modifier à tout moment ; les commandes déjà passées gardent leur prix.",
   "saveGroupPrices": "Enregistrer les prix de groupe",

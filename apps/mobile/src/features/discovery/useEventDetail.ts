@@ -70,6 +70,9 @@ export type EventDetail = {
   event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
   event_occurrence: { id: string; starts_at: string; ends_at: string }[];
   place: { id: string; name: string; slug: string } | null;
+  /** @abonten/core/refundPolicy (absent from an older server or cache). */
+  refund_policy?: string | null;
+  refund_cutoff_hours?: number | null;
 };
 
 export type OrganizerRating = { average: number; count: number };

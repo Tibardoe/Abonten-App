@@ -81,6 +81,9 @@ export type PostsType = {
   // useEventUploadForm.ts's selectedPlaceId. Optional/nullable: most events
   // still have no associated Place.
   placeId?: string | null;
+  // The refund-policy choice ("until_start", "until_cutoff:48", "none";
+  // @abonten/core/refundPolicy). Omitted = the default.
+  refundPolicy?: string | null;
 };
 
 export type EventDates = {

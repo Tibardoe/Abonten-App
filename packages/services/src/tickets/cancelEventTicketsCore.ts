@@ -10,6 +10,7 @@ import {
   tenderSplit,
 } from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { buyerCancelGate } from "./buyerCancelGate";
 import {
   type CancelTarget,
   releaseCancelledTickets,
@@ -118,6 +119,14 @@ async function planEventCancel(
     checkoutId: t.ticket_checkout_id,
     eventId,
   }));
+
+  // The event's refund policy, or a show that has started: one ticket the
+  // buyer may not cancel stops the whole "cancel all" (they share a policy;
+  // only a multi-date event's dates differ).
+  const refusal = await buyerCancelGate(targets.map((t) => t.id));
+  if (refusal) {
+    return { ok: false, status: refusal.status, message: refusal.message };
+  }
 
   if (rows.length > 0) {
     const ours = new Set(mine.map((t) => t.id));

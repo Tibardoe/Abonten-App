@@ -8,6 +8,10 @@ import {
 import { groupPricingProblemMessage } from "@abonten/core/groupPricing";
 import { logger } from "@abonten/core/logger";
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
+import {
+  DEFAULT_REFUND_POLICY,
+  parseRefundPolicy,
+} from "@abonten/core/refundPolicy";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
   SINGLE_TICKET_TYPE,
@@ -106,6 +110,9 @@ export type PostEventCoreInput = {
   clientRequestId: string;
   placeId?: string | null;
   draftId?: string | null;
+  /** The refund policy (@abonten/core/refundPolicy); omitted = the default. */
+  refundPolicy?: string | null;
+  refundCutoffHours?: number | null;
 };
 
 export type PostEventCoreResult =
@@ -225,6 +232,13 @@ export async function postEventCore(
       tiers,
     );
     if (capacityProblem) return { status: 400, message: capacityProblem };
+  }
+
+  const refundPolicy = input.refundPolicy
+    ? parseRefundPolicy(input.refundPolicy, input.refundCutoffHours ?? null)
+    : DEFAULT_REFUND_POLICY;
+  if (!refundPolicy) {
+    return { status: 400, message: tr("refundPolicyInvalid") };
   }
 
   const formattedTitle = formatTitle(input.title);
@@ -419,6 +433,26 @@ export async function postEventCore(
         `Event ${eventId as string} created but its group prices failed: ${tierError}`,
       );
       return { status: 500, message: tr("weCouldnTPostYourEvent") };
+    }
+  }
+
+  // create_event doesn't take the refund policy (its signature is shared
+  // with other work), so the service writes it straight after. A retry
+  // with the same clientRequestId finds the event and writes it again.
+  if (refundPolicy.kind !== DEFAULT_REFUND_POLICY.kind) {
+    const { error: policyError } = await getSupabaseServiceClient()
+      .from("event")
+      .update({
+        refund_policy: refundPolicy.kind,
+        refund_cutoff_hours: refundPolicy.cutoffHours,
+      })
+      .eq("id", eventId as string)
+      .eq("organizer_id", userId);
+    if (policyError) {
+      logger.error(
+        `postEventCore: saving the refund policy failed (${policyError.message})`,
+      );
+      return { status: 500, message: tr("refundPolicyNotSaved") };
     }
   }
 

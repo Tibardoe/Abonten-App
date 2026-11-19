@@ -3144,6 +3144,8 @@ export type Database = {
           organizer_id: string
           place_id: string | null
           published_at: string | null
+          refund_cutoff_hours: number | null
+          refund_policy: string
           require_registration: boolean
           search_title: string | null
           search_tsv: unknown
@@ -3179,6 +3181,8 @@ export type Database = {
           organizer_id: string
           place_id?: string | null
           published_at?: string | null
+          refund_cutoff_hours?: number | null
+          refund_policy?: string
           require_registration?: boolean
           search_title?: string | null
           search_tsv?: unknown
@@ -3214,6 +3218,8 @@ export type Database = {
           organizer_id?: string
           place_id?: string | null
           published_at?: string | null
+          refund_cutoff_hours?: number | null
+          refund_policy?: string
           require_registration?: boolean
           search_title?: string | null
           search_tsv?: unknown

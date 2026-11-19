@@ -14,7 +14,7 @@ import {
 // PATCH /api/mobile/organizer/events/:eventId
 //   { title, description, address, latitude, longitude, category, types[],
 //     checked, capacity?, websiteUrl?, startsAt?, endsAt?, specificDates?,
-//     flyerPublicId?, flyerVersion? }
+//     flyerPublicId?, flyerVersion?, refundPolicy?, refundCutoffHours? }
 //
 // Edits the core, non-ticketing fields of the caller's own event. A
 // replacement flyer is uploaded from the device first (signed direct
@@ -116,6 +116,12 @@ export async function PATCH(
         : null,
       flyerPublicId: flyerPublicId && flyerVersion ? flyerPublicId : undefined,
       flyerVersion: flyerPublicId && flyerVersion ? flyerVersion : undefined,
+      // Omitted by older app builds: the event keeps its policy.
+      refundPolicy: str(body.refundPolicy),
+      refundCutoffHours:
+        typeof body.refundCutoffHours === "number"
+          ? body.refundCutoffHours
+          : null,
     };
 
     const result = await updateEventCore(auth.supabase, actor.accountId, input);

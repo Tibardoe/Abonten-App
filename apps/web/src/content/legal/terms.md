@@ -1,9 +1,9 @@
 ---
 title: Terms and Conditions
 summary: The agreement between you and Abonten Hub when you use the website or the mobile app, whether you attend events, organize them, or run a place.
-version: 1.4-draft
+version: 1.5-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-10-22
+lastUpdated: 2026-11-19
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -76,7 +76,7 @@ We may hide, remove or restrict any listing, review, highlight, message or accou
 
 ## 7. Cancellations and refunds
 
-**Cancelling your own ticket.** You can cancel a ticket from My Tickets / the Tickets tab while the ticket is still active. Cancelling a ticket releases it for someone else to buy.
+**Cancelling your own ticket.** You can cancel a ticket from My Tickets / the Tickets tab while the ticket is still active and its event has not started. For a paid ticket, the organizer's refund policy, shown on the event page before you pay, sets until when you can cancel it for a refund: until the event starts, until a set time before it, or not at all ("No refunds"). Cancelling a ticket releases it for someone else to buy.
 
 **Refunds when you cancel.** When you cancel a paid ticket, Abonten requests a refund of the **ticket price** for that ticket from Paystack. **The service fee is not refunded.** The refund goes back to the payment method you paid with. A refund is *requested* at the moment you cancel and is *completed* when Paystack confirms it; your transaction history shows "refund pending" in between. Refund timing after Paystack confirms depends on your bank or mobile-money provider.
 
@@ -92,7 +92,7 @@ If you create an event you are an organizer, and the following applies in additi
 
 **Your listing.** You are responsible for the accuracy of everything in your event listing — title, description, dates, venue, ticket types, prices, capacity and images — and for holding any permits, licences or venue permissions the event needs. You must not list events you do not have the right to sell tickets for.
 
-**Ticket types and pricing.** You set ticket types, prices and quantities. Abonten shows the customer your price plus Abonten's service fee. You may create promo codes for your event and, where the feature is available, offer a promoter commission (a percentage of the ticket price you choose, between 1% and 30%) to people who bring buyers; that commission is charged to you when the sale settles.
+**Ticket types and pricing.** You set ticket types, prices and quantities, and your event's refund policy: until when buyers may cancel a paid ticket for a refund of the ticket price (until the event starts, until a set time before it, or no refunds). The policy is shown to buyers before they pay; once people hold tickets you may only make it more generous. It does not limit refunds when you cancel the event or a ticket yourself. Abonten shows the customer your price plus Abonten's service fee. You may create promo codes for your event and, where the feature is available, offer a promoter commission (a percentage of the ticket price you choose, between 1% and 30%) to people who bring buyers; that commission is charged to you when the sale settles.
 
 **Your earnings.** For each paid ticket you receive **100% of the ticket price you set**, recorded as a pending earning at the time of sale. Earnings become available for payout **48 hours after your event ends** (after its last date, for multi-date events). Refunds reverse the corresponding earning. Your Finances page shows pending and available balances and every ledger entry.
 

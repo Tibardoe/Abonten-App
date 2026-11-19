@@ -2,6 +2,11 @@ import { prettyTime } from "@/components/datetime/TimeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { formatMoney } from "@abonten/core/formatMoney";
+import {
+  DEFAULT_REFUND_POLICY,
+  refundCutoffDays,
+  refundPolicyFromChoice,
+} from "@abonten/core/refundPolicy";
 import { AppText } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
@@ -29,6 +34,16 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
         : "—"
       : t("datesCount", { count: w.occurrences.length });
 
+  const refundChoice =
+    refundPolicyFromChoice(w.refundPolicy) ?? DEFAULT_REFUND_POLICY;
+  const refundLabel =
+    refundChoice.kind === "until_cutoff"
+      ? t("refundPolicy.untilCutoff", {
+          days: refundCutoffDays(refundChoice.cutoffHours),
+        })
+      : refundChoice.kind === "none"
+        ? t("refundPolicy.none")
+        : t("refundPolicy.untilStart");
   const ticketing =
     w.ticketMode === "free"
       ? t("free")
@@ -77,6 +92,9 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
           label={t("registration")}
           value={w.requireRegistration ? t("required") : t("notRequired")}
         />
+        {w.ticketMode !== "free" ? (
+          <Row label={t("refundPolicy.label")} value={refundLabel} />
+        ) : null}
       </View>
 
       <AppText variant="muted">{w.description}</AppText>

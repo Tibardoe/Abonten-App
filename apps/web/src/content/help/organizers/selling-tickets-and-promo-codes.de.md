@@ -2,7 +2,7 @@
 title: Tickets verkaufen, Promo-Codes und Promoter-Provision
 summary: Wie Verkäufe und Reservierungen ablaufen, Promo-Codes anlegen, eine Promoter-Provision anbieten und deine Verkaufsstatistiken lesen.
 order: 2
-lastUpdated: 2026-10-29
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,15 @@ Beides ist optional und wirkt zusammen:
 - Mit Kapazität dürfen die festgelegten Mengen zusammen nicht darüber liegen – du siehst einen Hinweis (zum Beispiel 110 Tickets insgesamt bei einer Kapazität von 100) und kannst erst speichern, wenn es passt.
 - Ticketarten ohne Menge **teilen sich, was von der Kapazität übrig ist**, nachdem die festgelegten Mengen abgezogen sind. Bei Kapazität 100, Standard = 60 und VIP leer werden höchstens 60 Standard verkauft und über alle Arten ohne Menge hinweg höchstens 40 weitere. Lässt du alle Mengen leer, werden alle 100 Plätze geteilt.
 - Der Verkauf einer Art endet, wenn ihre eigene Menge aufgebraucht ist, und für alle geteilten Arten, wenn die geteilten Plätze weg sind. Reservierte Tickets zählen mit, bis ihre 30-minütige Reservierung abläuft.
+
+## Erstattungsregel
+
+Lege fest, bis wann Käufer ein bezahltes Ticket stornieren und den Ticketpreis zurückbekommen können: **bis zum Beginn des Events** (Standard), **1, 2, 3 oder 7 Tage vorher** oder **keine Erstattungen**. Die Event-Seite zeigt die Regel, bevor jemand bezahlt, und die Servicegebühr wird nie erstattet.
+
+- Sobald Personen Tickets haben, kannst du die Regel nur großzügiger machen (zum Beispiel von *Keine Erstattungen* zu *Bis 2 Tage vorher*), nie strenger.
+- Käufer können nie stornieren, sobald die Vorstellung begonnen hat, egal welche Regel gilt.
+- Sagst du das Event selbst ab, bekommt jeder Käufer immer sein Geld zurück, egal welche Regel gilt.
+- Bei einem Event mit mehreren Terminen zählt die Frist ab dem Termin des jeweiligen Tickets.
 
 ## Promo-Codes
 

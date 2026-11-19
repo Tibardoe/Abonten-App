@@ -65,6 +65,8 @@ export type UserTicketType = {
   updated_at: string | null;
   ticket_type_id: string;
   ticket_code: string;
+  /** The date of a multi-date event this ticket is for. */
+  occurrence_id?: string | null;
   ticket_type: {
     id: string;
     type: string;
@@ -101,6 +103,9 @@ export type UserTicketType = {
     event_code: string;
     event_dates: Date[]; // You can specify a better type if you know it
     occurrences: Occurrence[];
+    /** @abonten/core/refundPolicy (absent from an older server). */
+    refund_policy?: string | null;
+    refund_cutoff_hours?: number | null;
   };
 };
 

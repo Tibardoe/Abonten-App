@@ -438,6 +438,23 @@
   "invitedPromoterRate": "É promotor deste evento: ganha <strong>{rate}%</strong> de cada bilhete vendido pela sua ligação, em crédito depois do evento.",
   "promoterUsernamePlaceholder": "@username",
   "rewardInvitedPromoters": "Recompense os promotores que adicionar abaixo. Cada um que vender um bilhete pela sua ligação recebe a sua parte do preço em Crédito Abonten quando o evento terminar. É descontada do seu pagamento por essa venda, e nada é pago por bilhetes reembolsados ou cancelados.",
+  "refundPolicy": {
+    "label": "Reembolsos",
+    "help": "Até quando os compradores podem cancelar um bilhete pago e receber de volta o preço do bilhete. A taxa de serviço nunca é reembolsada.",
+    "untilStart": "Até o evento começar",
+    "untilCutoff": "Até {days, plural, one {# dia} other {# dias}} antes",
+    "none": "Sem reembolsos",
+    "lockedNote": "Já há pessoas com bilhetes, por isso só pode tornar os reembolsos mais generosos."
+  },
+  "refundPolicyLine": {
+    "untilStart": "Pode cancelar um bilhete pago e receber o reembolso do preço do bilhete até o evento começar.",
+    "untilCutoff": "Pode cancelar um bilhete pago e receber o reembolso do preço do bilhete até {days, plural, one {# dia} other {# dias}} antes do evento.",
+    "none": "Sem reembolsos: os bilhetes pagos não podem ser cancelados."
+  },
+  "refundClosed": {
+    "noRefunds": "Este evento não oferece reembolsos.",
+    "cutoffPassed": "Os reembolsos deste evento terminaram em {when}."
+  },
   "groupPrices": "Preços de grupo",
   "groupPricesEditableAnyTime": "Descontos para encomendas maiores. Pode alterá-los a qualquer momento; as encomendas já feitas mantêm o preço.",
   "saveGroupPrices": "Guardar os preços de grupo",

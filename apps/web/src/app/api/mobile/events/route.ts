@@ -139,6 +139,11 @@ export async function POST(req: Request) {
       clientRequestId,
       placeId: str(body.placeId),
       draftId: str(body.draftId),
+      refundPolicy: str(body.refundPolicy),
+      refundCutoffHours:
+        typeof body.refundCutoffHours === "number"
+          ? body.refundCutoffHours
+          : null,
     };
 
     const result = await postEventCore(auth.supabase, actor.accountId, input);

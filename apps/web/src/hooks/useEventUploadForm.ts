@@ -13,6 +13,11 @@ import {
 } from "@/utils/eventDateValidation";
 import type { GroupDiscountTier } from "@abonten/core/checkoutPricing";
 import {
+  DEFAULT_REFUND_POLICY,
+  refundPolicyChoice,
+  refundPolicyFromChoice,
+} from "@abonten/core/refundPolicy";
+import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
@@ -255,6 +260,14 @@ export function useEventUploadForm({
     initialValues?.requireRegistration ?? false,
   );
 
+  // The refund policy, as the select's choice (@abonten/core/refundPolicy).
+  const [refundPolicy, setRefundPolicy] = useState(
+    initialValues?.refundPolicy &&
+      refundPolicyFromChoice(initialValues.refundPolicy)
+      ? initialValues.refundPolicy
+      : refundPolicyChoice(DEFAULT_REFUND_POLICY),
+  );
+
   // Tracks whether the organizer has actually entered anything this
   // session, beyond whatever a continued draft was hydrated with — used to
   // decide whether Cancel needs to prompt at all (an untouched fresh form
@@ -312,6 +325,11 @@ export function useEventUploadForm({
   const handleChecked = () => {
     markTouched();
     setChecked((prev) => !prev);
+  };
+
+  const handleRefundPolicy = (choice: string) => {
+    markTouched();
+    setRefundPolicy(choice);
   };
 
   const handleSelectedAddress = (address: string) => {
@@ -419,6 +437,7 @@ export function useEventUploadForm({
       groupDiscounts: groupDiscounts.length > 0 ? groupDiscounts : undefined,
       requireRegistration: checked,
       currency: userCurrency ?? undefined,
+      refundPolicy,
     };
   };
 
@@ -573,6 +592,8 @@ export function useEventUploadForm({
         checked,
         clientRequestId: clientRequestIdRef.current,
         placeId: selectedPlaceId,
+        // A free event has nothing to refund: it keeps the default.
+        refundPolicy: ticket === TICKET_MODE.free ? null : refundPolicy,
         ...eventDates,
       };
 
@@ -625,6 +646,8 @@ export function useEventUploadForm({
     handleMultipleTickets: handleMultipleTicketsWithTouch,
     checked,
     handleChecked,
+    refundPolicy,
+    handleRefundPolicy,
     promoCodes,
     handlePromoCodesChange,
     groupDiscounts,

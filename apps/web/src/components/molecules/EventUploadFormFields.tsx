@@ -6,6 +6,7 @@ import CategoryFilter from "@/components/molecules/CategoryFilter";
 import DateTimePicker from "@/components/molecules/DateTimePicker";
 import GroupDiscountInputs from "@/components/molecules/GroupDiscountInputs";
 import PromoCodeInputs from "@/components/molecules/PromoCodeInputs";
+import RefundPolicySelect from "@/components/molecules/RefundPolicySelect";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import TypeFilter from "@/components/molecules/TypeFilter";
@@ -42,6 +43,8 @@ type EventUploadFormFieldsProps = Pick<
   | "setTicket"
   | "checked"
   | "handleChecked"
+  | "refundPolicy"
+  | "handleRefundPolicy"
   | "singleTicket"
   | "handleSingleTicket"
   | "singleTicketQuantity"
@@ -95,6 +98,8 @@ export default function EventUploadFormFields({
   setTicket,
   checked,
   handleChecked,
+  refundPolicy,
+  handleRefundPolicy,
   singleTicket,
   handleSingleTicket,
   singleTicketQuantity,
@@ -366,6 +371,14 @@ export default function EventUploadFormFields({
               </p>
             ) : capacityHint ? (
               <p className="text-xs text-muted-foreground">{capacityHint}</p>
+            ) : null}
+
+            {/* Refunds -- only paid tickets have a price to give back. */}
+            {ticket !== TICKET_MODE.free && ticket ? (
+              <RefundPolicySelect
+                value={refundPolicy}
+                onChange={handleRefundPolicy}
+              />
             ) : null}
           </div>
 

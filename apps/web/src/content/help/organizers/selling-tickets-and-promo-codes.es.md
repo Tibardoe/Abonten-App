@@ -2,7 +2,7 @@
 title: Vender entradas, códigos promocionales y comisión de promotores
 summary: Cómo funcionan las ventas y las reservas, crear códigos promocionales, ofrecer una comisión a promotores y leer las estadísticas de ventas.
 order: 2
-lastUpdated: 2026-10-29
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,15 @@ Ambos son opcionales y funcionan juntos:
 - Con aforo, las cantidades que pongas no pueden sumar más que él: verás un aviso (por ejemplo, 110 entradas en total para un aforo de 100) y no podrás guardar hasta que encaje.
 - Los tipos de entrada que dejes sin cantidad **se reparten lo que quede del aforo** después de las cantidades fijadas. Con aforo 100, General = 60 y VIP en blanco, se venden como máximo 60 generales y, entre todos los tipos sin cantidad, como máximo 40 más. Si dejas todas las cantidades en blanco, las 100 plazas son compartidas.
 - La venta de un tipo se detiene cuando se agota su propia cantidad, y la de todos los tipos compartidos cuando se acaban las plazas compartidas. Las entradas reservadas cuentan hasta que caduca su reserva de 30 minutos.
+
+## Política de reembolso
+
+Elige hasta cuándo los compradores pueden cancelar una entrada de pago y recuperar el precio de la entrada: **hasta que empiece el evento** (por defecto), **1, 2, 3 o 7 días antes**, o **sin reembolsos**. La página del evento muestra la política antes de que nadie pague, y la tarifa de servicio nunca se reembolsa.
+
+- Cuando ya hay personas con entradas, solo puedes hacer la política más generosa (por ejemplo, de *Sin reembolsos* a *Hasta 2 días antes*), nunca más estricta.
+- Los compradores nunca pueden cancelar una vez que la función ha empezado, sea cual sea la política.
+- Si cancelas el evento tú mismo, cada comprador recibe siempre su reembolso, sea cual sea la política.
+- En un evento con varias fechas, el plazo se cuenta desde la fecha de cada entrada.
 
 ## Códigos promocionales
 

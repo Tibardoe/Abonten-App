@@ -13,6 +13,12 @@ import {
 } from "@/utils/eventDateValidation";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import {
+  DEFAULT_REFUND_POLICY,
+  type RefundPolicy,
+  refundPolicyChoice,
+  refundPolicyOf,
+} from "@abonten/core/refundPolicy";
 import { toWallClockString } from "@abonten/core/time/timeZone";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
@@ -96,6 +102,16 @@ export function useEventEditForm({
 
   const [checked, setChecked] = useState(false);
 
+  // The refund policy as the select's choice, and the one saved on the
+  // event: once people hold tickets only a more generous one may replace it.
+  const [refundPolicy, setRefundPolicy] = useState(
+    refundPolicyChoice(DEFAULT_REFUND_POLICY),
+  );
+  const [savedRefundPolicy, setSavedRefundPolicy] = useState<RefundPolicy>(
+    DEFAULT_REFUND_POLICY,
+  );
+  const [hasPaidTickets, setHasPaidTickets] = useState(false);
+
   const [existingFlyer, setExistingFlyer] = useState<{
     publicId: string;
     version: string;
@@ -134,6 +150,12 @@ export function useEventEditForm({
     setTypes(parseEventTypes(event.event_type));
 
     setChecked(!!event.require_registration);
+    const savedPolicy = refundPolicyOf(event);
+    setSavedRefundPolicy(savedPolicy);
+    setRefundPolicy(refundPolicyChoice(savedPolicy));
+    setHasPaidTickets(
+      (event.ticket_type ?? []).some((type) => Number(type.price) > 0),
+    );
     setExistingFlyer({
       publicId: event.flyer_public_id,
       version: event.flyer_version,
@@ -293,6 +315,7 @@ export function useEventEditForm({
         types,
         checked,
         selectedFile: newFile,
+        refundPolicy,
         ...eventDates,
       });
 
@@ -334,6 +357,10 @@ export function useEventEditForm({
     handleType,
     checked,
     handleChecked,
+    refundPolicy,
+    handleRefundPolicy: setRefundPolicy,
+    savedRefundPolicy,
+    hasPaidTickets,
     existingFlyer,
     handleFileChange,
   };

@@ -4,6 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { actingFor } from "@/utils/teamActor";
+import { refundPolicyRequestFields } from "@abonten/core/refundPolicy";
 import {
   type UpdateEventCoreResult,
   updateEventCore,
@@ -28,6 +29,8 @@ export type UpdateEventInput = {
   ends_at?: string;
   specific_dates?: { start: string; end: string }[];
   selectedFile?: File | null;
+  /** The refund-policy choice (@abonten/core/refundPolicy); omit to keep it. */
+  refundPolicy?: string | null;
 };
 
 /**
@@ -96,6 +99,7 @@ export const updateEvent = withActionLocale(async function updateEvent(
     specific_dates: formData.specific_dates,
     flyerPublicId,
     flyerVersion,
+    ...refundPolicyRequestFields(formData.refundPolicy),
   });
 
   if (result.status === 200) {
