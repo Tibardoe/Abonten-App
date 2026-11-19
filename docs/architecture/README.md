@@ -23,6 +23,7 @@ complianceReviewRequired: no
 | [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
 | [weekly-highlights.md](weekly-highlights.md) | Abonten Weekly: editions, sections and items, read-time validity, caching, editorial workflow, jobs, switches, rollout |
 | [identity-verification.md](identity-verification.md) | Identity verification: government ID and live selfie through Smile ID, what is kept, duplicates across accounts, requirements, the Safety link, staff access, retention, rollout |
+| [show-runs.md](show-runs.md) | Runs of shows and copying a listing: each show a whole event in a run, what is copied, lists and search showing a run once, the show picker |
 | [group-tickets-and-prices.md](group-tickets-and-prices.md) | Group tickets (a type admitting several people, one ticket each) and automatic group prices: counting in people, the one pricing rule, never stacked with a promo code, database guarantees, the feature flag |
 | [ticket-plans.md](ticket-plans.md) | Pay small small: paying for tickets in parts before the event, held seats (`on_plan`), parts on the payment path, the settlement purchase, ending and refunding plans per part, the Balance page, why there is no top-up balance, rollout |
 | [safety.md](safety.md) | Abonten Safety: trusted contacts, SOS, check-ins, live location, the contact's page, the outbox and dispatcher, offline behaviour, privacy, rollout |

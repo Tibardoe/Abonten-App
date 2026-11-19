@@ -1,6 +1,7 @@
 "use client";
 
 import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
+import ManageEventShowsCard from "@/events/molecules/ManageEventShowsCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
@@ -133,11 +134,23 @@ export default function ManageEventView({
 
       <div className="w-full md:w-[70%] md:mx-auto">
         {activeTab === "details" && (
-          <ManageEventDetailsSection
-            event={event}
-            hasConfirmedParticipation={hasConfirmedParticipation}
-            onSaved={refresh}
-          />
+          <>
+            <ManageEventDetailsSection
+              event={event}
+              hasConfirmedParticipation={hasConfirmedParticipation}
+              onSaved={refresh}
+            />
+            {event.status === "published" && (
+              <div className="mt-8">
+                <ManageEventShowsCard
+                  eventId={event.id}
+                  timeZone={event.timezone}
+                  startsAt={event.starts_at}
+                  endsAt={event.ends_at}
+                />
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "promotion" && (

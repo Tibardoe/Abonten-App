@@ -482,6 +482,7 @@ function EventInsightsScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
+  const tEvents = useTranslations("events");
   // Managing as a team: the links follow the person's role (Owners and
   // Finance feature the event); the promoter commission stays with
   // personal events for now.
@@ -568,6 +569,12 @@ function EventInsightsScreen() {
             <TeamNavRow
               href={`/(app)/organizer/events/${eventId}/reviews`}
               label={t("reviewsReplies")}
+            />
+          ) : null}
+          {can("events.manage") ? (
+            <TeamNavRow
+              href={`/(app)/organizer/events/${eventId}/shows`}
+              label={tEvents("showsAndCopies")}
             />
           ) : null}
         </View>
@@ -664,6 +671,7 @@ function EventInsightsScreen() {
 // Finance get the full panel above).
 function TeamEventPanel() {
   const t = useTranslations("manage");
+  const tEvents = useTranslations("events");
   const tt = useTranslations("teams");
   const { eventId, title } = useLocalSearchParams<{
     eventId: string;
@@ -708,6 +716,12 @@ function TeamEventPanel() {
           <TeamNavRow
             href={`/(app)/organizer/events/${id}/reviews`}
             label={t("reviewsReplies")}
+          />
+        ) : null}
+        {can("events.manage") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/shows`}
+            label={tEvents("showsAndCopies")}
           />
         ) : null}
         <TeamNavRow

@@ -1462,5 +1462,14 @@
     "tierNotBetter": "A bigger group must get a bigger discount.",
     "freeEventTiers": "Group prices aren't available on a free event.",
     "notEnabled": "Group tickets and group prices aren't switched on for your account yet. Ask Abonten to switch them on."
+  },
+  "showRuns": {
+    "noSlots": "Pick at least one day and one time.",
+    "badSlot": "A show time isn't valid.",
+    "badRange": "The last day must be on or after the first.",
+    "tooLong": "A run can cover at most {days} days.",
+    "badDuration": "A show lasts from 15 minutes to 24 hours.",
+    "noneAhead": "None of these shows is in the future.",
+    "tooMany": "That's more than {max} shows. Add them in parts."
   }
 }

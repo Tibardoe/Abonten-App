@@ -1462,5 +1462,14 @@
     "tierNotBetter": "Un groupe plus grand doit obtenir une plus forte réduction.",
     "freeEventTiers": "Les prix de groupe ne sont pas disponibles pour un événement gratuit.",
     "notEnabled": "Les billets de groupe et les prix de groupe ne sont pas encore activés pour votre compte. Demandez à Abonten de les activer."
+  },
+  "showRuns": {
+    "noSlots": "Choisissez au moins un jour et une heure.",
+    "badSlot": "Une heure de séance n'est pas valide.",
+    "badRange": "Le dernier jour doit être le même que le premier ou après.",
+    "tooLong": "Une série peut couvrir au plus {days} jours.",
+    "badDuration": "Une séance dure de 15 minutes à 24 heures.",
+    "noneAhead": "Aucune de ces séances n'est à venir.",
+    "tooMany": "Cela fait plus de {max} séances. Ajoutez-les en plusieurs fois."
   }
 }

@@ -1265,6 +1265,48 @@ export type UpdateEventTicketTypesResult =
 // checkout is priced when it is made). PUT .../group-prices replaces them;
 // an empty list removes them. 403 = not switched on for this organizer.
 
+// ---- runs of shows ------------------------------------------------------
+// A run is a series of events, one per show, made from a listing
+// (docs/architecture/show-runs.md). POST .../shows adds shows (a weekly
+// pattern or dates, at most 60 a request) or, with separate, makes one
+// separate copy. `get_event_shows` (a public RPC) lists a run's shows.
+
+export type ShowRunSlotBody = { weekday: number; time: string };
+
+export type AddEventShowsBody = {
+  rule?: {
+    fromDate: string;
+    untilDate: string;
+    slots: ShowRunSlotBody[];
+    durationMinutes: number;
+  } | null;
+  shows?: { startsAt: string; endsAt: string }[] | null;
+  separate?: boolean;
+  clientRequestId: string;
+};
+
+export type AddEventShowsResult =
+  | {
+      status: 200;
+      message?: string;
+      data: {
+        shows: { id: string; eventCode: string; startsAt: string }[];
+        skipped: number;
+      };
+    }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+export type EventShow = {
+  id: string;
+  event_code: string;
+  starts_at: string;
+  ends_at: string;
+  timezone: string;
+  status: string;
+  seats_left: number | null;
+  sold_out: boolean;
+};
+
 export type GroupDiscountTierBody = { minTickets: number; percentOff: number };
 
 export type SetEventGroupPricesBody = { tiers: GroupDiscountTierBody[] };

@@ -25,6 +25,7 @@ import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds"
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
+import { EventShowsPicker } from "@/features/events/EventShowsPicker";
 import { GroupPricesNote } from "@/features/events/GroupPricesNote";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
@@ -486,6 +487,9 @@ export default function EventDetailScreen() {
               </View>
             </Pressable>
           ) : null}
+
+          {/* A run of shows: its other shows, each with its own seats. */}
+          <EventShowsPicker eventId={event.id} inRun={!!event.series_id} />
 
           {!canceled && !salesClosed ? (
             <GroupPricesNote tiers={event.event_group_discount} />

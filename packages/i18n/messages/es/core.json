@@ -1462,5 +1462,14 @@
     "tierNotBetter": "Un grupo más grande debe tener un descuento mayor.",
     "freeEventTiers": "Los precios de grupo no están disponibles en un evento gratuito.",
     "notEnabled": "Las entradas de grupo y los precios de grupo aún no están activados en tu cuenta. Pide a Abonten que los active."
+  },
+  "showRuns": {
+    "noSlots": "Elige al menos un día y una hora.",
+    "badSlot": "Una hora de función no es válida.",
+    "badRange": "El último día debe ser igual o posterior al primero.",
+    "tooLong": "Una serie puede abarcar como máximo {days} días.",
+    "badDuration": "Una función dura de 15 minutos a 24 horas.",
+    "noneAhead": "Ninguna de estas funciones es futura.",
+    "tooMany": "Son más de {max} funciones. Añádelas por partes."
   }
 }
