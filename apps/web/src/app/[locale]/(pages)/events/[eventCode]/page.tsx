@@ -36,6 +36,7 @@ import { hostDisplayName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
+import { refundCutoffDays, refundPolicyOf } from "@abonten/core/refundPolicy";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
@@ -304,6 +305,20 @@ export default async function page({
   // applies (@abonten/core/ticketTiers).
   const isAbsolutelyFreeEvent = hasFreeRegistration(event.ticket_type);
 
+  // The refund policy, said before anyone pays (@abonten/core/refundPolicy).
+  const sellsPaidTickets = (event.ticket_type ?? []).some(
+    (type: { price: number | null }) => Number(type.price ?? 0) > 0,
+  );
+  const refundPolicy = refundPolicyOf(event);
+  const refundPolicyLine =
+    refundPolicy.kind === "none"
+      ? t("refundPolicyLine.none")
+      : refundPolicy.kind === "until_cutoff"
+        ? t("refundPolicyLine.untilCutoff", {
+            days: refundCutoffDays(refundPolicy.cutoffHours),
+          })
+        : t("refundPolicyLine.untilStart");
+
   // "From" only when there is more than one price to choose from.
   const prices = (event.ticket_type ?? []).map((t: { price: number | null }) =>
     Number(t.price ?? 0),
@@ -521,6 +536,12 @@ export default async function page({
               {isAbsolutelyFreeEvent && !event.require_registration && (
                 <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
                   {t("freeEntryNoTicketOrRegistration")}
+                </p>
+              )}
+
+              {sellsPaidTickets && (
+                <p className="text-sm text-muted-foreground">
+                  {refundPolicyLine}
                 </p>
               )}
 

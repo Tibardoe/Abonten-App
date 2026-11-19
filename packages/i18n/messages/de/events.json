@@ -437,5 +437,22 @@
   "promotersFull": "Dieses Event hat {max} Promoter, mehr sind nicht möglich.",
   "invitedPromoterRate": "Du bist Promoter dieses Events: Du verdienst <strong>{rate} %</strong> an jedem Ticket, das über deinen Link verkauft wird, als Guthaben nach dem Event.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Belohne die Promoter, die du unten hinzufügst. Wer von ihnen ein Ticket über den eigenen Link verkauft, erhält nach dem Event seinen Anteil am Ticketpreis als Abonten-Guthaben. Er wird von deiner Auszahlung für diesen Verkauf abgezogen, und für erstattete oder stornierte Tickets wird nichts gezahlt."
+  "rewardInvitedPromoters": "Belohne die Promoter, die du unten hinzufügst. Wer von ihnen ein Ticket über den eigenen Link verkauft, erhält nach dem Event seinen Anteil am Ticketpreis als Abonten-Guthaben. Er wird von deiner Auszahlung für diesen Verkauf abgezogen, und für erstattete oder stornierte Tickets wird nichts gezahlt.",
+  "refundPolicy": {
+    "label": "Erstattungen",
+    "help": "Bis wann Käufer ein bezahltes Ticket stornieren und den Ticketpreis zurückbekommen können. Die Servicegebühr wird nie erstattet.",
+    "untilStart": "Bis zum Beginn des Events",
+    "untilCutoff": "Bis {days, plural, one {# Tag} other {# Tage}} vorher",
+    "none": "Keine Erstattungen",
+    "lockedNote": "Es haben bereits Personen Tickets, daher kannst du Erstattungen nur großzügiger machen."
+  },
+  "refundPolicyLine": {
+    "untilStart": "Du kannst ein bezahltes Ticket bis zum Beginn des Events stornieren und bekommst den Ticketpreis erstattet.",
+    "untilCutoff": "Du kannst ein bezahltes Ticket bis {days, plural, one {# Tag} other {# Tage}} vor dem Event stornieren und bekommst den Ticketpreis erstattet.",
+    "none": "Keine Erstattungen: Bezahlte Tickets können nicht storniert werden."
+  },
+  "refundClosed": {
+    "noRefunds": "Für dieses Event gibt es keine Erstattungen.",
+    "cutoffPassed": "Erstattungen für dieses Event waren bis {when} möglich."
+  }
 }

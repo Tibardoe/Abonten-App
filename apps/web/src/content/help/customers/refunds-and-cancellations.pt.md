@@ -2,7 +2,7 @@
 title: Reembolsos e cancelamentos
 summary: Cancelar um bilhete, o que é reembolsado (e o que não é), quanto tempo demoram os reembolsos e o que acontece quando um organizador cancela um evento.
 order: 6
-lastUpdated: 2026-10-30
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,6 +12,16 @@ owner: Abonten Hub
 ## Cancelar um bilhete que comprou
 
 Abra o bilhete em Os meus bilhetes (Gerir › Os meus bilhetes no website, Conta › Os meus bilhetes na aplicação) e escolha **Cancelar bilhete** enquanto ainda estiver *Ativo*. Cancelar liberta o bilhete para que outra pessoa o possa comprar.
+
+## A política de reembolso do evento
+
+Cada evento com bilhetes pagos indica na sua página, antes de pagar, até quando pode cancelar e ser reembolsado:
+
+- **Até o evento começar**: o caso habitual.
+- **Até um momento fixado antes**: por exemplo, 2 dias antes. Depois disso, **Cancelar bilhete** deixa de estar disponível.
+- **Sem reembolsos**: os bilhetes pagos não podem ser cancelados. Se o organizador cancelar o evento, é reembolsado na mesma.
+
+Seja qual for a política, um bilhete não pode ser cancelado depois de a sessão começar. Um bilhete gratuito pode ser cancelado até lá, para que outra pessoa possa ficar com o lugar.
 
 ## O que recebe de volta
 

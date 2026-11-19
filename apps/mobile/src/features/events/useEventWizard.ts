@@ -21,6 +21,12 @@ import {
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
 import {
+  DEFAULT_REFUND_POLICY,
+  refundPolicyChoice,
+  refundPolicyFromChoice,
+  refundPolicyRequestFields,
+} from "@abonten/core/refundPolicy";
+import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
@@ -162,6 +168,10 @@ export function useEventWizard(
   const [category, setCategory] = useState<string | null>(null);
   const [types, setTypes] = useState<string[]>([]);
   const [requireRegistration, setRequireRegistration] = useState(false);
+  // The refund policy, as a choice (@abonten/core/refundPolicy).
+  const [refundPolicy, setRefundPolicy] = useState(
+    refundPolicyChoice(DEFAULT_REFUND_POLICY),
+  );
   const [textErrors, setTextErrors] = useState<EventWizardTextErrors>({});
 
   // flyer — the picked source dimensions ride along so the in-app
@@ -422,6 +432,8 @@ export function useEventWizard(
     if (p.types?.length) setTypes(p.types);
     if (p.requireRegistration != null)
       setRequireRegistration(p.requireRegistration);
+    if (p.refundPolicy && refundPolicyFromChoice(p.refundPolicy))
+      setRefundPolicy(p.refundPolicy);
 
     if (detail.flyerPublicId && detail.flyerVersion) {
       const url = buildCloudinaryUrl(
@@ -578,6 +590,7 @@ export function useEventWizard(
           : undefined,
       requireRegistration,
       currency: CURRENCY,
+      refundPolicy,
     };
   }
 
@@ -872,6 +885,10 @@ export function useEventWizard(
         ...tickets.body,
         promoCodes: buildPromos(),
         placeId: venuePlace?.id ?? null,
+        // A free event has nothing to refund: it keeps the default.
+        ...refundPolicyRequestFields(
+          ticketMode === "free" ? null : refundPolicy,
+        ),
       });
     } finally {
       uploadProgress.reset();
@@ -1016,6 +1033,8 @@ export function useEventWizard(
     // tickets
     ticketMode,
     setTicketMode: selectTicketMode,
+    refundPolicy,
+    setRefundPolicy,
     capacityProblem,
     capacityHint,
     ticketPrice,

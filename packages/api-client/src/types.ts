@@ -526,6 +526,9 @@ export type EventCreateBody = {
   placeId?: string | null;
   // The draft being published, deleted server-side after create_event succeeds.
   draftId?: string | null;
+  /** The refund policy (@abonten/core/refundPolicy); omitted = the default. */
+  refundPolicy?: string | null;
+  refundCutoffHours?: number | null;
 };
 
 export type EventCreateResult =
@@ -916,6 +919,8 @@ export type EventDraftPayload = {
   selectedNetwork?: string | null;
   receivingAccountDetails?: EventDraftReceivingAccount;
   currency?: string | null;
+  /** The refund-policy choice (@abonten/core/refundPolicy refundPolicyChoice). */
+  refundPolicy?: string;
 };
 
 export type EventDraftListItem = {
@@ -1147,6 +1152,9 @@ export type EventForEditData = {
   event_type: string[] | string | null;
   require_registration: boolean | null;
   featured: boolean | null;
+  /** @abonten/core/refundPolicy (absent from an older server). */
+  refund_policy?: string | null;
+  refund_cutoff_hours?: number | null;
   starts_at: string | null;
   ends_at: string | null;
   flyer_public_id: string;
@@ -1190,6 +1198,9 @@ export type UpdateEventBody = {
   /** Omit both to keep the current flyer. */
   flyerPublicId?: string | null;
   flyerVersion?: string | null;
+  /** The refund policy (@abonten/core/refundPolicy); omit to keep it. */
+  refundPolicy?: string | null;
+  refundCutoffHours?: number | null;
 };
 
 export type UpdateEventResult =

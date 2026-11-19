@@ -4,6 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import { TICKET_MODE } from "@/events/ticketMode";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { actingFor } from "@/utils/teamActor";
+import { refundPolicyRequestFields } from "@abonten/core/refundPolicy";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type PostEventCoreResult,
@@ -103,5 +104,6 @@ export const postEvent = withActionLocale(async function postEvent(
     clientRequestId: formData.clientRequestId,
     placeId: formData.placeId ?? null,
     draftId: formData.draftId ?? null,
+    ...refundPolicyRequestFields(formData.refundPolicy),
   });
 });

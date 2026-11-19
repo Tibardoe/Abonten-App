@@ -1,3 +1,4 @@
+import { RefundClosedNote } from "@/components/RefundClosedNote";
 import { RefundStatusPanel } from "@/components/RefundStatusPanel";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
@@ -14,6 +15,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketCancelDecision } from "@abonten/core/refundPolicy";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { isTicketPaidBySomeoneElse } from "@abonten/core/ticketTransfers/paidBySomeoneElse";
@@ -135,7 +137,10 @@ export default function TicketDetailScreen() {
   // A paid ticket someone sent here is refunded to them: say "send it back"
   // instead of offering a cancel the server refuses.
   const sentToHolder = isTicketPaidBySomeoneElse(ticket);
-  const canCancel = live && !sentToHolder;
+  // The event's refund policy, and no cancelling once the show started
+  // (@abonten/core/refundPolicy; the server checks it again).
+  const cancelDecision = ticketCancelDecision(ticket);
+  const canCancel = live && !sentToHolder && cancelDecision.allowed;
 
   function onCancelTicket() {
     if (!ticket) return;
@@ -306,6 +311,14 @@ export default function TicketDetailScreen() {
             <AppText variant="meta" className="text-center">
               {t("sentToYouNoRefund")}
             </AppText>
+          ) : null}
+
+          {live && !sentToHolder ? (
+            <RefundClosedNote
+              decision={cancelDecision}
+              timeZone={ticket.event.timezone}
+              className="text-center"
+            />
           ) : null}
 
           {canCancel ? (

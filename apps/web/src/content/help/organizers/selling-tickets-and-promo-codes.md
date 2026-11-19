@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-10-29
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,15 @@ Both are optional and work together:
 - With a capacity, the quantities you set must not add up to more than it — you will see "Ticket quantities total 110, which exceeds the event capacity of 100" and cannot save until it fits.
 - Ticket types you leave without a quantity **share whatever the capacity has left** after the quantities you set. Capacity 100 with Standard = 60 and VIP left blank means at most 60 Standard and, between every type without a quantity, at most 40 more. Leave every quantity blank and all 100 seats are shared.
 - Sales stop for a type when its own quantity is used up, and for every shared type when the shared seats are gone. Held tickets count until their 30-minute hold expires.
+
+## Refund policy
+
+Choose until when buyers can cancel a paid ticket and get the ticket price back: **until the event starts** (the default), **1, 2, 3 or 7 days before it**, or **no refunds**. The event page shows the policy before anyone pays, and the service fee is never refunded.
+
+- Once people hold tickets, you can only make the policy more generous (for example from *No refunds* to *Until 2 days before*), never stricter.
+- Buyers can never cancel once the show has started, whatever the policy.
+- Cancelling the event yourself always refunds every buyer, whatever the policy.
+- For an event with several dates, the time counts from the date each ticket is for.
 
 ## Promo codes
 

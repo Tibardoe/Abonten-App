@@ -2,7 +2,7 @@
 title: Vender bilhetes, códigos promocionais e comissão de promotores
 summary: Como funcionam as vendas e as reservas, criar códigos promocionais, oferecer uma comissão a promotores e ler as estatísticas das suas vendas.
 order: 2
-lastUpdated: 2026-10-29
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,15 @@ Ambas são opcionais e funcionam em conjunto:
 - Com lotação, as quantidades definidas não podem somar mais do que ela: vê um aviso (por exemplo, 110 bilhetes no total para uma lotação de 100) e só pode guardar quando estiver dentro do limite.
 - Os tipos de bilhete sem quantidade **partilham o que resta da lotação** depois das quantidades definidas. Com lotação 100, Normal = 60 e VIP em branco, vendem-se no máximo 60 normais e, entre todos os tipos sem quantidade, no máximo mais 40. Se deixar todas as quantidades em branco, os 100 lugares são partilhados.
 - As vendas de um tipo param quando a sua própria quantidade se esgota, e as de todos os tipos partilhados quando os lugares partilhados acabam. Os bilhetes reservados contam até a reserva de 30 minutos expirar.
+
+## Política de reembolso
+
+Escolha até quando os compradores podem cancelar um bilhete pago e receber de volta o preço do bilhete: **até o evento começar** (predefinição), **1, 2, 3 ou 7 dias antes**, ou **sem reembolsos**. A página do evento mostra a política antes de alguém pagar, e a taxa de serviço nunca é reembolsada.
+
+- Quando já há pessoas com bilhetes, só pode tornar a política mais generosa (por exemplo, de *Sem reembolsos* para *Até 2 dias antes*), nunca mais restrita.
+- Os compradores nunca podem cancelar depois de a sessão começar, seja qual for a política.
+- Se o próprio organizador cancelar o evento, cada comprador é sempre reembolsado, seja qual for a política.
+- Num evento com várias datas, o prazo conta a partir da data de cada bilhete.
 
 ## Códigos promocionais
 

@@ -11,7 +11,9 @@ import TicketSendControl from "@/ticketTransfers/molecules/TicketSendControl";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatDateTime } from "@abonten/core/i18n/format";
 import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
+import { ticketCancelDecision } from "@abonten/core/refundPolicy";
 import {
   getRefundStatusKind,
   getRefundStatusLabel,
@@ -45,6 +47,7 @@ function TicketCard({
   const t = useTranslations("manage");
   const tc = useTranslations("core");
   const tt = useTranslations("tickets");
+  const te = useTranslations("events");
 
   // The ticket's own refund when its payment is refunded ticket by
   // ticket, else its payment's (refundStatus.ticketRefundState).
@@ -76,6 +79,11 @@ function TicketCard({
       event.event.ends_at,
       event.event.occurrences,
     ) === "ended";
+  // The event's refund policy, and no cancelling once the show started
+  // (@abonten/core/refundPolicy; the server checks it again).
+  const cancelDecision = ticketCancelDecision(event);
+  const live =
+    event.status === "active" && !cancelledByOrganizer && !eventEnded;
   // A refused refund, or one never asked for, can be asked for again.
   const refundKind = refund
     ? getRefundStatusKind(refund.status, refund.refundRequestedAt)
@@ -173,17 +181,14 @@ function TicketCard({
         <div className="flex items-center justify-between gap-2 pt-1">
           <ViewTicketBtn event={event} />
 
-          {event.status === "active" &&
-            !cancelledByOrganizer &&
-            !eventEnded &&
-            !sentToHolder && (
-              <CancelUserTicketBtn
-                ticketId={event.id}
-                transactionId={event.transaction_id}
-                eventId={event.event.id}
-                queryKey={queryKey}
-              />
-            )}
+          {live && !sentToHolder && cancelDecision.allowed && (
+            <CancelUserTicketBtn
+              ticketId={event.id}
+              transactionId={event.transaction_id}
+              eventId={event.event.id}
+              queryKey={queryKey}
+            />
+          )}
         </div>
 
         {sentToHolder &&
@@ -194,6 +199,24 @@ function TicketCard({
               {tt("sentToYouNoRefund")}
             </p>
           )}
+
+        {live && !sentToHolder && !cancelDecision.allowed ? (
+          cancelDecision.reason === "no_refunds" ? (
+            <p className="text-xs text-muted-foreground">
+              {te("refundClosed.noRefunds")}
+            </p>
+          ) : cancelDecision.reason === "cutoff_passed" ? (
+            <p className="text-xs text-muted-foreground">
+              {te("refundClosed.cutoffPassed", {
+                when: formatDateTime(cancelDecision.deadline, locale, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                  timeZone: event.event.timezone ?? undefined,
+                }),
+              })}
+            </p>
+          ) : null
+        ) : null}
 
         <TicketSendControl
           ticketId={event.id}

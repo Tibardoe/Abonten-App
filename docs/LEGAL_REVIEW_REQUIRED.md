@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.7
-lastReviewed: 2026-10-25
+version: 1.8
+lastReviewed: 2026-11-19
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -72,6 +72,7 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 | E7 | Referral and promoter incentives: any marketing / lottery / inducement rules that apply | Terms §12 | Confirm | Open |
 | E8 | Field-team commissions: employment vs contractor status of team members, and tax on commission payouts | `field-operations/` | Confirm | Open |
 | E9 | Chargeback handling: pausing accounts and holding payouts during disputes | Terms §7 | Confirm | Open |
+| E10 | Organizer refund policies (built 2026-11-19, `event.refund_policy` / `refund_cutoff_hours`, `buyerCancelGate`): an organizer may choose refunds until the event starts, until 1/2/3/7 days before, or no refunds; buyers can't cancel once the show has started; the policy may only become more generous after the first sale | Terms §7, §8 (1.5-draft); the refund line on the event page (website and app) | Confirm that a "no refunds" or cut-off policy shown before purchase is enforceable under Ghanaian consumer law, what must be shown and where (with E2), and whether a minimum refund right applies when an event changes materially | Open |
 
 ## F. Content, intellectual property and app stores
 

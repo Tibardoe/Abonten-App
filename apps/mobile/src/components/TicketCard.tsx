@@ -3,6 +3,7 @@ import { useCancelTicketFlow } from "@/features/tickets/useCancelTicket";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketCancelDecision } from "@abonten/core/refundPolicy";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { isTicketPaidBySomeoneElse } from "@abonten/core/ticketTransfers/paidBySomeoneElse";
@@ -55,11 +56,14 @@ export function TicketCard({
 
   // A paid ticket someone sent here is refunded to them: the holder sends
   // it back instead (the ticket screen says so).
+  // ...and only as the event's refund policy allows, never once the show
+  // started (@abonten/core/refundPolicy; the server checks it again).
   const canCancel =
     ticket.status === "active" &&
     !cancelledByOrganizer &&
     !eventEnded &&
-    !isTicketPaidBySomeoneElse(ticket);
+    !isTicketPaidBySomeoneElse(ticket) &&
+    ticketCancelDecision(ticket).allowed;
 
   function onCancel() {
     cancelFlow.start({ ...ticket, eventId: ticket.event.id }, (message) =>

@@ -2,7 +2,7 @@
 title: Vendre des billets, codes promo et commission des promoteurs
 summary: Comment fonctionnent les ventes et les réservations, créer des codes promo, proposer une commission aux promoteurs et lire les statistiques de vos ventes.
 order: 2
-lastUpdated: 2026-10-29
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,15 @@ Les deux sont facultatives et fonctionnent ensemble :
 - Avec une capacité, le total des quantités fixées ne doit pas la dépasser : un message vous l'indique (par exemple un total de 110 billets pour une capacité de 100) et vous ne pouvez pas enregistrer tant que cela ne tient pas.
 - Les types de billets laissés sans quantité **se partagent ce qui reste de la capacité** après les quantités fixées. Avec une capacité de 100, Standard = 60 et VIP laissé vide, on peut vendre au plus 60 Standard et, pour l'ensemble des types sans quantité, au plus 40 de plus. Laissez toutes les quantités vides et les 100 places sont partagées.
 - Les ventes s'arrêtent pour un type quand sa propre quantité est épuisée, et pour tous les types partagés quand les places partagées sont parties. Les billets réservés comptent jusqu'à l'expiration de leur réservation de 30 minutes.
+
+## Politique de remboursement
+
+Choisissez jusqu'à quand les acheteurs peuvent annuler un billet payant et récupérer le prix du billet : **jusqu'au début de l'événement** (par défaut), **1, 2, 3 ou 7 jours avant**, ou **aucun remboursement**. La page de l'événement affiche la politique avant tout paiement, et les frais de service ne sont jamais remboursés.
+
+- Une fois que des personnes ont des billets, vous pouvez seulement rendre la politique plus généreuse (par exemple de *Aucun remboursement* à *Jusqu'à 2 jours avant*), jamais plus stricte.
+- Les acheteurs ne peuvent jamais annuler une fois le spectacle commencé, quelle que soit la politique.
+- Si vous annulez vous-même l'événement, chaque acheteur est toujours remboursé, quelle que soit la politique.
+- Pour un événement à plusieurs dates, le délai se compte à partir de la date de chaque billet.
 
 ## Codes promo
 

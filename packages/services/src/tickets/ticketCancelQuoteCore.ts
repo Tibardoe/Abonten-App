@@ -9,6 +9,7 @@ import {
   tenderSplit,
 } from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { buyerCancelGate } from "./buyerCancelGate";
 import { ticketsOfPayment } from "./ticketsOfPayment";
 
 // What cancelling one of the caller's tickets would give back, before
@@ -54,6 +55,10 @@ export async function ticketCancelQuoteCore(
   if (ticket.status !== "active") {
     return { status: 409, message: tr("thisTicketIsAlreadyCancelled") };
   }
+  // The event's refund policy, or a show that has started, says no before
+  // the dialog offers anything (cancelUserTicketCore checks it again).
+  const refusal = await buyerCancelGate([ticket.id]);
+  if (refusal) return { status: refusal.status, message: refusal.message };
 
   // Every active ticket the caller holds for this event, across payments:
   // more than one offers "cancel all for this event" (cancelEventTicketsCore).

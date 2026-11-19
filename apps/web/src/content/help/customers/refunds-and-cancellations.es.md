@@ -2,7 +2,7 @@
 title: Reembolsos y cancelaciones
 summary: Cancelar una entrada, qué se reembolsa (y qué no), cuánto tardan los reembolsos y qué pasa cuando un organizador cancela un evento.
 order: 6
-lastUpdated: 2026-10-30
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,6 +12,16 @@ owner: Abonten Hub
 ## Cancelar una entrada que compraste
 
 Abre la entrada en Mis entradas (Gestionar › Mis entradas en la web, Cuenta › Mis entradas en la aplicación) y elige **Cancelar entrada** mientras siga *Activa*. Al cancelarla, la entrada queda libre para que otra persona la compre.
+
+## La política de reembolso del evento
+
+Cada evento con entradas de pago indica en su página, antes de que pagues, hasta cuándo puedes cancelar y recibir un reembolso:
+
+- **Hasta que empiece el evento**: el caso habitual.
+- **Hasta un momento fijado antes**: por ejemplo, 2 días antes. Después, ya no se ofrece **Cancelar entrada**.
+- **Sin reembolsos**: las entradas de pago no se pueden cancelar. Si el organizador cancela el evento, igualmente recibes el reembolso.
+
+Sea cual sea la política, una entrada no se puede cancelar una vez que la función ha empezado. Una entrada gratuita se puede cancelar hasta entonces, para que otra persona pueda ocupar el lugar.
 
 ## Qué te devolvemos
 

@@ -66,6 +66,9 @@ export const eventDraftPayloadSchema = z.object({
   selectedNetwork: z.string().nullable().optional(),
   receivingAccountDetails: receivingAccountDetailsSchema.optional(),
   currency: z.string().nullable().optional(),
+  /** The refund-policy choice ("until_start", "until_cutoff:48", "none";
+   *  @abonten/core/refundPolicy refundPolicyChoice). */
+  refundPolicy: z.string().max(32).optional(),
 });
 
 export type EventDraftPayload = z.infer<typeof eventDraftPayloadSchema>;
