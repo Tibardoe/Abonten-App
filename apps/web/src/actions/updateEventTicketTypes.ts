@@ -63,6 +63,7 @@ export default withActionLocale(async function updateEventTicketTypes(
       type: ticket.category ?? ticket.type ?? "",
       price: ticket.price,
       quantity: ticket.quantity ?? null,
+      admits: ticket.admits ?? 1,
       availableFrom: ticket.availableFrom ?? ticket.available_from ?? null,
       availableUntil: ticket.availableUntil ?? ticket.available_until ?? null,
     })),

@@ -12,7 +12,8 @@ import { type QueryClient, useQuery } from "@tanstack/react-query";
 const EVENT_DETAIL_SELECT = `
   *,
   user_info!organizer_id ( avatar_public_id, avatar_version, username, full_name, username_is_generated, organizer_verified, id_checked, account_kind, status_id ),
-  ticket_type ( id, type, price, currency, quantity, available_from, available_until ),
+  ticket_type ( id, type, price, currency, quantity, admits, available_from, available_until ),
+  event_group_discount ( min_tickets, percent_off ),
   event_occurrence ( id, starts_at, ends_at ),
   place:place_id ( id, name, slug )
 `;
@@ -58,10 +59,15 @@ export type EventDetail = {
     type: string;
     price: number;
     currency: string;
+    /** Places (people) left; a group type sells floor(quantity / admits). */
     quantity: number | null;
+    /** People one purchase admits (a Couple: 2); absent in an older cache. */
+    admits?: number | null;
     available_from: string | null;
     available_until: string | null;
   }[];
+  /** Automatic group prices ("10+ tickets: 10% off"); absent in an older cache. */
+  event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
   event_occurrence: { id: string; starts_at: string; ends_at: string }[];
   place: { id: string; name: string; slug: string } | null;
 };

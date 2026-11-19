@@ -437,5 +437,11 @@
   "promotersFull": "Dieses Event hat {max} Promoter, mehr sind nicht möglich.",
   "invitedPromoterRate": "Du bist Promoter dieses Events: Du verdienst <strong>{rate} %</strong> an jedem Ticket, das über deinen Link verkauft wird, als Guthaben nach dem Event.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Belohne die Promoter, die du unten hinzufügst. Wer von ihnen ein Ticket über den eigenen Link verkauft, erhält nach dem Event seinen Anteil am Ticketpreis als Abonten-Guthaben. Er wird von deiner Auszahlung für diesen Verkauf abgezogen, und für erstattete oder stornierte Tickets wird nichts gezahlt."
+  "rewardInvitedPromoters": "Belohne die Promoter, die du unten hinzufügst. Wer von ihnen ein Ticket über den eigenen Link verkauft, erhält nach dem Event seinen Anteil am Ticketpreis als Abonten-Guthaben. Er wird von deiner Auszahlung für diesen Verkauf abgezogen, und für erstattete oder stornierte Tickets wird nichts gezahlt.",
+  "groupPrices": "Gruppenpreise",
+  "groupPricesEditableAnyTime": "Rabatte für größere Bestellungen. Du kannst sie jederzeit ändern; bereits aufgegebene Bestellungen behalten ihren Preis.",
+  "saveGroupPrices": "Gruppenpreise speichern",
+  "groupPricesTitle": "Gruppenpreise",
+  "groupPriceTier": "Ab {count} Tickets: {percent} Rabatt",
+  "groupPricesAppliedAtCheckout": "Wird an der Kasse abgezogen; du musst nichts eingeben."
 }

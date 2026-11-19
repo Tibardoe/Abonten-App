@@ -25,6 +25,7 @@ import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds"
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
+import { GroupPricesNote } from "@/features/events/GroupPricesNote";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import type { ReviewSubject } from "@/features/reviews/useReviewSubject";
@@ -473,6 +474,10 @@ export default function EventDetailScreen() {
                 <Icon name="chevron-forward" size={16} tone="muted" />
               </View>
             </Pressable>
+          ) : null}
+
+          {!canceled && !salesClosed ? (
+            <GroupPricesNote tiers={event.event_group_discount} />
           ) : null}
 
           {!canceled && !salesClosed ? (

@@ -437,5 +437,11 @@
   "promotersFull": "Cet événement a {max} promoteurs, le maximum possible.",
   "invitedPromoterRate": "Vous êtes promoteur de cet événement : vous gagnez <strong>{rate} %</strong> de chaque billet vendu via votre lien, sous forme de crédit après l'événement.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Récompensez les promoteurs que vous ajoutez ci-dessous. Chacun d'eux qui vend un billet via son lien reçoit sa part du prix du billet, en Crédit Abonten, une fois l'événement terminé. Elle est déduite de votre versement pour cette vente, et rien n'est versé pour les billets remboursés ou annulés."
+  "rewardInvitedPromoters": "Récompensez les promoteurs que vous ajoutez ci-dessous. Chacun d'eux qui vend un billet via son lien reçoit sa part du prix du billet, en Crédit Abonten, une fois l'événement terminé. Elle est déduite de votre versement pour cette vente, et rien n'est versé pour les billets remboursés ou annulés.",
+  "groupPrices": "Prix de groupe",
+  "groupPricesEditableAnyTime": "Des réductions pour les grosses commandes. Vous pouvez les modifier à tout moment ; les commandes déjà passées gardent leur prix.",
+  "saveGroupPrices": "Enregistrer les prix de groupe",
+  "groupPricesTitle": "Prix de groupe",
+  "groupPriceTier": "À partir de {count} billets : {percent} de réduction",
+  "groupPricesAppliedAtCheckout": "Appliqué au paiement ; rien à saisir."
 }

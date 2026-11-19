@@ -4,6 +4,7 @@ import PostInput from "@/components/atoms/PostInput";
 import PromoCodeBtn from "@/components/atoms/PromoCodeBtn";
 import CategoryFilter from "@/components/molecules/CategoryFilter";
 import DateTimePicker from "@/components/molecules/DateTimePicker";
+import GroupDiscountInputs from "@/components/molecules/GroupDiscountInputs";
 import PromoCodeInputs from "@/components/molecules/PromoCodeInputs";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
@@ -18,7 +19,9 @@ import {
 } from "@/components/ui/form";
 import { TICKET_MODE } from "@/events/ticketMode";
 import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
+import { GROUP_PRICING_FLAG } from "@abonten/core/groupPricing";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
@@ -47,6 +50,8 @@ type EventUploadFormFieldsProps = Pick<
   | "handleMultipleTickets"
   | "handlePromoCodesChange"
   | "promoCodes"
+  | "groupDiscounts"
+  | "handleGroupDiscountsChange"
   | "capacityProblem"
   | "capacityHint"
   | "showPromoCodeFormPopup"
@@ -98,6 +103,8 @@ export default function EventUploadFormFields({
   handleMultipleTickets,
   handlePromoCodesChange,
   promoCodes,
+  groupDiscounts,
+  handleGroupDiscountsChange,
   capacityProblem,
   capacityHint,
   showPromoCodeFormPopup,
@@ -118,6 +125,8 @@ export default function EventUploadFormFields({
   className,
 }: EventUploadFormFieldsProps) {
   const t = useTranslations("common");
+  // Group tickets and group prices: switched on per organizer by staff.
+  const groupPricing = useMarketContext().flag(GROUP_PRICING_FLAG);
 
   const dateSectionRef = useRef<HTMLDivElement>(null);
   const locationSectionRef = useRef<HTMLDivElement>(null);
@@ -344,6 +353,7 @@ export default function EventUploadFormFields({
                 ticketType={ticket}
                 multipleTickets={multipleTickets}
                 handleMultipleTickets={handleMultipleTickets}
+                groupTicketsEnabled={groupPricing}
               />
             )}
 
@@ -380,6 +390,21 @@ export default function EventUploadFormFields({
               )}
             </div>
           )}
+
+          {/* Group prices -- automatic % off from a number of tickets in
+              one order. Only for organizers it is switched on for, and
+              never on a free event. */}
+          {ticket &&
+            ticket !== TICKET_MODE.free &&
+            (groupPricing || groupDiscounts.length > 0) && (
+              <div className="space-y-2 text-sm font-normal">
+                <h2>{t("groupPrices")}</h2>
+                <GroupDiscountInputs
+                  tiers={groupDiscounts}
+                  onChange={handleGroupDiscountsChange}
+                />
+              </div>
+            )}
 
           <hr className="border-border" />
         </div>

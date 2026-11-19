@@ -14,6 +14,7 @@ import {
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
+import { groupPricingEnabledFor } from "@abonten/services/events/groupPricingAccess";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -71,7 +72,7 @@ export default async function page({
     supabase
       .from("event")
       .select(
-        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, currency)",
+        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, admits, currency, available_from, available_until), event_group_discount(min_tickets, percent_off)",
       )
       .eq("id", eventId)
       .maybeSingle(),
@@ -140,6 +141,7 @@ export default async function page({
     { data: activePromotionRaw },
     participationResponse,
     { count: attendeeCount },
+    groupPricingEnabled,
   ] = await Promise.all([
     getEventPromotionTiers(),
     // "Is this event currently featured via a paid promotion" is always
@@ -165,6 +167,8 @@ export default async function page({
       .select("id", { count: "exact", head: true })
       .eq("event_id", eventId)
       .eq("status", "attending"),
+    // Group tickets and group prices are switched on per organizer.
+    groupPricingEnabledFor(actor.accountId),
   ]);
 
   const promotionTiers =
@@ -205,7 +209,7 @@ export default async function page({
 
   return (
     <ManageEventView
-      event={event}
+      event={{ ...event, group_pricing_enabled: groupPricingEnabled }}
       hasConfirmedParticipation={hasConfirmedParticipation}
       promotionTiers={promotionTiers}
       currentPromotion={currentPromotion}

@@ -13,8 +13,9 @@ import {
 
 // PUT /api/mobile/organizer/events/:eventId/ticket-types
 //   { currency?, freeEvent?, singleTicket?: { price, quantity } | null,
-//     multipleTickets?: { type, price, quantity, availableFrom?,
+//     multipleTickets?: { type, price, quantity, admits?, availableFrom?,
 //                         availableUntil? }[] | null }
+// quantity counts purchases; admits is how many people one purchase lets in.
 //
 // Replaces the caller's event's ticket types. Fully editable until the
 // event's first confirmed ticket, read-only after (409). Runs the same
@@ -72,6 +73,7 @@ export async function PUT(
             type: str(t.type) ?? "",
             price: typeof t.price === "number" ? t.price : Number.NaN,
             quantity: typeof t.quantity === "number" ? t.quantity : null,
+            admits: typeof t.admits === "number" ? t.admits : 1,
             availableFrom: str(t.availableFrom),
             availableUntil: str(t.availableUntil),
           }))

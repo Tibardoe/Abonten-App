@@ -1258,7 +1258,24 @@
     "checkLater": "4b1a948a",
     "checkLaterNote": "df8ce936",
     "cancelOrderTitle": "e0d45206",
-    "cancelOrderBody": "ee78f1f9"
+    "cancelOrderBody": "ee78f1f9",
+    "peoplePerTicket": "f69056ea",
+    "peoplePerTicketHint": "38428f3e",
+    "admitsPeople": "36d29821",
+    "admitsPeopleEachOwnTicket": "6cf8a20e",
+    "groupPrices": "ca059fbc",
+    "groupPricesHint": "ecfe763f",
+    "groupPriceLine": "d3431d1a",
+    "groupPriceFromTickets": "dd7c7f75",
+    "groupPricePercentOff": "2d08e346",
+    "removeGroupPrice": "9d77bbc0",
+    "addGroupPrice": "f53f39c9",
+    "groupPriceApplied": "73947ef9",
+    "groupPriceNextTier": "ab33e560",
+    "groupPriceBeatsPromo": "88718de3",
+    "groupDiscount": "bcecd893",
+    "saveGroupPrices": "8156ea6b",
+    "groupPricesSaved": "429379dc"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -2249,7 +2266,15 @@
     "ticketCancel.eventAll": "b5a0d947",
     "ticketCancel.eventFree": "23f8b859",
     "ticketCancel.eventOtherEvents": "22106d12",
-    "ticketCancel.confirmEvent": "1288dfb2"
+    "ticketCancel.confirmEvent": "1288dfb2",
+    "groupPricing.admitsRange": "dee861b3",
+    "groupPricing.freeAdmits": "d5de2ca4",
+    "groupPricing.tooManyTiers": "cd062689",
+    "groupPricing.tierRange": "ff5add93",
+    "groupPricing.tierDuplicate": "67997bc1",
+    "groupPricing.tierNotBetter": "f6a66722",
+    "groupPricing.freeEventTiers": "3b1f779c",
+    "groupPricing.notEnabled": "ecd79e78"
   },
   "discovery": {
     "aboutNewPostsFrom": "c0cd83e2",
@@ -2821,7 +2846,13 @@
     "promotersFull": "d39cde5f",
     "invitedPromoterRate": "4df27080",
     "promoterUsernamePlaceholder": "42375221",
-    "rewardInvitedPromoters": "c7942778"
+    "rewardInvitedPromoters": "c7942778",
+    "groupPrices": "ca059fbc",
+    "groupPricesEditableAnyTime": "03c14820",
+    "saveGroupPrices": "8156ea6b",
+    "groupPricesTitle": "ca059fbc",
+    "groupPriceTier": "d3431d1a",
+    "groupPricesAppliedAtCheckout": "6a12340b"
   },
   "explore": {
     "abontenHasnTLaunchedHereYet": "b1e552b7",
@@ -6284,6 +6315,7 @@
     "db.adjustmentRequestNotFound": "e7be585a",
     "db.adminAuditLogIsAppendOnly": "5f5a2a13",
     "db.adminNoteRowsAreImmutableCreateA": "35fbac4b",
+    "db.anEventCanHaveAtMost3": "a4a2347f",
     "db.anEventIsRequired": "ae261b08",
     "db.anIdempotencyKeyIsRequired": "60adcdc6",
     "db.anItemIsMarkedPaidOrFailed": "979031dd",
@@ -6510,10 +6542,12 @@
     "db.thisReviewIsNoLongerAvailable": "272ac09f",
     "db.thisReviewIsnTAvailableToYou": "64c049a1",
     "db.thisStoryIsNoLongerAvailable": "14e57193",
+    "db.thisTicketTypeHasBeenSoldSo": "3c0ae0cd",
     "db.ticketCodeAndQrAreRequired": "13de0511",
     "db.ticketCurrencyMustMatchTheEventCurrency": "ff470ba3",
     "db.ticketDataMismatchExpectedUnitsGot": "60c20796",
     "db.ticketDataMismatchForCheckoutRow": "8f9eadb4",
+    "db.ticketDataMismatchForType": "39629aff",
     "db.ticketExpiryIsRequired": "d127a8c3",
     "db.ticketForThisEventAlreadyBought": "ed15e7fc",
     "db.ticketOfTypeNotFound": "f1221a89",
@@ -7436,7 +7470,9 @@
     "teamTermsChanged": "3855e73d",
     "teamTermsNone": "760ededb",
     "teamTermsPending": "a5ed4144",
-    "weSentANewCodeTo": "896416a4"
+    "weSentANewCodeTo": "896416a4",
+    "groupPriceOrderChange": "06c1822d",
+    "groupPricesSaved": "c97e92a0"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",

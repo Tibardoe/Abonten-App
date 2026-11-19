@@ -29,7 +29,10 @@ export type TicketTransactionDetail = {
   unit_price: number;
   discount: number;
   total_price: number;
+  /** Tickets on the line (people). */
   quantity: number;
+  /** People one purchase admits (a Couple: 2); absent before 2026-11-19. */
+  admits?: number | null;
   checkout_session_id: string | null;
   created_at: string;
   expires_at: string | null;

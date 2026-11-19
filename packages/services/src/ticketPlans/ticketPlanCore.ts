@@ -1,5 +1,5 @@
 import { validateCheckoutQuantities } from "@abonten/core/checkoutLimits";
-import { computeLineAmount } from "@abonten/core/checkoutPricing";
+import { priceOrder } from "@abonten/core/checkoutPricing";
 import {
   resolveOccurrenceState,
   validatePurchaseOccurrence,
@@ -75,11 +75,12 @@ type EventRow = {
     price: number | null;
     type: string | null;
     currency: string;
+    admits: number;
   }[];
 };
 
 const EVENT_SELECT =
-  "id, status, title, event_code, organizer_id, currency, country_code, timezone, starts_at, ends_at, event_occurrence(id, starts_at, ends_at), ticket_type(id, price, type, currency)";
+  "id, status, title, event_code, organizer_id, currency, country_code, timezone, starts_at, ends_at, event_occurrence(id, starts_at, ends_at), ticket_type(id, price, type, currency, admits)";
 
 const isPaidType = (t: EventRow["ticket_type"][number]) =>
   (t.type ?? "") !== "FREE" && Number(t.price ?? 0) > 0;
@@ -322,8 +323,14 @@ export async function startTicketPlanCore(
   }
   const { offer, rules } = computed;
 
+  // quantities are purchases; a group type (a Couple) is `admits` tickets.
   const requested = Object.entries(input.quantities).filter(([, q]) => q > 0);
-  const totalTickets = requested.reduce((s, [, q]) => s + q, 0);
+  const admitsOf = (id: string) =>
+    Math.max(1, event.ticket_type.find((t) => t.id === id)?.admits ?? 1);
+  const totalTickets = requested.reduce(
+    (s, [id, q]) => s + q * admitsOf(id),
+    0,
+  );
   if (totalTickets > rules.maxTicketsPerPlan) {
     return {
       status: 400,
@@ -333,42 +340,41 @@ export async function startTicketPlanCore(
     };
   }
 
-  // Price every line from the ticket types themselves; no promo codes on a
-  // plan (version 1).
+  // Price every line from the ticket types themselves; no promo codes and
+  // no group prices on a plan (version 1).
   const typesById = new Map(event.ticket_type.map((t) => [t.id, t]));
   const currency = event.currency;
-  let ticketTotal = zero(currency);
-  const lines: {
-    ticket_type_id: string;
-    quantity: number;
-    unit_price: number;
-    discount: number;
-    discounted_units: number;
-    amount: number;
-  }[] = [];
-  for (const [ticketTypeId, quantity] of requested) {
+  for (const [ticketTypeId] of requested) {
     const type = typesById.get(ticketTypeId);
     if (!type || !isPaidType(type) || type.currency !== currency) {
       return { status: 400, message: tr("onlyPaidTicketsCanBePaid") };
     }
-    const unitPrice = Number(type.price);
-    const { discount, amount } = computeLineAmount(
-      quantity,
-      unitPrice,
-      0,
-      0,
-      currency,
-    );
-    ticketTotal = add(ticketTotal, fromMajor(amount, currency));
-    lines.push({
-      ticket_type_id: ticketTypeId,
-      quantity,
-      unit_price: unitPrice,
-      discount,
-      discounted_units: 0,
-      amount,
-    });
   }
+  const order = priceOrder(
+    requested.map(([ticketTypeId, purchases]) => {
+      // biome-ignore lint/style/noNonNullAssertion: checked just above
+      const type = typesById.get(ticketTypeId)!;
+      return {
+        id: ticketTypeId,
+        purchases,
+        admits: type.admits,
+        unitPrice: Number(type.price),
+        currency,
+      };
+    }),
+  );
+  let ticketTotal = zero(currency);
+  const lines = order.lines.map((line) => {
+    ticketTotal = add(ticketTotal, fromMajor(line.amount, currency));
+    return {
+      ticket_type_id: line.id,
+      quantity: line.quantity,
+      unit_price: line.unitPrice,
+      discount: line.discount,
+      discounted_units: 0,
+      amount: line.amount,
+    };
+  });
 
   const market = await getMarketOrDefault(event.country_code);
   const totals = computeOrderTotals({

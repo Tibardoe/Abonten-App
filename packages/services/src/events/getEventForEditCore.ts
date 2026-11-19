@@ -1,6 +1,8 @@
+import { purchasesLeft } from "@abonten/core/checkoutPricing";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { groupPricingEnabledFor } from "./groupPricingAccess";
 
 // Post-auth body of getEventForEdit, lifted so the mobile
 // GET /api/mobile/organizer/events/:id/edit route prefills its edit form
@@ -28,12 +30,19 @@ export type EventForEditData = {
         id: string;
         type: string;
         price: number;
+        /** Purchases left (a Couple counts once), as the form edits them. */
         quantity: number | null;
+        /** People one purchase admits (a Couple: 2). */
+        admits: number;
         currency: string | null;
         available_from: string | null;
         available_until: string | null;
       }[]
     | null;
+  /** Automatic group prices, smallest group first. */
+  event_group_discount: { min_tickets: number; percent_off: number }[] | null;
+  /** Group tickets and group prices are switched on for this organizer. */
+  group_pricing_enabled: boolean;
 };
 
 export type EventForEditResult =
@@ -67,7 +76,8 @@ export async function getEventForEditCore(
       flyer_public_id,
       flyer_version,
       event_occurrence(id, starts_at, ends_at),
-      ticket_type(id, type, price, quantity, currency, available_from, available_until)
+      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until),
+      event_group_discount(min_tickets, percent_off)
     `,
     )
     .eq("id", eventId)
@@ -81,5 +91,24 @@ export async function getEventForEditCore(
     };
   }
 
-  return { status: 200, data: event as unknown as EventForEditData };
+  const row = event as unknown as EventForEditData;
+  // The stock is stored in places (people); the form edits purchases.
+  const ticketTypes = (row.ticket_type ?? []).map((tier) => ({
+    ...tier,
+    admits: tier.admits ?? 1,
+    quantity: purchasesLeft(tier.quantity, tier.admits),
+  }));
+  const groupDiscounts = [...(row.event_group_discount ?? [])].sort(
+    (a, b) => a.min_tickets - b.min_tickets,
+  );
+
+  return {
+    status: 200,
+    data: {
+      ...row,
+      ticket_type: ticketTypes,
+      event_group_discount: groupDiscounts,
+      group_pricing_enabled: await groupPricingEnabledFor(userId),
+    },
+  };
 }

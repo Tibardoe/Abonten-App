@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-19 — Group tickets and group prices
+
+- A ticket type can admit several people (a Couple, a table): one purchase at its price issues one ticket per person (X39). Events can offer up to three automatic group prices by the number of tickets in one order; a promo code never adds to them (the larger wins per ticket, a worse code is not spent). Every stored count stays people, so capacity, issuance, restock and per-ticket refunds are unchanged; `create_ticket_checkout` now also refuses a ticket type of another event. Behind the feature flag `tickets.group_pricing` (off), opened per organizer. Migration `20261119200000_group_tickets_and_group_prices`. New: `architecture/group-tickets-and-prices.md` (1.0), `specifications/shows-seats-and-pricing.md` (1.0, decisions Y1–Y12); `OPERATIONAL_DECISIONS_REQUIRED.md` (X39, Y1–Y12), `specifications/tickets-entry-and-teams.md`.
+- Fix found on the way: the website's Manage › Details read ticket types without their sale window, so saving ticket types there cleared each type's on-sale and off-sale dates. It reads them now.
+
 ## 2026-11-18 — The consent link sends its own fresh code
 
 - An owner who opened the field team's consent link more than 5 minutes after the code went out had an expired code and no way to get another without going back to the sender. The page now has **Send me a new code** (same phone only; 60-second cooldown per phone, 5 an hour per onboarding, only while the onboarding is open), and the link lasts a day instead of 30 minutes, since the code, not the link, proves the phone. Members offer both ways: open the link, or reply with the code. `field-operations/onboarding-places.md` (1.1), `field-operations/roles-and-permissions.md` (1.1), `field-operations/onboarding-organizers-and-events.md` (1.3), `architecture/field-ops.md`

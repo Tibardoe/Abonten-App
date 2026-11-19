@@ -11,6 +11,7 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
+import type { GroupDiscountTier } from "@abonten/core/checkoutPricing";
 import {
   ticketCapacityHint,
   ticketCapacityProblem,
@@ -242,6 +243,10 @@ export function useEventUploadForm({
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>(
     initialValues?.promoCodes ?? [],
   );
+  // Automatic group prices (docs/architecture/group-tickets-and-prices.md).
+  const [groupDiscounts, setGroupDiscounts] = useState<GroupDiscountTier[]>(
+    initialValues?.groupDiscounts ?? [],
+  );
   const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(
     (initialValues?.promoCodes?.length ?? 0) > 0,
   );
@@ -348,7 +353,13 @@ export function useEventUploadForm({
     ticket === TICKET_MODE.single
       ? [{ quantity: singleTicketQuantity }]
       : ticket === TICKET_MODE.multiple
-        ? multipleTickets.map((t) => ({ quantity: t.quantity }))
+        ? // A group type (a Couple) takes `admits` places per ticket.
+          multipleTickets.map((t) => ({
+            quantity:
+              t.quantity == null
+                ? t.quantity
+                : t.quantity * Math.max(1, t.admits ?? 1),
+          }))
         : [];
   const capacityProblem =
     ticket && ticket !== TICKET_MODE.free
@@ -362,6 +373,11 @@ export function useEventUploadForm({
   const handleMultipleTicketsWithTouch = (tickets: Ticket[]) => {
     markTouched();
     setMultipleTickets(tickets);
+  };
+
+  const handleGroupDiscountsChange = (tiers: GroupDiscountTier[]) => {
+    markTouched();
+    setGroupDiscounts(tiers);
   };
 
   const handleDateTypeWithTouch = (nextDateType: string) => {
@@ -400,6 +416,7 @@ export function useEventUploadForm({
       singleTicketQuantity: singleTicketQuantity ?? undefined,
       multipleTickets: multipleTickets.length > 0 ? multipleTickets : undefined,
       promoCodes: promoCodes.length > 0 ? promoCodes : undefined,
+      groupDiscounts: groupDiscounts.length > 0 ? groupDiscounts : undefined,
       requireRegistration: checked,
       currency: userCurrency ?? undefined,
     };
@@ -551,6 +568,7 @@ export function useEventUploadForm({
         singleTicket,
         singleTicketQuantity,
         multipleTickets,
+        groupDiscounts: ticket === TICKET_MODE.free ? [] : groupDiscounts,
         currency: userCurrency,
         checked,
         clientRequestId: clientRequestIdRef.current,
@@ -609,6 +627,8 @@ export function useEventUploadForm({
     handleChecked,
     promoCodes,
     handlePromoCodesChange,
+    groupDiscounts,
+    handleGroupDiscountsChange,
     capacityProblem,
     capacityHint,
     showPromoCodeFormPopup,

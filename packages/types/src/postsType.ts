@@ -63,6 +63,8 @@ export type PostsType = {
   singleTicket: number | null;
   singleTicketQuantity: number | null;
   multipleTickets: Ticket[];
+  /** Automatic group prices ("10 or more tickets: 10% off"). */
+  groupDiscounts?: { minTickets: number; percentOff: number }[] | null;
   promoCodes: {
     promoCode: string;
     discount: number;

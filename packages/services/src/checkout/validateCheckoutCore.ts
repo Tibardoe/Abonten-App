@@ -1,8 +1,8 @@
 import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
 import { validateCheckoutQuantities } from "@abonten/core/checkoutLimits";
 import {
-  allocatePromoEligibility,
-  computeLineAmount,
+  type GroupDiscountTier,
+  priceOrder,
 } from "@abonten/core/checkoutPricing";
 import {
   resolveOccurrenceState,
@@ -34,6 +34,11 @@ const MAX_CHECKOUT_VALIDATIONS_PER_MINUTE = 30;
 
 export type CheckoutDetailsProp = {
   eventId: string;
+  /**
+   * Purchases per ticket type, as the buyer picked them. A group type (a
+   * Couple, a table) issues `admits` tickets per purchase; the checkout
+   * rows store tickets (docs/architecture/group-tickets-and-prices.md).
+   */
   quantities: { [ticketTypeId: string]: number };
   promoCode?: string | null;
   occurrenceId?: string | null;
@@ -247,18 +252,55 @@ export async function validateCheckoutCore(
     ([, value]) => value > 0,
   );
 
-  let promoCodeId: string | null = null;
-  let discountPercentage = 0;
-  const requestedLines = requestedEntries.map(([ticketTypeId, quantity]) => ({
-    id: ticketTypeId,
-    quantity,
-  }));
+  // Price every requested line here (read-only) -- the RPC below re-verifies
+  // the price, the event and whole purchases atomically at write time, but
+  // the pricing *decision* (unit price, group price, which tickets a promo
+  // code covers) stays a plain read + @abonten/core/checkoutPricing
+  // priceOrder, the same function the live checkout previews use, so the
+  // two can never drift apart.
+  const ticketTypeIds = requestedEntries.map(([id]) => id);
 
-  // Eligible-unit allocation is computed up front, across every requested
-  // ticket type in one pass (first-come in requestedLines order) — see
-  // checkoutPricing.ts, the same function CheckoutModal.tsx's live preview
-  // uses, so the two can't drift apart.
-  let eligibleUnitsByTicketType: Record<string, number> = {};
+  const { data: ticketTypeRows, error: ticketTypeError } = await supabase
+    .from("ticket_type")
+    .select("id, event_id, price, currency, admits")
+    .in("id", ticketTypeIds);
+
+  if (ticketTypeError) {
+    logger.error(`Failed to fetch ticket types: ${ticketTypeError.message}`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+
+  const typeById = new Map(
+    (ticketTypeRows ?? []).map((row) => [row.id as string, row]),
+  );
+
+  for (const [ticketTypeId] of requestedEntries) {
+    const type = typeById.get(ticketTypeId);
+    if (!type || type.event_id !== eventId || type.price === null) {
+      return {
+        status: 404,
+        message: tr("ticketOfTypeNotFound", {
+          ticketTypeId: ticketTypeId,
+        }),
+      };
+    }
+  }
+
+  // The limits count tickets: a Couple purchase is two.
+  const admitsById = Object.fromEntries(
+    requestedEntries.map(([id]) => [id, typeById.get(id)?.admits ?? 1]),
+  );
+  const ticketCheck = validateCheckoutQuantities(
+    coreT(),
+    quantities,
+    admitsById,
+  );
+  if (!ticketCheck.ok) {
+    return { status: 400, message: ticketCheck.message };
+  }
+
+  let promo: { percent: number; remainingUses: number | null } | null = null;
+  let promoCodeId: string | null = null;
 
   if (promoCode) {
     const promoCodeResponse = await getPromoCodeCore(
@@ -276,82 +318,47 @@ export async function validateCheckoutCore(
     }
 
     promoCodeId = promoCodeResponse.id;
-    discountPercentage = promoCodeResponse.discountPercentage;
-    eligibleUnitsByTicketType = allocatePromoEligibility(
-      requestedLines,
-      promoCodeResponse.remainingUses ?? null,
-    );
+    promo = {
+      percent: promoCodeResponse.discountPercentage,
+      remainingUses: promoCodeResponse.remainingUses ?? null,
+    };
   }
 
-  // Price every requested line here (read-only) — the RPC below re-verifies
-  // the price and quantity atomically at write time, but the pricing
-  // *decision* (unit price, discount, which lines a promo code covers)
-  // stays a plain read + @abonten/core/checkoutPricing, the same function
-  // the live checkout preview UI uses, so the two can never drift apart.
-  const ticketTypeIds = requestedEntries.map(([id]) => id);
+  // The event's group prices (service role: the event was just checked to
+  // be on sale, and the rows are public for it anyway).
+  const { data: tierRows, error: tierError } = await getSupabaseServiceClient()
+    .from("event_group_discount")
+    .select("min_tickets, percent_off")
+    .eq("event_id", eventId);
 
-  const { data: ticketTypeRows, error: ticketTypeError } = await supabase
-    .from("ticket_type")
-    .select("id, price, currency")
-    .in("id", ticketTypeIds);
-
-  if (ticketTypeError) {
-    logger.error(`Failed to fetch ticket types: ${ticketTypeError.message}`);
+  if (tierError) {
+    logger.error(`Failed to fetch group prices: ${tierError.message}`);
     return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  const priceById = new Map(
-    (ticketTypeRows ?? []).map((row) => [
-      row.id as string,
-      row.price as number,
-    ]),
-  );
-  const currencyById = new Map(
-    (ticketTypeRows ?? []).map((row) => [
-      row.id as string,
-      row.currency as string,
-    ]),
-  );
+  const groupTiers: GroupDiscountTier[] = (tierRows ?? []).map((row) => ({
+    minTickets: row.min_tickets,
+    percentOff: row.percent_off,
+  }));
 
-  const rows: {
-    ticketTypeId: string;
-    quantity: number;
-    unitPrice: number;
-    discount: number;
-    discountedUnits: number;
-    amount: number;
-  }[] = [];
-
-  for (const [ticketTypeId, quantity] of requestedEntries) {
-    const unitPrice = priceById.get(ticketTypeId);
-
-    if (unitPrice === undefined) {
+  const order = priceOrder(
+    requestedEntries.map(([ticketTypeId, purchases]) => {
+      // biome-ignore lint/style/noNonNullAssertion: every id was checked above
+      const type = typeById.get(ticketTypeId)!;
       return {
-        status: 404,
-        message: tr("ticketOfTypeNotFound", {
-          ticketTypeId: ticketTypeId,
-        }),
+        id: ticketTypeId,
+        purchases,
+        admits: type.admits,
+        unitPrice: Number(type.price),
+        currency: type.currency as string,
       };
-    }
+    }),
+    { promo, groupTiers },
+  );
 
-    const eligibleUnits = eligibleUnitsByTicketType[ticketTypeId] ?? 0;
-    const { discount, amount } = computeLineAmount(
-      quantity,
-      unitPrice,
-      discountPercentage,
-      eligibleUnits,
-      currencyById.get(ticketTypeId) as string,
-    );
-
-    rows.push({
-      ticketTypeId,
-      quantity,
-      unitPrice,
-      discount,
-      discountedUnits: eligibleUnits,
-      amount,
-    });
-  }
+  // A group price at least as good as the code wins outright: the code is
+  // not claimed, so it stays unused for this buyer.
+  const promoApplied = order.promoApplied;
 
   const expiresAt = getCheckoutExpiryTimestamp();
 
@@ -377,16 +384,17 @@ export async function validateCheckoutCore(
         p_user_id: userId,
         p_event_id: eventId,
         p_occurrence_id: occurrenceId ?? null,
-        p_promo_code_id: promoCodeId,
-        p_promo_code_text: promoCode ?? null,
+        p_promo_code_id: promoApplied ? promoCodeId : null,
+        p_promo_code_text: promoApplied ? (promoCode ?? null) : null,
         p_expires_at: expiresAt.toISOString(),
-        p_lines: rows.map((row) => ({
-          ticket_type_id: row.ticketTypeId,
-          quantity: row.quantity,
-          unit_price: row.unitPrice,
-          discount: row.discount,
-          discounted_units: row.discountedUnits,
-          amount: row.amount,
+        p_lines: order.lines.map((line) => ({
+          ticket_type_id: line.id,
+          quantity: line.quantity,
+          unit_price: line.unitPrice,
+          discount: line.discount,
+          discounted_units: line.discountedUnits,
+          amount: line.amount,
+          group_discount_percent: line.groupDiscountPercent,
         })),
       } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
     );

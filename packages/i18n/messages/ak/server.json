@@ -270,6 +270,7 @@
     "adjustmentRequestNotFound": "Adjustment request not found",
     "adminAuditLogIsAppendOnly": "admin_audit_log is append-only",
     "adminNoteRowsAreImmutableCreateA": "admin_note rows are immutable; create a new row with supersedes_id",
+    "anEventCanHaveAtMost3": "An event can have at most 3 group prices.",
     "anEventIsRequired": "An event is required",
     "anIdempotencyKeyIsRequired": "An idempotency key is required",
     "anItemIsMarkedPaidOrFailed": "An item is marked paid or failed",
@@ -497,10 +498,12 @@
     "thisReviewIsNoLongerAvailable": "This review is no longer available.",
     "thisReviewIsnTAvailableToYou": "This review isn't available to you.",
     "thisStoryIsNoLongerAvailable": "This Story is no longer available.",
+    "thisTicketTypeHasBeenSoldSo": "This ticket type has been sold, so the number of people it admits can no longer change.",
     "ticketCodeAndQrAreRequired": "ticket code and qr are required",
     "ticketCurrencyMustMatchTheEventCurrency": "Ticket currency {0} must match the event currency {1}",
     "ticketDataMismatchExpectedUnitsGot": "Ticket data mismatch (expected {0} units, got {1})",
     "ticketDataMismatchForCheckoutRow": "Ticket data mismatch for checkout row {0}",
+    "ticketDataMismatchForType": "Ticket data mismatch for type {0}",
     "ticketExpiryIsRequired": "ticket expiry is required",
     "ticketForThisEventAlreadyBought": "Ticket for this event already bought",
     "ticketOfTypeNotFound": "Ticket of type {0} not found",
@@ -1434,5 +1437,7 @@
   "teamTermsChanged": "The team terms have changed. Read them again, then accept.",
   "teamTermsNone": "There are no team terms to accept right now.",
   "teamTermsPending": "An Owner of the team needs to accept the team terms before its money can move.",
-  "weSentANewCodeTo": "We've sent a new code to {phone}."
+  "weSentANewCodeTo": "We've sent a new code to {phone}.",
+  "groupPriceOrderChange": "This order has a group price, so its number of tickets can't change here. Remove it and choose your tickets again.",
+  "groupPricesSaved": "Group prices saved."
 }

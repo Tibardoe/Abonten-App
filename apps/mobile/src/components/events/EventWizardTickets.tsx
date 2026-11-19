@@ -1,5 +1,8 @@
+import { GroupPricesEditor } from "@/components/events/GroupPricesEditor";
 import type { EventWizard } from "@/features/events/useEventWizard";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { uuidv4 } from "@/lib/uuid";
+import { GROUP_PRICING_FLAG } from "@abonten/core/groupPricing";
 import { AppText, Button, Chip, Field, Input } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
@@ -8,11 +11,14 @@ import { Pressable, View } from "react-native";
 // tiers. Mirrors the web TicketType + TicketInputs.
 export function EventWizardTickets({ w }: { w: EventWizard }) {
   const t = useTranslations("events");
+  const tCommon = useTranslations("common");
+  // Group tickets and group prices: switched on per organizer by staff.
+  const groupPricing = useMarket().flag(GROUP_PRICING_FLAG);
 
   function addTier() {
     w.setTiers((prev) => [
       ...prev,
-      { id: uuidv4(), name: "", price: "", quantity: "" },
+      { id: uuidv4(), name: "", price: "", quantity: "", admits: "1" },
     ]);
   }
   function patchTier(i: number, patch: Partial<(typeof w.tiers)[number]>) {
@@ -116,6 +122,19 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                   />
                 </View>
               </View>
+              {groupPricing || Number(tier.admits) > 1 ? (
+                <Field
+                  label={tCommon("peoplePerTicket")}
+                  hint={tCommon("peoplePerTicketHint")}
+                >
+                  <Input
+                    value={tier.admits}
+                    onChangeText={(v) => patchTier(i, { admits: v })}
+                    keyboardType="number-pad"
+                    placeholder="1"
+                  />
+                </Field>
+              ) : null}
             </View>
           ))}
           <Button
@@ -136,6 +155,15 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
         </AppText>
       ) : w.capacityHint ? (
         <AppText variant="meta">{w.capacityHint}</AppText>
+      ) : null}
+
+      {/* Automatic group prices: paid events, for organizers it is on for. */}
+      {w.ticketMode !== "free" && (groupPricing || w.groupPrices.length > 0) ? (
+        <GroupPricesEditor
+          value={w.groupPrices}
+          onChange={w.setGroupPrices}
+          problem={w.groupPriceProblem}
+        />
       ) : null}
     </View>
   );

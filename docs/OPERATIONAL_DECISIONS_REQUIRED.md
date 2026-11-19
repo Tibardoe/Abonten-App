@@ -233,13 +233,32 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | X36 | 7 | Team members earning on their own team's events | Built 2026-11-16: only when an Owner adds them (`event_promoter.owner_approved`); never Abonten's referral reward | Only if an Owner adds them as a promoter | **Decided (2026-11-15, the founder approved the plan).** |
 | X37 | 7 | A chargeback after the promoter was paid in cash | Not built | Recovered from their next earnings | **Decided (2026-11-15, the founder approved the plan).** |
 | X38 | 1 | Does a free ticket you sent still count as yours | `ticket.issued_to`, `issue_free_ticket`, index `ticket_one_free_registration_per_issuee` | Yes, so nobody sends theirs and registers again | **Decided (2026-11-15, the founder approved the plan).** |
-| X39 | 4 | Tables and groups | Not built | A ticket type can issue several tickets per purchase; no ticket admits more than one person | **Decided (2026-11-15, the founder approved the plan).** |
+| X39 | 4 | Tables and groups | Built 2026-11-19 ahead of Part 4: `ticket_type.admits`, one ticket per person ([architecture/group-tickets-and-prices.md](architecture/group-tickets-and-prices.md)), behind `tickets.group_pricing` | A ticket type can issue several tickets per purchase; no ticket admits more than one person | **Decided (2026-11-15, the founder approved the plan).** |
 | X40 | 4 | Venue capacity at the gate | Not built | Optional per event; warn at 90%, stop new entries at 100% | **Decided (2026-11-15, the founder approved the plan).** |
 | X41 | 3 | Leads | Not built | At least one per event; only Leads approve typed codes, void bands and settle disputes | **Decided (2026-11-15, the founder approved the plan).** |
 | X42 | 2 | A team with the business badge changes its name | Built 2026-11-16: `return_to_review`, trigger `team_name_back_to_review` (switched off with teams) | It goes back to review | **Decided (2026-11-15, the founder approved the plan).** |
 | X43 | All | How each part is switched on | Part 1: `ticket_transfer_program_setting`, `TICKET_TRANSFERS_KILL_SWITCH` | Off at first, then staff, then everyone, each with its own kill switch | **Decided (2026-11-15, the founder approved the plan).** |
 | X44 | All | Who pays for texts | Part 1: `texts_per_sender_per_day` (20) | Abonten, within daily caps; review the cost after the first month | **Decided (2026-11-15, the founder approved the plan).** |
 | X45 | All | How long scan history is kept | Not built | In full for 180 days after the event, then totals only | **Decided (2026-11-15, the founder approved the plan).** |
+
+## Shows, seats and pricing
+
+The plan in [specifications/shows-seats-and-pricing.md](specifications/shows-seats-and-pricing.md), asked for by the founder on 2026-11-19 ("go ahead and build them"). Part 1 (group tickets and group prices) is built and switched off: [architecture/group-tickets-and-prices.md](architecture/group-tickets-and-prices.md).
+
+| # | Part | Decision | Current implementation | Default taken | Status |
+|---|---|---|---|---|---|
+| Y1 | 1 | How many people a ticket type may admit | `ticket_type.admits` 1–20, FREE tier 1 | Each person gets their own ticket (X39) | **Decided (2026-11-19, built at the founder's request).** |
+| Y2 | 1 | How group prices count | `event_group_discount`, `priceOrder` | Tickets in one order, best tier for every ticket, up to three, bigger groups get more | **Decided (2026-11-19, built at the founder's request).** |
+| Y3 | 1 | A promo code and a group price together | `priceOrder` | Never added; the larger wins per ticket; a worse code is not spent | **Decided (2026-11-19, built at the founder's request).** |
+| Y4 | 1 | How it is opened | Feature flag `tickets.group_pricing` (off) | On request per organizer, then everyone | **Decided (2026-11-19, built at the founder's request).** |
+| Y5 | 2 | Seats and stock of a run of shows | Shared by every date of a listing | Per show | Planned default |
+| Y6 | 2 | When a run's money is ready | After the listing ends | 48 hours after each show | Planned default |
+| Y7 | 2 | A long run (an exhibition) | Stops selling once it starts | Day tickets while it runs | Planned default |
+| Y8 | 3 | First version of seating | `ticket.seat_number`, never filled | Assigned seats, not a map | **Decided (2026-11-19, the founder chose it).** |
+| Y9 | 3 | Who sets up a venue's seating | Not built | The organizer or staff; reusable per place | Planned default |
+| Y10 | 4 | What a pass is | Not built | N show credits for one series, each turned into a show's ticket | Planned default |
+| Y11 | 5 | Complimentary tickets | Not built | Organizer-issued, counted against seats, not refundable | Planned default |
+| Y12 | 6 | What copying a listing keeps | Not built | Everything but dates, sales, reviews and promo codes | Planned default |
 
 ## Product
 

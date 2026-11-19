@@ -1,9 +1,11 @@
+import type { GroupDiscountTier } from "@abonten/core/checkoutPricing";
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import {
   type StructuredAddress,
   readStructuredAddress,
 } from "@abonten/core/geo/address";
+import { groupPricingProblemMessage } from "@abonten/core/groupPricing";
 import { logger } from "@abonten/core/logger";
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
@@ -28,6 +30,10 @@ import {
   restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import {
+  groupPricingProblem,
+  replaceEventGroupDiscounts,
+} from "./groupPricingAccess";
 
 // Post-auth, post-flyer-upload body of postEvent, lifted so the
 // `/api/mobile/events` route runs the exact same create flow as the web
@@ -75,11 +81,16 @@ export type PostEventCoreInput = {
     | {
         type: string;
         price: number;
+        /** Purchases on sale (a Couple counts once); null = no limit. */
         quantity: number | null;
+        /** People one purchase admits (a Couple: 2). Default 1. */
+        admits?: number | null;
         availableFrom?: DateInput | null;
         availableUntil?: DateInput | null;
       }[]
     | null;
+  /** Automatic group prices (docs/architecture/group-tickets-and-prices.md). */
+  groupDiscounts?: GroupDiscountTier[] | null;
   promoCodes?:
     | {
         promoCode: string;
@@ -158,10 +169,32 @@ export async function postEventCore(
     return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
   }
 
+  // Group tickets and group prices: valid, and switched on for this
+  // organizer when used at all.
+  const groupProblem = await groupPricingProblem(userId, {
+    freeEvent: !!input.freeEvent,
+    tiers: input.multipleTickets ?? [],
+    groupDiscounts: input.groupDiscounts,
+  });
+  if (groupProblem) {
+    return {
+      status: groupProblem === "not_enabled" ? 403 : 400,
+      message: groupPricingProblemMessage(coreT(), groupProblem),
+    };
+  }
+
   if (!input.freeEvent) {
+    // Quantities are stored as places (people): a purchase of a type that
+    // admits two takes two.
     const tiers = [
       ...(input.singleTicket ? [input.singleTicket] : []),
-      ...(input.multipleTickets ?? []),
+      ...(input.multipleTickets ?? []).map((tier) => ({
+        ...tier,
+        quantity:
+          tier.quantity == null
+            ? null
+            : tier.quantity * Math.max(1, tier.admits ?? 1),
+      })),
     ];
     // Selling tickets needs a traceable organizer, when that is required.
     if (tiers.some((tier) => tier.price > 0)) {
@@ -249,14 +282,19 @@ export async function postEventCore(
               },
             ]
           : []),
-        ...(input.multipleTickets ?? []).map((ticket) => ({
-          type: ticket.type,
-          price: ticket.price,
-          quantity: ticket.quantity,
-          available_from: ticket.availableFrom ?? null,
-          available_until: ticket.availableUntil ?? null,
-          currency,
-        })),
+        ...(input.multipleTickets ?? []).map((ticket) => {
+          const admits = Math.max(1, ticket.admits ?? 1);
+          return {
+            type: ticket.type,
+            price: ticket.price,
+            // Places (people) on sale: purchases x admits.
+            quantity: ticket.quantity == null ? null : ticket.quantity * admits,
+            admits,
+            available_from: ticket.availableFrom ?? null,
+            available_until: ticket.availableUntil ?? null,
+            currency,
+          };
+        }),
       ];
 
   const promoCodesPayload =
@@ -365,6 +403,23 @@ export async function postEventCore(
       status: 500,
       message: tr("weCouldnTPostYourEvent"),
     };
+  }
+
+  // Group prices go in beside the event (service role: clients cannot
+  // write them). Written whole, like create_event is idempotent, so a retry
+  // of the same submission completes them.
+  const groupDiscounts = input.freeEvent ? [] : (input.groupDiscounts ?? []);
+  if (groupDiscounts.length > 0) {
+    const tierError = await replaceEventGroupDiscounts(
+      eventId as string,
+      groupDiscounts,
+    );
+    if (tierError) {
+      logger.error(
+        `Event ${eventId as string} created but its group prices failed: ${tierError}`,
+      );
+      return { status: 500, message: tr("weCouldnTPostYourEvent") };
+    }
   }
 
   if (input.draftId) {

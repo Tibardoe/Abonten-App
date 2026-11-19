@@ -206,7 +206,9 @@ function SessionCard({
             className="flex-row items-center justify-between"
           >
             <AppText variant="muted">
-              {ticketTypeLabel(tc, line.type)} × {line.quantity}
+              {/* Purchases: a Couple ticket (two people) counts once. */}
+              {ticketTypeLabel(tc, line.type)} ×{" "}
+              {line.purchases ?? line.quantity / Math.max(1, line.admits ?? 1)}
               {line.discount > 0
                 ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
                 : ""}

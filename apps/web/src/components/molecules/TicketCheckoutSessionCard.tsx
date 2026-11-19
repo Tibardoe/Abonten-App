@@ -136,13 +136,16 @@ export default function TicketCheckoutSessionCard({
       <div className="space-y-3">
         {session.lines.map((line) => {
           const isLinePending = pendingLineIds.has(line.ticketCheckoutId);
-          // availableStock is what's left AFTER this line's own reservation,
-          // so the stepper's ceiling is the line's current quantity plus
-          // whatever's still free.
+          // The stepper counts purchases: a Couple ticket is one purchase of
+          // two tickets (admits). availableStock is the places left AFTER
+          // this line's own reservation, so the ceiling is the line's
+          // purchases plus the whole purchases still free.
+          const admits = Math.max(1, line.admits ?? 1);
+          const purchases = line.purchases ?? line.quantity / admits;
           const maxQuantity =
             line.availableStock === null
               ? null
-              : line.quantity + line.availableStock;
+              : purchases + Math.floor(line.availableStock / admits);
 
           return (
             <div
@@ -166,17 +169,23 @@ export default function TicketCheckoutSessionCard({
 
               <QuantityStepper
                 label={t("tickets3", { type: ticketTypeLabel(tc, line.type) })}
-                quantity={line.quantity}
+                quantity={purchases}
                 minQuantity={1}
                 maxQuantity={maxQuantity}
                 disabled={isLinePending || locked}
                 onIncrement={() =>
-                  onQuantityChange(line.ticketCheckoutId, line.quantity + 1)
+                  onQuantityChange(line.ticketCheckoutId, purchases + 1)
                 }
                 onDecrement={() =>
-                  onQuantityChange(line.ticketCheckoutId, line.quantity - 1)
+                  onQuantityChange(line.ticketCheckoutId, purchases - 1)
                 }
               />
+
+              {admits > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  {t("admitsPeopleEachOwnTicket", { count: admits })}
+                </p>
+              )}
 
               <div className="flex justify-between text-xs text-muted-foreground">
                 <p>{t("unitPrice")}</p>
@@ -185,7 +194,11 @@ export default function TicketCheckoutSessionCard({
 
               {line.discount > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <p>{t("discount3")}</p>
+                  <p>
+                    {line.groupDiscountPercent
+                      ? t("groupDiscount")
+                      : t("discount3")}
+                  </p>
                   <p>
                     −{formatMoney(line.currency, line.discount, { locale })}
                   </p>

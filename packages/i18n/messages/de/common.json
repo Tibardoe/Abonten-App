@@ -926,5 +926,22 @@
   "checkLater": "Später prüfen",
   "checkLaterNote": "Wir sagen dir Bescheid, sobald sie bestätigt ist oder falls sie nicht durchgeht.",
   "cancelOrderTitle": "Diese Bestellung stornieren?",
-  "cancelOrderBody": "Deine reservierten Tickets gehen zurück in den Verkauf. Bestätige die Zahlungsanfrage nicht: Wenn du sie trotzdem bestätigst, wird das Geld automatisch vollständig erstattet."
+  "cancelOrderBody": "Deine reservierten Tickets gehen zurück in den Verkauf. Bestätige die Zahlungsanfrage nicht: Wenn du sie trotzdem bestätigst, wird das Geld automatisch vollständig erstattet.",
+  "peoplePerTicket": "Personen pro Ticket",
+  "peoplePerTicketHint": "Ein Paarticket gilt für 2 Personen. Jede Person erhält ein eigenes Ticket mit QR-Code.",
+  "admitsPeople": "{count, plural, one {Gilt für # Person} other {Gilt für # Personen}}",
+  "admitsPeopleEachOwnTicket": "{count, plural, one {Gilt für # Person} other {Gilt für # Personen, jede mit eigenem Ticket}}",
+  "groupPrices": "Gruppenpreise",
+  "groupPricesHint": "Automatische Rabatte für größere Bestellungen, zum Beispiel 10 % ab 10 Tickets. Ein Rabattcode kommt nie hinzu: Jedes Ticket erhält den höheren Rabatt.",
+  "groupPriceLine": "Ab {count} Tickets: {percent} Rabatt",
+  "groupPriceFromTickets": "Ab (Tickets)",
+  "groupPricePercentOff": "Rabatt (%)",
+  "removeGroupPrice": "Diesen Gruppenpreis entfernen",
+  "addGroupPrice": "Gruppenpreis hinzufügen",
+  "groupPriceApplied": "Gruppenpreis: {percent} Rabatt auf deine Bestellung",
+  "groupPriceNextTier": "{count, plural, one {Noch # Ticket} other {Noch # Tickets}} für {percent} Rabatt",
+  "groupPriceBeatsPromo": "Dein Gruppenpreis ist günstiger als dieser Code, daher wird der Code nicht verwendet.",
+  "groupDiscount": "Gruppenrabatt",
+  "saveGroupPrices": "Gruppenpreise speichern",
+  "groupPricesSaved": "Gruppenpreise gespeichert"
 }

@@ -20,15 +20,17 @@ import { setPendingRedirect } from "@/lib/authRedirect";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { useNowTick } from "@/lib/useNowTick";
 import { useQueryView } from "@/lib/useQueryView";
+import { MAX_TICKETS_PER_TICKET_TYPE } from "@abonten/core/checkoutLimits";
 import {
-  allocatePromoEligibility,
   computeCheckoutFee,
-  computeLineAmount,
+  priceOrder,
+  purchasesLeft,
 } from "@abonten/core/checkoutPricing";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { formatPercent } from "@abonten/core/i18n/format";
 import { tryFromMajor } from "@abonten/core/money/money";
 import {
   hasFreeRegistration,
@@ -90,6 +92,7 @@ export default function BuyTicketsScreen() {
   const t = useTranslations("checkout");
   const tc = useTranslations("core");
   const tp = useTranslations("ticketPlans");
+  const tCommon = useTranslations("common");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -147,51 +150,65 @@ export default function BuyTicketsScreen() {
   const planOffer = offerData?.available ? offerData : null;
   const paySmallSmall = payMode === "plan" && !!planOffer;
 
-  const lines = useMemo(
+  // The whole order, priced by the server's own rule (@abonten/core/
+  // checkoutPricing priceOrder): quantities are purchases (a Couple counts
+  // once and is two tickets), the event's group price applies to the whole
+  // order and a promo code never adds to it. A preview; the server prices
+  // the order again at checkout.
+  const groupTiers = useMemo(
     () =>
-      (event?.ticket_type ?? [])
-        .map((tier) => ({
-          id: tier.id,
-          quantity: quantities[tier.id] ?? 0,
-          price: tier.price,
-        }))
-        .filter((l) => l.quantity > 0),
-    [event, quantities],
+      (event?.event_group_discount ?? []).map((row) => ({
+        minTickets: row.min_tickets,
+        percentOff: row.percent_off,
+      })),
+    [event],
+  );
+  const order = useMemo(
+    () =>
+      priceOrder(
+        (event?.ticket_type ?? [])
+          .filter((tier) => (quantities[tier.id] ?? 0) > 0)
+          .map((tier) => ({
+            id: tier.id,
+            purchases: quantities[tier.id] ?? 0,
+            admits: tier.admits,
+            unitPrice: tier.price,
+            currency: tier.currency || currency,
+          })),
+        {
+          promo:
+            applied && applied.discountPercentage > 0
+              ? {
+                  percent: applied.discountPercentage,
+                  remainingUses: applied.remainingUses,
+                }
+              : null,
+          groupTiers,
+        },
+      ),
+    [event, quantities, applied, groupTiers, currency],
   );
 
-  const totalCount = useMemo(
-    () => lines.reduce((a, l) => a + l.quantity, 0),
-    [lines],
-  );
+  // Tickets (people): a Couple purchase is two.
+  const totalCount = order.tickets;
   const subtotal = useMemo(
-    () => lines.reduce((sum, l) => sum + l.quantity * l.price, 0),
-    [lines],
+    () => order.lines.reduce((sum, l) => sum + l.purchases * l.unitPrice, 0),
+    [order],
   );
-
-  // Live discount preview — mirrors the web CheckoutModal: allocate the code's
-  // remaining uses across the selected lines, discount only the eligible units.
-  const { discount, eligibleUnits } = useMemo(() => {
-    if (!applied || applied.discountPercentage <= 0)
-      return { discount: 0, eligibleUnits: 0 };
-    const eligibleByLine = allocatePromoEligibility(
-      lines,
-      applied.remainingUses,
-    );
-    let d = 0;
-    let units = 0;
-    for (const l of lines) {
-      const elig = eligibleByLine[l.id] ?? 0;
-      units += elig;
-      d += computeLineAmount(
-        l.quantity,
-        l.price,
-        applied.discountPercentage,
-        elig,
-        currency,
-      ).discount;
-    }
-    return { discount: d, eligibleUnits: units };
-  }, [applied, lines, currency]);
+  const discount = useMemo(
+    () => order.lines.reduce((sum, l) => sum + l.discount, 0),
+    [order],
+  );
+  const eligibleUnits = useMemo(
+    () => order.lines.reduce((sum, l) => sum + l.discountedUnits, 0),
+    [order],
+  );
+  // The code is not used when the group price is at least as good.
+  const groupBeatsPromo = !!applied && totalCount > 0 && !order.promoApplied;
+  const nextGroupTier =
+    [...groupTiers]
+      .filter((tier) => tier.minTickets > totalCount)
+      .sort((a, b) => a.minTickets - b.minTickets)[0] ?? null;
 
   const discountedSubtotal = Math.max(0, subtotal - discount);
   // The event market's own service fee (from the markets API), so a market
@@ -497,8 +514,16 @@ export default function BuyTicketsScreen() {
           <AppText variant="overline">{t("tickets")}</AppText>
           {event.ticket_type.map((tier) => {
             const onSale = isOnSale(tier, now);
-            const stockOut = tier.quantity != null && tier.quantity <= 0;
-            const cap = Math.min(MAX_PER_TYPE, tier.quantity ?? MAX_PER_TYPE);
+            // Stock is places (people); a Couple purchase takes two.
+            const admits = Math.max(1, tier.admits ?? 1);
+            const left = purchasesLeft(tier.quantity, admits);
+            const stockOut = left != null && left <= 0;
+            // The server allows 50 tickets of a type per order.
+            const cap = Math.min(
+              MAX_PER_TYPE,
+              Math.floor(MAX_TICKETS_PER_TICKET_TYPE / admits),
+              left ?? MAX_PER_TYPE,
+            );
             const qty = quantities[tier.id] ?? 0;
             const disabled = !onSale || stockOut;
             return (
@@ -518,10 +543,15 @@ export default function BuyTicketsScreen() {
                       ? t("soldOut")
                       : !onSale
                         ? t("notOnSale")
-                        : tier.quantity != null
-                          ? t("left", { quantity: tier.quantity })
+                        : left != null
+                          ? t("left", { quantity: left })
                           : ""}
                   </AppText>
+                  {admits > 1 ? (
+                    <AppText variant="caption" tone="muted">
+                      {tCommon("admitsPeopleEachOwnTicket", { count: admits })}
+                    </AppText>
+                  ) : null}
                 </View>
                 {disabled ? (
                   <AppText variant="caption" tone="muted">
@@ -539,6 +569,32 @@ export default function BuyTicketsScreen() {
             );
           })}
         </View>
+
+        {/* Group price: what the order gets, or how close the next is. */}
+        {order.groupDiscountPercent > 0 ? (
+          <AppText variant="body" tone="brand" className="font-medium">
+            {tCommon("groupPriceApplied", {
+              percent: formatPercent(order.groupDiscountPercent, locale, {
+                maximumFractionDigits: 0,
+              }),
+            })}
+          </AppText>
+        ) : null}
+        {nextGroupTier && !paySmallSmall ? (
+          <AppText variant="meta">
+            {tCommon("groupPriceNextTier", {
+              count: nextGroupTier.minTickets - totalCount,
+              percent: formatPercent(nextGroupTier.percentOff, locale, {
+                maximumFractionDigits: 0,
+              }),
+            })}
+          </AppText>
+        ) : null}
+        {groupBeatsPromo ? (
+          <AppText variant="caption" tone="muted">
+            {tCommon("groupPriceBeatsPromo")}
+          </AppText>
+        ) : null}
 
         {planOffer ? (
           <PaySmallSmallChoice

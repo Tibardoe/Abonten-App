@@ -297,6 +297,8 @@ import type {
   SendMessageInput,
   SendMessageResult,
   SetConversationStateBody,
+  SetEventGroupPricesBody,
+  SetEventGroupPricesResult,
   SetPlaceStatusBody,
   StartVerificationBody,
   StartVerificationResult,
@@ -1574,6 +1576,19 @@ export function createApiClient(options: ApiClientOptions) {
           `/api/mobile/organizer/events/${encodeURIComponent(
             eventId,
           )}/ticket-types`,
+          { method: "PUT", body, auth: true },
+        );
+      },
+      /**
+       * Replace the caller's event's automatic group prices (an empty list
+       * removes them). Editable any time; 403 when group pricing is not
+       * switched on for the organizer.
+       */
+      setEventGroupPrices(eventId: string, body: SetEventGroupPricesBody) {
+        return request<SetEventGroupPricesResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/group-prices`,
           { method: "PUT", body, auth: true },
         );
       },

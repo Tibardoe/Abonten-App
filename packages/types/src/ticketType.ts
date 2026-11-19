@@ -3,7 +3,10 @@ import type { Occurrence } from "./occurrenceType";
 export type Ticket = {
   category?: string;
   price: number;
+  /** Purchases on sale (a Couple counts once); null = no limit. */
   quantity?: number | null;
+  /** People one purchase admits (a Couple: 2). Default 1. */
+  admits?: number | null;
   availableFrom?: Date;
   availableUntil?: Date;
   currency?: string;
@@ -15,7 +18,10 @@ export type Ticket = {
 export type TicketType = {
   id: string;
   price: number;
+  /** Places (people) left; a group type sells floor(quantity / admits). */
   quantity?: number | null;
+  /** People one purchase admits (a Couple: 2). */
+  admits?: number | null;
   currency?: string;
   type: string;
   available_from?: Date;

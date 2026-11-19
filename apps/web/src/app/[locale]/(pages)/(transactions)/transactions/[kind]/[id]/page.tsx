@@ -73,6 +73,8 @@ export default async function Page({
         | {
             kind: "ticket";
             quantity: number;
+            /** People one purchase admits (a Couple: 2). */
+            admits?: number | null;
             checkout_session_id: string | null;
             event: { title: string } | null;
             ticket_type: { type: string; currency: string | null } | null;
@@ -170,7 +172,18 @@ export default async function Page({
               label={t("ticketType")}
               value={ticketTypeLabel(tc, row.ticket_type?.type)}
             />
-            <DetailRow label={t("quantity")} value={row.quantity} />
+            {/* unit_price is one purchase's price; a Couple purchase is
+                two tickets (admits). */}
+            <DetailRow
+              label={t("quantity")}
+              value={row.quantity / Math.max(1, row.admits ?? 1)}
+            />
+            {(row.admits ?? 1) > 1 && (
+              <DetailRow
+                label={tCommon("peoplePerTicket")}
+                value={row.admits}
+              />
+            )}
             <DetailRow
               label={t("unitPrice")}
               value={formatMoney(currency, row.unit_price, { locale })}

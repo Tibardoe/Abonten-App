@@ -1,13 +1,19 @@
 "use client";
 
+import setEventGroupDiscounts from "@/actions/setEventGroupDiscounts";
 import updateEventTicketTypes from "@/actions/updateEventTicketTypes";
 import ManagePromoCodesButton from "@/components/atoms/ManagePromoCodesButton";
 import EditEventFormFields from "@/components/molecules/EditEventFormFields";
+import GroupDiscountInputs from "@/components/molecules/GroupDiscountInputs";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import { TICKET_MODE, type TicketMode } from "@/events/ticketMode";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
+import {
+  type GroupDiscountTier,
+  purchasesLeft,
+} from "@abonten/core/checkoutPricing";
 import {
   ticketCapacityHint,
   ticketCapacityProblem,
@@ -69,7 +75,9 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
     multipleTickets: ticketTypes.map((t) => ({
       category: t.type ?? "",
       price: t.price ?? 0,
-      quantity: t.quantity,
+      // Stored as places (people); the form edits purchases.
+      quantity: purchasesLeft(t.quantity, t.admits),
+      admits: t.admits ?? 1,
       availableFrom: t.available_from ? new Date(t.available_from) : undefined,
       availableUntil: t.available_until
         ? new Date(t.available_until)
@@ -130,6 +138,39 @@ export default function ManageEventDetailsSection({
   );
   const [isSavingTickets, setIsSavingTickets] = useState(false);
 
+  // Group tickets and group prices (switched on per organizer by staff).
+  const groupPricingEnabled = !!event.group_pricing_enabled;
+  const initialGroupDiscounts: GroupDiscountTier[] = (
+    event.event_group_discount ?? []
+  ).map((row) => ({
+    minTickets: row.min_tickets,
+    percentOff: row.percent_off,
+  }));
+  const [groupDiscounts, setGroupDiscounts] = useState<GroupDiscountTier[]>(
+    initialGroupDiscounts,
+  );
+  const [isSavingGroupPrices, setIsSavingGroupPrices] = useState(false);
+  const groupPricesChanged =
+    JSON.stringify(groupDiscounts) !== JSON.stringify(initialGroupDiscounts);
+
+  const handleSaveGroupPrices = async () => {
+    setIsSavingGroupPrices(true);
+    try {
+      const response = await setEventGroupDiscounts({
+        eventId: event.id,
+        tiers: groupDiscounts,
+      });
+      if (response.status === 200) {
+        toast.success(response.message);
+        onSaved();
+      } else {
+        toast.error(`❌ ${response.message}`);
+      }
+    } finally {
+      setIsSavingGroupPrices(false);
+    }
+  };
+
   const handleSaveTicketTypes = async () => {
     setIsSavingTickets(true);
     try {
@@ -161,7 +202,12 @@ export default function ManageEventDetailsSection({
     ticketMode === TICKET_MODE.single
       ? [{ quantity: singleTicketQuantity }]
       : ticketMode === TICKET_MODE.multiple
-        ? multipleTickets.map((t) => ({ quantity: t.quantity }))
+        ? multipleTickets.map((t) => ({
+            quantity:
+              t.quantity == null
+                ? t.quantity
+                : t.quantity * Math.max(1, t.admits ?? 1),
+          }))
         : [];
   const capacityProblem =
     ticketMode && ticketMode !== TICKET_MODE.free
@@ -260,6 +306,7 @@ export default function ManageEventDetailsSection({
               ticketType={ticketMode}
               multipleTickets={multipleTickets}
               handleMultipleTickets={setMultipleTickets}
+              groupTicketsEnabled={groupPricingEnabled}
             />
           )}
 
@@ -290,6 +337,34 @@ export default function ManageEventDetailsSection({
           </button>
         )}
       </div>
+
+      {initialTicketState.mode !== TICKET_MODE.free &&
+        (groupPricingEnabled || initialGroupDiscounts.length > 0) && (
+          <>
+            <hr className="border-border" />
+            <div className="space-y-4">
+              <div>
+                <h2 className="font-semibold text-lg">{t("groupPrices")}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("groupPricesEditableAnyTime")}
+                </p>
+              </div>
+              <GroupDiscountInputs
+                tiers={groupDiscounts}
+                onChange={setGroupDiscounts}
+                disabled={isSavingGroupPrices}
+              />
+              <button
+                type="button"
+                onClick={handleSaveGroupPrices}
+                disabled={isSavingGroupPrices || !groupPricesChanged}
+                className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+              >
+                {isSavingGroupPrices ? t("saving") : t("saveGroupPrices")}
+              </button>
+            </div>
+          </>
+        )}
 
       <hr className="border-border" />
 

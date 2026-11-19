@@ -71,6 +71,143 @@ export function computeLineAmount(
   };
 }
 
+// ── Group tickets and group prices ────────────────────────────────────
+// docs/architecture/group-tickets-and-prices.md. A ticket type may admit
+// several people per purchase (a Couple type: 2); every stored count is a
+// count of people (tickets), and a line is a whole number of purchases at
+// the type's price. An event may offer automatic group prices by the number
+// of tickets in one order. A promo code and a group price never add up:
+// each ticket gets the larger of the two.
+
+/** An event's automatic group price: orders of at least `minTickets`. */
+export type GroupDiscountTier = { minTickets: number; percentOff: number };
+
+/** The best group price an order of `tickets` tickets reaches (0 = none). */
+export function groupDiscountPercentFor(
+  tiers: readonly GroupDiscountTier[] | null | undefined,
+  tickets: number,
+): number {
+  let best = 0;
+  for (const tier of tiers ?? []) {
+    if (tickets >= tier.minTickets && tier.percentOff > best) {
+      best = tier.percentOff;
+    }
+  }
+  return best;
+}
+
+/** Whole purchases a stock of `peopleLeft` places still allows. */
+export function purchasesLeft(
+  peopleLeft: number | null | undefined,
+  admits: number | null | undefined,
+): number | null {
+  if (peopleLeft === null || peopleLeft === undefined) return null;
+  return Math.floor(Math.max(0, peopleLeft) / Math.max(1, admits ?? 1));
+}
+
+export type OrderLineInput = {
+  /** The ticket type. */
+  id: string;
+  /** What the buyer picked: purchases of this type. */
+  purchases: number;
+  /** People one purchase lets in (1 for an ordinary ticket). */
+  admits?: number | null;
+  /** The price of one purchase, in major units. */
+  unitPrice: number;
+  currency: string;
+};
+
+export type PricedOrderLine = {
+  id: string;
+  purchases: number;
+  admits: number;
+  /** Tickets on the line: purchases × admits. */
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  /** Tickets the promo code discounted (it never discounts the others). */
+  discountedUnits: number;
+  /** The group price applied to this line, or null. */
+  groupDiscountPercent: number | null;
+  amount: number;
+};
+
+export type PricedOrder = {
+  lines: PricedOrderLine[];
+  /** Tickets in the whole order. */
+  tickets: number;
+  /** The group price the order reached (0 = none). */
+  groupDiscountPercent: number;
+  /** The promo code discounts at least one ticket. */
+  promoApplied: boolean;
+};
+
+/**
+ * Prices a whole order: the one rule for the server (validateCheckoutCore,
+ * the basket, Pay small small) and every live preview, so they agree to the
+ * pesewa. `promo` is the code's percentage and how many tickets it may
+ * still discount (null = unlimited). The group price comes from the number
+ * of tickets in the order; when it is at least as good as the code, the
+ * code is not used at all (so it is not spent).
+ */
+export function priceOrder(
+  lines: readonly OrderLineInput[],
+  options: {
+    promo?: { percent: number; remainingUses: number | null } | null;
+    groupTiers?: readonly GroupDiscountTier[] | null;
+  } = {},
+): PricedOrder {
+  const sized = lines.map((line) => {
+    const admits = Math.max(1, Math.floor(line.admits ?? 1));
+    return { ...line, admits, quantity: line.purchases * admits };
+  });
+  const tickets = sized.reduce((sum, line) => sum + line.quantity, 0);
+  const groupPercent = groupDiscountPercentFor(options.groupTiers, tickets);
+  const promo = options.promo ?? null;
+  const promoPercent =
+    promo && promo.percent > groupPercent ? promo.percent : 0;
+  const eligibleByLine =
+    promoPercent > 0
+      ? allocatePromoEligibility(
+          sized.map((line) => ({ id: line.id, quantity: line.quantity })),
+          promo?.remainingUses ?? null,
+        )
+      : {};
+
+  const priced = sized.map((line): PricedOrderLine => {
+    const unitMinor = fromMajor(line.unitPrice, line.currency).amountMinor;
+    const eligible = promoPercent > 0 ? (eligibleByLine[line.id] ?? 0) : 0;
+    const groupTickets = groupPercent > 0 ? line.quantity - eligible : 0;
+    // Per ticket the price is unitMinor / admits; rounded once per line.
+    const percentTickets =
+      eligible * promoPercent + groupTickets * groupPercent;
+    const discountMinor = percentTickets
+      ? roundHalfAwayFromZero(
+          (unitMinor * percentTickets) / (100 * line.admits),
+        )
+      : 0;
+    const amountMinor = Math.max(0, unitMinor * line.purchases - discountMinor);
+    return {
+      id: line.id,
+      purchases: line.purchases,
+      admits: line.admits,
+      quantity: line.quantity,
+      unitPrice: line.unitPrice,
+      discount: toMajor(money(discountMinor, line.currency)),
+      discountedUnits: eligible,
+      groupDiscountPercent: groupTickets > 0 ? groupPercent : null,
+      amount: toMajor(money(amountMinor, line.currency)),
+    };
+  });
+
+  return {
+    lines: priced,
+    tickets,
+    groupDiscountPercent: groupPercent,
+    promoApplied: priced.some((line) => line.discountedUnits > 0),
+  };
+}
+
 // Ticket checkout only — the customer-paid Abonten service fee, added on top
 // of the (already discounted) ticket total at payment time. The whole fee is
 // Abonten's; the organizer still receives 100% of the ticket price. Not
