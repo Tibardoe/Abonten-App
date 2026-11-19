@@ -4,8 +4,8 @@ purpose: Define how legal documents are versioned, how an effective date is set,
 audience: Founder, legal counsel, engineering
 scope: The four public legal documents
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-18
+version: 1.2
+lastReviewed: 2026-11-19
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -62,6 +62,7 @@ Every change to a file in `apps/web/src/content/legal/` is versioned by git. In 
 | Privacy Policy | 1.7-draft | — | Minor: §2 adds "Page views of listings" (that an event or place page was opened, when, on which platform; no account, device or address kept; the owner's own views not recorded); §3 purpose 6 names event-page views for organizers; §9 retention row (2026-10-18) | — (draft) |
 | Cookie Policy | 1.1-draft | — | Minor: §1 and §4 name Vercel Web Analytics, which sets no cookies and stores nothing in the browser (2026-10-18) | — (draft) |
 | Security overview | 1.3-draft | — | Minor: "What happens next" states the two-working-day acknowledgement goal for security reports (O1, 2026-09-12) | — (draft) |
+| Terms and Conditions | 1.5-draft | — | Minor: §7 a buyer can cancel a ticket only until its event starts, and a paid one only as the organizer's refund policy (shown before paying) allows; §8 organizers set that policy and may only make it more generous once tickets are sold (legal E10, 2026-11-19) | — (draft) |
 | Privacy Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Cookie Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Security overview | 1.0-draft | — | Initial draft (2026-09-12) | — |

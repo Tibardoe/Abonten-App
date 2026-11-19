@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-19 — Organizers set a refund policy; no cancelling after the show starts
+
+- An event with paid tickets now has a refund policy the organizer picks when creating or editing it: refunds until the event starts (the default, how every event behaved), until 1, 2, 3 or 7 days before, or no refunds. The event page (website and app) says it before anyone pays; the ticket screens drop **Cancel** and say why once refunds are closed. Once people hold tickets the policy may only become more generous (`guard_event_refund_policy`, migration `20261119120000`). Every buyer cancel path checks it on the server (`buyerCancelGate`), and no buyer can cancel a ticket once its show has started; before this the app only hid the button after the event ended, and a direct call could still refund an unscanned ticket. Organizer and staff refunds are unchanged. Help: `customers/refunds-and-cancellations`, `organizers/selling-tickets-and-promo-codes` (five languages); Terms 1.5-draft §7, §8; `LEGAL_REVIEW_REQUIRED.md` 1.8 (E10); `legal/versioning-and-effective-dates.md` 1.2; PROJECT.md §77
+
 ## 2026-11-19 — A "Gallery" place category
 
 - Places can be filed as **Gallery** (`place_category` id 15, slug `gallery`; schema.org `ArtGallery`; labels in every language). The first gallery onboarded (Berj Gallery, Busua) had to go under Entertainment. Searches for "museum" and "exhibition" now also find galleries (search vocabulary rows; "art" already did). (no doc version change)

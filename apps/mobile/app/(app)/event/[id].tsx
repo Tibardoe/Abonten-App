@@ -53,6 +53,7 @@ import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { hostDisplayName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { refundCutoffDays, refundPolicyOf } from "@abonten/core/refundPolicy";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -299,6 +300,16 @@ export default function EventDetailScreen() {
     ticketTypes: event.ticket_type,
   });
   const isFree = hasFreeRegistration(event.ticket_type);
+  // The refund policy, said before anyone pays (@abonten/core/refundPolicy).
+  const refundPolicy = refundPolicyOf(event);
+  const refundPolicyLine =
+    refundPolicy.kind === "none"
+      ? t("refundPolicyLine.none")
+      : refundPolicy.kind === "until_cutoff"
+        ? t("refundPolicyLine.untilCutoff", {
+            days: refundCutoffDays(refundPolicy.cutoffHours),
+          })
+        : t("refundPolicyLine.untilStart");
   const reviewSubject: ReviewSubject = {
     kind: "event",
     id: event.id,
@@ -712,6 +723,7 @@ export default function EventDetailScreen() {
                       length: event.ticket_type.length,
                     })}
                   </AppText>
+                  <AppText variant="meta">{refundPolicyLine}</AppText>
                 </View>
               </View>
             )}

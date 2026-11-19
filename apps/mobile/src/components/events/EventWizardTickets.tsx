@@ -1,3 +1,4 @@
+import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { uuidv4 } from "@/lib/uuid";
 import { AppText, Button, Chip, Field, Input } from "@abonten/ui-native";
@@ -136,6 +137,14 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
         </AppText>
       ) : w.capacityHint ? (
         <AppText variant="meta">{w.capacityHint}</AppText>
+      ) : null}
+
+      {/* Refunds -- only paid tickets have a price to give back. */}
+      {w.ticketMode !== "free" ? (
+        <RefundPolicyPicker
+          value={w.refundPolicy}
+          onChange={w.setRefundPolicy}
+        />
       ) : null}
     </View>
   );

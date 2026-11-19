@@ -3,6 +3,11 @@ import {
   readStructuredAddress,
 } from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
+import {
+  isStricterRefundPolicy,
+  parseRefundPolicy,
+  refundPolicyOf,
+} from "@abonten/core/refundPolicy";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
@@ -63,6 +68,9 @@ export type UpdateEventCoreInput = {
   specific_dates?: { start: DateInput; end: DateInput }[] | null;
   flyerPublicId?: string | null;
   flyerVersion?: string | null;
+  /** The refund policy (@abonten/core/refundPolicy); omitted = keep it. */
+  refundPolicy?: string | null;
+  refundCutoffHours?: number | null;
 };
 
 export type UpdateEventCoreResult =
@@ -98,6 +106,14 @@ export async function updateEventCore(
   // with the reason instead of a generic failure.
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
+  }
+
+  // Older app builds send no policy: the event keeps the one it has.
+  const nextRefundPolicy = input.refundPolicy
+    ? parseRefundPolicy(input.refundPolicy, input.refundCutoffHours ?? null)
+    : undefined;
+  if (nextRefundPolicy === null) {
+    return { status: 400, message: tr("refundPolicyInvalid") };
   }
 
   const locationCheck = validateLocationInput(coreT(), {
@@ -138,7 +154,7 @@ export async function updateEventCore(
   const { data: existingEvent, error: fetchError } = await supabase
     .from("event")
     .select(
-      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, country_code, event_occurrence(starts_at, ends_at), ticket_type(id, type, quantity)",
+      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, country_code, refund_policy, refund_cutoff_hours, event_occurrence(starts_at, ends_at), ticket_type(id, type, quantity)",
     )
     .eq("id", eventId)
     .eq("organizer_id", userId)
@@ -185,6 +201,16 @@ export async function updateEventCore(
         status: 409,
         message: tr("thisEventAlreadyHasConfirmedTickets"),
       };
+    }
+
+    // People bought on the refund terms the page showed them: from now on
+    // the policy may only become more generous (the database guard
+    // guard_event_refund_policy says the same).
+    if (
+      nextRefundPolicy &&
+      isStricterRefundPolicy(nextRefundPolicy, refundPolicyOf(existingEvent))
+    ) {
+      return { status: 409, message: tr("refundPolicyStricterAfterSales") };
     }
   }
 
@@ -276,6 +302,12 @@ export async function updateEventCore(
       ends_at: eventEndDate?.toISOString() ?? null,
       flyer_public_id: nextFlyerPublicId,
       flyer_version: nextFlyerVersion,
+      ...(nextRefundPolicy
+        ? {
+            refund_policy: nextRefundPolicy.kind,
+            refund_cutoff_hours: nextRefundPolicy.cutoffHours,
+          }
+        : {}),
     })
     .eq("id", eventId)
     .eq("organizer_id", userId);

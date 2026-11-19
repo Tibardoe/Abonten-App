@@ -9,6 +9,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { buyerCancelGate } from "./buyerCancelGate";
 import { ticketsOfPayment } from "./ticketsOfPayment";
 
 // Post-auth body of cancelUserTicket, lifted so the mobile API route
@@ -221,6 +222,14 @@ export async function cancelUserTicketCore(
         eventId: other.eventId,
       });
     }
+  }
+
+  // The event's refund policy, and no cancelling once the show started
+  // (@abonten/core/refundPolicy): checked here, on the server, because the
+  // app and the website hiding the button is not enough.
+  const refusal = await buyerCancelGate(targets.map((t) => t.id));
+  if (refusal) {
+    return { status: refusal.status, message: refusal.message, ...about };
   }
 
   // Compare-and-set: only the caller that actually flips a row from a live

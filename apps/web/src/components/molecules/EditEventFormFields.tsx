@@ -4,6 +4,7 @@ import PostAutoComplete from "@/components/atoms/PostAutoComplete";
 import PostInput from "@/components/atoms/PostInput";
 import CategoryFilter from "@/components/molecules/CategoryFilter";
 import DateTimePicker from "@/components/molecules/DateTimePicker";
+import RefundPolicySelect from "@/components/molecules/RefundPolicySelect";
 import TypeFilter from "@/components/molecules/TypeFilter";
 import {
   Form,
@@ -32,6 +33,10 @@ type EditEventFormFieldsProps = Pick<
   | "initialEntries"
   | "checked"
   | "handleChecked"
+  | "refundPolicy"
+  | "handleRefundPolicy"
+  | "savedRefundPolicy"
+  | "hasPaidTickets"
   | "category"
   | "setCategory"
   | "types"
@@ -69,6 +74,10 @@ export default function EditEventFormFields({
   initialEntries,
   checked,
   handleChecked,
+  refundPolicy,
+  handleRefundPolicy,
+  savedRefundPolicy,
+  hasPaidTickets,
   category,
   setCategory,
   types,
@@ -267,6 +276,16 @@ export default function EditEventFormFields({
                 </FormItem>
               )}
             />
+
+            {/* Outside the locked fieldset: after the first sale the policy
+                may still become more generous. */}
+            {hasPaidTickets ? (
+              <RefundPolicySelect
+                value={refundPolicy}
+                onChange={handleRefundPolicy}
+                lockedAt={restrictedLocked ? savedRefundPolicy : null}
+              />
+            ) : null}
 
             <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
               <span>{t("requireRegistration")}</span>

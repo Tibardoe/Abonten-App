@@ -437,5 +437,22 @@
   "promotersFull": "Este evento tiene {max} promotores, el máximo posible.",
   "invitedPromoterRate": "Eres promotor de este evento: ganas <strong>{rate} %</strong> de cada entrada vendida con tu enlace, como crédito después del evento.",
   "promoterUsernamePlaceholder": "@username",
-  "rewardInvitedPromoters": "Recompensa a los promotores que añadas abajo. Cada uno que venda una entrada con su enlace recibe su parte del precio como Crédito Abonten cuando termine el evento. Se descuenta de tu pago por esa venta, y no se paga nada por entradas reembolsadas o canceladas."
+  "rewardInvitedPromoters": "Recompensa a los promotores que añadas abajo. Cada uno que venda una entrada con su enlace recibe su parte del precio como Crédito Abonten cuando termine el evento. Se descuenta de tu pago por esa venta, y no se paga nada por entradas reembolsadas o canceladas.",
+  "refundPolicy": {
+    "label": "Reembolsos",
+    "help": "Hasta cuándo los compradores pueden cancelar una entrada de pago y recuperar el precio de la entrada. La tarifa de servicio nunca se reembolsa.",
+    "untilStart": "Hasta que empiece el evento",
+    "untilCutoff": "Hasta {days, plural, one {# día} other {# días}} antes",
+    "none": "Sin reembolsos",
+    "lockedNote": "Ya hay personas con entradas, así que solo puedes hacer los reembolsos más generosos."
+  },
+  "refundPolicyLine": {
+    "untilStart": "Puedes cancelar una entrada de pago y recibir el reembolso del precio de la entrada hasta que empiece el evento.",
+    "untilCutoff": "Puedes cancelar una entrada de pago y recibir el reembolso del precio de la entrada hasta {days, plural, one {# día} other {# días}} antes del evento.",
+    "none": "Sin reembolsos: las entradas de pago no se pueden cancelar."
+  },
+  "refundClosed": {
+    "noRefunds": "Este evento no ofrece reembolsos.",
+    "cutoffPassed": "Los reembolsos de este evento cerraron el {when}."
+  }
 }

@@ -2,7 +2,7 @@
 title: Refunds and cancellations
 summary: Cancelling a ticket, what is refunded (and what is not), how long refunds take, and what happens when an organizer cancels an event.
 order: 6
-lastUpdated: 2026-10-30
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,6 +12,16 @@ owner: Abonten Hub
 ## Cancelling a ticket you bought
 
 Open the ticket in My Tickets (Manage › My Tickets on the web, Account › My Tickets in the app) and choose **Cancel ticket** while it is still *Active*. Cancelling releases the ticket so someone else can buy it.
+
+## The event's refund policy
+
+Every event with paid tickets says on its page, before you pay, until when you can cancel for a refund:
+
+- **Until the event starts**: the usual case.
+- **Until a set time before it**: for example 2 days before. After that, **Cancel ticket** is no longer offered.
+- **No refunds**: paid tickets can't be cancelled. If the organizer cancels the event, you are still refunded.
+
+Whatever the policy, a ticket can't be cancelled once its show has started. A free ticket can be cancelled until then, so someone else can have the place.
 
 ## What you get back
 

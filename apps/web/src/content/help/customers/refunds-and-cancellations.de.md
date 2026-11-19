@@ -2,7 +2,7 @@
 title: Erstattungen und Stornierungen
 summary: Ein Ticket stornieren, was erstattet wird (und was nicht), wie lange Erstattungen dauern und was passiert, wenn ein Veranstalter ein Event absagt.
 order: 6
-lastUpdated: 2026-10-30
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,6 +12,16 @@ owner: Abonten Hub
 ## Ein gekauftes Ticket stornieren
 
 Öffne das Ticket unter Meine Tickets (Verwalten › Meine Tickets auf der Website, Konto › Meine Tickets in der App) und wähle **Ticket stornieren**, solange es noch *Aktiv* ist. Durch die Stornierung wird das Ticket wieder frei, sodass jemand anderes es kaufen kann.
+
+## Die Erstattungsregel des Events
+
+Jedes Event mit bezahlten Tickets zeigt auf seiner Seite, bevor du bezahlst, bis wann du für eine Erstattung stornieren kannst:
+
+- **Bis zum Beginn des Events**: der übliche Fall.
+- **Bis zu einem festen Zeitpunkt vorher**: zum Beispiel 2 Tage vorher. Danach wird **Ticket stornieren** nicht mehr angeboten.
+- **Keine Erstattungen**: Bezahlte Tickets können nicht storniert werden. Sagt der Veranstalter das Event ab, bekommst du trotzdem dein Geld zurück.
+
+Unabhängig von der Regel kann ein Ticket nicht mehr storniert werden, sobald die Vorstellung begonnen hat. Ein kostenloses Ticket kannst du bis dahin stornieren, damit jemand anderes den Platz bekommt.
 
 ## Was du zurückbekommst
 

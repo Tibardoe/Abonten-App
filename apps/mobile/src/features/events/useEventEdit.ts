@@ -19,6 +19,13 @@ import {
 } from "@abonten/core/eventDateValidation";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import {
+  DEFAULT_REFUND_POLICY,
+  type RefundPolicy,
+  refundPolicyChoice,
+  refundPolicyOf,
+  refundPolicyRequestFields,
+} from "@abonten/core/refundPolicy";
+import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
@@ -112,6 +119,15 @@ export function useEventEdit(eventId: string) {
   const [types, setTypes] = useState<string[]>([]);
   const [requireRegistration, setRequireRegistration] = useState(false);
   const [textErrors, setTextErrors] = useState<EventEditTextErrors>({});
+  // The refund policy as a choice, and the one saved: once people hold
+  // tickets only a more generous one may replace it.
+  const [refundPolicy, setRefundPolicy] = useState(
+    refundPolicyChoice(DEFAULT_REFUND_POLICY),
+  );
+  const [savedRefundPolicy, setSavedRefundPolicy] = useState<RefundPolicy>(
+    DEFAULT_REFUND_POLICY,
+  );
+  const [hasPaidTickets, setHasPaidTickets] = useState(false);
 
   // flyer — the existing Cloudinary flyer, plus an optional replacement URI
   const [existingFlyer, setExistingFlyer] = useState<{
@@ -168,6 +184,12 @@ export function useEventEdit(eventId: string) {
     setCategory(event.event_category ?? null);
     setTypes(parseEventTypes(event.event_type));
     setRequireRegistration(!!event.require_registration);
+    const savedPolicy = refundPolicyOf(event);
+    setSavedRefundPolicy(savedPolicy);
+    setRefundPolicy(refundPolicyChoice(savedPolicy));
+    setHasPaidTickets(
+      (event.ticket_type ?? []).some((type) => Number(type.price) > 0),
+    );
     setExistingFlyer({
       publicId: event.flyer_public_id,
       version: event.flyer_version,
@@ -492,6 +514,7 @@ export function useEventEdit(eventId: string) {
       endsAt: schedule.endsAt ?? null,
       specificDates: schedule.specificDates ?? null,
       flyerUri: newFlyerUri,
+      ...refundPolicyRequestFields(refundPolicy),
     });
   }
 
@@ -630,6 +653,10 @@ export function useEventEdit(eventId: string) {
     toggleType,
     requireRegistration,
     setRequireRegistration,
+    refundPolicy,
+    setRefundPolicy,
+    savedRefundPolicy,
+    hasPaidTickets,
     textErrors,
     // flyer
     existingFlyer,

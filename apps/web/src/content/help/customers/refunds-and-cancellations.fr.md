@@ -2,7 +2,7 @@
 title: Remboursements et annulations
 summary: Annuler un billet, ce qui est remboursé (et ce qui ne l'est pas), le délai des remboursements et ce qui se passe quand un organisateur annule un événement.
 order: 6
-lastUpdated: 2026-10-30
+lastUpdated: 2026-11-19
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,6 +12,16 @@ owner: Abonten Hub
 ## Annuler un billet que vous avez acheté
 
 Ouvrez le billet dans Mes billets (Gérer › Mes billets sur le site web, Compte › Mes billets dans l'application) et choisissez **Annuler le billet** tant qu'il est encore *Actif*. L'annulation libère le billet pour que quelqu'un d'autre puisse l'acheter.
+
+## La politique de remboursement de l'événement
+
+Chaque événement avec des billets payants indique sur sa page, avant que vous payiez, jusqu'à quand vous pouvez annuler pour être remboursé :
+
+- **Jusqu'au début de l'événement** : le cas habituel.
+- **Jusqu'à un moment fixé avant** : par exemple 2 jours avant. Ensuite, **Annuler le billet** n'est plus proposé.
+- **Aucun remboursement** : les billets payants ne peuvent pas être annulés. Si l'organisateur annule l'événement, vous êtes quand même remboursé.
+
+Quelle que soit la politique, un billet ne peut plus être annulé une fois le spectacle commencé. Un billet gratuit peut être annulé jusque-là, pour que quelqu'un d'autre puisse prendre la place.
 
 ## Ce qui vous est rendu
 

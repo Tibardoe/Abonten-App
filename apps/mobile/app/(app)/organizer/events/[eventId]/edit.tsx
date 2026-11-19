@@ -1,5 +1,6 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TimeField, prettyTime } from "@/components/datetime/TimeField";
+import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { FormSkeleton } from "@/components/skeletons";
@@ -188,6 +189,16 @@ export default function EditEventScreen() {
           onValueChange={w.setRequireRegistration}
         />
       </View>
+
+      {/* Refunds: still editable after the first sale, but then only
+          towards more generous (the server refuses the rest). */}
+      {w.hasPaidTickets ? (
+        <RefundPolicyPicker
+          value={w.refundPolicy}
+          onChange={w.setRefundPolicy}
+          lockedAt={w.locked ? w.savedRefundPolicy : null}
+        />
+      ) : null}
 
       {/* Flyer */}
       <Field label={t("flyer")}>
