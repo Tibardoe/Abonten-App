@@ -16,6 +16,7 @@ import { publicSupabase } from "@/config/supabase/publicClient";
 import EventViewLogger from "@/events/atoms/EventViewLogger";
 import GroupPricesNote from "@/events/atoms/GroupPricesNote";
 import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
+import EventShowsPicker from "@/events/molecules/EventShowsPicker";
 import { languageAlternates } from "@/i18n/alternates";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import { loadReviewPreview } from "@/reviews/loadReviews";
@@ -251,6 +252,7 @@ export default async function page({
     reviewPreview,
     similarEventsResponse,
     city,
+    showsResult,
   ] = await Promise.all([
     // `attendance` has RLS restricting SELECT to the row's owner or the
     // event's organizer — this cookie-free publicSupabase client always has
@@ -275,6 +277,10 @@ export default async function page({
     // The market city the pin is in: the address's locality and the
     // breadcrumb's middle step for search engines.
     cityAt(lat, lng),
+    // A run of shows: its other upcoming shows, for the show picker.
+    event.series_id
+      ? supabase.rpc("get_event_shows", { p_event_id: event.id })
+      : null,
   ]);
 
   const attendanceCount = Number(attendanceCountResult ?? 0);
@@ -526,6 +532,11 @@ export default async function page({
                   {eventDateAndTime.time}
                 </p>
               </div>
+
+              <EventShowsPicker
+                shows={showsResult?.data ?? null}
+                currentId={event.id}
+              />
 
               <EventDateSelector
                 eventDates={event_dates}

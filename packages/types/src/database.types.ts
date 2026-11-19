@@ -3149,6 +3149,7 @@ export type Database = {
           require_registration: boolean
           search_title: string | null
           search_tsv: unknown
+          series_id: string | null
           slug: string
           starts_at: string | null
           status: string
@@ -3186,6 +3187,7 @@ export type Database = {
           require_registration?: boolean
           search_title?: string | null
           search_tsv?: unknown
+          series_id?: string | null
           slug: string
           starts_at?: string | null
           status?: string
@@ -3223,6 +3225,7 @@ export type Database = {
           require_registration?: boolean
           search_title?: string | null
           search_tsv?: unknown
+          series_id?: string | null
           slug?: string
           starts_at?: string | null
           status?: string
@@ -4072,6 +4075,32 @@ export type Database = {
             columns: ["event_review_id"]
             isOneToOne: false
             referencedRelation: "event_review"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_series: {
+        Row: {
+          created_at: string
+          id: string
+          organizer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organizer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organizer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_series_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
             referencedColumns: ["id"]
           },
         ]
@@ -16565,6 +16594,18 @@ export type Database = {
       ensure_future_review_partitions: { Args: never; Returns: undefined }
       event_capacity_check: { Args: { p_event_id: string }; Returns: undefined }
       event_reminders_enqueue: { Args: never; Returns: number }
+      event_add_show: {
+        Args: {
+          p_client_request_id: string
+          p_ends_at: string
+          p_event_code: string
+          p_in_series?: boolean
+          p_slug: string
+          p_source: string
+          p_starts_at: string
+        }
+        Returns: string
+      }
       event_shared_capacity_left: {
         Args: { p_event_id: string }
         Returns: number
@@ -17287,6 +17328,19 @@ export type Database = {
         Returns: {
           attendance_count: number
           event_id: string
+        }[]
+      }
+      get_event_shows: {
+        Args: { p_event_id: string }
+        Returns: {
+          ends_at: string
+          event_code: string
+          id: string
+          seats_left: number
+          sold_out: boolean
+          starts_at: string
+          status: string
+          timezone: string
         }[]
       }
       get_event_attendee_contacts: {

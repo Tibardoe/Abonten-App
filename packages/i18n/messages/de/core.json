@@ -1462,5 +1462,14 @@
     "tierNotBetter": "Eine größere Gruppe muss einen höheren Rabatt erhalten.",
     "freeEventTiers": "Gruppenpreise sind bei einer kostenlosen Veranstaltung nicht verfügbar.",
     "notEnabled": "Gruppentickets und Gruppenpreise sind für dein Konto noch nicht freigeschaltet. Bitte Abonten, sie freizuschalten."
+  },
+  "showRuns": {
+    "noSlots": "Wähle mindestens einen Tag und eine Uhrzeit.",
+    "badSlot": "Eine Uhrzeit ist ungültig.",
+    "badRange": "Der letzte Tag muss am oder nach dem ersten liegen.",
+    "tooLong": "Eine Reihe kann höchstens {days} Tage umfassen.",
+    "badDuration": "Eine Vorstellung dauert 15 Minuten bis 24 Stunden.",
+    "noneAhead": "Keine dieser Vorstellungen liegt in der Zukunft.",
+    "tooMany": "Das sind mehr als {max} Vorstellungen. Füge sie in Teilen hinzu."
   }
 }

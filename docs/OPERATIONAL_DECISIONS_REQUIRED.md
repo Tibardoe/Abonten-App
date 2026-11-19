@@ -251,14 +251,14 @@ The plan in [specifications/shows-seats-and-pricing.md](specifications/shows-sea
 | Y2 | 1 | How group prices count | `event_group_discount`, `priceOrder` | Tickets in one order, best tier for every ticket, up to three, bigger groups get more | **Decided (2026-11-19, built at the founder's request).** |
 | Y3 | 1 | A promo code and a group price together | `priceOrder` | Never added; the larger wins per ticket; a worse code is not spent | **Decided (2026-11-19, built at the founder's request).** |
 | Y4 | 1 | How it is opened | Feature flag `tickets.group_pricing` (off) | On request per organizer, then everyone | **Decided (2026-11-19, built at the founder's request).** |
-| Y5 | 2 | Seats and stock of a run of shows | Shared by every date of a listing | Per show | Planned default |
-| Y6 | 2 | When a run's money is ready | After the listing ends | 48 hours after each show | Planned default |
-| Y7 | 2 | A long run (an exhibition) | Stops selling once it starts | Day tickets while it runs | Planned default |
+| Y5 | 2 | Seats and stock of a run of shows | A run is a series of events (`event.series_id`), one per show ([architecture/show-runs.md](architecture/show-runs.md)) | Per show | **Decided (2026-11-19, built at the founder's request).** |
+| Y6 | 2 | When a run's money is ready | Per show (each is an event) | 48 hours after each show | **Decided (2026-11-19, built at the founder's request).** |
+| Y7 | 2 | A long run (an exhibition) | A show per day | Each day sold until it starts | **Decided (2026-11-19, built at the founder's request).** |
 | Y8 | 3 | First version of seating | `ticket.seat_number`, never filled | Assigned seats, not a map | **Decided (2026-11-19, the founder chose it).** |
 | Y9 | 3 | Who sets up a venue's seating | Not built | The organizer or staff; reusable per place | Planned default |
 | Y10 | 4 | What a pass is | Not built | N show credits for one series, each turned into a show's ticket | Planned default |
 | Y11 | 5 | Complimentary tickets | Not built | Organizer-issued, counted against seats, not refundable | Planned default |
-| Y12 | 6 | What copying a listing keeps | Not built | Everything but dates, sales, reviews and promo codes | Planned default |
+| Y12 | 6 | What copying a listing keeps | `event_add_show` | Everything but dates, sales, reviews, featuring and photos; running promo codes move with the date | **Decided (2026-11-19, built at the founder's request).** |
 
 ## Product
 

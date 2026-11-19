@@ -68,6 +68,8 @@ export type EventDetail = {
   }[];
   /** Automatic group prices ("10+ tickets: 10% off"); absent in an older cache. */
   event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
+  /** The run of shows this event belongs to (event_series), or null. */
+  series_id?: string | null;
   event_occurrence: { id: string; starts_at: string; ends_at: string }[];
   place: { id: string; name: string; slug: string } | null;
   /** @abonten/core/refundPolicy (absent from an older server or cache). */

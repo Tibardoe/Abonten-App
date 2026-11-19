@@ -86,6 +86,8 @@ import type {
   UpdateSafetySessionBody,
 } from "./types";
 import type {
+  AddEventShowsBody,
+  AddEventShowsResult,
   AddMomoWalletBody,
   AddPayoutAccountBody,
   AddPayoutAccountResult,
@@ -1584,6 +1586,16 @@ export function createApiClient(options: ApiClientOptions) {
        * removes them). Editable any time; 403 when group pricing is not
        * switched on for the organizer.
        */
+      /**
+       * Adds shows to a listing's run (a weekly pattern or dates), or makes
+       * a separate copy with one date (body.separate).
+       */
+      addEventShows(eventId: string, body: AddEventShowsBody) {
+        return request<AddEventShowsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/shows`,
+          { method: "POST", body, auth: true },
+        );
+      },
       setEventGroupPrices(eventId: string, body: SetEventGroupPricesBody) {
         return request<SetEventGroupPricesResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(
