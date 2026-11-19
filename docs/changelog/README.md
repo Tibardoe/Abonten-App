@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-19 — A "Gallery" place category
+
+- Places can be filed as **Gallery** (`place_category` id 15, slug `gallery`; schema.org `ArtGallery`; labels in every language). The first gallery onboarded (Berj Gallery, Busua) had to go under Entertainment. Searches for "museum" and "exhibition" now also find galleries (search vocabulary rows; "art" already did). (no doc version change)
+
 ## 2026-11-18 — The consent link sends its own fresh code
 
 - An owner who opened the field team's consent link more than 5 minutes after the code went out had an expired code and no way to get another without going back to the sender. The page now has **Send me a new code** (same phone only; 60-second cooldown per phone, 5 an hour per onboarding, only while the onboarding is open), and the link lasts a day instead of 30 minutes, since the code, not the link, proves the phone. Members offer both ways: open the link, or reply with the code. `field-operations/onboarding-places.md` (1.1), `field-operations/roles-and-permissions.md` (1.1), `field-operations/onboarding-organizers-and-events.md` (1.3), `architecture/field-ops.md`
