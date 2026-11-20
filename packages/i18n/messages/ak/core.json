@@ -1022,6 +1022,10 @@
     "complimentary_tickets": {
       "title": "{actor} gave you {count, plural, one {a ticket} other {# tickets}}",
       "body": "{count, plural, one {Your ticket} other {Your tickets}} for {title} {count, plural, one {is} other {are}} in Tickets."
+    },
+    "event_rescheduled": {
+      "title": "{title} has moved",
+      "body": "Now {dayTime}. Open your ticket to keep it or get a full refund."
     }
   },
   "openStatus": {

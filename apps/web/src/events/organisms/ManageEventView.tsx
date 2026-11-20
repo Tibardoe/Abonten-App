@@ -3,6 +3,7 @@
 import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
 import GiveComplimentaryCard from "@/events/molecules/GiveComplimentaryCard";
 import ManageEventPassCard from "@/events/molecules/ManageEventPassCard";
+import ManageEventRescheduleCard from "@/events/molecules/ManageEventRescheduleCard";
 import ManageEventSeatingCard from "@/events/molecules/ManageEventSeatingCard";
 import ManageEventShowsCard from "@/events/molecules/ManageEventShowsCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
@@ -143,6 +144,16 @@ export default function ManageEventView({
               hasConfirmedParticipation={hasConfirmedParticipation}
               onSaved={refresh}
             />
+            {/* Dates lock once people hold tickets: moving it tells them. */}
+            {event.status === "published" && hasConfirmedParticipation && (
+              <div className="mt-8">
+                <ManageEventRescheduleCard
+                  eventId={event.id}
+                  title={event.title}
+                  timeZone={event.timezone}
+                />
+              </div>
+            )}
             {event.status === "published" && (
               <div className="mt-8">
                 <ManageEventSeatingCard eventId={event.id} />

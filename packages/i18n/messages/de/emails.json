@@ -102,5 +102,18 @@
       "intro": "Der Alarm von {person} auf Abonten wurde aus Versehen gesendet. Es ist nichts passiert.",
       "button": "Seite öffnen"
     }
+  },
+  "reschedule": {
+    "subject": "{eventTitle} ist verschoben auf {newWhen}",
+    "preview": "{eventTitle} findet jetzt am {newWhen} statt. Dein Ticket bleibt gültig.",
+    "heading": "Dein Event wurde verschoben",
+    "intro": "{greeting} der Veranstalter hat <strong>{eventTitle}</strong> auf einen neuen Termin verschoben. Dein Ticket gilt für den neuen Termin: Du musst nichts tun, um es zu behalten.",
+    "choice": "Du kannst zum neuen Termin nicht? Öffne dein Ticket und wähle vor dem {refundUntil} „Geld zurück“: Bei bezahlten Tickets bekommst du den Ticketpreis und die Servicegebühr zurück.",
+    "event": "Event",
+    "was": "Vorher",
+    "now": "Jetzt",
+    "messageLabel": "Nachricht des Veranstalters",
+    "openTickets": "Meine Tickets öffnen",
+    "questions": "Fragen zum Event? Schreib dem Veranstalter über die Eventseite in der Abonten-App."
   }
 }

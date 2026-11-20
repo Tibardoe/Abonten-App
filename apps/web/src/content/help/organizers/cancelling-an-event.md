@@ -2,14 +2,14 @@
 title: Cancelling an event
 summary: What happens to tickets, refunds, attendees and your earnings when you cancel, and alternatives to cancelling.
 order: 4
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
 
 # Cancelling an event
 
-Cancelling is **final and cannot be undone**. Before the first ticket is confirmed you can simply edit the date or venue instead; after that they are locked, to protect people who already hold a ticket.
+Cancelling is **final and cannot be undone**. Before the first ticket is confirmed you can simply edit the date or venue instead; after that they are locked, to protect people who already hold a ticket, and you move the date with **Move to a new date** instead (below).
 
 ## How to cancel
 
@@ -35,7 +35,11 @@ A paid promotion on a cancelled event is not refunded.
 
 ## Moving the event to a new date
 
-Abonten has no "postponed" state. Before any ticket is confirmed, edit the event's dates. Once tickets are confirmed, the dates and venue can't be changed: cancel the event (buyers get the ticket price back), create a new event for the new date, and say where to find it in the cancelled event's description.
+Before any ticket is confirmed, edit the event's dates. Once people hold tickets, use **Move to a new date** (website: Manage › Details; app: the event's menu): choose the new date, the start and end times, and write a message to ticket holders. Everyone holding a ticket is told at once in the app, by push and by email, with your message.
+
+Their tickets stay valid for the new date. Anyone who can't make it can give their tickets back for a full refund, **service fee included**, for 7 days and no later than 48 hours before the new date, whatever refund policy you chose. Your earnings for those tickets are reversed; the rest are paid 48 hours after the new date.
+
+An event can be moved twice at most. An event with several dates can't be moved yet, and the venue can't change: for those, cancel the event and create a new one, and say where to find it in the cancelled event's description.
 
 ## Communicating
 

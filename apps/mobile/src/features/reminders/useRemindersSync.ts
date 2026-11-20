@@ -1,10 +1,12 @@
 import { useSession } from "@/auth/SessionProvider";
+import { supabase } from "@/lib/supabase";
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
 import {
   clearEventReminders,
   listEventReminders,
   markLocalServerSynced,
+  reconcileEventReminder,
   sameOffsets,
   setEventReminders,
 } from "./eventReminders";
@@ -47,6 +49,24 @@ async function syncAll(userId: string): Promise<void> {
     } else if (!rec.serverSynced) {
       await markLocalServerSynced(rec.eventId, true);
     }
+  }
+
+  // The events' own dates: an organizer may have moved one
+  // (docs/architecture/event-reschedule.md) or cancelled it since the
+  // reminder was set. An event this read can't see is left alone.
+  const { data: events } = await supabase
+    .from("event")
+    .select("id, starts_at, status")
+    .in(
+      "id",
+      local.map((r) => r.eventId),
+    );
+  for (const event of events ?? []) {
+    await reconcileEventReminder({
+      eventId: event.id,
+      startsAtIso: event.starts_at,
+      status: event.status,
+    }).catch(() => {});
   }
 }
 

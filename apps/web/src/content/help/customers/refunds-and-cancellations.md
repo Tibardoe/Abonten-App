@@ -2,7 +2,7 @@
 title: Refunds and cancellations
 summary: Cancelling a ticket, what is refunded (and what is not), how long refunds take, and what happens when an organizer cancels an event.
 order: 6
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -49,6 +49,12 @@ If an organizer cancels, Abonten automatically:
 3. notifies you in the app and, for paid tickets, by email.
 
 You do not need to do anything. If a refund shows *Refund failed*, use *Retry refund* or contact support.
+
+## When the organizer moves an event
+
+If an organizer moves an event to a new date, you're told in the app, by push and by email, with their message. Your ticket stays valid for the new date: you don't need to do anything to keep it.
+
+If you can't make the new date, open your ticket and choose **Get a refund** before the date it shows (7 days at most, and no later than 48 hours before the new date). You get the ticket price **and the service fee** back, whatever the event's refund policy says. A ticket someone sent you is refunded to the person who paid for it.
 
 ## Bookings at places
 

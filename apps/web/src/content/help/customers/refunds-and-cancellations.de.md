@@ -2,7 +2,7 @@
 title: Erstattungen und Stornierungen
 summary: Ein Ticket stornieren, was erstattet wird (und was nicht), wie lange Erstattungen dauern und was passiert, wenn ein Veranstalter ein Event absagt.
 order: 6
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -49,6 +49,12 @@ Sagt ein Veranstalter ab, erledigt Abonten automatisch Folgendes:
 3. Du wirst in der App benachrichtigt und, bei bezahlten Tickets, per E-Mail.
 
 Du musst nichts tun. Zeigt eine Erstattung *Erstattung fehlgeschlagen*, nutze *Erstattung erneut versuchen* oder kontaktiere den Support.
+
+## Wenn der Veranstalter ein Event verschiebt
+
+Verschiebt ein Veranstalter ein Event auf einen neuen Termin, wirst du in der App, per Push und per E-Mail informiert, mit seiner Nachricht. Dein Ticket gilt für den neuen Termin: Du musst nichts tun, um es zu behalten.
+
+Wenn du zum neuen Termin nicht kannst, öffne dein Ticket und wähle **Geld zurück** vor dem angezeigten Datum (höchstens 7 Tage, und spätestens 48 Stunden vor dem neuen Termin). Du bekommst den Ticketpreis **und die Servicegebühr** zurück, egal was die Erstattungsregel des Events sagt. Ein Ticket, das dir geschickt wurde, wird der Person erstattet, die es bezahlt hat.
 
 ## Buchungen bei Orten
 

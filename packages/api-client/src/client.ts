@@ -228,6 +228,7 @@ import type {
   GiveComplimentaryTicketsResult,
   HighlightPlaybackBody,
   HighlightPlaybackResult,
+  HolderRescheduleResult,
   LoyaltyProgressResult,
   MarkConversationReadBody,
   MarkConversationUnreadBody,
@@ -293,6 +294,10 @@ import type {
   RequestPlaceBookingResult,
   RequestTicketRefundBody,
   RequestTicketRefundResult,
+  RescheduleChoiceResult,
+  RescheduleEventBody,
+  RescheduleEventResult,
+  RescheduleSetupResult,
   ResolvedAddress,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
@@ -1142,6 +1147,27 @@ export function createApiClient(options: ApiClientOptions) {
           auth: true,
         });
       },
+      /** The event's latest move as the caller (a holder) sees it, or null. */
+      reschedule(eventId: string) {
+        return request<HolderRescheduleResult>(
+          `/api/mobile/events/${encodeURIComponent(eventId)}/reschedule`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Keep my tickets for the new date. */
+      keepAfterReschedule(eventId: string) {
+        return request<RescheduleChoiceResult>(
+          `/api/mobile/events/${encodeURIComponent(eventId)}/reschedule/keep`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** Give my tickets back for the ticket price and the service fee. */
+      refundAfterReschedule(eventId: string) {
+        return request<RescheduleChoiceResult>(
+          `/api/mobile/events/${encodeURIComponent(eventId)}/reschedule/refund`,
+          { method: "POST", auth: true },
+        );
+      },
     },
 
     paymentMethods: {
@@ -1619,6 +1645,23 @@ export function createApiClient(options: ApiClientOptions) {
       ) {
         return request<GiveComplimentaryTicketsResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/complimentary`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Whether the event can move to a new date, and who would be told. */
+      rescheduleSetup(eventId: string) {
+        return request<RescheduleSetupResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/reschedule`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Moves the event to a new date with a message; every holder is told
+       * and may keep their tickets or give them back for a full refund.
+       */
+      rescheduleEvent(eventId: string, body: RescheduleEventBody) {
+        return request<RescheduleEventResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/reschedule`,
           { method: "POST", body, auth: true },
         );
       },

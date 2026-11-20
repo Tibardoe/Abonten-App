@@ -102,5 +102,18 @@
       "intro": "L'alerte de {person} sur Abonten a été envoyée par erreur. Tout va bien.",
       "button": "Ouvrir la page"
     }
+  },
+  "reschedule": {
+    "subject": "{eventTitle} est déplacé au {newWhen}",
+    "preview": "{eventTitle} a désormais lieu le {newWhen}. Votre billet reste valable.",
+    "heading": "Votre événement a été déplacé",
+    "intro": "{greeting} l'organisateur a déplacé <strong>{eventTitle}</strong> à une nouvelle date. Votre billet est valable pour la nouvelle date : vous n'avez rien à faire pour le garder.",
+    "choice": "Vous ne pouvez pas venir à la nouvelle date ? Ouvrez votre billet et choisissez « Être remboursé » avant le {refundUntil} : les billets payants sont remboursés du prix du billet et des frais de service.",
+    "event": "Événement",
+    "was": "Avant",
+    "now": "Maintenant",
+    "messageLabel": "Message de l'organisateur",
+    "openTickets": "Ouvrir mes billets",
+    "questions": "Des questions sur l'événement ? Écrivez à l'organisateur depuis la page de l'événement dans l'application Abonten."
   }
 }

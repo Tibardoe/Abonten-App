@@ -102,5 +102,18 @@
       "intro": "The alert from {person} on Abonten was sent by mistake. Nothing is wrong.",
       "button": "Open the page"
     }
+  },
+  "reschedule": {
+    "subject": "{eventTitle} has moved to {newWhen}",
+    "preview": "{eventTitle} is now on {newWhen}. Your ticket is still valid.",
+    "heading": "Your event has moved",
+    "intro": "{greeting} the organizer has moved <strong>{eventTitle}</strong> to a new date. Your ticket is valid for the new date: you don't need to do anything to keep it.",
+    "choice": "Can't make the new date? Open your ticket and choose Get a refund before {refundUntil}: paid tickets get the ticket price and the service fee back.",
+    "event": "Event",
+    "was": "Was",
+    "now": "Now",
+    "messageLabel": "Message from the organizer",
+    "openTickets": "Open my tickets",
+    "questions": "Questions about the event? Message the organizer from the event page in the Abonten app."
   }
 }

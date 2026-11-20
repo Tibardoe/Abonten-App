@@ -102,5 +102,18 @@
   "passShowStarted": "Empezó",
   "passShowFull": "Sin plazas para abonos",
   "couldNotChooseShow": "No se pudo elegir esa función. Inténtalo de nuevo.",
-  "passCouldNotLoad": "No se pudieron cargar las funciones de este abono. Inténtalo más tarde."
+  "passCouldNotLoad": "No se pudieron cargar las funciones de este abono. Inténtalo más tarde.",
+  "rescheduleBannerTitle": "Este evento ha cambiado de fecha",
+  "rescheduleBannerDates": "Antes: {previous}. Ahora: {now}.",
+  "rescheduleBannerMessageLabel": "Del organizador",
+  "rescheduleBannerChoice": "Tu entrada vale para la nueva fecha. Si no puedes ir, puedes pedir el reembolso completo, comisión de servicio incluida, hasta el {refundUntil}.",
+  "rescheduleKeptNote": "Conservas tu entrada para la nueva fecha.",
+  "rescheduleClosedNote": "Los reembolsos por este cambio cerraron el {refundUntil}. Tu entrada vale para la nueva fecha.",
+  "rescheduleKeep": "{count, plural, one {Conservar mi entrada} other {Conservar mis entradas}}",
+  "rescheduleRefundAmount": "Pedir el reembolso · {amount}",
+  "rescheduleGiveBack": "{count, plural, one {Devolver mi entrada} other {Devolver mis entradas}}",
+  "rescheduleRefundConfirmTitle": "{count, plural, one {¿Devolver tu entrada?} other {¿Devolver tus # entradas?}}",
+  "rescheduleRefundConfirmPaid": "{amount} vuelve a la tarjeta o al dinero móvil con que pagaste. No se puede deshacer.",
+  "rescheduleRefundConfirmFree": "Tu plaza vuelve al organizador. No se puede deshacer.",
+  "couldNotSaveChoice": "No se pudo guardar. Inténtalo de nuevo."
 }

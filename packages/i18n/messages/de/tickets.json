@@ -102,5 +102,18 @@
   "passShowStarted": "Begonnen",
   "passShowFull": "Keine Plätze für Pässe",
   "couldNotChooseShow": "Diese Vorstellung konnte nicht gewählt werden. Versuche es erneut.",
-  "passCouldNotLoad": "Die Vorstellungen dieses Passes konnten nicht geladen werden. Versuche es später erneut."
+  "passCouldNotLoad": "Die Vorstellungen dieses Passes konnten nicht geladen werden. Versuche es später erneut.",
+  "rescheduleBannerTitle": "Dieses Event wurde verschoben",
+  "rescheduleBannerDates": "Vorher: {previous}. Jetzt: {now}.",
+  "rescheduleBannerMessageLabel": "Vom Veranstalter",
+  "rescheduleBannerChoice": "Dein Ticket gilt für den neuen Termin. Wenn du nicht kannst, bekommst du bis {refundUntil} den vollen Betrag samt Servicegebühr zurück.",
+  "rescheduleKeptNote": "Du behältst dein Ticket für den neuen Termin.",
+  "rescheduleClosedNote": "Erstattungen für diese Änderung waren bis {refundUntil} möglich. Dein Ticket gilt für den neuen Termin.",
+  "rescheduleKeep": "{count, plural, one {Mein Ticket behalten} other {Meine Tickets behalten}}",
+  "rescheduleRefundAmount": "Geld zurück · {amount}",
+  "rescheduleGiveBack": "{count, plural, one {Mein Ticket zurückgeben} other {Meine Tickets zurückgeben}}",
+  "rescheduleRefundConfirmTitle": "{count, plural, one {Dein Ticket zurückgeben?} other {Deine # Tickets zurückgeben?}}",
+  "rescheduleRefundConfirmPaid": "{amount} geht zurück auf die Karte oder das Mobile Money, mit dem du bezahlt hast. Das lässt sich nicht rückgängig machen.",
+  "rescheduleRefundConfirmFree": "Dein Platz geht an den Veranstalter zurück. Das lässt sich nicht rückgängig machen.",
+  "couldNotSaveChoice": "Das konnte nicht gespeichert werden. Versuche es noch einmal."
 }

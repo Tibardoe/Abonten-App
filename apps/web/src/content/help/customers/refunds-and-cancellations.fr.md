@@ -2,7 +2,7 @@
 title: Remboursements et annulations
 summary: Annuler un billet, ce qui est remboursé (et ce qui ne l'est pas), le délai des remboursements et ce qui se passe quand un organisateur annule un événement.
 order: 6
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -49,6 +49,12 @@ Si un organisateur annule, Abonten, automatiquement :
 3. vous prévient dans l'application et, pour les billets payants, par e-mail.
 
 Vous n'avez rien à faire. Si un remboursement affiche *Échec du remboursement*, utilisez *Relancer le remboursement* ou contactez l'assistance.
+
+## Quand l'organisateur déplace un événement
+
+Si un organisateur déplace un événement à une nouvelle date, vous êtes prévenu dans l'application, par push et par e-mail, avec son message. Votre billet reste valable pour la nouvelle date : vous n'avez rien à faire pour le garder.
+
+Si vous ne pouvez pas venir à la nouvelle date, ouvrez votre billet et choisissez **Être remboursé** avant la date indiquée (7 jours au plus, et au plus tard 48 heures avant la nouvelle date). Vous récupérez le prix du billet **et les frais de service**, quelle que soit la politique de remboursement de l'événement. Un billet qu'on vous a envoyé est remboursé à la personne qui l'a payé.
 
 ## Réservations dans les lieux
 

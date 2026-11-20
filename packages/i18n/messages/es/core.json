@@ -1022,6 +1022,10 @@
     "complimentary_tickets": {
       "title": "{actor} te regaló {count, plural, one {una entrada} other {# entradas}}",
       "body": "{count, plural, one {Tu entrada} other {Tus entradas}} para {title} {count, plural, one {está} other {están}} en Entradas."
+    },
+    "event_rescheduled": {
+      "title": "{title} cambia de fecha",
+      "body": "Ahora {dayTime}. Abre tu entrada para conservarla o pedir el reembolso completo."
     }
   },
   "openStatus": {

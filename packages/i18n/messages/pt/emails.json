@@ -102,5 +102,18 @@
       "intro": "O alerta de {person} no Abonten foi enviado por engano. Está tudo bem.",
       "button": "Abrir a página"
     }
+  },
+  "reschedule": {
+    "subject": "{eventTitle} mudou para {newWhen}",
+    "preview": "{eventTitle} é agora a {newWhen}. O seu bilhete continua válido.",
+    "heading": "O seu evento mudou de data",
+    "intro": "{greeting} o organizador mudou <strong>{eventTitle}</strong> para uma nova data. O seu bilhete vale para a nova data: não precisa de fazer nada para o manter.",
+    "choice": "Não pode ir na nova data? Abra o seu bilhete e escolha «Pedir reembolso» antes de {refundUntil}: os bilhetes pagos recebem o preço do bilhete e a taxa de serviço.",
+    "event": "Evento",
+    "was": "Antes",
+    "now": "Agora",
+    "messageLabel": "Mensagem do organizador",
+    "openTickets": "Abrir os meus bilhetes",
+    "questions": "Dúvidas sobre o evento? Escreva ao organizador a partir da página do evento na app Abonten."
   }
 }

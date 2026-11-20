@@ -260,6 +260,17 @@ The plan in [specifications/shows-seats-and-pricing.md](specifications/shows-sea
 | Y11 | 5 | Complimentary tickets | Built: `issue_complimentary_tickets`, website Manage › Details, app Give free tickets ([architecture/complimentary-tickets.md](architecture/complimentary-tickets.md)) | Organizer-issued, counted against seats, not refundable | **Decided (2026-11-20, built at the founder's request).** |
 | Y12 | 6 | What copying a listing keeps | `event_add_show` | Everything but dates, sales, reviews, featuring and photos; running promo codes move with the date | **Decided (2026-11-19, built at the founder's request).** |
 
+## Moving an event to a new date
+
+Built 2026-11-20 at the founder's request ("build reschedule with your suggested defaults"): [architecture/event-reschedule.md](architecture/event-reschedule.md).
+
+| # | Decision | Current implementation | Default taken | Status |
+|---|---|---|---|---|
+| RS1 | Is the service fee refunded when a holder gives tickets back after the organizer moved the event? | `ticket.refund_includes_fee`, `_refund_fee_share`, `transaction_refund.fee_amount` | Yes: the ticket price and its share of the fee (the buyer did nothing wrong; Abonten bears Paystack's processing charge). A cancellation still keeps the fee | **Decided (2026-11-20, the founder's default).** |
+| RS2 | How long holders may give tickets back after a move | `event_reschedule()` `refund_until`, `rescheduleRefundUntil` | 7 days, ending no later than 48 hours before the new date; never under a day (nor past the new start) when the date is close | **Decided (2026-11-20, the founder's default).** |
+| RS3 | Text messages to holders when an event moves | Notice + push + email only | No text messages (Hubtel charges per message) | **Decided (2026-11-20, the founder's default).** |
+| RS4 | How many times an event may move | `event_reschedule()`, `MAX_RESCHEDULES` | Twice; after that, cancel | **Decided (2026-11-20, the founder's default).** |
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |

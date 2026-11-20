@@ -5,6 +5,7 @@ import RefundStatusBadge from "@/components/atoms/RefundStatusBadge";
 import RetryRefundBtn from "@/components/atoms/RetryRefundBtn";
 import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
+import RescheduleNotice from "@/components/molecules/RescheduleNotice";
 import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import TicketSendControl from "@/ticketTransfers/molecules/TicketSendControl";
@@ -135,6 +136,15 @@ function TicketCard({
               away. */}
           <span>{ticketTypeLabel(tc, event.ticket_type.type)}</span>
         </div>
+
+        {/* The organizer moved the event: the new date, their message,
+            keep or give back (renders nothing when it never moved). */}
+        {live && (
+          <RescheduleNotice
+            eventId={event.event.id}
+            ticketsQueryKey={queryKey}
+          />
+        )}
 
         {refundBadge && (
           <div className="space-y-1 rounded-lg bg-muted/50 p-2.5">

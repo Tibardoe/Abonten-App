@@ -2,14 +2,14 @@
 title: Cancelar um evento
 summary: O que acontece aos bilhetes, aos reembolsos, aos participantes e aos seus ganhos quando cancela, e alternativas ao cancelamento.
 order: 4
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
 
 # Cancelar um evento
 
-Cancelar é **definitivo e não pode ser desfeito**. Enquanto nenhum bilhete estiver confirmado, pode simplesmente alterar a data ou o local; depois disso ficam bloqueados, para proteger quem já tem bilhete.
+Cancelar é **definitivo e não pode ser desfeito**. Enquanto nenhum bilhete estiver confirmado, pode simplesmente alterar a data ou o local; depois disso ficam bloqueados, para proteger quem já tem bilhete, e a data muda-se com **Mudar para uma nova data** (abaixo).
 
 ## Como cancelar
 
@@ -35,7 +35,11 @@ Uma promoção paga num evento cancelado não é reembolsada.
 
 ## Mudar o evento para outra data
 
-O Abonten não tem um estado «adiado». Enquanto nenhum bilhete estiver confirmado, altere as datas do evento. Depois de haver bilhetes confirmados, a data e o local não podem ser alterados: cancele o evento (quem comprou recebe de volta o preço do bilhete), crie um novo evento para a nova data e indique onde o encontrar na descrição do evento cancelado.
+Enquanto nenhum bilhete estiver confirmado, altere as datas do evento. Quando já houver pessoas com bilhetes, use **Mudar para uma nova data** (site: Gerir › Detalhes; app: o menu do evento): escolha a nova data, as horas de início e de fim, e escreva uma mensagem para quem tem bilhete. Todos são avisados de imediato na app, por push e por e-mail, com a sua mensagem.
+
+Os bilhetes continuam válidos para a nova data. Quem não puder ir pode devolver os bilhetes e receber o reembolso total, **taxa de serviço incluída**, durante 7 dias e até 48 horas antes da nova data, seja qual for a política de reembolso que escolheu. As suas receitas desses bilhetes são anuladas; o resto é pago 48 horas depois da nova data.
+
+Um evento pode ser mudado no máximo duas vezes. Um evento com várias datas ainda não pode ser mudado, e o local não pode mudar: nesses casos, cancele o evento, crie um novo e indique onde o encontrar na descrição do evento cancelado.
 
 ## Comunicar
 

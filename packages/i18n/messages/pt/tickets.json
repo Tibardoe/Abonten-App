@@ -102,5 +102,18 @@
   "passShowStarted": "Começou",
   "passShowFull": "Sem lugares para passes",
   "couldNotChooseShow": "Não foi possível escolher essa sessão. Tente de novo.",
-  "passCouldNotLoad": "Não foi possível carregar as sessões deste passe. Tente mais tarde."
+  "passCouldNotLoad": "Não foi possível carregar as sessões deste passe. Tente mais tarde.",
+  "rescheduleBannerTitle": "Este evento mudou de data",
+  "rescheduleBannerDates": "Antes: {previous}. Agora: {now}.",
+  "rescheduleBannerMessageLabel": "Do organizador",
+  "rescheduleBannerChoice": "O seu bilhete vale para a nova data. Se não puder ir, pode receber o reembolso total, taxa de serviço incluída, até {refundUntil}.",
+  "rescheduleKeptNote": "Mantém o seu bilhete para a nova data.",
+  "rescheduleClosedNote": "Os reembolsos por esta mudança fecharam a {refundUntil}. O seu bilhete vale para a nova data.",
+  "rescheduleKeep": "{count, plural, one {Manter o meu bilhete} other {Manter os meus bilhetes}}",
+  "rescheduleRefundAmount": "Pedir reembolso · {amount}",
+  "rescheduleGiveBack": "{count, plural, one {Devolver o meu bilhete} other {Devolver os meus bilhetes}}",
+  "rescheduleRefundConfirmTitle": "{count, plural, one {Devolver o seu bilhete?} other {Devolver os seus # bilhetes?}}",
+  "rescheduleRefundConfirmPaid": "{amount} volta para o cartão ou o mobile money com que pagou. Não é possível anular.",
+  "rescheduleRefundConfirmFree": "O seu lugar volta para o organizador. Não é possível anular.",
+  "couldNotSaveChoice": "Não foi possível guardar. Tente de novo."
 }
