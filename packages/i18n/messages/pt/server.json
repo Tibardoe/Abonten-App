@@ -339,6 +339,7 @@
     "fixedExponentMoneyArithmeticRemainsIn": "Ainda há aritmética monetária de expoente fixo em: {0}",
     "functionWasNotRewrittenPatternNotFound": "A função {0} não foi reescrita (padrão não encontrado)",
     "getUserTransactionSummaryChangedSince20260925100000": "get_user_transaction_summary mudou desde 20260925100000; volte a derivar esta correção",
+    "giveFrom1To40TicketsAt": "Ofereça de 1 a 40 bilhetes de cada vez.",
     "goodwillLimitReachedForThisUserThis": "Limite de cortesia atingido para este utilizador este mês (usado {0}, limite {1})",
     "identityAccountIneligible": "identity_account_ineligible",
     "identityInvalidTransition": "identity_invalid_transition",
@@ -403,6 +404,7 @@
     "onlyAnActiveMemberCanOnboard": "Só um membro ativo pode integrar negócios",
     "onlyAnActiveMemberCanSubmitContent": "Só um membro ativo pode submeter conteúdo",
     "onlyLeftForThisEvent": "Só restam {0} {1} para este evento.",
+    "onlyOfTheseTicketsAreLeft": "Só restam {0} destes bilhetes.",
     "onlyOfflineAndOnlineMembersOnboardBusinesses": "Só os membros presenciais e online integram negócios",
     "onlyOfflineAndOnlineMembersTakeAssignments": "Só os membros presenciais e online recebem atribuições",
     "onlyTextMessagesCanBeEdited": "Só as mensagens de texto podem ser editadas.",
@@ -498,8 +500,10 @@
     "thisEventHasNoFreeRegistrationAvailable": "Este evento não tem inscrição gratuita disponível",
     "thisEventIsNoLongerAcceptingRsvps": "Este evento já não aceita confirmações de presença.",
     "thisEventIsNotCurrentlyOnSale": "Este evento não está à venda neste momento.",
+    "thisEventIsNotOn": "Este evento não está ativo.",
     "thisEventIsNotOpenForRegistration": "Este evento não está aberto a inscrições.",
     "thisEventIsNotOpenForTicket": "Este evento não está aberto à venda de bilhetes.",
+    "thisEventIsOver": "Este evento já terminou.",
     "thisEventIsSoldOut": "Este evento está esgotado.",
     "thisEventStillHasActivePromoCodes": "Este evento ainda tem códigos promocionais ativos. Remova-os ou desative-os antes de o tornar gratuito.",
     "thisEventWasCancelled": "Este evento foi cancelado.",
@@ -1468,5 +1472,9 @@
   "seatingPlanSaved": "Planta de lugares guardada.",
   "seatingLockedAfterFirstTicket": "Este evento já tem bilhetes, por isso os lugares já não podem mudar.",
   "seatingSectionNotInPlan": "Uma secção não faz parte da planta escolhida.",
-  "seatingSaved": "Lugares guardados."
+  "seatingSaved": "Lugares guardados.",
+  "giveFromOneToTickets": "Ofereça de 1 a {max} bilhetes de cada vez.",
+  "chooseADateForTheseTickets": "Escolha a data destes bilhetes.",
+  "noAccountForComplimentary": "Nenhuma conta Abonten tem esse utilizador ou número. Peça-lhes que se registem primeiro.",
+  "complimentaryTicketsGiven": "{count, plural, one {# bilhete oferecido} other {# bilhetes oferecidos}} a {name}."
 }

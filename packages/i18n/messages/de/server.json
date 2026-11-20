@@ -339,6 +339,7 @@
     "fixedExponentMoneyArithmeticRemainsIn": "Geldarithmetik mit festem Exponenten ist noch vorhanden in: {0}",
     "functionWasNotRewrittenPatternNotFound": "Die Funktion {0} wurde nicht umgeschrieben (Muster nicht gefunden)",
     "getUserTransactionSummaryChangedSince20260925100000": "get_user_transaction_summary hat sich seit 20260925100000 geändert; leite diese Korrektur neu ab",
+    "giveFrom1To40TicketsAt": "Vergib 1 bis 40 Tickets auf einmal.",
     "goodwillLimitReachedForThisUserThis": "Kulanzlimit für diesen Nutzer in diesem Monat erreicht (verwendet {0}, Limit {1})",
     "identityAccountIneligible": "identity_account_ineligible",
     "identityInvalidTransition": "identity_invalid_transition",
@@ -403,6 +404,7 @@
     "onlyAnActiveMemberCanOnboard": "Nur ein aktives Mitglied kann Geschäfte aufnehmen",
     "onlyAnActiveMemberCanSubmitContent": "Nur ein aktives Mitglied kann Inhalte einreichen",
     "onlyLeftForThisEvent": "Für dieses Event sind nur noch {0} {1} übrig.",
+    "onlyOfTheseTicketsAreLeft": "Nur noch {0} dieser Tickets sind übrig.",
     "onlyOfflineAndOnlineMembersOnboardBusinesses": "Nur Offline- und Online-Mitglieder nehmen Geschäfte auf",
     "onlyOfflineAndOnlineMembersTakeAssignments": "Nur Offline- und Online-Mitglieder übernehmen Einsätze",
     "onlyTextMessagesCanBeEdited": "Nur Textnachrichten können bearbeitet werden.",
@@ -498,8 +500,10 @@
     "thisEventHasNoFreeRegistrationAvailable": "Für dieses Event ist keine kostenlose Anmeldung verfügbar",
     "thisEventIsNoLongerAcceptingRsvps": "Dieses Event nimmt keine Zusagen mehr an.",
     "thisEventIsNotCurrentlyOnSale": "Dieses Event ist derzeit nicht im Verkauf.",
+    "thisEventIsNotOn": "Diese Veranstaltung findet nicht statt.",
     "thisEventIsNotOpenForRegistration": "Dieses Event ist nicht für Anmeldungen geöffnet.",
     "thisEventIsNotOpenForTicket": "Dieses Event ist nicht für den Ticketverkauf geöffnet.",
+    "thisEventIsOver": "Diese Veranstaltung ist vorbei.",
     "thisEventIsSoldOut": "Dieses Event ist ausverkauft.",
     "thisEventStillHasActivePromoCodes": "Dieses Event hat noch aktive Promo-Codes. Entferne oder deaktiviere sie, bevor du es kostenlos machst.",
     "thisEventWasCancelled": "Dieses Event wurde abgesagt.",
@@ -1468,5 +1472,9 @@
   "seatingPlanSaved": "Saalplan gespeichert.",
   "seatingLockedAfterFirstTicket": "Diese Veranstaltung hat schon Tickets, daher kann sich die Sitzplatzvergabe nicht mehr ändern.",
   "seatingSectionNotInPlan": "Ein Bereich gehört nicht zum gewählten Plan.",
-  "seatingSaved": "Sitzplätze gespeichert."
+  "seatingSaved": "Sitzplätze gespeichert.",
+  "giveFromOneToTickets": "Vergib 1 bis {max} Tickets auf einmal.",
+  "chooseADateForTheseTickets": "Wähle den Termin für diese Tickets.",
+  "noAccountForComplimentary": "Kein Abonten-Konto hat diesen Benutzernamen oder diese Nummer. Bitte sie, sich zuerst anzumelden.",
+  "complimentaryTicketsGiven": "{count, plural, one {# Ticket} other {# Tickets}} an {name} vergeben."
 }

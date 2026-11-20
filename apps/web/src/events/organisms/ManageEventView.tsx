@@ -1,6 +1,7 @@
 "use client";
 
 import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
+import GiveComplimentaryCard from "@/events/molecules/GiveComplimentaryCard";
 import ManageEventSeatingCard from "@/events/molecules/ManageEventSeatingCard";
 import ManageEventShowsCard from "@/events/molecules/ManageEventShowsCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
@@ -194,7 +195,13 @@ export default function ManageEventView({
         )}
 
         {activeTab === "attendees" && (
-          <ManageEventAttendeesSection eventId={event.id} />
+          <>
+            {covers(teamRole, "events.manage") &&
+              event.status === "published" && (
+                <GiveComplimentaryCard event={event} />
+              )}
+            <ManageEventAttendeesSection eventId={event.id} />
+          </>
         )}
 
         {activeTab === "checkin" && <CheckInByCodeCard eventId={event.id} />}

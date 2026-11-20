@@ -1018,6 +1018,10 @@
     "payment_not_through_orders": {
       "body": "Votre paiement de {amount} n'a pas abouti : vous n'avez pas été débité et aucun billet n'a été émis. Vous pouvez réessayer depuis la page de chaque événement.",
       "title": "Votre paiement n'a pas abouti"
+    },
+    "complimentary_tickets": {
+      "title": "{actor} vous a offert {count, plural, one {un billet} other {# billets}}",
+      "body": "{count, plural, one {Votre billet} other {Vos billets}} pour {title} {count, plural, one {est} other {sont}} dans Billets."
     }
   },
   "openStatus": {

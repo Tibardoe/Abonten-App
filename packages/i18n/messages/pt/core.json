@@ -1018,6 +1018,10 @@
     "payment_not_through_orders": {
       "body": "O seu pagamento de {amount} não foi concluído: não lhe foi cobrado nada e não foram emitidos bilhetes. Pode tentar novamente na página de cada evento.",
       "title": "O seu pagamento não foi concluído"
+    },
+    "complimentary_tickets": {
+      "title": "{actor} ofereceu-lhe {count, plural, one {um bilhete} other {# bilhetes}}",
+      "body": "{count, plural, one {O seu bilhete} other {Os seus bilhetes}} para {title} {count, plural, one {está} other {estão}} em Bilhetes."
     }
   },
   "openStatus": {

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-20 — Complimentary tickets
+
+- Organizers (and team members who manage events) give free tickets of one of an event's types to a named person by username or phone — website Manage › Attendees, app "Give free tickets". They are real tickets on that person's account (own codes, seated, checked in, can be sent on), taken from the type's stock and the event's capacity, with no payment, earning or fee and nothing to refund; the person gets a notice and a push, and the door list marks them "Free ticket". One `ticket_checkout` per gift (`paid`, price 0, `complimentary_by`, `complimentary_note`), written by the service-role-only `issue_complimentary_tickets`. Migration `20261120090000_complimentary_tickets`. New: `architecture/complimentary-tickets.md` (1.0); Y11 decided.
+
 ## 2026-11-19 — Assigned seats
 
 - Organizers describe a venue once as a seating plan (sections, rows front first, seats per row) and choose which section each ticket type sells (website Manage › Details › Seating). When a ticket is issued by any path, the database gives it the best seat left — next to its order's seats, else the run closest to the middle of the frontmost row with room for the whole order — writes it on the ticket ("Stalls · C12") and records it in `ticket_seat` (a seat cannot be given twice). Cancelled tickets free their seat; sent tickets keep it. A section never sells more than its seats (deferred guard). Seats show on the web and app tickets and attendee lists. Migration `20261119220000_assigned_seats`. New: `architecture/assigned-seats.md` (1.0); Y8, Y9 decided.

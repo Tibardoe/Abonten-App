@@ -1018,6 +1018,10 @@
     "payment_not_through_orders": {
       "body": "Tu pago de {amount} no se completó, así que no se te ha cobrado y no se emitieron entradas. Puedes volver a intentarlo desde la página de cada evento.",
       "title": "Tu pago no se completó"
+    },
+    "complimentary_tickets": {
+      "title": "{actor} te regaló {count, plural, one {una entrada} other {# entradas}}",
+      "body": "{count, plural, one {Tu entrada} other {Tus entradas}} para {title} {count, plural, one {está} other {están}} en Entradas."
     }
   },
   "openStatus": {

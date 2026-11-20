@@ -577,6 +577,12 @@ function EventInsightsScreen() {
               label={tEvents("showsAndCopies")}
             />
           ) : null}
+          {can("events.manage") ? (
+            <TeamNavRow
+              href={`/(app)/organizer/events/${eventId}/comps`}
+              label={tEvents("giveFreeTickets")}
+            />
+          ) : null}
         </View>
       ) : null}
 
@@ -722,6 +728,12 @@ function TeamEventPanel() {
           <TeamNavRow
             href={`/(app)/organizer/events/${id}/shows`}
             label={tEvents("showsAndCopies")}
+          />
+        ) : null}
+        {can("events.manage") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/comps`}
+            label={tEvents("giveFreeTickets")}
           />
         ) : null}
         <TeamNavRow

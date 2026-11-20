@@ -1271,6 +1271,25 @@ export type UpdateEventTicketTypesResult =
 // pattern or dates, at most 60 a request) or, with separate, makes one
 // separate copy. `get_event_shows` (a public RPC) lists a run's shows.
 
+// ---- complimentary tickets ------------------------------------------------
+// Free tickets an organizer gives a named person (an account, by username
+// or phone); real tickets, counted against stock and seats, no payment.
+
+export type GiveComplimentaryTicketsBody = {
+  ticketTypeId: string;
+  /** Purchases of the type (a Couple counts once). */
+  quantity: number;
+  occurrenceId?: string | null;
+  target:
+    | { kind: "username"; username: string }
+    | { kind: "phone"; phone: string };
+  note?: string | null;
+};
+
+export type GiveComplimentaryTicketsResult =
+  | { status: 200; message?: string; data: { tickets: number } }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
 export type ShowRunSlotBody = { weekday: number; time: string };
 
 export type AddEventShowsBody = {
@@ -1387,6 +1406,8 @@ export type AttendanceRow = {
     used_at: string | null;
     /** An assigned seat ("Stalls · C12"); absent before 2026-11-19. */
     seat_number?: string | null;
+    /** { complimentary: true } for a ticket the organizer gave away. */
+    metadata?: unknown;
   } | null;
   auth: { email: string | null; phone: string | null } | null;
 };

@@ -508,5 +508,16 @@
   "notSeated": "Sans place numérotée",
   "sellsSeats": "{seats, plural, one {Vend # place} other {Vend # places}}",
   "saveSeating": "Enregistrer le placement",
-  "stopSeating": "Arrêter les places numérotées"
+  "stopSeating": "Arrêter les places numérotées",
+  "giveFreeTickets": "Offrir des billets",
+  "giveFreeTicketsIntro": "Pour les artistes, la presse, les partenaires ou la famille : de vrais billets sur le compte de la personne, pris sur vos places et contrôlés à l'entrée comme les autres. Aucun argent n'est échangé et ils ne sont pas remboursables.",
+  "giveTo": "Offrir à",
+  "giveToPlaceholder": "@nom d'utilisateur ou numéro de téléphone",
+  "howMany": "Combien",
+  "forDate": "Pour la date",
+  "noteOptional": "Note (facultative, visible par votre équipe seulement)",
+  "compNotePlaceholder": "Famille des artistes",
+  "giveTickets": "Offrir les billets",
+  "couldNotGiveTickets": "Les billets n'ont pas pu être offerts. Réessayez.",
+  "giveTicketsNeedsPublished": "Publiez l'événement pour offrir des billets."
 }

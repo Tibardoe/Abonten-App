@@ -1934,6 +1934,8 @@
     "notices.payment_not_through.body": "fb6a3260",
     "notices.payment_not_through_orders.title": "33b40297",
     "notices.payment_not_through_orders.body": "d475fb47",
+    "notices.complimentary_tickets.title": "13300448",
+    "notices.complimentary_tickets.body": "f7b4855b",
     "noticeWords.someone": "35bb097a",
     "reviewer.attendee": "aabccb93",
     "reviewer.guest": "face83ee",
@@ -2929,7 +2931,18 @@
     "notSeated": "7a0924ff",
     "sellsSeats": "d60a9613",
     "saveSeating": "0b16e6a2",
-    "stopSeating": "a44e4b04"
+    "stopSeating": "a44e4b04",
+    "giveFreeTickets": "7e5f4e4c",
+    "giveFreeTicketsIntro": "159e5683",
+    "giveTo": "295d3473",
+    "giveToPlaceholder": "f44c4825",
+    "howMany": "503ce866",
+    "forDate": "833cccdb",
+    "noteOptional": "f08ed2aa",
+    "compNotePlaceholder": "0e444661",
+    "giveTickets": "6b86c97a",
+    "couldNotGiveTickets": "3b52c4b0",
+    "giveTicketsNeedsPublished": "06faf818"
   },
   "explore": {
     "abontenHasnTLaunchedHereYet": "b1e552b7",
@@ -6461,6 +6474,7 @@
     "db.fixedExponentMoneyArithmeticRemainsIn": "88c502f0",
     "db.functionWasNotRewrittenPatternNotFound": "30803cf7",
     "db.getUserTransactionSummaryChangedSince20260925100000": "ba557892",
+    "db.giveFrom1To40TicketsAt": "bf7089c5",
     "db.goodwillLimitReachedForThisUserThis": "5029ead6",
     "db.identityAccountIneligible": "04216f40",
     "db.identityInvalidTransition": "5935afb9",
@@ -6510,6 +6524,7 @@
     "db.onboardingModeMustMatchTheMemberS": "fe7fbc2d",
     "db.onboardingNotFound": "550947fb",
     "db.onlyLeftForThisEvent": "9b64cf59",
+    "db.onlyOfTheseTicketsAreLeft": "ecd974e0",
     "db.onlyABookingSStatusCanChange": "d0ec5639",
     "db.onlyACompletedPayoutCanBeReversed": "3191ec1d",
     "db.onlyADraftBatchCanBeApproved": "1acdb8a8",
@@ -6619,8 +6634,10 @@
     "db.thisEventHasNoFreeRegistrationAvailable": "e0fcadba",
     "db.thisEventIsNoLongerAcceptingRsvps": "2b39265b",
     "db.thisEventIsNotCurrentlyOnSale": "62a13ec3",
+    "db.thisEventIsNotOn": "b707ce65",
     "db.thisEventIsNotOpenForRegistration": "a3433375",
     "db.thisEventIsNotOpenForTicket": "f61d9d5a",
+    "db.thisEventIsOver": "4e828d38",
     "db.thisEventIsSoldOut": "ff986453",
     "db.thisEventStillHasActivePromoCodes": "587aaa37",
     "db.thisEventWasCancelled": "7deba8ab",
@@ -7578,7 +7595,11 @@
     "seatingPlanSaved": "79f68414",
     "seatingLockedAfterFirstTicket": "b35a582e",
     "seatingSectionNotInPlan": "8afef140",
-    "seatingSaved": "672ee996"
+    "seatingSaved": "672ee996",
+    "giveFromOneToTickets": "acef5d9f",
+    "chooseADateForTheseTickets": "877a7927",
+    "noAccountForComplimentary": "aee94763",
+    "complimentaryTicketsGiven": "e9a231cb"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -8589,7 +8610,8 @@
     "organizerSendingOn": "7e906909",
     "organizerSendingOff": "321f57c4",
     "organizerTurnOff": "8807c2b3",
-    "organizerTurnOn": "26563efc"
+    "organizerTurnOn": "26563efc",
+    "complimentaryTicket": "05cc3b94"
   },
   "transactions": {
     "amount": "43dc8532",

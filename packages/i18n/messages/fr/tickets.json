@@ -91,5 +91,6 @@
   "organizerSendingOn": "L'envoi de billets est activé",
   "organizerSendingOff": "L'envoi de billets est désactivé",
   "organizerTurnOff": "Désactiver",
-  "organizerTurnOn": "Activer"
+  "organizerTurnOn": "Activer",
+  "complimentaryTicket": "Billet offert"
 }

@@ -91,5 +91,6 @@
   "organizerSendingOn": "Sending tickets is on",
   "organizerSendingOff": "Sending tickets is off",
   "organizerTurnOff": "Turn off",
-  "organizerTurnOn": "Turn on"
+  "organizerTurnOn": "Turn on",
+  "complimentaryTicket": "Free ticket"
 }
