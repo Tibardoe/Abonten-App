@@ -145,12 +145,14 @@ export async function runTicketPlanMaintenanceCore(
     await end(plan.id, "expired", "hold_expired", "expired");
   }
 
-  // 2b: the deadline passed.
+  // 2b: the deadline passed. A postponed event's plans wait for its new
+  // date (event_reschedule() moves their deadline with it).
   const { data: overdue } = await supabase
     .from("ticket_plan")
-    .select("id")
+    .select("id, event:event_id!inner(postponed_at)")
     .eq("status", "active")
     .lt("deadline_at", nowIso)
+    .is("event.postponed_at", null)
     .limit(BATCH);
   for (const plan of overdue ?? []) {
     await end(plan.id, "lapsed", "deadline", "lapsed");

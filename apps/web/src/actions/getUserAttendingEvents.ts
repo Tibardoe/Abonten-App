@@ -27,10 +27,13 @@ type TicketRow = UserTicketType & {
 function isPastTicket(row: TicketRow): boolean {
   const event = row.ticket_type?.event;
   if (!event) return false;
+  // A postponed event is not over: its old date may have passed while it
+  // waits for the new one.
   return (
     event.status === "canceled" ||
-    getEventStatus(event.starts_at, event.ends_at, event.occurrences) ===
-      "ended"
+    (!event.postponed_at &&
+      getEventStatus(event.starts_at, event.ends_at, event.occurrences) ===
+        "ended")
   );
 }
 

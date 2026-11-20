@@ -50,11 +50,11 @@ Se um organizador cancelar, o Abonten, automaticamente:
 
 Não precisa de fazer nada. Se um reembolso mostrar *Reembolso falhou*, use *Repetir o reembolso* ou contacte o apoio.
 
-## Quando o organizador muda um evento de data
+## Quando o organizador muda ou adia um evento
 
-Se um organizador mudar um evento para uma nova data, é avisado na app, por push e por e-mail, com a mensagem dele. O seu bilhete continua válido para a nova data: não precisa de fazer nada para o manter.
+Se um organizador mudar um evento (uma nova data, um novo local, ou a data que tem de um evento com várias datas) ou o adiar, é avisado na app, por push e por e-mail, com a mensagem dele. O seu bilhete continua válido: não precisa de fazer nada para o manter.
 
-Se não puder ir na nova data, abra o seu bilhete e escolha **Pedir reembolso** antes da data indicada (7 dias no máximo, e até 48 horas antes da nova data). Recebe de volta o preço do bilhete **e a taxa de serviço**, diga o que disser a política de reembolso do evento. Um bilhete que lhe enviaram é reembolsado a quem o pagou.
+Se não puder ir, abra o seu bilhete e escolha **Pedir reembolso** antes da data indicada (7 dias no máximo, e até 48 horas antes da data). Enquanto um evento estiver adiado, Pedir reembolso fica disponível até o organizador definir a nova data. Recebe de volta o preço do bilhete **e a taxa de serviço**, diga o que disser a política de reembolso do evento. Um bilhete que lhe enviaram é reembolsado a quem o pagou.
 
 ## Reservas em locais
 

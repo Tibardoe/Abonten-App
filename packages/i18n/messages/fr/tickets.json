@@ -115,5 +115,14 @@
   "rescheduleRefundConfirmTitle": "{count, plural, one {Rendre votre billet ?} other {Rendre vos # billets ?}}",
   "rescheduleRefundConfirmPaid": "{amount} sera reversé sur la carte ou le mobile money utilisé pour payer. Cette action est définitive.",
   "rescheduleRefundConfirmFree": "Votre place revient à l'organisateur. Cette action est définitive.",
-  "couldNotSaveChoice": "Impossible d'enregistrer. Réessayez."
+  "couldNotSaveChoice": "Impossible d'enregistrer. Réessayez.",
+  "rescheduleBannerTitlePostponed": "Cet événement est reporté",
+  "rescheduleBannerTitleVenue": "Cet événement change de lieu",
+  "rescheduleBannerTitleOneDate": "Votre date a été déplacée",
+  "rescheduleBannerPostponed": "Avant : {previous}. Une nouvelle date est à venir.",
+  "rescheduleBannerVenue": "Désormais à {venue}.",
+  "rescheduleBannerVenues": "Avant : {previous}. Désormais : {venue}.",
+  "rescheduleBannerChoicePostponed": "Votre billet reste valable pour la nouvelle date. Si vous préférez ne pas attendre, vous pouvez être remboursé intégralement, frais de service compris, jusqu'à ce que la nouvelle date soit fixée.",
+  "rescheduleBannerChoiceVenue": "Votre billet est valable dans le nouveau lieu. Si vous ne pouvez pas y aller, vous pouvez être remboursé intégralement, frais de service compris, jusqu'au {refundUntil}.",
+  "rescheduleKeptNoteVenue": "Vous gardez votre billet pour le nouveau lieu."
 }

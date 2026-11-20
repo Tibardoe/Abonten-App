@@ -270,6 +270,10 @@ Built 2026-11-20 at the founder's request ("build reschedule with your suggested
 | RS2 | How long holders may give tickets back after a move | `event_reschedule()` `refund_until`, `rescheduleRefundUntil` | 7 days, ending no later than 48 hours before the new date; never under a day (nor past the new start) when the date is close | **Decided (2026-11-20, the founder's default).** |
 | RS3 | Text messages to holders when an event moves | Notice + push + email only | No text messages (Hubtel charges per message) | **Decided (2026-11-20, the founder's default).** |
 | RS4 | How many times an event may move | `event_reschedule()`, `MAX_RESCHEDULES` | Twice; after that, cancel | **Decided (2026-11-20, the founder's default).** |
+| RS5 | How long holders may give tickets back while an event is postponed with no date | `event_reschedule()` (no `refund_until`), `refundIsOpen` | Until the organizer sets the new date (then the usual RS2 window) | **Decided (2026-11-20, built with the founder's "do all of Not in this version").** |
+| RS6 | Can a seated event change venue? | `event_reschedule()`, setup `seated` | No: its seats belong to the hall; cancel and list again | **Decided (2026-11-20, same).** |
+| RS7 | How often an event may be postponed, and does it count as a move? | `event_reschedule()`, `MAX_POSTPONEMENTS` | Once, single-date events only; it does not count as a move, setting the new date does | **Decided (2026-11-20, same).** |
+| RS8 | An event with several dates | `event_reschedule()` (`p_occurrence_id`) | One date at a time, twice per date, only that date's holders told and refunded; a new venue is for every date; it can't be postponed | **Decided (2026-11-20, same).** |
 
 ## Product
 

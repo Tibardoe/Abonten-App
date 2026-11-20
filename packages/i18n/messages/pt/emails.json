@@ -114,6 +114,22 @@
     "now": "Agora",
     "messageLabel": "Mensagem do organizador",
     "openTickets": "Abrir os meus bilhetes",
-    "questions": "Dúvidas sobre o evento? Escreva ao organizador a partir da página do evento na app Abonten."
+    "questions": "Dúvidas sobre o evento? Escreva ao organizador a partir da página do evento na app Abonten.",
+    "subjectVenue": "{eventTitle} mudou de local",
+    "subjectPostponed": "{eventTitle} foi adiado",
+    "subjectOneDate": "{eventTitle}: a sua data mudou para {newWhen}",
+    "previewVenue": "{eventTitle} é agora em {venue}. O seu bilhete continua válido.",
+    "previewPostponed": "{eventTitle} foi adiado. Haverá uma nova data.",
+    "headingVenue": "O seu evento mudou de local",
+    "headingPostponed": "O seu evento foi adiado",
+    "introDateVenue": "{greeting} o organizador mudou <strong>{eventTitle}</strong> para uma nova data e um novo local. O seu bilhete vale para ambos: não precisa de fazer nada para o manter.",
+    "introOneDate": "{greeting} o organizador mudou a data de <strong>{eventTitle}</strong> para a qual tem bilhete. O seu bilhete vale para a nova data: não precisa de fazer nada para o manter.",
+    "introVenue": "{greeting} o organizador mudou <strong>{eventTitle}</strong> para um novo local. O seu bilhete vale lá: não precisa de fazer nada para o manter.",
+    "introPostponed": "{greeting} o organizador adiou <strong>{eventTitle}</strong>. Haverá uma nova data e avisamos assim que for definida. O seu bilhete continua válido para ela.",
+    "choiceVenue": "Não pode ir? Abra o seu bilhete e escolha «Pedir reembolso» antes de {refundUntil}: os bilhetes pagos recebem o preço do bilhete e a taxa de serviço.",
+    "choicePostponed": "Prefere o dinheiro de volta? Abra o seu bilhete e escolha «Pedir reembolso» a qualquer momento até a nova data ser definida: os bilhetes pagos recebem o preço do bilhete e a taxa de serviço.",
+    "when": "Quando",
+    "venue": "Local",
+    "previousVenue": "Local anterior"
   }
 }

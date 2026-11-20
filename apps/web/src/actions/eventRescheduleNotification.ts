@@ -1,6 +1,8 @@
 "use server";
 
-import EventRescheduledEmailTemplate from "@/components/organisms/EventRescheduledEmailTemplate";
+import EventRescheduledEmailTemplate, {
+  type RescheduleEmailKind,
+} from "@/components/organisms/EventRescheduledEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { emailWordsFor } from "@/lib/email/emailWords";
@@ -38,6 +40,25 @@ export default withActionLocale(async function eventRescheduleNotification(
   const batch = await rescheduleEmailBatchCore(rescheduleId);
   if (!batch) return { status: 500, message: tr("somethingWentWrong") };
 
+  const kind: RescheduleEmailKind =
+    batch.kind === "postpone"
+      ? "postponed"
+      : batch.oneDate
+        ? "one_date"
+        : batch.venue && batch.dateChanged
+          ? "date_venue"
+          : batch.venue
+            ? "venue"
+            : "date";
+  const subjectKey =
+    kind === "postponed"
+      ? "reschedule.subjectPostponed"
+      : kind === "venue"
+        ? "reschedule.subjectVenue"
+        : kind === "one_date"
+          ? "reschedule.subjectOneDate"
+          : "reschedule.subject";
+
   const supabase = getSupabaseServiceClient();
   let sent = 0;
   let failed = 0;
@@ -63,20 +84,23 @@ export default withActionLocale(async function eventRescheduleNotification(
           ...WHEN,
           timeZone: batch.timezone,
         });
-      const newWhen = when(batch.startsAt);
+      const newWhen = batch.startsAt ? when(batch.startsAt) : null;
       const { error } = await sendEmail({
         from: "Abonten Hub <tickets@abontenhub.com>",
         to: [adminUser.user.email],
-        subject: words.t("reschedule.subject", {
+        subject: words.t(subjectKey, {
           eventTitle: batch.title,
-          newWhen,
+          newWhen: newWhen ?? "",
         }),
         react: EventRescheduledEmailTemplate({
           words,
+          kind,
           eventTitle: batch.title,
           previousWhen: when(batch.previousStartsAt),
           newWhen,
-          refundUntil: when(batch.refundUntil),
+          venue: batch.venue,
+          previousVenue: batch.previousVenue,
+          refundUntil: batch.refundUntil ? when(batch.refundUntil) : null,
           message: batch.message,
           myTicketsUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/manage/my-events`,
         }),

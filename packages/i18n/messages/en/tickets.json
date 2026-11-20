@@ -115,5 +115,14 @@
   "rescheduleRefundConfirmTitle": "{count, plural, one {Give your ticket back?} other {Give your # tickets back?}}",
   "rescheduleRefundConfirmPaid": "{amount} goes back to the card or mobile money you paid with. This can't be undone.",
   "rescheduleRefundConfirmFree": "Your place goes back to the organizer. This can't be undone.",
-  "couldNotSaveChoice": "Couldn't save that. Try again."
+  "couldNotSaveChoice": "Couldn't save that. Try again.",
+  "rescheduleBannerTitlePostponed": "This event is postponed",
+  "rescheduleBannerTitleVenue": "This event has a new venue",
+  "rescheduleBannerTitleOneDate": "Your date has moved",
+  "rescheduleBannerPostponed": "Was {previous}. A new date is to come.",
+  "rescheduleBannerVenue": "Now at {venue}.",
+  "rescheduleBannerVenues": "Was at {previous}. Now at {venue}.",
+  "rescheduleBannerChoicePostponed": "Your ticket stays valid for the new date. If you'd rather not wait, you can get a full refund, service fee included, until the new date is set.",
+  "rescheduleBannerChoiceVenue": "Your ticket is valid at the new venue. If you can't get there, you can get a full refund, service fee included, until {refundUntil}.",
+  "rescheduleKeptNoteVenue": "You're keeping your ticket for the new venue."
 }

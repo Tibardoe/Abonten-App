@@ -33,7 +33,11 @@ import { ticketsOfPayment } from "./ticketsOfPayment";
  * refund_prepare). Payments with Abonten Credit or Pay small small keep
  * their whole-payment rules.
  */
-export type EventCancelOptions = { afterReschedule?: boolean };
+export type EventCancelOptions = {
+  afterReschedule?: boolean;
+  /** Only the tickets for this date of an event with several dates (a move of that date). */
+  occurrenceId?: string | null;
+};
 
 type TicketRow = {
   id: string;
@@ -67,7 +71,7 @@ async function planEventCancel(
   eventId: string,
   options: EventCancelOptions = {},
 ): Promise<Plan> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("ticket")
     .select(
       "id, transaction_id, ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id!inner(event_id)",
@@ -75,6 +79,10 @@ async function planEventCancel(
     .eq("user_id", userId)
     .eq("status", "active")
     .eq("ticket_type.event_id", eventId);
+  if (options.occurrenceId) {
+    query = query.eq("occurrence_id", options.occurrenceId);
+  }
+  const { data, error } = await query;
   if (error) {
     logger.error(`Failed listing an event's tickets: ${error.message}`);
     return { ok: false, status: 500, message: tr("somethingWentWrong") };

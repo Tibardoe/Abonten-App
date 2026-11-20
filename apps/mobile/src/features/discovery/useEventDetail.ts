@@ -37,6 +37,8 @@ export type EventDetail = {
   flyer_version: string;
   starts_at: string | null;
   ends_at: string | null;
+  /** Postponed with no new date yet (docs/architecture/event-reschedule.md). */
+  postponed_at?: string | null;
   status: string;
   event_code: string;
   created_at: string;

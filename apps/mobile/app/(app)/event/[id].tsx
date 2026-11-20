@@ -292,10 +292,16 @@ export default function EventDetailScreen() {
     event.event_occurrence,
     nowMs,
   );
-  const hasEnded = !canceled && occurrenceState.blockReason === "ended";
+  // Postponed with no new date yet: nothing is on sale, and its old date
+  // passing does not end it.
+  const postponed = !canceled && !!event.postponed_at;
+  const hasEnded =
+    !canceled && !postponed && occurrenceState.blockReason === "ended";
   const inProgressNoFuture =
-    !canceled && occurrenceState.blockReason === "ongoing_no_future";
-  const salesClosed = hasEnded || inProgressNoFuture;
+    !canceled &&
+    !postponed &&
+    occurrenceState.blockReason === "ongoing_no_future";
+  const salesClosed = postponed || hasEnded || inProgressNoFuture;
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: attendanceCount,
@@ -330,6 +336,7 @@ export default function EventDetailScreen() {
   // The page's one primary action, pinned to its foot (resolveEventCta).
   const cta = resolveEventCta(tc, {
     canceled,
+    postponed,
     ended: hasEnded,
     inProgressNoFuture,
     soldOut,
@@ -423,9 +430,11 @@ export default function EventDetailScreen() {
             >
               {canceled
                 ? t("thisEventHasBeenCanceled")
-                : hasEnded
-                  ? t("thisEventHasEnded")
-                  : t("thisEventIsCurrentlyInProgress")}
+                : postponed
+                  ? t("thisEventIsPostponed")
+                  : hasEnded
+                    ? t("thisEventHasEnded")
+                    : t("thisEventIsCurrentlyInProgress")}
             </AppText>
           </View>
         ) : null}
@@ -697,9 +706,11 @@ export default function EventDetailScreen() {
             ) : salesClosed ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
                 <AppText variant="muted" className="font-semibold">
-                  {hasEnded
-                    ? t("thisEventHasEnded")
-                    : t("thisEventIsInProgressTicket")}
+                  {postponed
+                    ? t("thisEventIsPostponed")
+                    : hasEnded
+                      ? t("thisEventHasEnded")
+                      : t("thisEventIsInProgressTicket")}
                 </AppText>
               </View>
             ) : soldOut ? (

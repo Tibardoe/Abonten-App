@@ -17,7 +17,11 @@ type TicketRow = {
   status: string;
   occurrence: { starts_at: string; ends_at: string | null } | null;
   ticket_type: {
-    event: { id: string; organizer_id: string } | null;
+    event: {
+      id: string;
+      organizer_id: string;
+      postponed_at: string | null;
+    } | null;
   } | null;
 };
 
@@ -56,7 +60,7 @@ export async function checkInTicketCore(
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "id, status, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(event:event_id(id, organizer_id))",
+      "id, status, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(event:event_id(id, organizer_id, postponed_at))",
     )
     .eq(byCode ? "ticket_code" : "id", ref)
     .maybeSingle();
@@ -90,6 +94,11 @@ export async function checkInTicketCore(
           ? tr("thisTicketIsAlreadyCheckedIn")
           : tr("onlyActiveTicketsCanBeChecked"),
     };
+  }
+
+  // A postponed event has no date yet: nobody comes in on the old one.
+  if (checkedIn && ticket.ticket_type?.event?.postponed_at) {
+    return { status: 400, message: tr("thisEventIsPostponedNoEntry") };
   }
 
   // A ticket bought for one date of a multi-date event admits only on that

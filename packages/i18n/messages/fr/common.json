@@ -944,5 +944,7 @@
   "groupDiscount": "Réduction de groupe",
   "saveGroupPrices": "Enregistrer les prix de groupe",
   "groupPricesSaved": "Prix de groupe enregistrés",
-  "passForShows": "Un pass pour {shows, plural, one {# représentation} other {# représentations}} : celle-ci, puis choisissez les autres depuis votre billet"
+  "passForShows": "Un pass pour {shows, plural, one {# représentation} other {# représentations}} : celle-ci, puis choisissez les autres depuis votre billet",
+  "thisEventIsPostponed": "Cet événement est reporté. Une nouvelle date est à venir : la vente des billets reprendra alors.",
+  "eventPostponed": "Reporté : nouvelle date à venir"
 }

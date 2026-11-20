@@ -12,6 +12,7 @@ type Show = {
   status: string;
   seats_left: number | null;
   sold_out: boolean;
+  postponed?: boolean;
   place_id?: string | null;
   venue_name?: string | null;
   venue_address?: string | null;
@@ -49,7 +50,8 @@ export default async function EventShowsPicker({
           <ul className="grid grid-cols-2 gap-2">
             {group.shows.map((show) => {
               const current = show.id === currentId;
-              const unavailable = show.sold_out || show.status === "canceled";
+              const unavailable =
+                show.sold_out || show.status === "canceled" || !!show.postponed;
               const day = formatInTimeZone(
                 show.starts_at,
                 show.timezone,
@@ -79,11 +81,13 @@ export default async function EventShowsPicker({
                       {" · "}
                       {show.status === "canceled"
                         ? t("showCancelled")
-                        : show.sold_out
-                          ? t("showSoldOut")
-                          : show.seats_left != null
-                            ? t("showSeatsLeft", { count: show.seats_left })
-                            : t("showOnSale")}
+                        : show.postponed
+                          ? t("showPostponed")
+                          : show.sold_out
+                            ? t("showSoldOut")
+                            : show.seats_left != null
+                              ? t("showSeatsLeft", { count: show.seats_left })
+                              : t("showOnSale")}
                     </span>
                   </Link>
                 </li>

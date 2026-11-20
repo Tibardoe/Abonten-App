@@ -115,5 +115,14 @@
   "rescheduleRefundConfirmTitle": "{count, plural, one {Dein Ticket zurückgeben?} other {Deine # Tickets zurückgeben?}}",
   "rescheduleRefundConfirmPaid": "{amount} geht zurück auf die Karte oder das Mobile Money, mit dem du bezahlt hast. Das lässt sich nicht rückgängig machen.",
   "rescheduleRefundConfirmFree": "Dein Platz geht an den Veranstalter zurück. Das lässt sich nicht rückgängig machen.",
-  "couldNotSaveChoice": "Das konnte nicht gespeichert werden. Versuche es noch einmal."
+  "couldNotSaveChoice": "Das konnte nicht gespeichert werden. Versuche es noch einmal.",
+  "rescheduleBannerTitlePostponed": "Dieses Event ist verschoben",
+  "rescheduleBannerTitleVenue": "Dieses Event hat einen neuen Ort",
+  "rescheduleBannerTitleOneDate": "Dein Termin wurde verschoben",
+  "rescheduleBannerPostponed": "Vorher: {previous}. Ein neuer Termin folgt.",
+  "rescheduleBannerVenue": "Jetzt: {venue}.",
+  "rescheduleBannerVenues": "Vorher: {previous}. Jetzt: {venue}.",
+  "rescheduleBannerChoicePostponed": "Dein Ticket bleibt für den neuen Termin gültig. Wenn du nicht warten möchtest, bekommst du den vollen Betrag samt Servicegebühr zurück, bis der neue Termin feststeht.",
+  "rescheduleBannerChoiceVenue": "Dein Ticket gilt am neuen Ort. Wenn du nicht hinkommst, bekommst du bis {refundUntil} den vollen Betrag samt Servicegebühr zurück.",
+  "rescheduleKeptNoteVenue": "Du behältst dein Ticket für den neuen Ort."
 }

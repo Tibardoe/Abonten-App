@@ -50,11 +50,11 @@ Sagt ein Veranstalter ab, erledigt Abonten automatisch Folgendes:
 
 Du musst nichts tun. Zeigt eine Erstattung *Erstattung fehlgeschlagen*, nutze *Erstattung erneut versuchen* oder kontaktiere den Support.
 
-## Wenn der Veranstalter ein Event verschiebt
+## Wenn der Veranstalter ein Event verschiebt oder verlegt
 
-Verschiebt ein Veranstalter ein Event auf einen neuen Termin, wirst du in der App, per Push und per E-Mail informiert, mit seiner Nachricht. Dein Ticket gilt für den neuen Termin: Du musst nichts tun, um es zu behalten.
+Verschiebt oder verlegt ein Veranstalter ein Event (neuer Termin, neuer Ort oder dein Termin eines Events mit mehreren Terminen) oder verschiebt es ohne neuen Termin, wirst du in der App, per Push und per E-Mail informiert, mit seiner Nachricht. Dein Ticket bleibt gültig: Du musst nichts tun, um es zu behalten.
 
-Wenn du zum neuen Termin nicht kannst, öffne dein Ticket und wähle **Geld zurück** vor dem angezeigten Datum (höchstens 7 Tage, und spätestens 48 Stunden vor dem neuen Termin). Du bekommst den Ticketpreis **und die Servicegebühr** zurück, egal was die Erstattungsregel des Events sagt. Ein Ticket, das dir geschickt wurde, wird der Person erstattet, die es bezahlt hat.
+Wenn du nicht kannst, öffne dein Ticket und wähle **Geld zurück** vor dem angezeigten Datum (höchstens 7 Tage, und spätestens 48 Stunden vor dem Termin). Solange ein Event ohne neuen Termin verschoben ist, bleibt Geld zurück offen, bis der Veranstalter den neuen Termin festlegt. Du bekommst den Ticketpreis **und die Servicegebühr** zurück, egal was die Erstattungsregel des Events sagt. Ein Ticket, das dir geschickt wurde, wird der Person erstattet, die es bezahlt hat.
 
 ## Buchungen bei Orten
 

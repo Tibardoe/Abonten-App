@@ -115,5 +115,14 @@
   "rescheduleRefundConfirmTitle": "{count, plural, one {¿Devolver tu entrada?} other {¿Devolver tus # entradas?}}",
   "rescheduleRefundConfirmPaid": "{amount} vuelve a la tarjeta o al dinero móvil con que pagaste. No se puede deshacer.",
   "rescheduleRefundConfirmFree": "Tu plaza vuelve al organizador. No se puede deshacer.",
-  "couldNotSaveChoice": "No se pudo guardar. Inténtalo de nuevo."
+  "couldNotSaveChoice": "No se pudo guardar. Inténtalo de nuevo.",
+  "rescheduleBannerTitlePostponed": "Este evento está aplazado",
+  "rescheduleBannerTitleVenue": "Este evento cambia de lugar",
+  "rescheduleBannerTitleOneDate": "Tu fecha ha cambiado",
+  "rescheduleBannerPostponed": "Antes: {previous}. Habrá una nueva fecha.",
+  "rescheduleBannerVenue": "Ahora en {venue}.",
+  "rescheduleBannerVenues": "Antes en {previous}. Ahora en {venue}.",
+  "rescheduleBannerChoicePostponed": "Tu entrada sigue valiendo para la nueva fecha. Si prefieres no esperar, puedes pedir el reembolso completo, comisión de servicio incluida, hasta que se fije la nueva fecha.",
+  "rescheduleBannerChoiceVenue": "Tu entrada vale en el nuevo lugar. Si no puedes ir, puedes pedir el reembolso completo, comisión de servicio incluida, hasta el {refundUntil}.",
+  "rescheduleKeptNoteVenue": "Conservas tu entrada para el nuevo lugar."
 }

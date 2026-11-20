@@ -104,7 +104,7 @@ Legal register, versioning and effective dates: [legal/README.md](legal/README.m
 | A page said "nothing here" during an outage / an event page was a 404 while the database was down / a button stayed busy / "did my ban go through?" in the admin console | [architecture/web-resilience.md](architecture/web-resilience.md) |
 | Abonten Weekly edition did not publish / a listing vanished from an edition | [admin/weekly.md](admin/weekly.md) · [architecture/weekly-highlights.md](architecture/weekly-highlights.md) |
 | An identity check is stuck / "my document is linked to another account" / a payout is held for identity | [admin/identity.md](admin/identity.md) · [architecture/identity-verification.md](architecture/identity-verification.md) |
-| The event moved: "can I get my money back?", "I missed the refund window" | [architecture/event-reschedule.md](architecture/event-reschedule.md) |
+| The event moved, changed venue or was postponed: "can I get my money back?", "I missed the refund window" | [architecture/event-reschedule.md](architecture/event-reschedule.md) |
 | Festival or season passes: "where are my other shows?", "no places for passes" | [architecture/show-passes.md](architecture/show-passes.md) |
 | Free tickets for cast, press or sponsors; "my guest didn't get their ticket" | [architecture/complimentary-tickets.md](architecture/complimentary-tickets.md) |
 | Numbered seats: setting up a hall, "we were seated apart", "change my seat" | [architecture/assigned-seats.md](architecture/assigned-seats.md) |

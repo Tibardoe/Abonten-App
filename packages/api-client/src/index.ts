@@ -187,6 +187,7 @@ export type {
   GroupDiscountTierBody,
   ShowRunSlotBody,
   ShowVenueBody,
+  RescheduleDate,
   SetEventGroupPricesBody,
   SetEventGroupPricesResult,
   SetPlaceStatusBody,

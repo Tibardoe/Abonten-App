@@ -17,7 +17,6 @@
 import { createHash } from "node:crypto";
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
-import { readStructuredAddress } from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
 import {
   MAX_SHOWS_PER_REQUEST,
@@ -28,10 +27,8 @@ import {
 } from "@abonten/core/showRuns";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { userFacingError } from "@abonten/core/userFacingError";
-import { validateLocationInput } from "@abonten/core/validateLocationInput";
-import type { Database, Json } from "@abonten/types/database.types";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { resolveListingLocation } from "../geo/locationResolution";
 import { coreT, tr } from "../i18n/requestLocale";
 import { requireVerifiedIdentity } from "../identity/identityCore";
 import {
@@ -39,18 +36,18 @@ import {
   restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import {
+  type EventVenueArgs,
+  type EventVenueInput,
+  resolveEventVenue,
+} from "./resolveEventVenue";
 
 const UNIQUE_VIOLATION = "23505";
 const CHECK_VIOLATION = "23514";
 const CODE_ATTEMPTS = 3;
 
 /** Where new shows are: an Abonten place, or an address with its point. */
-export type ShowVenueInput = {
-  placeId?: string | null;
-  address?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-};
+export type ShowVenueInput = EventVenueInput;
 
 export type AddEventShowsInput = {
   eventId: string;
@@ -75,110 +72,6 @@ export type AddEventShowsResult =
       data: { shows: AddedShow[]; skipped: number };
     }
   | { status: 400 | 403 | 404 | 409 | 500; message: string };
-
-type VenueArgs = {
-  p_place_id?: string;
-  p_latitude?: number;
-  p_longitude?: number;
-  p_address?: Json;
-  p_country_code?: string;
-  p_timezone?: string;
-};
-
-type ResolvedVenue =
-  | { ok: true; timeZone: string; args: VenueArgs }
-  | { ok: false; status: 400 | 409 | 500; message: string };
-
-/**
- * The venue of new shows, checked: a listed Abonten place, or an address
- * whose point resolves to the listing's country (its currency and market).
- */
-async function resolveShowVenue(
-  venue: ShowVenueInput,
-  listingCountry: string,
-): Promise<ResolvedVenue> {
-  if (venue.placeId) {
-    const { data: place, error } = await getSupabaseServiceClient()
-      .from("place")
-      .select("id, status, moderation_state, country_code, timezone")
-      .eq("id", venue.placeId)
-      .maybeSingle();
-    if (error) {
-      logger.error(`addEventShows: place read failed (${error.message})`);
-      return { ok: false, status: 500, message: tr("somethingWentWrong") };
-    }
-    if (
-      !place ||
-      place.status !== "published" ||
-      place.moderation_state === "hidden" ||
-      place.moderation_state === "removed"
-    ) {
-      return { ok: false, status: 409, message: tr("thatPlaceCanTHostAShow") };
-    }
-    if (place.country_code !== listingCountry) {
-      return {
-        ok: false,
-        status: 409,
-        message: tr("aShowMustBeInTheSameCountry"),
-      };
-    }
-    return {
-      ok: true,
-      timeZone: place.timezone ?? "",
-      args: { p_place_id: place.id },
-    };
-  }
-
-  const address = venue.address?.trim() ?? "";
-  const locationCheck = validateLocationInput(coreT(), {
-    address,
-    latitude: venue.latitude ?? Number.NaN,
-    longitude: venue.longitude ?? Number.NaN,
-  });
-  if (!locationCheck.valid) {
-    return {
-      ok: false,
-      status: 400,
-      message: userFacingError("Add shows", locationCheck),
-    };
-  }
-  const lat = venue.latitude as number;
-  const lng = venue.longitude as number;
-  const resolved = await resolveListingLocation({
-    lat,
-    lng,
-    countryHint: listingCountry,
-  });
-  if (!resolved.ok) {
-    return {
-      ok: false,
-      status: 400,
-      message: userFacingError("Add shows", resolved),
-    };
-  }
-  if (resolved.location.countryCode !== listingCountry) {
-    return {
-      ok: false,
-      status: 409,
-      message: tr("aShowMustBeInTheSameCountry"),
-    };
-  }
-  return {
-    ok: true,
-    timeZone: resolved.location.timeZone,
-    args: {
-      p_latitude: lat,
-      p_longitude: lng,
-      p_address: {
-        ...readStructuredAddress(null),
-        full_address: address,
-        country_code: resolved.location.countryCode,
-      },
-      p_country_code: resolved.location.countryCode,
-      p_timezone: resolved.location.timeZone,
-    },
-  };
-}
 
 /** A stable id for one show of one submission (a retry makes the same). */
 function showRequestId(clientRequestId: string, startsAt: string): string {
@@ -227,9 +120,13 @@ export async function addEventShowsCore(
 
   // Another venue: its clock reads the times.
   let zone = source.timezone ?? "Africa/Accra";
-  let venueArgs: VenueArgs = {};
+  let venueArgs: EventVenueArgs = {};
   if (input.venue) {
-    const venue = await resolveShowVenue(input.venue, source.country_code);
+    const venue = await resolveEventVenue(
+      input.venue,
+      source.country_code,
+      tr("aShowMustBeInTheSameCountry"),
+    );
     if (!venue.ok) return { status: venue.status, message: venue.message };
     zone = venue.timeZone || zone;
     venueArgs = venue.args;

@@ -183,7 +183,8 @@
     "in_progress": "Venda de bilhetes encerrada",
     "no_tickets": "Bilhetes ainda não disponíveis",
     "rsvp": "Reservar lugar",
-    "sold_out": "Esgotado"
+    "sold_out": "Esgotado",
+    "postponed": "Adiado"
   },
   "eventDates": {
     "notice": "A hora de início ou de fim tem de ser pelo menos daqui a {hours} horas",
@@ -1025,7 +1026,23 @@
     },
     "event_rescheduled": {
       "title": "{title} mudou de data",
-      "body": "Agora {dayTime}. Abra o seu bilhete para o manter ou receber o reembolso total."
+      "body": "Agora a {when}. Abra o seu bilhete para o manter ou receber o reembolso total."
+    },
+    "event_moved_venue": {
+      "title": "{title} mudou de data e local",
+      "body": "Agora a {when} em {venue}. Abra o seu bilhete para o manter ou receber o reembolso total."
+    },
+    "event_venue_changed": {
+      "title": "{title} mudou de local",
+      "body": "Agora em {venue}. Abra o seu bilhete para o manter ou receber o reembolso total."
+    },
+    "event_date_moved": {
+      "title": "{title}: a sua data mudou",
+      "body": "{previousWhen} passa para {when}. Abra o seu bilhete para o manter ou receber o reembolso total."
+    },
+    "event_postponed": {
+      "title": "{title} foi adiado",
+      "body": "Haverá uma nova data. Abra o seu bilhete para o manter ou receber o reembolso total."
     }
   },
   "openStatus": {

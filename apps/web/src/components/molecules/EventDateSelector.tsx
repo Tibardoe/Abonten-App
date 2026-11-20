@@ -21,6 +21,8 @@ type EventDateSelectorProps = {
   soldOut?: boolean;
   isAbsolutelyFreeEvent?: boolean;
   eventStatus?: string;
+  /** Postponed with no new date yet: nothing is on sale. */
+  postponed?: boolean;
   /** The event's zone: every date and time reads on the venue's clock. */
   timeZone?: string | null;
 };
@@ -33,6 +35,7 @@ export default function EventDateSelector({
   soldOut,
   isAbsolutelyFreeEvent,
   eventStatus,
+  postponed,
   timeZone,
 }: EventDateSelectorProps) {
   const locale = useLocale();
@@ -86,11 +89,13 @@ export default function EventDateSelector({
   const isCanceled = eventStatus === "canceled";
   const blockedLabel = isCanceled
     ? t("eventCancelled")
-    : occurrenceState.blockReason === "ended"
-      ? t("eventEnded")
-      : occurrenceState.blockReason === "ongoing_no_future"
-        ? t("eventInProgress")
-        : null;
+    : postponed
+      ? t("eventPostponed")
+      : occurrenceState.blockReason === "ended"
+        ? t("eventEnded")
+        : occurrenceState.blockReason === "ongoing_no_future"
+          ? t("eventInProgress")
+          : null;
 
   const selectedDateTime = selectedOccurrence
     ? formatFullDateTimeRange(

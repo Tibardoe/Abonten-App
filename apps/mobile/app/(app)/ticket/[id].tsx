@@ -128,6 +128,7 @@ export default function TicketDetailScreen() {
   const cancelledByOrganizer = ticket.event.status === "canceled";
   const refund = ticketRefundState(ticket);
   const eventEnded =
+    !ticket.event.postponed_at &&
     getEventStatus(
       ticket.event.starts_at,
       ticket.event.ends_at,

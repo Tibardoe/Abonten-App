@@ -49,6 +49,35 @@ describe("the notice registry", () => {
 });
 
 describe("renderNotice", () => {
+  it("words every kind of event move on the event's clock", () => {
+    const params = {
+      title: "Honey Trap",
+      startsAt: "2026-12-05T18:00:00Z",
+      previousStartsAt: "2026-11-28T18:00:00Z",
+      timezone: "Africa/Accra",
+      venue: "Kumasi Cultural Centre",
+    };
+    expect(renderNotice(i18nEn, { id: "event_rescheduled", params })).toEqual({
+      title: "Honey Trap has moved",
+      body: "Now Sat 5 Dec, 6:00 pm. Open your ticket to keep it or get a full refund.",
+    });
+    expect(renderNotice(i18nEn, { id: "event_date_moved", params })?.body).toBe(
+      "Sat 28 Nov, 6:00 pm is now Sat 5 Dec, 6:00 pm. Open your ticket to keep it or get a full refund.",
+    );
+    expect(
+      renderNotice(i18nEn, { id: "event_venue_changed", params })?.title,
+    ).toBe("Honey Trap has a new venue");
+    expect(
+      renderNotice(i18nEn, { id: "event_moved_venue", params })?.body,
+    ).toContain("at Kumasi Cultural Centre");
+    expect(
+      renderNotice(i18nFr, {
+        id: "event_postponed",
+        params: { title: "Honey Trap" },
+      })?.title,
+    ).toBe("Honey Trap est reporté");
+  });
+
   it("words a missing name itself", () => {
     expect(
       renderNotice(i18nEn, {

@@ -1,8 +1,13 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
+import {
+  type PickedVenue,
+  VenuePickerField,
+} from "@/features/events/VenuePickerField";
 import { api } from "@/lib/api";
 import {
   MAX_RESCHEDULE_MESSAGE,
+  rescheduleMessageProblem,
   rescheduleProblem,
   rescheduleRefundUntil,
 } from "@abonten/core/eventReschedule";
@@ -13,6 +18,7 @@ import {
 import {
   AppText,
   Button,
+  Chip,
   Field,
   Input,
   KeyboardAwareScrollView,
@@ -32,6 +38,8 @@ const WHEN: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
+type Mode = "date" | "venue" | "postpone";
+
 /** "yyyy-mm-dd" + "HH:MM" as a wall clock, a day later when `nextDay`. */
 function wallClock(date: string, time: string, nextDay = false): string {
   if (!nextDay) return `${date}T${time}`;
@@ -41,11 +49,13 @@ function wallClock(date: string, time: string, nextDay = false): string {
 }
 
 // Move an event that people already hold tickets for
-// (docs/architecture/event-reschedule.md): a new date and a message.
-// Everyone holding a ticket is told (notice, push, email) and may keep it or
-// give it back for the ticket price and the service fee until the window
-// closes. Mirrors the website's Manage › Details card;
-// GET/POST /api/mobile/organizer/events/:id/reschedule.
+// (docs/architecture/event-reschedule.md): a new date, a new venue or both;
+// one date of an event with several dates; or postponed with no new date
+// yet. Everyone holding a ticket is told (notice, push, email) and may keep
+// it or give it back for the ticket price and the service fee until the
+// window closes (while postponed: until the new date). Mirrors the
+// website's Manage › Details card; GET/POST
+// /api/mobile/organizer/events/:id/reschedule.
 export default function RescheduleEventScreen() {
   const t = useTranslations("events");
   const tc = useTranslations("common");
@@ -67,22 +77,40 @@ export default function RescheduleEventScreen() {
   });
   const setup = setupQuery.data;
 
+  const [mode, setMode] = useState<Mode>("date");
+  const [occurrenceId, setOccurrenceId] = useState<string | null>(null);
   const [day, setDay] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
+  const [venueToo, setVenueToo] = useState(false);
+  const [picked, setPicked] = useState<PickedVenue>(null);
   const [message, setMessage] = useState("");
+
+  const withVenue = mode === "venue" || (mode === "date" && venueToo);
+  const chosenDate =
+    setup && setup.dates.length > 0
+      ? (setup.dates.find((d) => d.id === occurrenceId) ?? null)
+      : null;
 
   const move = useMutation({
     mutationFn: () =>
       api.organizer.rescheduleEvent(id, {
-        // Wall-clock times: the server reads them on the venue's clock.
-        startsAt: wallClock(day as string, startTime as string),
-        endsAt: wallClock(
-          day as string,
-          endTime as string,
-          (endTime as string) <= (startTime as string),
-        ),
         message,
+        ...(mode === "postpone"
+          ? { postpone: true }
+          : {
+              occurrenceId: chosenDate?.id ?? null,
+              // Wall-clock times: the server reads them on the venue's clock.
+              startsAt:
+                mode === "date" && day && startTime
+                  ? wallClock(day, startTime)
+                  : null,
+              endsAt:
+                mode === "date" && day && startTime && endTime
+                  ? wallClock(day, endTime, endTime <= startTime)
+                  : null,
+              venue: withVenue ? (picked?.venue ?? null) : null,
+            }),
       }),
     onSuccess: (res) => {
       if (res.status === 200) {
@@ -120,47 +148,124 @@ export default function RescheduleEventScreen() {
   const zone = setup.timezone;
   const when = (iso: string | Date) =>
     formatInTimeZone(iso, zone, WHEN, locale);
+  const severalDates = setup.dates.length > 0;
+  const postponed = !!setup.postponedAt;
   const startsAt =
-    day && startTime
+    mode === "date" && day && startTime
       ? parseEventTimestamp(wallClock(day, startTime), zone)
       : null;
   const endsAt =
-    day && startTime && endTime
+    mode === "date" && day && startTime && endTime
       ? parseEventTimestamp(wallClock(day, endTime, endTime <= startTime), zone)
       : null;
-  const problem = setup.startsAt
-    ? rescheduleProblem({
-        startsAt,
-        endsAt,
-        message,
-        currentStartsAt: new Date(setup.startsAt),
-        currentEndsAt: setup.endsAt ? new Date(setup.endsAt) : null,
-        moves: setup.moves,
-      })
-    : "dates";
-  const refundUntil = startsAt ? rescheduleRefundUntil(startsAt) : null;
+  const problem =
+    mode === "postpone"
+      ? rescheduleMessageProblem(message)
+      : mode === "venue"
+        ? picked
+          ? rescheduleMessageProblem(message)
+          : "venue"
+        : severalDates && !chosenDate
+          ? "date"
+          : withVenue && !picked
+            ? "venue"
+            : rescheduleProblem({
+                startsAt,
+                endsAt,
+                message,
+                currentStartsAt: chosenDate
+                  ? new Date(chosenDate.startsAt)
+                  : setup.startsAt
+                    ? new Date(setup.startsAt)
+                    : null,
+                currentEndsAt: chosenDate
+                  ? new Date(chosenDate.endsAt)
+                  : setup.endsAt
+                    ? new Date(setup.endsAt)
+                    : null,
+                moves: chosenDate ? chosenDate.moves : setup.moves,
+                sameDateAllowed: withVenue || postponed,
+              });
+  const refundStart =
+    mode === "date"
+      ? startsAt
+      : mode === "venue"
+        ? setup.startsAt
+          ? new Date(setup.startsAt)
+          : setup.dates[0]
+            ? new Date(setup.dates[0].startsAt)
+            : null
+        : null;
+  const refundUntil = refundStart ? rescheduleRefundUntil(refundStart) : null;
 
   const blockedText =
     setup.blocked === "not_published"
       ? t("rescheduleBlockedNotPublished")
-      : setup.blocked === "several_dates"
-        ? t("rescheduleBlockedSeveralDates")
-        : setup.blocked === "started"
-          ? t("rescheduleBlockedStarted")
-          : setup.blocked === "too_many"
-            ? t("rescheduleBlockedTooMany")
-            : null;
+      : setup.blocked === "started"
+        ? t("rescheduleBlockedStarted")
+        : setup.blocked === "too_many"
+          ? t("rescheduleBlockedTooMany")
+          : null;
+
+  const modes: Mode[] = postponed
+    ? ["date"]
+    : [
+        "date",
+        ...(setup.seated ? [] : (["venue"] as Mode[])),
+        ...(setup.canPostpone ? (["postpone"] as Mode[]) : []),
+      ];
+  const modeLabel = (m: Mode) =>
+    m === "postpone"
+      ? t("rescheduleModePostpone")
+      : m === "venue"
+        ? t("rescheduleModeVenue")
+        : severalDates
+          ? t("rescheduleModeOneDate")
+          : t("rescheduleNewDate");
+  const submitLabel =
+    mode === "postpone"
+      ? t("reschedulePostponeSubmit")
+      : postponed
+        ? t("rescheduleSetDateSubmit")
+        : chosenDate
+          ? t("rescheduleSubmitDate")
+          : t("rescheduleSubmit");
 
   function confirmMove() {
-    if (!startsAt || !refundUntil || problem) return;
+    if (problem || !setup) return;
+    const title = setup.title;
+    if (mode === "postpone") {
+      Alert.alert(
+        t("reschedulePostponeConfirmTitle", { title }),
+        t("reschedulePostponeConfirmBody", { count: setup.holders }),
+        [
+          { text: tc("cancel"), style: "cancel" },
+          {
+            text: t("reschedulePostponeSubmit"),
+            onPress: () => move.mutate(),
+          },
+        ],
+      );
+      return;
+    }
     Alert.alert(
-      t("rescheduleConfirmTitle", {
-        title: setup?.title ?? "",
-        when: when(startsAt),
-      }),
+      mode === "venue"
+        ? t("rescheduleConfirmVenueTitle", {
+            title,
+            venue: picked?.label ?? "",
+          })
+        : chosenDate
+          ? t("rescheduleConfirmDateTitle", {
+              title,
+              when: startsAt ? when(startsAt) : "",
+            })
+          : t("rescheduleConfirmTitle", {
+              title,
+              when: startsAt ? when(startsAt) : "",
+            }),
       t("rescheduleConfirmBody", {
-        count: setup?.holders ?? 0,
-        refundUntil: when(refundUntil),
+        count: setup.holders,
+        refundUntil: refundUntil ? when(refundUntil) : "",
       }),
       [
         { text: tc("cancel"), style: "cancel" },
@@ -177,45 +282,122 @@ export default function RescheduleEventScreen() {
         contentContainerClassName="gap-4 p-4 pb-12"
       >
         <AppText variant="meta">{t("rescheduleIntro")}</AppText>
+        {postponed && setup.postponedAt ? (
+          <View className="rounded-xl bg-muted p-3">
+            <AppText variant="small">
+              {t("reschedulePostponedNow", { when: when(setup.postponedAt) })}
+            </AppText>
+          </View>
+        ) : null}
         {blockedText ? (
           <AppText variant="small">{blockedText}</AppText>
         ) : (
           <>
-            {setup.startsAt ? (
-              <AppText variant="small">
-                {t("rescheduleCurrent", { when: when(setup.startsAt) })}
+            {modes.length > 1 ? (
+              <View className="flex-row flex-wrap gap-2">
+                {modes.map((m) => (
+                  <Chip
+                    key={m}
+                    label={modeLabel(m)}
+                    selected={mode === m}
+                    onPress={() => setMode(m)}
+                  />
+                ))}
+              </View>
+            ) : null}
+            {setup.seated && !postponed ? (
+              <AppText variant="caption" tone="muted">
+                {t("rescheduleSeatedNoVenue")}
               </AppText>
             ) : null}
-            <Field label={t("rescheduleNewDate")}>
-              <DateRangeField
-                mode="single"
-                start={day}
-                end={null}
-                onChange={(next) => setDay(next.start)}
-              />
-            </Field>
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                {/* The field shows only the time: its name sits above it. */}
-                <Field label={t("rescheduleStartTime")}>
-                  <TimeField
-                    label={t("rescheduleStartTime")}
-                    value={startTime}
-                    onChange={setStartTime}
+
+            {mode === "date" ? (
+              <>
+                {severalDates ? (
+                  <Field label={t("rescheduleWhichDate")}>
+                    <View className="flex-row flex-wrap gap-2">
+                      {setup.dates.map((d) => (
+                        <Chip
+                          key={d.id}
+                          label={
+                            d.moves >= setup.maxMoves
+                              ? t("rescheduleDateMovedTwice", {
+                                  when: when(d.startsAt),
+                                })
+                              : when(d.startsAt)
+                          }
+                          selected={occurrenceId === d.id}
+                          // A date moved twice can't move again.
+                          onPress={() =>
+                            d.moves < setup.maxMoves && setOccurrenceId(d.id)
+                          }
+                        />
+                      ))}
+                    </View>
+                  </Field>
+                ) : setup.startsAt && !postponed ? (
+                  <AppText variant="small">
+                    {t("rescheduleCurrent", { when: when(setup.startsAt) })}
+                  </AppText>
+                ) : null}
+                <Field label={t("rescheduleNewDate")}>
+                  <DateRangeField
+                    mode="single"
+                    start={day}
+                    end={null}
+                    onChange={(next) => setDay(next.start)}
                   />
                 </Field>
-              </View>
-              <View className="flex-1">
-                {/* The field shows only the time: its name sits above it. */}
-                <Field label={t("rescheduleEndTime")}>
-                  <TimeField
-                    label={t("rescheduleEndTime")}
-                    value={endTime}
-                    onChange={setEndTime}
-                  />
-                </Field>
-              </View>
-            </View>
+                <View className="flex-row gap-3">
+                  <View className="flex-1">
+                    {/* The field shows only the time: its name sits above it. */}
+                    <Field label={t("rescheduleStartTime")}>
+                      <TimeField
+                        label={t("rescheduleStartTime")}
+                        value={startTime}
+                        onChange={setStartTime}
+                      />
+                    </Field>
+                  </View>
+                  <View className="flex-1">
+                    {/* The field shows only the time: its name sits above it. */}
+                    <Field label={t("rescheduleEndTime")}>
+                      <TimeField
+                        label={t("rescheduleEndTime")}
+                        value={endTime}
+                        onChange={setEndTime}
+                      />
+                    </Field>
+                  </View>
+                </View>
+                {!severalDates && !setup.seated ? (
+                  <View className="flex-row">
+                    <Chip
+                      label={t("rescheduleVenueToo")}
+                      selected={venueToo}
+                      onPress={() => {
+                        if (venueToo) setPicked(null);
+                        setVenueToo(!venueToo);
+                      }}
+                    />
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+
+            {mode === "venue" && setup.venue ? (
+              <AppText variant="small">
+                {t("rescheduleCurrentVenue", { venue: setup.venue })}
+              </AppText>
+            ) : null}
+            {withVenue ? (
+              <VenuePickerField picked={picked} onChange={setPicked} />
+            ) : null}
+
+            {mode === "postpone" ? (
+              <AppText variant="meta">{t("reschedulePostponeHint")}</AppText>
+            ) : null}
+
             <Field label={t("rescheduleMessage")}>
               <Input
                 value={message}
@@ -227,16 +409,22 @@ export default function RescheduleEventScreen() {
               />
             </Field>
             <AppText variant="meta">
-              {refundUntil
-                ? t("rescheduleWhoIsTold", {
-                    count: setup.holders,
-                    refundUntil: when(refundUntil),
-                  })
-                : t("rescheduleHolders", { count: setup.holders })}
+              {mode === "postpone"
+                ? t("reschedulePostponeWhoIsTold", { count: setup.holders })
+                : refundUntil
+                  ? t("rescheduleWhoIsTold", {
+                      count: setup.holders,
+                      refundUntil: when(refundUntil),
+                    })
+                  : t("rescheduleHolders", { count: setup.holders })}
             </AppText>
-            <AppText variant="meta">
-              {t("rescheduleMovesLeft", { left: setup.maxMoves - setup.moves })}
-            </AppText>
+            {mode !== "postpone" && !severalDates ? (
+              <AppText variant="meta">
+                {t("rescheduleMovesLeft", {
+                  left: setup.maxMoves - setup.moves,
+                })}
+              </AppText>
+            ) : null}
             {problem === "too_soon" ? (
               <AppText variant="small" tone="error">
                 {t("rescheduleTooSoonHint")}
@@ -248,7 +436,7 @@ export default function RescheduleEventScreen() {
               </AppText>
             ) : null}
             <Button
-              title={t("rescheduleSubmit")}
+              title={submitLabel}
               fullWidth
               loading={move.isPending}
               disabled={move.isPending || problem !== null}

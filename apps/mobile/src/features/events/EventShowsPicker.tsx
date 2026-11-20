@@ -45,7 +45,8 @@ export function EventShowsPicker({
           >
             {group.shows.map((show) => {
               const current = show.id === eventId;
-              const unavailable = show.sold_out || show.status === "canceled";
+              const unavailable =
+                show.sold_out || show.status === "canceled" || show.postponed;
               return (
                 <Pressable
                   key={show.id}
@@ -76,11 +77,13 @@ export function EventShowsPicker({
                     {" · "}
                     {show.status === "canceled"
                       ? t("showCancelled")
-                      : show.sold_out
-                        ? t("showSoldOut")
-                        : show.seats_left != null
-                          ? t("showSeatsLeft", { count: show.seats_left })
-                          : t("showOnSale")}
+                      : show.postponed
+                        ? t("showPostponed")
+                        : show.sold_out
+                          ? t("showSoldOut")
+                          : show.seats_left != null
+                            ? t("showSeatsLeft", { count: show.seats_left })
+                            : t("showOnSale")}
                   </AppText>
                 </Pressable>
               );

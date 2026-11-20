@@ -293,11 +293,13 @@ export default function EventShowsScreen() {
                   <AppText variant="caption" tone="muted">
                     {show.status === "canceled"
                       ? t("showCancelled")
-                      : show.sold_out
-                        ? t("showSoldOut")
-                        : show.seats_left != null
-                          ? t("showSeatsLeft", { count: show.seats_left })
-                          : t("showOnSale")}
+                      : show.postponed
+                        ? t("showPostponed")
+                        : show.sold_out
+                          ? t("showSoldOut")
+                          : show.seats_left != null
+                            ? t("showSeatsLeft", { count: show.seats_left })
+                            : t("showOnSale")}
                   </AppText>
                 </Pressable>
               ))}

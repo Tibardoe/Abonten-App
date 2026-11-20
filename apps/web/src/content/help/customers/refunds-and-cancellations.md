@@ -50,11 +50,11 @@ If an organizer cancels, Abonten automatically:
 
 You do not need to do anything. If a refund shows *Refund failed*, use *Retry refund* or contact support.
 
-## When the organizer moves an event
+## When the organizer moves or postpones an event
 
-If an organizer moves an event to a new date, you're told in the app, by push and by email, with their message. Your ticket stays valid for the new date: you don't need to do anything to keep it.
+If an organizer moves an event (a new date, a new venue, or the date you hold of an event with several dates) or postpones it, you're told in the app, by push and by email, with their message. Your ticket stays valid: you don't need to do anything to keep it.
 
-If you can't make the new date, open your ticket and choose **Get a refund** before the date it shows (7 days at most, and no later than 48 hours before the new date). You get the ticket price **and the service fee** back, whatever the event's refund policy says. A ticket someone sent you is refunded to the person who paid for it.
+If you can't make it, open your ticket and choose **Get a refund** before the date it shows (7 days at most, and no later than 48 hours before the date). While an event is postponed, Get a refund stays open until the organizer sets the new date. You get the ticket price **and the service fee** back, whatever the event's refund policy says. A ticket someone sent you is refunded to the person who paid for it.
 
 ## Bookings at places
 

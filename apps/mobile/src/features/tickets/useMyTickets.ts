@@ -30,6 +30,9 @@ function statusesFor(filter: TicketFilter): string[] {
 }
 
 function eventEnded(event: UserTicketType["event"]): boolean {
+  // A postponed event waits for its new date: not over, whatever its old
+  // date says.
+  if (event?.postponed_at) return false;
   return (
     getEventStatus(
       event?.starts_at,

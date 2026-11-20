@@ -114,6 +114,22 @@
     "now": "Ahora",
     "messageLabel": "Mensaje del organizador",
     "openTickets": "Abrir mis entradas",
-    "questions": "¿Preguntas sobre el evento? Escribe al organizador desde la página del evento en la app de Abonten."
+    "questions": "¿Preguntas sobre el evento? Escribe al organizador desde la página del evento en la app de Abonten.",
+    "subjectVenue": "{eventTitle} cambia de lugar",
+    "subjectPostponed": "{eventTitle} se aplaza",
+    "subjectOneDate": "{eventTitle}: tu fecha cambia al {newWhen}",
+    "previewVenue": "{eventTitle} ahora es en {venue}. Tu entrada sigue valiendo.",
+    "previewPostponed": "{eventTitle} se aplaza. Habrá una nueva fecha.",
+    "headingVenue": "Tu evento cambia de lugar",
+    "headingPostponed": "Tu evento se aplaza",
+    "introDateVenue": "{greeting} el organizador ha cambiado <strong>{eventTitle}</strong> a una nueva fecha y un nuevo lugar. Tu entrada vale para ambos: no tienes que hacer nada para conservarla.",
+    "introOneDate": "{greeting} el organizador ha cambiado la fecha de <strong>{eventTitle}</strong> para la que tienes entrada. Tu entrada vale para la nueva fecha: no tienes que hacer nada para conservarla.",
+    "introVenue": "{greeting} el organizador ha cambiado <strong>{eventTitle}</strong> a un nuevo lugar. Tu entrada vale allí: no tienes que hacer nada para conservarla.",
+    "introPostponed": "{greeting} el organizador ha aplazado <strong>{eventTitle}</strong>. Habrá una nueva fecha y te avisaremos en cuanto se fije. Tu entrada sigue valiendo para ella.",
+    "choiceVenue": "¿No puedes ir? Abre tu entrada y elige «Pedir el reembolso» antes del {refundUntil}: las entradas de pago recuperan el precio y la comisión de servicio.",
+    "choicePostponed": "¿Prefieres recuperar tu dinero? Abre tu entrada y elige «Pedir el reembolso» en cualquier momento hasta que se fije la nueva fecha: las entradas de pago recuperan el precio y la comisión de servicio.",
+    "when": "Cuándo",
+    "venue": "Lugar",
+    "previousVenue": "Lugar anterior"
   }
 }

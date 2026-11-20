@@ -46,8 +46,9 @@ export function TicketCard({
 
   const cancelledByOrganizer = event.status === "canceled";
   const eventEnded =
+    !event.postponed_at &&
     getEventStatus(event.starts_at, event.ends_at, event.occurrences) ===
-    "ended";
+      "ended";
 
   const txn = ticket.transaction;
   const showRefundPanel =
