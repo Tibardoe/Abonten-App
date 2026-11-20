@@ -48,6 +48,7 @@ function AttendanceRow({
 }) {
   const t = useTranslations("events");
   const tc = useTranslations("core");
+  const tt = useTranslations("tickets");
 
   const queryClient = useQueryClient();
 
@@ -77,6 +78,12 @@ function AttendanceRow({
           <span className="text-sm text-muted-foreground">
             {ticketTypeLabel(tc, attendee.ticket_type?.type)}
           </span>
+
+          {attendee.ticket?.seat_number ? (
+            <span className="text-sm font-semibold">
+              {tt("seat", { seat_number: attendee.ticket.seat_number })}
+            </span>
+          ) : null}
 
           {isCancelled ? (
             <span className="px-2 py-1 rounded-full text-xs font-semibold bg-destructive/10 text-destructive">

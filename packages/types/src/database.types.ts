@@ -4079,6 +4079,36 @@ export type Database = {
           },
         ]
       }
+      event_seating: {
+        Row: {
+          event_id: string
+          plan_id: string
+        }
+        Insert: {
+          event_id: string
+          plan_id: string
+        }
+        Update: {
+          event_id?: string
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_seating_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_seating_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "seating_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_series: {
         Row: {
           created_at: string
@@ -12597,6 +12627,73 @@ export type Database = {
         }
         Relationships: []
       }
+      seating_plan: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seating_plan_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seating_section: {
+        Row: {
+          id: string
+          name: string
+          plan_id: string
+          position: number
+          rows: Json
+          seat_count: number
+        }
+        Insert: {
+          id?: string
+          name: string
+          plan_id: string
+          position?: number
+          rows: Json
+          seat_count?: number
+        }
+        Update: {
+          id?: string
+          name?: string
+          plan_id?: string
+          position?: number
+          rows?: Json
+          seat_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seating_section_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "seating_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storage_purge_config: {
         Row: {
           content_upload_sweep_at: string | null
@@ -13895,6 +13992,55 @@ export type Database = {
           },
         ]
       }
+      ticket_seat: {
+        Row: {
+          assigned_at: string
+          event_id: string
+          row_label: string
+          seat_number: number
+          section_id: string
+          ticket_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          event_id: string
+          row_label: string
+          seat_number: number
+          section_id: string
+          ticket_id: string
+        }
+        Update: {
+          assigned_at?: string
+          event_id?: string
+          row_label?: string
+          seat_number?: number
+          section_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_seat_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_seat_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "seating_section"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_seat_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_transfer: {
         Row: {
           cancel_reason: string | null
@@ -14051,6 +14197,7 @@ export type Database = {
           id: string
           price: number | null
           quantity: number | null
+          seating_section_id: string | null
           type: string | null
         }
         Insert: {
@@ -14063,6 +14210,7 @@ export type Database = {
           id?: string
           price?: number | null
           quantity?: number | null
+          seating_section_id?: string | null
           type?: string | null
         }
         Update: {
@@ -14075,6 +14223,7 @@ export type Database = {
           id?: string
           price?: number | null
           quantity?: number | null
+          seating_section_id?: string | null
           type?: string | null
         }
         Relationships: [

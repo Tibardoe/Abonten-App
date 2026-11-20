@@ -1471,5 +1471,17 @@
     "badDuration": "Eine Vorstellung dauert 15 Minuten bis 24 Stunden.",
     "noneAhead": "Keine dieser Vorstellungen liegt in der Zukunft.",
     "tooMany": "Das sind mehr als {max} Vorstellungen. Füge sie in Teilen hinzu."
+  },
+  "seating": {
+    "planName": "Gib dem Plan einen Namen mit bis zu 80 Zeichen.",
+    "noSections": "Füge mindestens einen Bereich hinzu.",
+    "tooManySections": "Ein Plan kann höchstens {max} Bereiche haben.",
+    "sectionName": "Gib jedem Bereich einen Namen mit bis zu 60 Zeichen.",
+    "duplicateSection": "Zwei Bereiche haben denselben Namen.",
+    "noRows": "Jeder Bereich braucht mindestens eine Reihe.",
+    "tooManyRows": "Ein Bereich kann höchstens {max} Reihen haben.",
+    "rowLabel": "Jede Reihe braucht eine Bezeichnung mit bis zu 6 Zeichen.",
+    "duplicateRow": "Zwei Reihen eines Bereichs haben dieselbe Bezeichnung.",
+    "rowSeats": "Eine Reihe hat 1 bis {max} Plätze."
   }
 }

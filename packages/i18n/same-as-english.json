@@ -335,6 +335,7 @@
     "events:reminderLead.m10",
     "events:reminderLead.m30",
     "events:reminderLead.minutes",
+    "events:sectionName",
     "events:tabs.promotion",
     "events:types",
     "explore:distance",

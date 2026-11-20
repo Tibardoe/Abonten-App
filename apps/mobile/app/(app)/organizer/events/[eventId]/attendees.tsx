@@ -30,6 +30,7 @@ function AttendeeRow({
 }) {
   const t = useTranslations("manage");
   const tc = useTranslations("core");
+  const tTickets = useTranslations("tickets");
 
   const toast = useToast();
   const checkIn = useCheckInTicket(eventId);
@@ -77,6 +78,11 @@ function AttendeeRow({
           {attendee.ticket_type?.type ? (
             <AppText className="text-sm text-muted-foreground">
               {ticketTypeLabel(tc, attendee.ticket_type.type)}
+            </AppText>
+          ) : null}
+          {attendee.ticket?.seat_number ? (
+            <AppText className="text-sm font-semibold">
+              {tTickets("seat", { seat_number: attendee.ticket.seat_number })}
             </AppText>
           ) : null}
           <View
