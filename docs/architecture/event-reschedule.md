@@ -2,9 +2,9 @@
 title: Moving or postponing an event
 purpose: How an organizer moves an event that already has tickets to a new date, a new venue or both, moves one date of an event with several dates, or postpones it with no new date yet; how every holder is told; and how a holder keeps their ticket or gives it back for the ticket price and the service fee.
 audience: Engineering, operations and support
-scope: event_reschedule, event_reschedule_choice, event.postponed_at, ticket.refund_includes_fee, transaction_refund.fee_amount, event_reschedule(), get_event_reschedule(), _refund_fee_share(), refund_quote_amount_with_fee(), the replaced refund_prepare() and _refund_fee_adjustment(), the event_rescheduled push (migrations 20261120170000 and 20261120210000), the postponement guards in the selling, listing, reminder, settlement and retirement functions; @abonten/core/eventReschedule; @abonten/services events/eventRescheduleCore, events/resolveEventVenue and the afterReschedule / occurrenceId options of tickets/cancelEventTicketsCore; the website's Manage › Details card, ticket card notice, event page and email; the app's Move or postpone screen, ticket notice and event screen; the app's reminders following a moved event.
+scope: event_reschedule, event_reschedule_choice, event.postponed_at, ticket.refund_includes_fee, transaction_refund.fee_amount, event_reschedule(), get_event_reschedule(), _refund_fee_share(), refund_quote_amount_with_fee(), the replaced refund_prepare() and _refund_fee_adjustment(), the event_rescheduled push (migrations 20261120170000 and 20261120210000), the postponement guards in the selling, listing, reminder, settlement and retirement functions, the text outbox event_reschedule_text and the reschedule-texts job (migration 20261120220000); @abonten/core/eventReschedule; @abonten/services events/eventRescheduleCore, events/rescheduleTextsCore, events/resolveEventVenue and the afterReschedule / occurrenceId options of tickets/cancelEventTicketsCore; the website's Manage › Details card, ticket card notice, event page and email; the app's Move or postpone screen, ticket notice and event screen; the app's reminders following a moved event.
 status: Review required
-version: 1.1
+version: 1.2
 lastReviewed: 2026-11-20
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Moving or postponing an event
 
-**State (2026-11-20): built and open to every organizer.** Asked for by the founder ("build reschedule with your suggested defaults", then "do all of Not in this version"); decisions RS1–RS8 in [OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md), legal item E11 in [LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md).
+**State (2026-11-20): built and open to every organizer.** Asked for by the founder ("build reschedule with your suggested defaults", then "do all of Not in this version"); decisions RS1–RS8 (RS3 changed: texts) in [OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md), legal item E11 in [LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md).
 
 Before this, an event's date and venue locked at its first confirmed ticket and the only way out was cancelling it (everyone refunded, the service fee kept) and making a new one.
 
@@ -26,7 +26,7 @@ Before this, an event's date and venue locked at its first confirmed ticket and 
    - **one date** of an event with several dates (`event_occurrence`): only the people holding that date are told;
    - **postponed, new date to come**: the event keeps its old date but sells nothing, leaves the lists and waits; the organizer later sets the new date (an ordinary move, which lifts the postponement).
    The form says how many people hold tickets and until when they may get a refund.
-2. **Every holder is told at once**: one in-app notice per person holding a live ticket or a running Pay small small plan (for one date: that date's), pushed as urgent (notification type `event_rescheduled`; the notice says which: `event_rescheduled` a new date, `event_moved_venue` a new date and venue, `event_venue_changed` a new venue, `event_date_moved` one date, `event_postponed`), and an email saying the same with the organizer's message (sent after the response, in each reader's language, dates on the event's clock).
+2. **Every holder is told at once**: one in-app notice per person holding a live ticket or a running Pay small small plan (for one date: that date's), pushed as urgent (notification type `event_rescheduled`; the notice says which: `event_rescheduled` a new date, `event_moved_venue` a new date and venue, `event_venue_changed` a new venue, `event_date_moved` one date, `event_postponed`), an email saying the same with the organizer's message (sent after the response, in each reader's language, dates on the event's clock), and a short text to everyone with a verified phone in a market whose text rail is Hubtel (section 4a).
 3. **Each holder chooses** (website ticket card, app ticket screen):
    - **Keep my ticket**: nothing changes; the same ticket, code, QR and seat are valid for the new date or venue. Doing nothing keeps it too. Keeping is not final while the window is open.
    - **Get a refund**: every ticket they hold for the event (after a one-date move: for that date) and paid for themselves is given back for the **ticket price and its share of the service fee**, whatever the event's refund policy says; free tickets are given back (their place returns). A ticket someone else paid for stays (its refund is the payer's), as everywhere.
@@ -65,6 +65,17 @@ Before this, an event's date and venue locked at its first confirmed ticket and 
 | Pay small small plans do not lapse | the plan sweep (`ticketPlanMaintenanceCore`, `ticket_plan_work_due`) skips them; the new date moves their deadline |
 | Tickets stay in "upcoming", the event page says "Postponed" | website My Events, app Tickets, event pages (`postponed_at`), show pickers (`get_event_shows.postponed`) |
 
+## 4a. Text messages
+
+| Step | How |
+|---|---|
+| Queue | Right after the move, `rescheduleEventCore` calls `event_reschedule_queue_texts()`: one `event_reschedule_text` row per person the notice went to who has a verified phone (`auth.users.phone_confirmed_at`) and an active account. The row holds no number. |
+| Send | The transport sends after the response (20 seconds at most), and the `reschedule-texts` pg_cron job (every minute, only while a text is due) posts to `/api/jobs/reschedule-texts` with the notification-delivery token to send the rest. Rows are claimed with row locks: nobody is texted twice. |
+| Who | Numbers in a market whose text rail is Hubtel (`canTextNumber`, Ghana today); others are marked skipped. At most 1,000 texts per move (`MAX_TEXTS_PER_MOVE`). |
+| Words | One short text in the person's language (`server.rescheduleSms*`): what changed, the date on the event's clock, the venue, and the link to their tickets. Title and venue are shortened to 40 characters. |
+| Failures | A refused or unanswered text is not tried again (it may have gone out; the notice, push and email reached the person anyway). A dispatcher that died mid-send leaves its rows to the next run (claimed again after five minutes, given up after three claims). |
+| Stop | `RESCHEDULE_TEXTS_KILL_SWITCH=true` on the web deployment: nothing is queued and queued texts are skipped. |
+
 ## 4. The money
 
 A refund after a move goes through the normal per-ticket path (`cancelEventTicketsCore` → `issueRefundCore` → `refund_prepare`), with two differences:
@@ -85,12 +96,12 @@ Payments partly in Abonten Credit and Pay small small purchases are refunded as 
 | Services | `packages/services/src/events/eventRescheduleCore.ts` (`getRescheduleSetupCore`, `rescheduleEventCore`, `getEventRescheduleForHolderCore`, `keepTicketsAfterRescheduleCore`, `refundAfterRescheduleCore`, `rescheduleEmailBatchCore`); `events/resolveEventVenue.ts` (shared with tours); `tickets/cancelEventTicketsCore.ts` (`afterReschedule`, `occurrenceId`) |
 | Website | actions `rescheduleEvent`, `getRescheduleSetup`, `getEventReschedule`, `keepTicketsAfterReschedule`, `refundAfterReschedule`, `eventRescheduleNotification` (email); `ManageEventRescheduleCard` with `VenuePicker`; `RescheduleNotice` on the My Tickets card; `EventRescheduledEmailTemplate`; `EventStatusBanner` / `EventDateSelector` (postponed) |
 | App | `GET`/`POST /api/mobile/organizer/events/:id/reschedule`; `GET /api/mobile/events/:id/reschedule`, `POST …/keep`, `POST …/refund`; `organizer/events/[eventId]/reschedule.tsx` with `VenuePickerField`; `features/reschedule/RescheduleNotice` on the ticket screen; event screen (postponed) |
+| Texts | `supabase/migrations/20261120220000_reschedule_texts.sql`; `events/rescheduleTextsQueue.ts`, `events/rescheduleTextsCore.ts`; `POST /api/jobs/reschedule-texts` |
 | Notice | `core` `notices.event_rescheduled`, `event_moved_venue`, `event_venue_changed`, `event_date_moved`, `event_postponed`; push trigger `trg_notification_queue_app_push` (urgent) |
-| Tests | `packages/core/src/eventReschedule.test.ts`, `packages/services/src/__integration__/event-reschedule.integration.test.ts`, `event-reschedule-more.integration.test.ts` |
+| Tests | `packages/core/src/eventReschedule.test.ts`, `packages/services/src/__integration__/event-reschedule.integration.test.ts`, `event-reschedule-more.integration.test.ts`, `reschedule-texts.integration.test.ts` |
 
 ## 6. Not in this version
 
-- Text messages to holders (RS3).
 - A full refund including the fee for payments with Abonten Credit or Pay small small.
 - Postponing an event with several dates (move or cancel its dates instead).
 

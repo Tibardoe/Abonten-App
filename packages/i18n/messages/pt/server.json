@@ -1539,5 +1539,10 @@
   "thatPlaceCanTHostAShow": "Esse local não pode receber uma sessão no Abonten.",
   "eventPostponedNotified": "Evento adiado. {count, plural, =0 {Ainda ninguém tinha bilhete.} one {# pessoa foi avisada.} other {# pessoas foram avisadas.}}",
   "rescheduleDateNotFound": "Essa data não faz parte deste evento.",
-  "thisEventIsPostponedNoEntry": "Este evento foi adiado: não é possível validar bilhetes até ter a nova data."
+  "thisEventIsPostponedNoEntry": "Este evento foi adiado: não é possível validar bilhetes até ter a nova data.",
+  "rescheduleSmsDate": "Abonten: {title} mudou para {when}. Mantenha o bilhete ou peça o reembolso total: {link}",
+  "rescheduleSmsDateVenue": "Abonten: {title} mudou para {when} em {venue}. Mantenha o bilhete ou peça o reembolso total: {link}",
+  "rescheduleSmsVenue": "Abonten: {title} mudou de local: {venue}. Mantenha o bilhete ou peça o reembolso total: {link}",
+  "rescheduleSmsOneDate": "Abonten: a sua data de {title} mudou para {when}. Mantenha o bilhete ou peça o reembolso total: {link}",
+  "rescheduleSmsPostponed": "Abonten: {title} foi adiado, data a anunciar. Mantenha o bilhete ou peça o reembolso total: {link}"
 }

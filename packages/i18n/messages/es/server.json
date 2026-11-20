@@ -1539,5 +1539,10 @@
   "thatPlaceCanTHostAShow": "Ese lugar no puede acoger una función en Abonten.",
   "eventPostponedNotified": "Evento aplazado. {count, plural, =0 {Todavía nadie tenía entrada.} one {Se avisó a # persona.} other {Se avisó a # personas.}}",
   "rescheduleDateNotFound": "Esa fecha no forma parte de este evento.",
-  "thisEventIsPostponedNoEntry": "Este evento está aplazado: no se pueden validar entradas hasta que tenga su nueva fecha."
+  "thisEventIsPostponedNoEntry": "Este evento está aplazado: no se pueden validar entradas hasta que tenga su nueva fecha.",
+  "rescheduleSmsDate": "Abonten: {title} cambia al {when}. Conserva tu entrada o pide el reembolso completo: {link}",
+  "rescheduleSmsDateVenue": "Abonten: {title} cambia al {when} en {venue}. Conserva tu entrada o pide el reembolso completo: {link}",
+  "rescheduleSmsVenue": "Abonten: {title} cambia de lugar: {venue}. Conserva tu entrada o pide el reembolso completo: {link}",
+  "rescheduleSmsOneDate": "Abonten: tu fecha de {title} cambia al {when}. Conserva tu entrada o pide el reembolso completo: {link}",
+  "rescheduleSmsPostponed": "Abonten: {title} se aplaza, fecha por confirmar. Conserva tu entrada o pide el reembolso completo: {link}"
 }
