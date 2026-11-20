@@ -196,18 +196,24 @@ export default function RescheduleEventScreen() {
             </Field>
             <View className="flex-row gap-3">
               <View className="flex-1">
-                <TimeField
-                  label={t("rescheduleStartTime")}
-                  value={startTime}
-                  onChange={setStartTime}
-                />
+                {/* The field shows only the time: its name sits above it. */}
+                <Field label={t("rescheduleStartTime")}>
+                  <TimeField
+                    label={t("rescheduleStartTime")}
+                    value={startTime}
+                    onChange={setStartTime}
+                  />
+                </Field>
               </View>
               <View className="flex-1">
-                <TimeField
-                  label={t("rescheduleEndTime")}
-                  value={endTime}
-                  onChange={setEndTime}
-                />
+                {/* The field shows only the time: its name sits above it. */}
+                <Field label={t("rescheduleEndTime")}>
+                  <TimeField
+                    label={t("rescheduleEndTime")}
+                    value={endTime}
+                    onChange={setEndTime}
+                  />
+                </Field>
               </View>
             </View>
             <Field label={t("rescheduleMessage")}>

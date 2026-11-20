@@ -534,7 +534,7 @@
   "sellPass": "Poner este abono a la venta",
   "couldNotSellPass": "No se pudo poner el abono a la venta. Inténtalo de nuevo.",
   "rescheduleTitle": "Cambiar a una nueva fecha",
-  "rescheduleIntro": "Ya hay personas con entradas, así que la fecha no se puede editar arriba. Cambia el evento aquí: todos los que tienen entrada reciben un aviso, una notificación push y un correo, y pueden conservar su entrada o pedir el reembolso completo, comisión de servicio incluida.",
+  "rescheduleIntro": "Ya hay personas con entradas, así que la fecha está bloqueada. Cambia el evento aquí: todos los que tienen entrada reciben un aviso, una notificación push y un correo, y pueden conservar su entrada o pedir el reembolso completo, comisión de servicio incluida.",
   "rescheduleCurrent": "Ahora el {when}.",
   "rescheduleNewDate": "Nueva fecha",
   "rescheduleStartTime": "Empieza",

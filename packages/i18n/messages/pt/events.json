@@ -534,7 +534,7 @@
   "sellPass": "Pôr este passe à venda",
   "couldNotSellPass": "Não foi possível pôr o passe à venda. Tente de novo.",
   "rescheduleTitle": "Mudar para uma nova data",
-  "rescheduleIntro": "Já há pessoas com bilhetes, por isso a data não pode ser editada acima. Mude o evento aqui: todos os que têm bilhete são avisados por notificação, push e e-mail, e podem manter o bilhete ou receber o reembolso total, taxa de serviço incluída.",
+  "rescheduleIntro": "Já há pessoas com bilhetes, por isso a data está bloqueada. Mude o evento aqui: todos os que têm bilhete são avisados por notificação, push e e-mail, e podem manter o bilhete ou receber o reembolso total, taxa de serviço incluída.",
   "rescheduleCurrent": "Atualmente a {when}.",
   "rescheduleNewDate": "Nova data",
   "rescheduleStartTime": "Começa",

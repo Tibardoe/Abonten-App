@@ -534,7 +534,7 @@
   "sellPass": "Diesen Pass verkaufen",
   "couldNotSellPass": "Der Pass konnte nicht in den Verkauf gehen. Versuche es erneut.",
   "rescheduleTitle": "Auf einen neuen Termin verschieben",
-  "rescheduleIntro": "Es gibt schon Tickets, deshalb lässt sich der Termin oben nicht mehr ändern. Verschiebe das Event hier: Alle mit Ticket werden per Mitteilung, Push und E-Mail informiert und können ihr Ticket behalten oder den vollen Betrag samt Servicegebühr zurückbekommen.",
+  "rescheduleIntro": "Es gibt schon Tickets, deshalb ist der Termin gesperrt. Verschiebe das Event hier: Alle mit Ticket werden per Mitteilung, Push und E-Mail informiert und können ihr Ticket behalten oder den vollen Betrag samt Servicegebühr zurückbekommen.",
   "rescheduleCurrent": "Derzeit am {when}.",
   "rescheduleNewDate": "Neuer Termin",
   "rescheduleStartTime": "Beginn",

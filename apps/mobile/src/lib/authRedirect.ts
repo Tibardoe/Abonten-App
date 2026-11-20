@@ -15,6 +15,20 @@ export function consumePendingRedirect(): string | null {
   return value;
 }
 
+// A sign-out the person asked for (SessionProvider.signOut) ends on Home,
+// never on the sign-in screen: whatever screen is left showing when the
+// session goes, the route guard reads this and goes Home instead. A session
+// that ends any other way (expired, revoked) still goes to sign-in.
+let signedOutAt = 0;
+
+export function noteSignOut(): void {
+  signedOutAt = Date.now();
+}
+
+export function justSignedOut(): boolean {
+  return Date.now() - signedOutAt < 5_000;
+}
+
 // Screens that require a session. Anything not listed here renders for
 // signed-out visitors too, matching the web app's public-route allowlist
 // (`/`, `/events`, `/explore`, `/places`, `/search`, public profiles).
