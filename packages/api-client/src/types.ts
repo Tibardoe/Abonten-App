@@ -1276,8 +1276,14 @@ export type AddEventShowsBody = {
   } | null;
   shows?: { startsAt: string; endsAt: string }[] | null;
   separate?: boolean;
+  /** Another venue in the same country (a tour): a place, or an address. */
+  venue?: ShowVenueBody | null;
   clientRequestId: string;
 };
+
+export type ShowVenueBody =
+  | { placeId: string }
+  | { address: string; latitude: number; longitude: number };
 
 export type AddEventShowsResult =
   | {
@@ -1299,6 +1305,11 @@ export type EventShow = {
   status: string;
   seats_left: number | null;
   sold_out: boolean;
+  /** The show's venue (a tour plays several): a listed place, if any. */
+  place_id: string | null;
+  venue_name: string | null;
+  venue_address: string | null;
+  city: string | null;
 };
 
 // ---- complimentary tickets ------------------------------------------------

@@ -186,6 +186,7 @@ export type {
   ShowPassState,
   GroupDiscountTierBody,
   ShowRunSlotBody,
+  ShowVenueBody,
   SetEventGroupPricesBody,
   SetEventGroupPricesResult,
   SetPlaceStatusBody,

@@ -1,6 +1,10 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import {
+  ShowVenueField,
+  type ShowVenueState,
+} from "@/features/events/ShowVenueField";
+import {
   useAddEventShows,
   useAddShowPass,
   useEventShows,
@@ -13,6 +17,7 @@ import {
   type ShowRunSlot,
   type Weekday,
   expandShowRun,
+  groupShowsByVenue,
   showRunProblemMessage,
 } from "@abonten/core/showRuns";
 import { formatInTimeZone } from "@abonten/core/time/timeZone";
@@ -46,7 +51,8 @@ function addMinutesToWallClock(date: string, time: string, minutes: number) {
 // Shows and copies (docs/architecture/show-runs.md): turn this listing into
 // a run of shows — each its own listing with its own seats, door list and
 // payout, listed once to buyers with a show picker — or make a separate
-// copy with a new date. Mirrors the website's Manage › Details card.
+// copy with a new date, here or at another venue in the same country (a
+// tour). Mirrors the website's Manage › Details card.
 export default function EventShowsScreen() {
   const t = useTranslations("events");
   const tc = useTranslations("core");
@@ -71,6 +77,7 @@ export default function EventShowsScreen() {
     },
   });
   const shows = useEventShows(id, !!event?.series_id).data ?? [];
+  const venues = groupShowsByVenue(shows);
   const add = useAddEventShows(id);
   const addPass = useAddShowPass(id);
   const passes = (event?.ticket_type ?? []).filter((x) => x.pass_shows != null);
@@ -102,6 +109,11 @@ export default function EventShowsScreen() {
   const [duration, setDuration] = useState("");
   const [copyDay, setCopyDay] = useState<string | null>(null);
   const [copyTime, setCopyTime] = useState<string | null>(null);
+  const [oneDay, setOneDay] = useState<string | null>(null);
+  const [oneTime, setOneTime] = useState<string | null>(null);
+  const [where, setWhere] = useState<ShowVenueState>({ mode: "same" });
+  const venue = where.mode === "other" ? where.venue : null;
+  const venueReady = where.mode === "same" || !!venue;
   // One per submission: a retry after a lost answer makes nothing twice.
   const requestId = useRef(uuidv4());
 
@@ -144,6 +156,7 @@ export default function EventShowsScreen() {
         slots,
         durationMinutes: minutes,
       },
+      venue,
       clientRequestId: requestId.current,
     });
     if (res.status === 200) {
@@ -160,6 +173,29 @@ export default function EventShowsScreen() {
     }
   }
 
+  async function addOneShow() {
+    if (!oneDay || !oneTime) return;
+    const res = await add.mutateAsync({
+      // Wall-clock times: the server reads them on the venue's clock.
+      shows: [
+        {
+          startsAt: `${oneDay}T${oneTime}`,
+          endsAt: addMinutesToWallClock(oneDay, oneTime, minutes),
+        },
+      ],
+      venue,
+      clientRequestId: requestId.current,
+    });
+    if (res.status === 200) {
+      requestId.current = uuidv4();
+      toast.success(res.message ?? t("addThisShow"));
+      setOneDay(null);
+      setOneTime(null);
+    } else {
+      toast.error(res.message ?? t("couldNotAddShows"));
+    }
+  }
+
   async function makeCopy() {
     if (!copyDay || !copyTime) return;
     const res = await add.mutateAsync({
@@ -171,6 +207,7 @@ export default function EventShowsScreen() {
         },
       ],
       separate: true,
+      venue,
       clientRequestId: requestId.current,
     });
     if (res.status === 200 && res.data.shows[0]) {
@@ -212,51 +249,109 @@ export default function EventShowsScreen() {
 
       {shows.length > 0 ? (
         <View className="gap-2 rounded-xl border border-border bg-card p-3">
-          {shows.map((show) => (
-            <Pressable
-              key={show.id}
-              accessibilityRole="link"
-              onPress={() =>
-                show.id !== id &&
-                router.push(`/(app)/organizer/events/${show.id}`)
-              }
-              className="flex-row items-center justify-between"
-            >
-              <AppText
-                variant="small"
-                className={show.id === id ? "font-semibold" : "text-primary"}
-              >
-                {formatInTimeZone(
-                  show.starts_at,
-                  show.timezone,
-                  {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  },
-                  locale,
-                )}
-              </AppText>
-              <AppText variant="caption" tone="muted">
-                {show.status === "canceled"
-                  ? t("showCancelled")
-                  : show.sold_out
-                    ? t("showSoldOut")
-                    : show.seats_left != null
-                      ? t("showSeatsLeft", { count: show.seats_left })
-                      : t("showOnSale")}
-              </AppText>
-            </Pressable>
+          {venues.map((group) => (
+            <View key={group.key} className="gap-2">
+              {venues.length > 1 ? (
+                <AppText
+                  variant="caption"
+                  tone="muted"
+                  numberOfLines={1}
+                  className="font-semibold"
+                >
+                  {group.label}
+                </AppText>
+              ) : null}
+              {group.shows.map((show) => (
+                <Pressable
+                  key={show.id}
+                  accessibilityRole="link"
+                  onPress={() =>
+                    show.id !== id &&
+                    router.push(`/(app)/organizer/events/${show.id}`)
+                  }
+                  className="flex-row items-center justify-between"
+                >
+                  <AppText
+                    variant="small"
+                    className={
+                      show.id === id ? "font-semibold" : "text-primary"
+                    }
+                  >
+                    {formatInTimeZone(
+                      show.starts_at,
+                      show.timezone,
+                      {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      },
+                      locale,
+                    )}
+                  </AppText>
+                  <AppText variant="caption" tone="muted">
+                    {show.status === "canceled"
+                      ? t("showCancelled")
+                      : show.sold_out
+                        ? t("showSoldOut")
+                        : show.seats_left != null
+                          ? t("showSeatsLeft", { count: show.seats_left })
+                          : t("showOnSale")}
+                  </AppText>
+                </Pressable>
+              ))}
+            </View>
           ))}
         </View>
       ) : null}
 
-      <View className="gap-3">
+      <ShowVenueField value={where} onChange={setWhere} />
+
+      <Field label={t("showLengthMinutes")}>
+        <Input
+          value={duration}
+          onChangeText={setDuration}
+          keyboardType="number-pad"
+          placeholder={String(defaultDuration)}
+        />
+      </Field>
+
+      <View className="gap-3 border-t border-border pt-5">
         <AppText variant="small" className="font-semibold">
-          {t("repeatOn")}
+          {t("addOneShow")}
         </AppText>
+        <AppText variant="meta">{t("addOneShowHint")}</AppText>
+        <Field label={t("showDate")}>
+          <DateRangeField
+            mode="single"
+            start={oneDay}
+            end={null}
+            onChange={(next) => setOneDay(next.start)}
+          />
+        </Field>
+        <TimeField
+          label={t("showTimes")}
+          value={oneTime}
+          onChange={setOneTime}
+        />
+        <Button
+          title={t("addThisShow")}
+          variant="outline"
+          fullWidth
+          loading={add.isPending}
+          disabled={
+            add.isPending || !oneDay || !oneTime || !venueReady || minutes < 15
+          }
+          onPress={addOneShow}
+        />
+      </View>
+
+      <View className="gap-3 border-t border-border pt-5">
+        <AppText variant="small" className="font-semibold">
+          {t("repeatWeekly")}
+        </AppText>
+        <AppText variant="meta">{t("repeatOn")}</AppText>
         <View className="flex-row flex-wrap gap-2">
           {WEEKDAYS.map((d) => (
             <Chip
@@ -324,15 +419,6 @@ export default function EventShowsScreen() {
           />
         </Field>
 
-        <Field label={t("showLengthMinutes")}>
-          <Input
-            value={duration}
-            onChangeText={setDuration}
-            keyboardType="number-pad"
-            placeholder={String(defaultDuration)}
-          />
-        </Field>
-
         {preview && !preview.ok && slots.length > 0 ? (
           <AppText variant="small" tone="error">
             {showRunProblemMessage(tc, preview.problem)}
@@ -347,7 +433,7 @@ export default function EventShowsScreen() {
           }
           fullWidth
           loading={add.isPending}
-          disabled={add.isPending || !preview?.ok}
+          disabled={add.isPending || !preview?.ok || !venueReady}
           onPress={addShows}
         />
       </View>
@@ -373,7 +459,7 @@ export default function EventShowsScreen() {
           variant="outline"
           fullWidth
           loading={add.isPending}
-          disabled={add.isPending || !copyDay || !copyTime}
+          disabled={add.isPending || !copyDay || !copyTime || !venueReady}
           onPress={makeCopy}
         />
       </View>

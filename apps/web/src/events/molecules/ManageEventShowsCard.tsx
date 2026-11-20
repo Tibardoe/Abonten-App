@@ -10,6 +10,7 @@ import {
   type ShowRunSlot,
   type Weekday,
   expandShowRun,
+  groupShowsByVenue,
   showRunProblemMessage,
 } from "@abonten/core/showRuns";
 import { formatInTimeZone } from "@abonten/core/time/timeZone";
@@ -18,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
+import ShowVenueChooser, { type ShowVenueState } from "./ShowVenueChooser";
 
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
@@ -33,7 +35,8 @@ function addMinutesToWallClock(date: string, time: string, minutes: number) {
  * Manage › Details: turn a listing into a run of shows, or copy it
  * (docs/architecture/show-runs.md). Each show is its own listing with its
  * own seats, door list and payout; the run is listed once to buyers, with
- * a show picker on each show's page.
+ * a show picker on each show's page. New shows and copies may be at another
+ * venue in the same country (a tour).
  */
 export default function ManageEventShowsCard({
   eventId,
@@ -59,6 +62,7 @@ export default function ManageEventShowsCard({
     staleTime: 30_000,
   });
   const shows = data?.status === 200 ? data.data : [];
+  const venues = groupShowsByVenue(shows);
 
   const defaultDuration =
     startsAt && endsAt
@@ -79,6 +83,11 @@ export default function ManageEventShowsCard({
   const [duration, setDuration] = useState(String(defaultDuration));
   const [copyDate, setCopyDate] = useState("");
   const [copyTime, setCopyTime] = useState("");
+  const [oneDate, setOneDate] = useState("");
+  const [oneTime, setOneTime] = useState("");
+  const [where, setWhere] = useState<ShowVenueState>({ mode: "same" });
+  const venue = where.mode === "other" ? where.venue : null;
+  const venueReady = where.mode === "same" || !!venue;
   const [pending, start] = useTransition();
   // One per submission: a retry after a lost answer makes nothing twice.
   const requestId = useRef(crypto.randomUUID());
@@ -107,11 +116,33 @@ export default function ManageEventShowsCard({
     [fromDate, untilDate, slots, duration, timeZone],
   );
 
-  const add = () =>
+  const add = (one: boolean) =>
     start(async () => {
       const res = await addEventShows({
         eventId,
-        rule: { fromDate, untilDate, slots, durationMinutes: Number(duration) },
+        ...(one
+          ? {
+              // Wall-clock times: the server reads them on the venue's clock.
+              shows: [
+                {
+                  startsAt: `${oneDate}T${oneTime}`,
+                  endsAt: addMinutesToWallClock(
+                    oneDate,
+                    oneTime,
+                    Number(duration),
+                  ),
+                },
+              ],
+            }
+          : {
+              rule: {
+                fromDate,
+                untilDate,
+                slots,
+                durationMinutes: Number(duration),
+              },
+            }),
+        venue,
         clientRequestId: requestId.current,
       }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res) {
@@ -123,6 +154,8 @@ export default function ManageEventShowsCard({
         setTimes([]);
         setFromDate("");
         setUntilDate("");
+        setOneDate("");
+        setOneTime("");
         qc.invalidateQueries({ queryKey: key });
         router.refresh();
       } else {
@@ -142,6 +175,7 @@ export default function ManageEventShowsCard({
           },
         ],
         separate: true,
+        venue,
         clientRequestId: requestId.current,
       }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data.shows[0]) {
@@ -160,45 +194,102 @@ export default function ManageEventShowsCard({
         <p className="text-sm text-muted-foreground">{t("showsIntro")}</p>
       </div>
 
-      {shows.length > 0 && (
-        <ul className="space-y-1 text-sm">
-          {shows.map((show) => (
-            <li key={show.id} className="flex items-center justify-between">
-              <Link
-                href={`/manage/events/${show.id}`}
-                className={
-                  show.id === eventId ? "font-semibold" : "text-primary"
-                }
-              >
-                {formatInTimeZone(
-                  show.starts_at,
-                  show.timezone,
-                  {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "short",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  },
-                  locale,
-                )}
-              </Link>
-              <span className="text-muted-foreground">
-                {show.status === "canceled"
-                  ? t("showCancelled")
-                  : show.sold_out
-                    ? t("showSoldOut")
-                    : show.seats_left != null
-                      ? t("showSeatsLeft", { count: show.seats_left })
-                      : t("showOnSale")}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {venues.map((group) => (
+        <div key={group.key} className="space-y-1">
+          {venues.length > 1 && (
+            <p className="truncate text-sm font-medium">{group.label}</p>
+          )}
+          <ul className="space-y-1 text-sm">
+            {group.shows.map((show) => (
+              <li key={show.id} className="flex items-center justify-between">
+                <Link
+                  href={`/manage/events/${show.id}`}
+                  className={
+                    show.id === eventId ? "font-semibold" : "text-primary"
+                  }
+                >
+                  {formatInTimeZone(
+                    show.starts_at,
+                    show.timezone,
+                    {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    },
+                    locale,
+                  )}
+                </Link>
+                <span className="text-muted-foreground">
+                  {show.status === "canceled"
+                    ? t("showCancelled")
+                    : show.sold_out
+                      ? t("showSoldOut")
+                      : show.seats_left != null
+                        ? t("showSeatsLeft", { count: show.seats_left })
+                        : t("showOnSale")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      <ShowVenueChooser value={where} onChange={setWhere} />
+
+      <div className="space-y-1">
+        <label htmlFor="run-duration" className="text-sm text-muted-foreground">
+          {t("showLengthMinutes")}
+        </label>
+        <Input
+          id="run-duration"
+          type="number"
+          min={15}
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          className="w-32"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t("addOneShow")}</p>
+        <p className="text-xs text-muted-foreground">{t("addOneShowHint")}</p>
+        <div className="flex flex-wrap items-end gap-2">
+          <Input
+            type="date"
+            aria-label={t("showDate")}
+            value={oneDate}
+            onChange={(e) => setOneDate(e.target.value)}
+            className="w-auto"
+          />
+          <Input
+            type="time"
+            aria-label={t("showTimes")}
+            value={oneTime}
+            onChange={(e) => setOneTime(e.target.value)}
+            className="w-auto"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={
+              pending ||
+              !oneDate ||
+              !oneTime ||
+              !venueReady ||
+              !(Number(duration) >= 15)
+            }
+            onClick={() => add(true)}
+          >
+            {t("addThisShow")}
+          </Button>
+        </div>
+      </div>
 
       <div className="space-y-3">
-        <p className="text-sm font-medium">{t("repeatOn")}</p>
+        <p className="text-sm font-medium">{t("repeatWeekly")}</p>
+        <p className="text-sm text-muted-foreground">{t("repeatOn")}</p>
         <div className="flex flex-wrap gap-2">
           {WEEKDAYS.map((d) => {
             const on = days.includes(d);
@@ -260,7 +351,7 @@ export default function ManageEventShowsCard({
           ))}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <label htmlFor="run-from" className="text-sm text-muted-foreground">
               {t("runFrom")}
@@ -286,21 +377,6 @@ export default function ManageEventShowsCard({
               onChange={(e) => setUntilDate(e.target.value)}
             />
           </div>
-          <div className="space-y-1">
-            <label
-              htmlFor="run-duration"
-              className="text-sm text-muted-foreground"
-            >
-              {t("showLengthMinutes")}
-            </label>
-            <Input
-              id="run-duration"
-              type="number"
-              min={15}
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-            />
-          </div>
         </div>
 
         {preview && !preview.ok && slots.length > 0 && (
@@ -312,8 +388,8 @@ export default function ManageEventShowsCard({
         <Button
           type="button"
           className="w-full"
-          disabled={pending || !preview || !preview.ok}
-          onClick={add}
+          disabled={pending || !preview || !preview.ok || !venueReady}
+          onClick={() => add(false)}
         >
           {preview?.ok
             ? t("addShowsCount", { count: preview.shows.length })
@@ -344,7 +420,7 @@ export default function ManageEventShowsCard({
           <Button
             type="button"
             variant="outline"
-            disabled={pending || !copyDate || !copyTime}
+            disabled={pending || !copyDate || !copyTime || !venueReady}
             onClick={copy}
           >
             {t("makeACopy")}

@@ -54,6 +54,7 @@ export default withActionLocale(async function addEventShows(
       : null,
     shows: parsed.data.shows ?? null,
     separate: parsed.data.separate,
+    venue: parsed.data.venue ?? null,
     clientRequestId: parsed.data.clientRequestId,
   });
   if (result.status === 200) {

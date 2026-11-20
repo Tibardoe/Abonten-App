@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { MAX_SHOWS_PER_REQUEST, expandShowRun } from "./showRuns";
+import {
+  MAX_SHOWS_PER_REQUEST,
+  expandShowRun,
+  groupShowsByVenue,
+  showVenueLabel,
+} from "./showRuns";
 
 const NOW = new Date("2026-11-19T12:00:00Z");
 
@@ -129,5 +134,48 @@ describe("expandShowRun", () => {
       expandShowRun({ ...base, slots: daily }, "Africa/Accra", NOW),
     ).toEqual({ ok: false, problem: "too_many" });
     expect(MAX_SHOWS_PER_REQUEST).toBe(60);
+  });
+});
+
+describe("groupShowsByVenue", () => {
+  it("groups a tour by venue, in the order of each venue's first show", () => {
+    const shows = [
+      {
+        id: "a",
+        place_id: null,
+        venue_name: null,
+        venue_address: "Labadi Beach Hotel, Accra",
+      },
+      {
+        id: "b",
+        place_id: "p1",
+        venue_name: "Kumasi Cultural Centre",
+        venue_address: "Bantama, Kumasi",
+      },
+      {
+        id: "c",
+        place_id: null,
+        venue_name: null,
+        venue_address: " labadi beach hotel, accra ",
+      },
+    ];
+    const groups = groupShowsByVenue(shows);
+    expect(groups.map((g) => g.label)).toEqual([
+      "Labadi Beach Hotel, Accra",
+      "Kumasi Cultural Centre",
+    ]);
+    expect(groups[0].shows.map((s) => s.id)).toEqual(["a", "c"]);
+    expect(groups[1].shows.map((s) => s.id)).toEqual(["b"]);
+  });
+
+  it("keeps a run at one venue in one group", () => {
+    const shows = [
+      { id: "a", venue_address: "Osu, Accra" },
+      { id: "b", venue_address: "Osu, Accra" },
+    ];
+    expect(groupShowsByVenue(shows)).toHaveLength(1);
+    expect(showVenueLabel({ venue_name: " ", venue_address: "Osu" })).toBe(
+      "Osu",
+    );
   });
 });

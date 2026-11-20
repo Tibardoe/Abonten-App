@@ -28,6 +28,20 @@ export const addEventShowsSchema = z
       .max(100)
       .nullish(),
     separate: z.boolean().optional(),
+    // Another venue (a tour): an Abonten place, or an address with its point.
+    venue: z
+      .object({
+        placeId: z.string().uuid().nullish(),
+        address: z.string().max(500).nullish(),
+        latitude: z.number().min(-90).max(90).nullish(),
+        longitude: z.number().min(-180).max(180).nullish(),
+      })
+      .refine(
+        (v) =>
+          !!v.placeId ||
+          (!!v.address?.trim() && v.latitude != null && v.longitude != null),
+      )
+      .nullish(),
     clientRequestId: z.string().uuid(),
   })
   .refine((v) => !!v.rule !== !!(v.shows && v.shows.length > 0), {

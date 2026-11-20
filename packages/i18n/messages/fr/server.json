@@ -275,6 +275,7 @@
     "aReviewNoteIsRequired": "Une note d'examen est obligatoire",
     "aSeatedTicketTypeNeedsANumber": "Un type de billet placé doit avoir un nombre de billets.",
     "aSectionHasSeatsItsTicketTypes": "Une section a {0} places ; ses types de billets en vendent {1}.",
+    "aShowMustBeInTheSame": "Une séance doit avoir lieu dans le même pays que l'annonce.",
     "aShowNeedsAStartAndAn": "Une séance doit avoir un début et une fin après celui-ci.",
     "aSpotlightHoldsOneMediaItem": "Un Spotlight contient un seul média",
     "aStoryHoldsAtMostItems": "Une Story contient au maximum {0} éléments",
@@ -477,6 +478,7 @@
     "thatMonthHasNotStartedYet": "Ce mois n'a pas encore commencé",
     "thatMonthHasnTStartedYet": "Ce mois n'a pas encore commencé",
     "thatPersonIsNotInThisConversation": "Cette personne ne fait pas partie de cette conversation.",
+    "thatPlaceCanTHostAShow": "Ce lieu ne peut pas accueillir de séance sur Abonten.",
     "thatPlaceIsNotAvailable": "Ce lieu n'est pas disponible",
     "thatPlaceNoLongerExists": "Ce lieu n'existe plus",
     "thatTicketIsAlreadyInYourOrder": "Ce billet est déjà dans votre commande.",
@@ -1520,5 +1522,7 @@
   "eventMovedNotified": "Événement déplacé. {count, plural, =0 {Personne n'avait encore de billet.} one {# personne a été prévenue.} other {# personnes ont été prévenues.}}",
   "rescheduleNotFound": "Cet événement n'a pas été déplacé.",
   "rescheduleKept": "Vous gardez vos billets pour la nouvelle date.",
-  "rescheduleRefundClosed": "Les remboursements liés à ce changement sont fermés. Vos billets sont valables pour la nouvelle date."
+  "rescheduleRefundClosed": "Les remboursements liés à ce changement sont fermés. Vos billets sont valables pour la nouvelle date.",
+  "aShowMustBeInTheSameCountry": "Une séance doit avoir lieu dans le même pays que l'annonce. Pour un autre pays, créez un nouvel événement là-bas.",
+  "thatPlaceCanTHostAShow": "Ce lieu ne peut pas accueillir de séance sur Abonten."
 }

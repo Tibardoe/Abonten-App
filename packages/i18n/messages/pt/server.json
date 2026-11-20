@@ -275,6 +275,7 @@
     "aReviewNoteIsRequired": "É necessária uma nota de revisão",
     "aSeatedTicketTypeNeedsANumber": "Um tipo de bilhete com lugar precisa de um número de bilhetes.",
     "aSectionHasSeatsItsTicketTypes": "Uma secção tem {0} lugares; os seus tipos de bilhete vendem {1}.",
+    "aShowMustBeInTheSame": "Uma sessão tem de ser no mesmo país que o anúncio.",
     "aShowNeedsAStartAndAn": "Uma sessão precisa de um início e de um fim depois dele.",
     "aSpotlightHoldsOneMediaItem": "Um Spotlight tem um único item multimédia",
     "aStoryHoldsAtMostItems": "Uma Story tem no máximo {0} itens",
@@ -477,6 +478,7 @@
     "thatMonthHasNotStartedYet": "Esse mês ainda não começou",
     "thatMonthHasnTStartedYet": "Esse mês ainda não começou",
     "thatPersonIsNotInThisConversation": "Essa pessoa não está nesta conversa.",
+    "thatPlaceCanTHostAShow": "Esse local não pode receber uma sessão no Abonten.",
     "thatPlaceIsNotAvailable": "Esse local não está disponível",
     "thatPlaceNoLongerExists": "Esse local já não existe",
     "thatTicketIsAlreadyInYourOrder": "Esse bilhete já está na sua encomenda.",
@@ -1520,5 +1522,7 @@
   "eventMovedNotified": "Evento mudado. {count, plural, =0 {Ainda ninguém tinha bilhete.} one {# pessoa foi avisada.} other {# pessoas foram avisadas.}}",
   "rescheduleNotFound": "Este evento não mudou de data.",
   "rescheduleKept": "Mantém os seus bilhetes para a nova data.",
-  "rescheduleRefundClosed": "Os reembolsos por esta mudança estão fechados. Os seus bilhetes valem para a nova data."
+  "rescheduleRefundClosed": "Os reembolsos por esta mudança estão fechados. Os seus bilhetes valem para a nova data.",
+  "aShowMustBeInTheSameCountry": "Uma sessão tem de ser no mesmo país que o anúncio. Para outro país, crie um novo evento lá.",
+  "thatPlaceCanTHostAShow": "Esse local não pode receber uma sessão no Abonten."
 }

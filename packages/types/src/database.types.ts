@@ -16856,13 +16856,19 @@ export type Database = {
       event_reminders_enqueue: { Args: never; Returns: number }
       event_add_show: {
         Args: {
+          p_address?: Json
           p_client_request_id: string
+          p_country_code?: string
           p_ends_at: string
           p_event_code: string
           p_in_series?: boolean
+          p_latitude?: number
+          p_longitude?: number
+          p_place_id?: string
           p_slug: string
           p_source: string
           p_starts_at: string
+          p_timezone?: string
         }
         Returns: string
       }
@@ -17631,14 +17637,18 @@ export type Database = {
       get_event_shows: {
         Args: { p_event_id: string }
         Returns: {
+          city: string
           ends_at: string
           event_code: string
           id: string
+          place_id: string
           seats_left: number
           sold_out: boolean
           starts_at: string
           status: string
           timezone: string
+          venue_address: string
+          venue_name: string
         }[]
       }
       get_event_attendee_contacts: {

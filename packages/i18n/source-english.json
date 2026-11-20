@@ -2904,7 +2904,7 @@
     "showSeatsLeft": "47df25ac",
     "showOnSale": "8137c8d1",
     "showsTitle": "e7f76b77",
-    "showsIntro": "c487b8bd",
+    "showsIntro": "b1faa04c",
     "showsAndCopies": "b7e320d2",
     "repeatOn": "66bdfe35",
     "showTimes": "2c5ecaf2",
@@ -2991,7 +2991,19 @@
     "rescheduleTooSoonHint": "a35b3051",
     "rescheduleUnchangedHint": "31905598",
     "couldNotMoveEvent": "e5f78a47",
-    "rescheduleCouldNotLoad": "07fac1b4"
+    "rescheduleCouldNotLoad": "07fac1b4",
+    "showVenue": "525f61b6",
+    "showVenueSame": "e3bb9712",
+    "showVenueOther": "0b8f97c4",
+    "showVenueHint": "8d9f8ac6",
+    "showVenueAddress": "486f8fb8",
+    "showVenuePickFirst": "4060de4e",
+    "showVenueChosen": "04cb1260",
+    "addOneShow": "9b493f12",
+    "addOneShowHint": "a0110d24",
+    "showDate": "684be841",
+    "addThisShow": "ccaa6c8c",
+    "repeatWeekly": "3ed01d15"
   },
   "explore": {
     "abontenHasnTLaunchedHereYet": "b1e552b7",
@@ -6458,6 +6470,7 @@
     "db.aReviewNoteIsRequired": "339afea2",
     "db.aSeatedTicketTypeNeedsANumber": "11f5767a",
     "db.aSectionHasSeatsItsTicketTypes": "44148bb9",
+    "db.aShowMustBeInTheSame": "c0719534",
     "db.aShowNeedsAStartAndAn": "cb5947ab",
     "db.aSpotlightHoldsOneMediaItem": "94088e4a",
     "db.aStoryHoldsAtMostItems": "47845313",
@@ -6660,6 +6673,7 @@
     "db.thatMonthHasNotStartedYet": "4eb543a6",
     "db.thatMonthHasnTStartedYet": "4cf5e7bb",
     "db.thatPersonIsNotInThisConversation": "7e4dc4cd",
+    "db.thatPlaceCanTHostAShow": "94f3b912",
     "db.thatPlaceIsNotAvailable": "3dcbdb00",
     "db.thatPlaceNoLongerExists": "6bde24de",
     "db.thatTicketIsAlreadyInYourOrder": "84eda8f0",
@@ -7692,7 +7706,9 @@
     "eventMovedNotified": "6db16f00",
     "rescheduleNotFound": "e0070b36",
     "rescheduleKept": "31983190",
-    "rescheduleRefundClosed": "7fc24229"
+    "rescheduleRefundClosed": "7fc24229",
+    "aShowMustBeInTheSameCountry": "5edc13ba",
+    "thatPlaceCanTHostAShow": "94f3b912"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",

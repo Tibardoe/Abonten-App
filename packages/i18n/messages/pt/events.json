@@ -467,7 +467,7 @@
   "showSeatsLeft": "{count, plural, one {Resta # lugar} other {Restam # lugares}}",
   "showOnSale": "À venda",
   "showsTitle": "Sessões",
-  "showsIntro": "Repita este anúncio: adicione sessões num padrão semanal. Cada sessão é um anúncio próprio, com os seus lugares, lista de entrada e pagamento 48 horas depois. Os compradores veem a série uma vez e escolhem uma sessão.",
+  "showsIntro": "Repita este anúncio: adicione sessões uma a uma ou num padrão semanal, neste local ou em digressão. Cada sessão é um anúncio próprio, com os seus lugares, lista de entrada e pagamento 48 horas depois. Os compradores veem a série uma vez e escolhem uma sessão.",
   "showsAndCopies": "Sessões e cópias",
   "repeatOn": "Repetir às",
   "showTimes": "Hora da sessão",
@@ -554,5 +554,17 @@
   "rescheduleTooSoonHint": "A nova data tem de ser daqui a pelo menos duas horas.",
   "rescheduleUnchangedHint": "Escolha outra data ou outra hora.",
   "couldNotMoveEvent": "Não foi possível mudar o evento. Tente de novo.",
-  "rescheduleCouldNotLoad": "Não foi possível carregar agora. Tente de novo."
+  "rescheduleCouldNotLoad": "Não foi possível carregar agora. Tente de novo.",
+  "showVenue": "Onde",
+  "showVenueSame": "Neste local",
+  "showVenueOther": "Noutro local",
+  "showVenueHint": "Em digressão? As novas sessões e as cópias podem ser noutro local do mesmo país. Uma planta de lugares fica com o seu local: dê uma à nova sessão se precisar.",
+  "showVenueAddress": "Morada do local",
+  "showVenuePickFirst": "Escolha primeiro o local nas sugestões ou entre os locais.",
+  "showVenueChosen": "Novas sessões: {venue}",
+  "addOneShow": "Adicionar uma sessão",
+  "addOneShowHint": "Uma só data: uma paragem da digressão ou uma noite extra.",
+  "showDate": "Data da sessão",
+  "addThisShow": "Adicionar esta sessão",
+  "repeatWeekly": "Ou repetir todas as semanas"
 }

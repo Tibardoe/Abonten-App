@@ -108,7 +108,7 @@ Legal register, versioning and effective dates: [legal/README.md](legal/README.m
 | Festival or season passes: "where are my other shows?", "no places for passes" | [architecture/show-passes.md](architecture/show-passes.md) |
 | Free tickets for cast, press or sponsors; "my guest didn't get their ticket" | [architecture/complimentary-tickets.md](architecture/complimentary-tickets.md) |
 | Numbered seats: setting up a hall, "we were seated apart", "change my seat" | [architecture/assigned-seats.md](architecture/assigned-seats.md) |
-| A play with many shows, "cancel one show", "copy my event to next month", a run listed once | [architecture/show-runs.md](architecture/show-runs.md) |
+| A play with many shows, a tour across cities, "cancel one show", "copy my event to next month", a run listed once | [architecture/show-runs.md](architecture/show-runs.md) |
 | A Couple or table ticket, a group price, "my promo code didn't work", switching group pricing on for an organizer | [architecture/group-tickets-and-prices.md](architecture/group-tickets-and-prices.md) |
 | A buyer paying small small: a part, a missed deadline, a refund that has not arrived / "can I top up an Abonten balance?" | [admin/ticket-plans.md](admin/ticket-plans.md) · [architecture/ticket-plans.md](architecture/ticket-plans.md) |
 | A ticket sent to a friend: where it went, the wrong person, "I bought it from someone", a refund for a received ticket | [admin/ticket-transfers.md](admin/ticket-transfers.md) · [architecture/ticket-transfers.md](architecture/ticket-transfers.md) |
