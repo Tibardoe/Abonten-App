@@ -467,7 +467,7 @@
   "showSeatsLeft": "{count, plural, one {Queda # plaza} other {Quedan # plazas}}",
   "showOnSale": "A la venta",
   "showsTitle": "Funciones",
-  "showsIntro": "Repite este anuncio: añade funciones con un patrón semanal. Cada función es un anuncio propio con sus plazas, su lista de acceso y su pago 48 horas después. Los compradores ven la serie una vez y eligen una función.",
+  "showsIntro": "Repite este anuncio: añade funciones de una en una o con un patrón semanal, en este lugar o de gira. Cada función es un anuncio propio con sus plazas, su lista de acceso y su pago 48 horas después. Los compradores ven la serie una vez y eligen una función.",
   "showsAndCopies": "Funciones y copias",
   "repeatOn": "Repetir los",
   "showTimes": "Hora de la función",
@@ -554,5 +554,17 @@
   "rescheduleTooSoonHint": "La nueva fecha debe ser dentro de al menos dos horas.",
   "rescheduleUnchangedHint": "Elige otra fecha u otra hora.",
   "couldNotMoveEvent": "No se pudo cambiar el evento. Inténtalo de nuevo.",
-  "rescheduleCouldNotLoad": "No se pudo cargar ahora. Inténtalo de nuevo."
+  "rescheduleCouldNotLoad": "No se pudo cargar ahora. Inténtalo de nuevo.",
+  "showVenue": "Dónde",
+  "showVenueSame": "En este lugar",
+  "showVenueOther": "En otro lugar",
+  "showVenueHint": "¿De gira? Las nuevas funciones y las copias pueden ser en otro lugar del mismo país. Un plano de asientos se queda con su lugar: dale uno a la nueva función si lo necesita.",
+  "showVenueAddress": "Dirección del lugar",
+  "showVenuePickFirst": "Primero elige el lugar entre las sugerencias o entre los lugares.",
+  "showVenueChosen": "Nuevas funciones: {venue}",
+  "addOneShow": "Añadir una función",
+  "addOneShowHint": "Una sola fecha: una parada de la gira o una noche más.",
+  "showDate": "Fecha de la función",
+  "addThisShow": "Añadir esta función",
+  "repeatWeekly": "O repetir cada semana"
 }

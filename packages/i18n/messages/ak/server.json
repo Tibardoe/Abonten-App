@@ -275,6 +275,7 @@
     "aReviewNoteIsRequired": "A review note is required",
     "aSeatedTicketTypeNeedsANumber": "A seated ticket type needs a number of tickets.",
     "aSectionHasSeatsItsTicketTypes": "A section has {0} seats; its ticket types sell {1}.",
+    "aShowMustBeInTheSame": "A show must be in the same country as the listing.",
     "aShowNeedsAStartAndAn": "A show needs a start and an end after it.",
     "aSpotlightHoldsOneMediaItem": "A Spotlight holds one media item",
     "aStoryHoldsAtMostItems": "A Story holds at most {0} items",
@@ -477,6 +478,7 @@
     "thatMonthHasNotStartedYet": "That month has not started yet",
     "thatMonthHasnTStartedYet": "That month hasn't started yet",
     "thatPersonIsNotInThisConversation": "That person is not in this conversation.",
+    "thatPlaceCanTHostAShow": "That place can't host a show on Abonten.",
     "thatPlaceIsNotAvailable": "That place is not available",
     "thatPlaceNoLongerExists": "That place no longer exists",
     "thatTicketIsAlreadyInYourOrder": "That ticket is already in your order.",
@@ -1520,5 +1522,7 @@
   "eventMovedNotified": "Event moved. {count, plural, =0 {Nobody held a ticket yet.} one {# person has been told.} other {# people have been told.}}",
   "rescheduleNotFound": "This event hasn't been moved.",
   "rescheduleKept": "You're keeping your tickets for the new date.",
-  "rescheduleRefundClosed": "Refunds for this change have closed. Your tickets are valid for the new date."
+  "rescheduleRefundClosed": "Refunds for this change have closed. Your tickets are valid for the new date.",
+  "aShowMustBeInTheSameCountry": "A show must be in the same country as the listing. For another country, create a new event there.",
+  "thatPlaceCanTHostAShow": "That place can't host a show on Abonten."
 }

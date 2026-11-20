@@ -275,6 +275,7 @@
     "aReviewNoteIsRequired": "Eine Prüfnotiz ist erforderlich",
     "aSeatedTicketTypeNeedsANumber": "Ein Tickettyp mit Sitzplatz braucht eine Anzahl Tickets.",
     "aSectionHasSeatsItsTicketTypes": "Ein Bereich hat {0} Plätze; seine Tickettypen verkaufen {1}.",
+    "aShowMustBeInTheSame": "Eine Vorstellung muss im selben Land wie das Angebot stattfinden.",
     "aShowNeedsAStartAndAn": "Eine Vorstellung braucht einen Beginn und ein Ende danach.",
     "aSpotlightHoldsOneMediaItem": "Ein Spotlight enthält ein Medienelement",
     "aStoryHoldsAtMostItems": "Eine Story enthält höchstens {0} Elemente",
@@ -477,6 +478,7 @@
     "thatMonthHasNotStartedYet": "Dieser Monat hat noch nicht begonnen",
     "thatMonthHasnTStartedYet": "Dieser Monat hat noch nicht begonnen",
     "thatPersonIsNotInThisConversation": "Diese Person ist nicht Teil dieser Unterhaltung.",
+    "thatPlaceCanTHostAShow": "Dieser Ort kann auf Abonten keine Vorstellung ausrichten.",
     "thatPlaceIsNotAvailable": "Dieser Ort ist nicht verfügbar",
     "thatPlaceNoLongerExists": "Dieser Ort existiert nicht mehr",
     "thatTicketIsAlreadyInYourOrder": "Dieses Ticket ist bereits in deiner Bestellung.",
@@ -1520,5 +1522,7 @@
   "eventMovedNotified": "Event verschoben. {count, plural, =0 {Noch hatte niemand ein Ticket.} one {# Person wurde informiert.} other {# Personen wurden informiert.}}",
   "rescheduleNotFound": "Dieses Event wurde nicht verschoben.",
   "rescheduleKept": "Du behältst deine Tickets für den neuen Termin.",
-  "rescheduleRefundClosed": "Erstattungen für diese Änderung sind nicht mehr möglich. Deine Tickets gelten für den neuen Termin."
+  "rescheduleRefundClosed": "Erstattungen für diese Änderung sind nicht mehr möglich. Deine Tickets gelten für den neuen Termin.",
+  "aShowMustBeInTheSameCountry": "Eine Vorstellung muss im selben Land wie das Angebot stattfinden. Für ein anderes Land erstelle dort ein neues Event.",
+  "thatPlaceCanTHostAShow": "Dieser Ort kann auf Abonten keine Vorstellung ausrichten."
 }

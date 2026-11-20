@@ -143,3 +143,36 @@ export function showRunProblemMessage(
       return t("showRuns.tooMany", { max: MAX_SHOWS_PER_REQUEST });
   }
 }
+
+/** A show's venue, as get_event_shows returns it (tours). */
+export type ShowVenueFields = {
+  place_id?: string | null;
+  venue_name?: string | null;
+  venue_address?: string | null;
+};
+
+/** What a heading shows for a venue: the place's name, else the address. */
+export function showVenueLabel(show: ShowVenueFields): string {
+  return show.venue_name?.trim() || show.venue_address?.trim() || "";
+}
+
+export type ShowVenueGroup<T> = { key: string; label: string; shows: T[] };
+
+/**
+ * A run's shows by venue (a tour): venues in the order of their first show,
+ * each venue's shows in the order given. A run that stays at one venue is
+ * one group.
+ */
+export function groupShowsByVenue<T extends ShowVenueFields>(
+  shows: readonly T[],
+): ShowVenueGroup<T>[] {
+  const groups = new Map<string, ShowVenueGroup<T>>();
+  for (const show of shows) {
+    const key =
+      show.place_id ?? (show.venue_address ?? "").trim().toLowerCase();
+    const group = groups.get(key);
+    if (group) group.shows.push(show);
+    else groups.set(key, { key, label: showVenueLabel(show), shows: [show] });
+  }
+  return [...groups.values()];
+}

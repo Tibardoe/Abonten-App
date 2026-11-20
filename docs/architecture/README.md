@@ -27,7 +27,7 @@ complianceReviewRequired: no
 | [show-passes.md](show-passes.md) | Passes for several shows of a run: sold on every show, the holder chooses the other shows from the ticket, cancelled together |
 | [complimentary-tickets.md](complimentary-tickets.md) | Complimentary tickets: an organizer gives real tickets of a type to a named person, from the stock and seats, with no money moved |
 | [assigned-seats.md](assigned-seats.md) | Assigned seats: seating plans, ticket types selling sections, the database seating every issued ticket (an order side by side), freeing and guards |
-| [show-runs.md](show-runs.md) | Runs of shows and copying a listing: each show a whole event in a run, what is copied, lists and search showing a run once, the show picker |
+| [show-runs.md](show-runs.md) | Runs of shows, tours and copying a listing: each show a whole event in a run, shows at other venues, what is copied, lists and search showing a run once (nearest venue first), the show picker |
 | [group-tickets-and-prices.md](group-tickets-and-prices.md) | Group tickets (a type admitting several people, one ticket each) and automatic group prices: counting in people, the one pricing rule, never stacked with a promo code, database guarantees, the feature flag |
 | [ticket-plans.md](ticket-plans.md) | Pay small small: paying for tickets in parts before the event, held seats (`on_plan`), parts on the payment path, the settlement purchase, ending and refunding plans per part, the Balance page, why there is no top-up balance, rollout |
 | [safety.md](safety.md) | Abonten Safety: trusted contacts, SOS, check-ins, live location, the contact's page, the outbox and dispatcher, offline behaviour, privacy, rollout |

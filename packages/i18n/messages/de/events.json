@@ -467,7 +467,7 @@
   "showSeatsLeft": "{count, plural, one {Noch # Platz} other {Noch # Plätze}}",
   "showOnSale": "Im Verkauf",
   "showsTitle": "Vorstellungen",
-  "showsIntro": "Wiederhole dieses Angebot: Füge Vorstellungen nach einem Wochenmuster hinzu. Jede Vorstellung ist ein eigenes Angebot mit eigenen Plätzen, eigener Einlassliste und Auszahlung 48 Stunden danach. Käufer sehen die Reihe einmal und wählen eine Vorstellung.",
+  "showsIntro": "Wiederhole dieses Angebot: Füge Vorstellungen einzeln oder nach einem Wochenmuster hinzu, an diesem Ort oder auf Tour. Jede Vorstellung ist ein eigenes Angebot mit eigenen Plätzen, eigener Einlassliste und Auszahlung 48 Stunden danach. Käufer sehen die Reihe einmal und wählen eine Vorstellung.",
   "showsAndCopies": "Vorstellungen und Kopien",
   "repeatOn": "Wiederholen am",
   "showTimes": "Beginn",
@@ -554,5 +554,17 @@
   "rescheduleTooSoonHint": "Der neue Termin muss mindestens zwei Stunden in der Zukunft liegen.",
   "rescheduleUnchangedHint": "Wähle einen anderen Termin oder eine andere Uhrzeit.",
   "couldNotMoveEvent": "Das Event konnte nicht verschoben werden. Versuche es noch einmal.",
-  "rescheduleCouldNotLoad": "Das lässt sich gerade nicht laden. Versuche es noch einmal."
+  "rescheduleCouldNotLoad": "Das lässt sich gerade nicht laden. Versuche es noch einmal.",
+  "showVenue": "Wo",
+  "showVenueSame": "An diesem Ort",
+  "showVenueOther": "An einem anderen Ort",
+  "showVenueHint": "Auf Tour? Neue Vorstellungen und Kopien können an einem anderen Ort im selben Land stattfinden. Ein Saalplan bleibt bei seinem Ort: Gib der neuen Vorstellung bei Bedarf einen eigenen.",
+  "showVenueAddress": "Adresse des Ortes",
+  "showVenuePickFirst": "Wähle zuerst den Ort aus den Vorschlägen oder einen Ort auf Abonten.",
+  "showVenueChosen": "Neue Vorstellungen: {venue}",
+  "addOneShow": "Eine Vorstellung hinzufügen",
+  "addOneShowHint": "Ein einzelner Termin: ein Tourstopp oder ein Zusatzabend.",
+  "showDate": "Datum der Vorstellung",
+  "addThisShow": "Diese Vorstellung hinzufügen",
+  "repeatWeekly": "Oder jede Woche wiederholen"
 }

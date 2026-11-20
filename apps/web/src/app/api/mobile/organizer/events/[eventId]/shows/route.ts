@@ -11,9 +11,11 @@ import { addEventShowsSchema } from "@abonten/validation/showRunSchemas";
 
 // POST /api/mobile/organizer/events/:eventId/shows
 //   { rule?: { fromDate, untilDate, slots: { weekday, time }[], durationMinutes },
-//     shows?: { startsAt, endsAt }[], separate?: boolean, clientRequestId }
+//     shows?: { startsAt, endsAt }[], separate?: boolean,
+//     venue?: { placeId } | { address, latitude, longitude }, clientRequestId }
 //
-// Adds shows to the listing's run, or makes a separate copy with one date.
+// Adds shows to the listing's run, or makes a separate copy with one date,
+// at the listing's venue or another one in the same country (a tour).
 // Runs the same addEventShowsCore as the web addEventShows action
 // (docs/architecture/show-runs.md).
 export async function POST(
@@ -50,6 +52,7 @@ export async function POST(
         : null,
       shows: parsed.data.shows ?? null,
       separate: parsed.data.separate,
+      venue: parsed.data.venue ?? null,
       clientRequestId: parsed.data.clientRequestId,
     });
     return fromActionResult(result);
