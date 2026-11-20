@@ -45,7 +45,7 @@ ECG prepaid is closer to a plan than to a wallet: a customer prepays ECG for ECG
 | When it is offered | Only while the deadline is at least 3 days away | `min_days_to_deadline` |
 | Hold for the first part | 30 minutes, like a checkout | `hold_minutes` |
 | Tickets per plan | At most 4; one open plan per person and event | `max_tickets_per_plan` |
-| Unfinished plan | The ticket share of what was paid comes back; the service-fee share is kept, as on every refund | `keep_fee_on_refund` (copied onto each plan) |
+| Unfinished plan | The ticket share of what was paid comes back; the service-fee share is kept, as on every refund. Except after the organizer moved or postponed the event: a plan cancelled while that move's refunds are open ends with the reason `event_moved` and everything paid comes back ([event-reschedule.md](event-reschedule.md) §4) | `keep_fee_on_refund` (copied onto each plan); `ticket_plan_release` |
 | Reminders | 7 and 2 days before the deadline, while something is left | `reminder_days` |
 
 No promo codes on a plan (version 1), no credit, no interest. The tickets exist only once everything is paid.

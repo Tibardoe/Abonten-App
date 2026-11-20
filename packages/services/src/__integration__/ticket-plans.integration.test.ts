@@ -27,6 +27,7 @@ import {
   vi,
 } from "vitest";
 import { cancelEventCore } from "../events/cancelEventCore";
+import { refundAfterRescheduleCore } from "../events/eventRescheduleCore";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
@@ -708,6 +709,81 @@ describe("Pay small small", () => {
       .select("id", { count: "exact", head: true })
       .eq("plan_id", planId);
     expect(count).toBe(0);
+  });
+
+  it("gives back everything paid, fee included, when the organizer moved the event", async () => {
+    const move = async (eventId: string) => {
+      const start = Date.now() + 40 * DAY;
+      const { error } = await service.rpc("event_reschedule", {
+        p_event_id: eventId,
+        p_actor: organizer.id,
+        p_starts_at: new Date(start).toISOString(),
+        p_ends_at: new Date(start + 4 * 3_600_000).toISOString(),
+        p_message: "The hall needs repairs.",
+      });
+      expect(error).toBeNull();
+    };
+
+    // A running plan, cancelled while the move's refunds are open: all of
+    // the part paid comes back, not only its ticket share.
+    const running = await createEvent({ capacity: 50, quantity: 5 });
+    const started = await startTicketPlanCore(buyer.id, {
+      eventId: running.eventId,
+      quantities: { [running.ticketTypeId]: 2 },
+    });
+    if (started.status !== 200) throw new Error("plan not started");
+    await payPart(started.data.planId, 10_500);
+    await move(running.eventId);
+    const detail = await getTicketPlanCore(buyer.id, started.data.planId);
+    expect(detail.status === 200 && detail.data.refundIfEnded).toEqual({
+      refundMinor: 10_500,
+      keptMinor: 0,
+    });
+    const cancelled = await cancelTicketPlanCore(buyer.id, started.data.planId);
+    expect(cancelled.status).toBe(200);
+    const ended = await plan(started.data.planId);
+    expect(ended).toMatchObject({
+      status: "cancelled",
+      ended_reason: "event_moved",
+    });
+    expect(Number(ended.refund_minor)).toBe(10_500);
+    expect(Number(ended.kept_minor)).toBe(0);
+
+    // A finished plan purchase, given back after the move: GH₵ 210 back
+    // through the two parts' charges, half each.
+    const done = await createEvent({ capacity: 50, quantity: 5 });
+    const second = await startTicketPlanCore(buyer.id, {
+      eventId: done.eventId,
+      quantities: { [done.ticketTypeId]: 2 },
+    });
+    if (second.status !== 200) throw new Error("plan not started");
+    await payPart(second.data.planId, 10_500);
+    await payPart(second.data.planId, 10_500);
+    const finished = await plan(second.data.planId);
+    expect(finished.status).toBe("completed");
+    await move(done.eventId);
+    paystack.refundTransaction.mockClear();
+    const back = await refundAfterRescheduleCore(
+      buyer.client,
+      buyer.id,
+      done.eventId,
+    );
+    expect(back.status, back.message).toBe(200);
+    const amounts = paystack.refundTransaction.mock.calls
+      .map((c) => c[2])
+      .sort();
+    expect(amounts).toEqual([10_500, 10_500]);
+    const { data: adjustment } = await service
+      .from("platform_fee_entry")
+      .select("ticket_revenue, service_fee, net_revenue")
+      .eq("transaction_id", finished.transaction_id as string)
+      .eq("entry_type", "fee_refund_adjustment")
+      .single();
+    expect(adjustment).toEqual({
+      ticket_revenue: -200,
+      service_fee: -10,
+      net_revenue: -10,
+    });
   });
 
   it("ends the plans on an event the organizer cancels", async () => {

@@ -2,9 +2,9 @@
 title: Moving or postponing an event
 purpose: How an organizer moves an event that already has tickets to a new date, a new venue or both, moves one date of an event with several dates, or postpones it with no new date yet; how every holder is told; and how a holder keeps their ticket or gives it back for the ticket price and the service fee.
 audience: Engineering, operations and support
-scope: event_reschedule, event_reschedule_choice, event.postponed_at, ticket.refund_includes_fee, transaction_refund.fee_amount, event_reschedule(), get_event_reschedule(), _refund_fee_share(), refund_quote_amount_with_fee(), the replaced refund_prepare() and _refund_fee_adjustment(), the event_rescheduled push (migrations 20261120170000 and 20261120210000), the postponement guards in the selling, listing, reminder, settlement and retirement functions, the text outbox event_reschedule_text and the reschedule-texts job (migration 20261120220000); @abonten/core/eventReschedule; @abonten/services events/eventRescheduleCore, events/rescheduleTextsCore, events/resolveEventVenue and the afterReschedule / occurrenceId options of tickets/cancelEventTicketsCore; the website's Manage › Details card, ticket card notice, event page and email; the app's Move or postpone screen, ticket notice and event screen; the app's reminders following a moved event.
+scope: event_reschedule, event_reschedule_choice, event.postponed_at, ticket.refund_includes_fee, transaction_refund.fee_amount, event_reschedule(), get_event_reschedule(), _refund_fee_share(), refund_quote_amount_with_fee(), the replaced refund_prepare() and _refund_fee_adjustment(), the event_rescheduled push (migrations 20261120170000 and 20261120210000), the postponement guards in the selling, listing, reminder, settlement and retirement functions, the text outbox event_reschedule_text and the reschedule-texts job (migration 20261120220000), whole_payment_fee(), the replaced record_fee_refund_adjustment() and ticket_plan_release() with the event_moved end reason (migration 20261120230000); @abonten/core/eventReschedule; @abonten/services events/eventRescheduleCore, events/rescheduleTextsCore, events/resolveEventVenue and the afterReschedule / occurrenceId options of tickets/cancelEventTicketsCore; the website's Manage › Details card, ticket card notice, event page and email; the app's Move or postpone screen, ticket notice and event screen; the app's reminders following a moved event.
 status: Review required
-version: 1.2
+version: 1.3
 lastReviewed: 2026-11-20
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -85,7 +85,9 @@ A refund after a move goes through the normal per-ticket path (`cancelEventTicke
 
 Because the flag sits on the ticket, a refund that fails and is retried later (Retry refund, the retry sweep) still includes the fee. The organizer's share is held and reversed exactly as for any refund (`_refund_hold`).
 
-Payments partly in Abonten Credit and Pay small small purchases are refunded as a whole by their own path, which keeps the fee; a holder with such a payment gets the ticket price back. Both are switched off in production today.
+Payments partly or wholly in Abonten Credit and Pay small small purchases are refunded as a whole by their own path. After a move, once every ticket of such a payment is given back (each flagged `refund_includes_fee`), `issueRefundCore` adds the payment's service fee (`whole_payment_fee()`) to the amount, and splits the total between credit and cash (or the plan's parts) exactly like the ticket price. `record_fee_refund_adjustment()` then records the fee given back (`service_fee` and `net_revenue` negative). The holder's quote shows the same total before they choose.
+
+A **running Pay small small plan** cancelled while a move's refund window is open (or the event is postponed) ends with the reason `event_moved` (`moveRefundOpenFor`, `ticket_plan_release`): everything paid comes back, fee included, whatever the plan's `keep_fee_on_refund`. The plan screen's "if you end this plan" amount says so (`refundIfEnded`). Both programmes are switched off in production today.
 
 ## 5. Code map
 
@@ -93,16 +95,15 @@ Payments partly in Abonten Credit and Pay small small purchases are refunded as 
 |---|---|
 | Database | `supabase/migrations/20261120170000_event_reschedule.sql`, `20261120210000_reschedule_venue_dates_postpone.sql` |
 | Rules | `packages/core/src/eventReschedule.ts` |
-| Services | `packages/services/src/events/eventRescheduleCore.ts` (`getRescheduleSetupCore`, `rescheduleEventCore`, `getEventRescheduleForHolderCore`, `keepTicketsAfterRescheduleCore`, `refundAfterRescheduleCore`, `rescheduleEmailBatchCore`); `events/resolveEventVenue.ts` (shared with tours); `tickets/cancelEventTicketsCore.ts` (`afterReschedule`, `occurrenceId`) |
+| Services | `packages/services/src/events/eventRescheduleCore.ts` (`getRescheduleSetupCore`, `rescheduleEventCore`, `getEventRescheduleForHolderCore`, `keepTicketsAfterRescheduleCore`, `refundAfterRescheduleCore`, `rescheduleEmailBatchCore`); `events/resolveEventVenue.ts` (shared with tours); `events/rescheduleWindow.ts` (`isMoveRefundOpen`, `moveRefundOpenFor`); `organizer/issueRefundCore.ts` (whole payments: `whole_payment_fee`); `ticketPlans/ticketPlanCore.ts` (`event_moved`); `tickets/cancelEventTicketsCore.ts` (`afterReschedule`, `occurrenceId`) |
 | Website | actions `rescheduleEvent`, `getRescheduleSetup`, `getEventReschedule`, `keepTicketsAfterReschedule`, `refundAfterReschedule`, `eventRescheduleNotification` (email); `ManageEventRescheduleCard` with `VenuePicker`; `RescheduleNotice` on the My Tickets card; `EventRescheduledEmailTemplate`; `EventStatusBanner` / `EventDateSelector` (postponed) |
 | App | `GET`/`POST /api/mobile/organizer/events/:id/reschedule`; `GET /api/mobile/events/:id/reschedule`, `POST …/keep`, `POST …/refund`; `organizer/events/[eventId]/reschedule.tsx` with `VenuePickerField`; `features/reschedule/RescheduleNotice` on the ticket screen; event screen (postponed) |
 | Texts | `supabase/migrations/20261120220000_reschedule_texts.sql`; `events/rescheduleTextsQueue.ts`, `events/rescheduleTextsCore.ts`; `POST /api/jobs/reschedule-texts` |
 | Notice | `core` `notices.event_rescheduled`, `event_moved_venue`, `event_venue_changed`, `event_date_moved`, `event_postponed`; push trigger `trg_notification_queue_app_push` (urgent) |
-| Tests | `packages/core/src/eventReschedule.test.ts`, `packages/services/src/__integration__/event-reschedule.integration.test.ts`, `event-reschedule-more.integration.test.ts`, `reschedule-texts.integration.test.ts` |
+| Tests | `packages/core/src/eventReschedule.test.ts`, `packages/services/src/__integration__/event-reschedule.integration.test.ts`, `event-reschedule-more.integration.test.ts`, `reschedule-texts.integration.test.ts`; the after-move cases in `credits-ticket-redemption.integration.test.ts` and `ticket-plans.integration.test.ts` |
 
 ## 6. Not in this version
 
-- A full refund including the fee for payments with Abonten Credit or Pay small small.
 - Postponing an event with several dates (move or cancel its dates instead).
 
 ## 7. Support

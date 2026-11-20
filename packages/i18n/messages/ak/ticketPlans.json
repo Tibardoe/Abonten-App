@@ -109,5 +109,6 @@
   "whatYouArePayingFor": "What you're paying for",
   "youReAlreadyPayingForThisEvent": "You're already paying small small for this event.",
   "yourBalance": "your balance",
-  "yourPlans": "Paying small small"
+  "yourPlans": "Paying small small",
+  "endedEventMoved": "You cancelled this plan after the organizer moved the event, so everything you paid comes back."
 }

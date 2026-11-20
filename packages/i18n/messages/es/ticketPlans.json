@@ -109,5 +109,6 @@
   "whatYouArePayingFor": "Lo que estás pagando",
   "youReAlreadyPayingForThisEvent": "Ya estás pagando este evento a plazos.",
   "yourBalance": "tu saldo",
-  "yourPlans": "Pagos a plazos"
+  "yourPlans": "Pagos a plazos",
+  "endedEventMoved": "Cancelaste este plan después de que el organizador cambiara el evento: te devolvemos todo lo que pagaste."
 }

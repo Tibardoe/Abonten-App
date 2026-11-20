@@ -125,6 +125,7 @@ export async function noticePlanReminder(
 const ENDED_NOTICE: Partial<Record<TicketPlanEndReason, string>> = {
   deadline: "ticket_plan_lapsed",
   buyer: "ticket_plan_cancelled",
+  event_moved: "ticket_plan_cancelled",
   event_cancelled: "ticket_plan_event_cancelled",
   admin: "ticket_plan_ended_by_staff",
 };

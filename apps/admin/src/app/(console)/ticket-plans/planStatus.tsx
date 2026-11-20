@@ -60,6 +60,7 @@ export const END_REASON: Record<TicketPlanEndReason, string> = {
   event_cancelled: "The event was cancelled",
   account_closed: "The buyer closed their account",
   admin: "Ended by staff",
+  event_moved: "Cancelled by the buyer after the event moved (all paid back)",
 };
 
 export function minor(amountMinor: number, currency: string): string {
