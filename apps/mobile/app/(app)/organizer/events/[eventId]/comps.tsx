@@ -24,7 +24,7 @@ type Mode = "username" | "phone";
 // tickets of one of the event's types to a named person — cast, press,
 // sponsors, family. They come out of the seats, are seated and checked in
 // like any other, and are never refundable. Mirrors the website's
-// Manage › Attendees card; POST /api/mobile/organizer/events/:id/complimentary.
+// Manage › Details card; POST /api/mobile/organizer/events/:id/complimentary.
 export default function GiveComplimentaryScreen() {
   const t = useTranslations("events");
   const tt = useTranslations("tickets");

@@ -13,7 +13,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 /**
- * Manage › Attendees: give free tickets to a named person (cast, press,
+ * Manage › Details: give free tickets to a named person (cast, press,
  * sponsors; docs/architecture/complimentary-tickets.md). They are real
  * tickets on that person's account, counted against the seats, seated and
  * checked in like any other, never refundable.
@@ -67,7 +67,7 @@ export default function GiveComplimentaryCard({
     });
 
   return (
-    <div className="mb-6 space-y-3 rounded-xl border border-border bg-card p-4 text-card-foreground">
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4 text-card-foreground">
       <div>
         <h2 className="font-semibold text-lg">{t("giveFreeTickets")}</h2>
         <p className="text-sm text-muted-foreground">

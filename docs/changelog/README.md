@@ -18,7 +18,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-11-20 — Complimentary tickets
 
-- Organizers (and team members who manage events) give free tickets of one of an event's types to a named person by username or phone — website Manage › Attendees, app "Give free tickets". They are real tickets on that person's account (own codes, seated, checked in, can be sent on), taken from the type's stock and the event's capacity, with no payment, earning or fee and nothing to refund; the person gets a notice and a push, and the door list marks them "Free ticket". One `ticket_checkout` per gift (`paid`, price 0, `complimentary_by`, `complimentary_note`), written by the service-role-only `issue_complimentary_tickets`. Migration `20261120090000_complimentary_tickets`. New: `architecture/complimentary-tickets.md` (1.0); Y11 decided.
+- Organizers (and team members who manage events) give free tickets of one of an event's types to a named person by username or phone — website Manage › Details, app "Give free tickets". They are real tickets on that person's account (own codes, seated, checked in, can be sent on), taken from the type's stock and the event's capacity, with no payment, earning or fee and nothing to refund; the person gets a notice and a push, and the door list marks them "Free ticket". One `ticket_checkout` per gift (`paid`, price 0, `complimentary_by`, `complimentary_note`), written by the service-role-only `issue_complimentary_tickets`. Migration `20261120090000_complimentary_tickets`. New: `architecture/complimentary-tickets.md` (1.0); Y11 decided.
 
 ## 2026-11-19 — Assigned seats
 

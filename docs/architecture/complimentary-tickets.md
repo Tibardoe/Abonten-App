@@ -2,7 +2,7 @@
 title: Complimentary tickets
 purpose: How an organizer gives free tickets to named people (cast, press, sponsors, family) — real tickets taken from the seats, with no money moved — and the rules that keep them apart from sales.
 audience: Engineering, operations and support
-scope: ticket_checkout.complimentary_by / complimentary_note, issue_complimentary_tickets (migration 20261120090000); @abonten/services comps/complimentaryCore; the website's Manage › Attendees card, the app's Give free tickets screen, POST /api/mobile/organizer/events/:id/complimentary; the complimentary_tickets notice; where a given ticket is marked.
+scope: ticket_checkout.complimentary_by / complimentary_note, issue_complimentary_tickets (migration 20261120090000); @abonten/services comps/complimentaryCore; the website's Manage › Details card, the app's Give free tickets screen, POST /api/mobile/organizer/events/:id/complimentary; the complimentary_tickets notice; where a given ticket is marked.
 status: Review required
 version: 1.0
 lastReviewed: 2026-11-20
@@ -47,7 +47,7 @@ A Couple-style type counts in purchases: "1" of a type that admits two gives two
 | Database | `supabase/migrations/20261120090000_complimentary_tickets.sql` |
 | Service | `packages/services/src/comps/complimentaryCore.ts` |
 | Input | `packages/validation/src/complimentarySchemas.ts` |
-| Website | `actions/giveComplimentaryTickets.ts`; Manage › Attendees › `GiveComplimentaryCard` |
+| Website | `actions/giveComplimentaryTickets.ts`; Manage › Details › `GiveComplimentaryCard` |
 | App | `app/(app)/organizer/events/[eventId]/comps.tsx` (menu row "Give free tickets") via `api.organizer.giveComplimentaryTickets` |
 | Mark on the door list | `@abonten/core/complimentary` (`isComplimentary`) |
 | Tests | `packages/services/src/__integration__/complimentary-tickets.integration.test.ts` |

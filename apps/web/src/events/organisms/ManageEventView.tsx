@@ -157,6 +157,11 @@ export default function ManageEventView({
                 />
               </div>
             )}
+            {event.status === "published" && (
+              <div className="mt-8">
+                <GiveComplimentaryCard event={event} />
+              </div>
+            )}
           </>
         )}
 
@@ -195,13 +200,7 @@ export default function ManageEventView({
         )}
 
         {activeTab === "attendees" && (
-          <>
-            {covers(teamRole, "events.manage") &&
-              event.status === "published" && (
-                <GiveComplimentaryCard event={event} />
-              )}
-            <ManageEventAttendeesSection eventId={event.id} />
-          </>
+          <ManageEventAttendeesSection eventId={event.id} />
         )}
 
         {activeTab === "checkin" && <CheckInByCodeCard eventId={event.id} />}
