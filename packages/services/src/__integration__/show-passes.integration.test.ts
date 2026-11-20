@@ -323,5 +323,26 @@ describe("passes for several shows", () => {
     expect(
       await buyerCancelGate([host2], new Date(zoneDay(4, 19))),
     ).toMatchObject({ status: 409, reason: "started" });
+
+    // A show Abonten has hidden is not offered and can't be chosen.
+    const hiddenShow = later.data.shows[0].id;
+    const host3 = await buyPass(third);
+    await service
+      .from("event")
+      .update({ moderation_state: "hidden" })
+      .eq("id", hiddenShow);
+    const offered = await getShowPassCore(buyer.id, host3);
+    if (offered.status !== 200) throw new Error("state");
+    expect(offered.data.shows.map((s) => s.eventId)).not.toContain(hiddenShow);
+    const hiddenChoice = await service.rpc("ticket_pass_claim", {
+      p_pass_ticket: host3,
+      p_holder: buyer.id,
+      p_event_id: hiddenShow,
+      p_expires_at: inDays(12).toISOString(),
+      p_ticket: {},
+    });
+    expect(hiddenChoice.error?.message).toBe(
+      "This show can no longer be chosen.",
+    );
   });
 });
