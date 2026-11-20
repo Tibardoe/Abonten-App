@@ -9,6 +9,7 @@ import {
 import { useActingTeams } from "@/features/teams/useTeams";
 import { useQueryView } from "@/lib/useQueryView";
 import type { AttendanceRow } from "@abonten/api-client";
+import { isComplimentary } from "@abonten/core/complimentary";
 import { personName } from "@abonten/core/personName";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
@@ -83,6 +84,11 @@ function AttendeeRow({
           {attendee.ticket?.seat_number ? (
             <AppText className="text-sm font-semibold">
               {tTickets("seat", { seat_number: attendee.ticket.seat_number })}
+            </AppText>
+          ) : null}
+          {isComplimentary(attendee.ticket?.metadata) ? (
+            <AppText className="text-xs font-semibold text-muted-foreground">
+              {tTickets("complimentaryTicket")}
             </AppText>
           ) : null}
           <View

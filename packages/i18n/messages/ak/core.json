@@ -1018,6 +1018,10 @@
     "payment_not_through_orders": {
       "body": "Your payment of {amount} didn't go through, so you weren't charged and no tickets were issued. You can try again from each event's page.",
       "title": "Your payment didn't go through"
+    },
+    "complimentary_tickets": {
+      "title": "{actor} gave you {count, plural, one {a ticket} other {# tickets}}",
+      "body": "{count, plural, one {Your ticket} other {Your tickets}} for {title} {count, plural, one {is} other {are}} in Tickets."
     }
   },
   "openStatus": {

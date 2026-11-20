@@ -1259,12 +1259,6 @@ export type UpdateEventTicketTypesResult =
   | { status: 200; message?: string }
   | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
 
-// ---- group prices -------------------------------------------------------
-// An event's automatic group prices ("10 or more tickets: 10% off"), up to
-// three, a bigger group always getting more off. Editable any time (a
-// checkout is priced when it is made). PUT .../group-prices replaces them;
-// an empty list removes them. 403 = not switched on for this organizer.
-
 // ---- runs of shows ------------------------------------------------------
 // A run is a series of events, one per show, made from a listing
 // (docs/architecture/show-runs.md). POST .../shows adds shows (a weekly
@@ -1306,6 +1300,86 @@ export type EventShow = {
   seats_left: number | null;
   sold_out: boolean;
 };
+
+// ---- complimentary tickets ------------------------------------------------
+// Free tickets an organizer gives a named person (an account, by username
+// or phone); real tickets, counted against stock and seats, no payment.
+
+export type GiveComplimentaryTicketsBody = {
+  ticketTypeId: string;
+  /** Purchases of the type (a Couple counts once). */
+  quantity: number;
+  occurrenceId?: string | null;
+  target:
+    | { kind: "username"; username: string }
+    | { kind: "phone"; phone: string };
+  note?: string | null;
+};
+
+export type GiveComplimentaryTicketsResult =
+  | { status: 200; message?: string; data: { tickets: number } }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+// ---- passes for several shows -------------------------------------------
+// A pass is a ticket type sold on every show of a run (pass_shows = N): the
+// ticket bought admits to its show and lets its holder choose N - 1 other
+// shows, each a ticket of its own (docs/architecture/show-passes.md).
+
+export type AddShowPassBody = {
+  name: string;
+  /** Shows the pass covers, the one it is bought for included (2-30). */
+  shows: number;
+  /** In the event's currency, major units. */
+  price: number;
+  /** Passes each show takes; null = no limit of its own. */
+  quantity: number | null;
+};
+
+export type AddShowPassResult =
+  | { status: 200; message?: string; data: { added: number; skipped: number } }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+export type ShowPassShow = {
+  eventId: string;
+  eventCode: string;
+  startsAt: string;
+  endsAt: string | null;
+  timezone: string;
+  status: string;
+  isBoughtShow: boolean;
+  ticketId: string | null;
+  ticketStatus: string | null;
+  hasPass: boolean;
+  /** Places left for passes at this show; null = no limit. */
+  passesLeft: number | null;
+  started: boolean;
+};
+
+export type ShowPassState = {
+  passTicketId: string;
+  passStatus: string;
+  name: string;
+  showsTotal: number;
+  showsUsed: number;
+  boughtEventId: string;
+  shows: ShowPassShow[];
+};
+
+export type ShowPassResult =
+  | { status: 200; message?: string; data: ShowPassState }
+  | { status: 401 | 404 | 500; message: string };
+
+export type ClaimShowPassBody = { eventId: string };
+
+export type ClaimShowPassResult =
+  | { status: 200; message?: string; data: { ticketId: string } }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+// ---- group prices -------------------------------------------------------
+// An event's automatic group prices ("10 or more tickets: 10% off"), up to
+// three, a bigger group always getting more off. Editable any time (a
+// checkout is priced when it is made). PUT .../group-prices replaces them;
+// an empty list removes them. 403 = not switched on for this organizer.
 
 export type GroupDiscountTierBody = { minTickets: number; percentOff: number };
 
@@ -1387,6 +1461,8 @@ export type AttendanceRow = {
     used_at: string | null;
     /** An assigned seat ("Stalls · C12"); absent before 2026-11-19. */
     seat_number?: string | null;
+    /** { complimentary: true } for a ticket the organizer gave away. */
+    metadata?: unknown;
   } | null;
   auth: { email: string | null; phone: string | null } | null;
 };

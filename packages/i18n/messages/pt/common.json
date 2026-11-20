@@ -943,5 +943,6 @@
   "groupPriceBeatsPromo": "O seu preço de grupo é melhor do que este código, por isso o código não é usado.",
   "groupDiscount": "Desconto de grupo",
   "saveGroupPrices": "Guardar os preços de grupo",
-  "groupPricesSaved": "Preços de grupo guardados"
+  "groupPricesSaved": "Preços de grupo guardados",
+  "passForShows": "Um passe para {shows, plural, one {# sessão} other {# sessões}}: esta, e depois escolhe as outras a partir do bilhete"
 }

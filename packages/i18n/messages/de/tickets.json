@@ -91,5 +91,16 @@
   "organizerSendingOn": "Tickets verschicken ist an",
   "organizerSendingOff": "Tickets verschicken ist aus",
   "organizerTurnOff": "Ausschalten",
-  "organizerTurnOn": "Einschalten"
+  "organizerTurnOn": "Einschalten",
+  "complimentaryTicket": "Freikarte",
+  "passYourShows": "Deine Vorstellungen mit diesem Pass",
+  "passShowsLeft": "{left, plural, =0 {Alle Vorstellungen dieses Passes sind gewählt.} one {Du kannst noch # Vorstellung wählen.} other {Du kannst noch # Vorstellungen wählen.}} Der Pass gilt für {total}.",
+  "passBoughtShow": "Für diese gekauft",
+  "passChosen": "Gewählt",
+  "passChoose": "Wählen",
+  "passShowCancelled": "Abgesagt",
+  "passShowStarted": "Begonnen",
+  "passShowFull": "Keine Plätze für Pässe",
+  "couldNotChooseShow": "Diese Vorstellung konnte nicht gewählt werden. Versuche es erneut.",
+  "passCouldNotLoad": "Die Vorstellungen dieses Passes konnten nicht geladen werden. Versuche es später erneut."
 }

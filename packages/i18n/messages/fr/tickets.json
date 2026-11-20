@@ -91,5 +91,16 @@
   "organizerSendingOn": "L'envoi de billets est activé",
   "organizerSendingOff": "L'envoi de billets est désactivé",
   "organizerTurnOff": "Désactiver",
-  "organizerTurnOn": "Activer"
+  "organizerTurnOn": "Activer",
+  "complimentaryTicket": "Billet offert",
+  "passYourShows": "Vos représentations avec ce pass",
+  "passShowsLeft": "{left, plural, =0 {Toutes les représentations de ce pass sont choisies.} one {Vous pouvez encore choisir # représentation.} other {Vous pouvez encore choisir # représentations.}} Le pass en couvre {total}.",
+  "passBoughtShow": "Acheté pour celle-ci",
+  "passChosen": "Choisie",
+  "passChoose": "Choisir",
+  "passShowCancelled": "Annulée",
+  "passShowStarted": "Commencée",
+  "passShowFull": "Plus de place pour les pass",
+  "couldNotChooseShow": "Cette représentation n'a pas pu être choisie. Réessayez.",
+  "passCouldNotLoad": "Les représentations de ce pass n'ont pas pu être chargées. Réessayez plus tard."
 }

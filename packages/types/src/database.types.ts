@@ -13543,6 +13543,8 @@ export type Database = {
           admits: number
           checkout_session_id: string | null
           completed_at: string | null
+          complimentary_by: string | null
+          complimentary_note: string | null
           created_at: string | null
           discount: number | null
           discounted_units: number
@@ -13551,6 +13553,7 @@ export type Database = {
           group_discount_percent: number | null
           id: string
           occurrence_id: string | null
+          pass_ticket_id: string | null
           promo_code: string | null
           quantity: number
           referral_code: string | null
@@ -13568,6 +13571,8 @@ export type Database = {
           admits?: number
           checkout_session_id?: string | null
           completed_at?: string | null
+          complimentary_by?: string | null
+          complimentary_note?: string | null
           created_at?: string | null
           discount?: number | null
           discounted_units?: number
@@ -13576,6 +13581,7 @@ export type Database = {
           group_discount_percent?: number | null
           id?: string
           occurrence_id?: string | null
+          pass_ticket_id?: string | null
           promo_code?: string | null
           quantity: number
           referral_code?: string | null
@@ -13593,6 +13599,8 @@ export type Database = {
           admits?: number
           checkout_session_id?: string | null
           completed_at?: string | null
+          complimentary_by?: string | null
+          complimentary_note?: string | null
           created_at?: string | null
           discount?: number | null
           discounted_units?: number
@@ -13601,6 +13609,7 @@ export type Database = {
           group_discount_percent?: number | null
           id?: string
           occurrence_id?: string | null
+          pass_ticket_id?: string | null
           promo_code?: string | null
           quantity?: number
           referral_code?: string | null
@@ -14195,6 +14204,7 @@ export type Database = {
           currency: string
           event_id: string | null
           id: string
+          pass_shows: number | null
           price: number | null
           quantity: number | null
           seating_section_id: string | null
@@ -14208,6 +14218,7 @@ export type Database = {
           currency: string
           event_id?: string | null
           id?: string
+          pass_shows?: number | null
           price?: number | null
           quantity?: number | null
           seating_section_id?: string | null
@@ -14221,6 +14232,7 @@ export type Database = {
           currency?: string
           event_id?: string | null
           id?: string
+          pass_shows?: number | null
           price?: number | null
           quantity?: number | null
           seating_section_id?: string | null
@@ -16755,6 +16767,19 @@ export type Database = {
         }
         Returns: string
       }
+      event_series_add_pass: {
+        Args: {
+          p_event_id: string
+          p_name: string
+          p_price: number
+          p_quantity: number
+          p_shows: number
+        }
+        Returns: {
+          added: number
+          skipped: number
+        }[]
+      }
       event_shared_capacity_left: {
         Args: { p_event_id: string }
         Returns: number
@@ -18333,6 +18358,19 @@ export type Database = {
       }
       is_event_settled: { Args: { p_event_id: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      issue_complimentary_tickets: {
+        Args: {
+          p_event_id: string
+          p_expires_at: string
+          p_given_by: string
+          p_note: string
+          p_occurrence_id: string
+          p_recipient_id: string
+          p_ticket_type_id: string
+          p_tickets: Json
+        }
+        Returns: string
+      }
       issue_free_ticket: {
         Args: {
           p_event_id: string
@@ -19239,6 +19277,20 @@ export type Database = {
       team_role_can: {
         Args: { p_capability: string; p_role: string }
         Returns: boolean
+      }
+      ticket_pass_claim: {
+        Args: {
+          p_event_id: string
+          p_expires_at: string
+          p_holder: string
+          p_pass_ticket: string
+          p_ticket: Json
+        }
+        Returns: string
+      }
+      ticket_pass_state: {
+        Args: { p_holder: string; p_pass_ticket: string }
+        Returns: Json
       }
       ticket_plan_admin_part_refund: {
         Args: { p_action: string; p_note: string; p_payment_id: string }

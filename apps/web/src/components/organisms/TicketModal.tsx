@@ -1,5 +1,6 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
+import PassShowsPanel from "@/components/molecules/PassShowsPanel";
 import { useToast } from "@/hooks/useToast";
 import TicketCodeReveal from "@/ticketTransfers/molecules/TicketCodeReveal";
 import { loadTicketPdfFontInBrowser } from "@/utils/ticketPdfFont";
@@ -198,6 +199,11 @@ export default function TicketModal({
             </div>
           </div>
         </div>
+
+        {/* A pass for several shows (docs/architecture/show-passes.md). */}
+        {event.ticket_type.pass_shows && event.status !== "cancelled" ? (
+          <PassShowsPanel ticketId={event.id} />
+        ) : null}
 
         <Button
           onClick={handleDOwnloadPdf}
