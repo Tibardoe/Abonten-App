@@ -1539,5 +1539,10 @@
   "thatPlaceCanTHostAShow": "Dieser Ort kann auf Abonten keine Vorstellung ausrichten.",
   "eventPostponedNotified": "Event verschoben. {count, plural, =0 {Noch hatte niemand ein Ticket.} one {# Person wurde informiert.} other {# Personen wurden informiert.}}",
   "rescheduleDateNotFound": "Dieser Termin gehört nicht zu diesem Event.",
-  "thisEventIsPostponedNoEntry": "Dieses Event ist verschoben: Tickets können erst zum neuen Termin eingelassen werden."
+  "thisEventIsPostponedNoEntry": "Dieses Event ist verschoben: Tickets können erst zum neuen Termin eingelassen werden.",
+  "rescheduleSmsDate": "Abonten: {title} ist verschoben auf {when}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
+  "rescheduleSmsDateVenue": "Abonten: {title} ist verschoben auf {when}, Ort: {venue}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
+  "rescheduleSmsVenue": "Abonten: {title} hat einen neuen Ort: {venue}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
+  "rescheduleSmsOneDate": "Abonten: Dein Termin von {title} ist verschoben auf {when}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
+  "rescheduleSmsPostponed": "Abonten: {title} ist verschoben, neuer Termin folgt. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}"
 }

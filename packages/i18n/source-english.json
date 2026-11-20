@@ -7770,7 +7770,12 @@
     "thatPlaceCanTHostAShow": "94f3b912",
     "eventPostponedNotified": "f4ff0c18",
     "rescheduleDateNotFound": "f6b29c06",
-    "thisEventIsPostponedNoEntry": "dd54f97d"
+    "thisEventIsPostponedNoEntry": "dd54f97d",
+    "rescheduleSmsDate": "ca98a5c7",
+    "rescheduleSmsDateVenue": "9b2d28a6",
+    "rescheduleSmsVenue": "3d4dfeb4",
+    "rescheduleSmsOneDate": "2e61091f",
+    "rescheduleSmsPostponed": "9512faaa"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",

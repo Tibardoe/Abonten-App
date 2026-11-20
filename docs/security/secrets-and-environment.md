@@ -67,6 +67,7 @@ complianceReviewRequired: no
 | `IDENTITY_PROVIDER_OVERRIDE` | no (config) | Preview / local only: `test` uses the stand-in page `/identity/test`; refused on the production deployment and database | Smile ID |
 | `TICKET_PLANS_KILL_SWITCH` | flag | Pay small small emergency stop: no new plan and no new part; running plans can still be read and cancelled, and the ticket-plans job keeps ending and refunding them. Set on admin too for the Settings page to show it | Pay small small follows `ticket_plan_program_setting` |
 | `TICKET_TRANSFERS_KILL_SWITCH` | flag | Sending tickets emergency stop: no new offer and no accepting; open offers can still be declined or taken back, and the expiry job keeps running. Set on admin too for Admin › Ticket transfers to show it | Sending tickets follows `ticket_transfer_program_setting` |
+| `RESCHEDULE_TEXTS_KILL_SWITCH` | flag | Stops the text messages sent when an event moves or is postponed: nothing is queued and queued texts are skipped; the notice, push and email still go out | Texts go to holders with a verified phone in a Hubtel market |
 | `TEAMS_KILL_SWITCH` | flag | Team accounts emergency stop: no new team, no invitation and no accepting; members can still leave and Owners can still remove members. Set on admin too for Admin › Teams to show it | Team accounts follow `team_program_setting` |
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |

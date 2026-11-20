@@ -7,6 +7,7 @@ import {
   getRescheduleSetupCore,
   rescheduleEventCore,
 } from "@abonten/services/events/eventRescheduleCore";
+import { dispatchRescheduleTextsCore } from "@abonten/services/events/rescheduleTextsCore";
 import {
   bindLocaleFromRequest,
   tr,
@@ -72,11 +73,16 @@ export async function POST(
     );
     if (result.status === 200) {
       const { rescheduleId } = result.data;
-      after(() =>
-        eventRescheduleNotification(rescheduleId).catch((error) =>
+      after(async () => {
+        await eventRescheduleNotification(rescheduleId).catch((error) =>
           logger.error(`Reschedule emails failed for ${rescheduleId}`, error),
-        ),
-      );
+        );
+        // The texts queued by the move; the reschedule-texts job sends any
+        // left over.
+        await dispatchRescheduleTextsCore({ budgetMs: 20_000 }).catch((error) =>
+          logger.error(`Reschedule texts failed for ${rescheduleId}`, error),
+        );
+      });
     }
     return fromActionResult(result);
   } catch (error) {

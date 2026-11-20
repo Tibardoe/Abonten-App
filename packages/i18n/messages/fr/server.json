@@ -1539,5 +1539,10 @@
   "thatPlaceCanTHostAShow": "Ce lieu ne peut pas accueillir de séance sur Abonten.",
   "eventPostponedNotified": "Événement reporté. {count, plural, =0 {Personne n'avait encore de billet.} one {# personne a été prévenue.} other {# personnes ont été prévenues.}}",
   "rescheduleDateNotFound": "Cette date ne fait pas partie de cet événement.",
-  "thisEventIsPostponedNoEntry": "Cet événement est reporté : aucun billet ne peut être scanné avant sa nouvelle date."
+  "thisEventIsPostponedNoEntry": "Cet événement est reporté : aucun billet ne peut être scanné avant sa nouvelle date.",
+  "rescheduleSmsDate": "Abonten : {title} est déplacé au {when}. Gardez votre billet ou soyez remboursé intégralement : {link}",
+  "rescheduleSmsDateVenue": "Abonten : {title} est déplacé au {when} à {venue}. Gardez votre billet ou soyez remboursé intégralement : {link}",
+  "rescheduleSmsVenue": "Abonten : {title} change de lieu : {venue}. Gardez votre billet ou soyez remboursé intégralement : {link}",
+  "rescheduleSmsOneDate": "Abonten : votre date de {title} est déplacée au {when}. Gardez votre billet ou soyez remboursé intégralement : {link}",
+  "rescheduleSmsPostponed": "Abonten : {title} est reporté, nouvelle date à venir. Gardez votre billet ou soyez remboursé intégralement : {link}"
 }

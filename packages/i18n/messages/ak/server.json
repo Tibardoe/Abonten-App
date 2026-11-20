@@ -1539,5 +1539,10 @@
   "thatPlaceCanTHostAShow": "That place can't host a show on Abonten.",
   "eventPostponedNotified": "Event postponed. {count, plural, =0 {Nobody held a ticket yet.} one {# person has been told.} other {# people have been told.}}",
   "rescheduleDateNotFound": "That date isn't part of this event.",
-  "thisEventIsPostponedNoEntry": "This event is postponed: tickets can't be checked in until it has its new date."
+  "thisEventIsPostponedNoEntry": "This event is postponed: tickets can't be checked in until it has its new date.",
+  "rescheduleSmsDate": "Abonten: {title} has moved to {when}. Keep your ticket or get a full refund: {link}",
+  "rescheduleSmsDateVenue": "Abonten: {title} has moved to {when} at {venue}. Keep your ticket or get a full refund: {link}",
+  "rescheduleSmsVenue": "Abonten: {title} has a new venue: {venue}. Keep your ticket or get a full refund: {link}",
+  "rescheduleSmsOneDate": "Abonten: your date of {title} has moved to {when}. Keep your ticket or get a full refund: {link}",
+  "rescheduleSmsPostponed": "Abonten: {title} is postponed, new date to come. Keep your ticket or get a full refund: {link}"
 }

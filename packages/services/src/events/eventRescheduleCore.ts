@@ -40,6 +40,7 @@ import {
   cancelEventTicketsCore,
   eventCancelQuoteCore,
 } from "../tickets/cancelEventTicketsCore";
+import { queueRescheduleTextsCore } from "./rescheduleTextsQueue";
 import {
   type EventVenueArgs,
   type EventVenueInput,
@@ -383,6 +384,9 @@ export async function rescheduleEventCore(
   }
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { status: 500, message: tr("somethingWentWrong") };
+  // The texts are queued now (one SQL statement); the transport sends them
+  // after the response and the reschedule-texts job finishes the rest.
+  await queueRescheduleTextsCore(row.reschedule_id);
   return {
     status: 200,
     message: input.postpone

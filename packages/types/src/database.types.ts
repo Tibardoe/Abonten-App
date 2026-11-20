@@ -4060,6 +4060,63 @@ export type Database = {
           },
         ]
       }
+      event_reschedule_text: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          detail: string | null
+          id: number
+          next_attempt_at: string
+          provider_ref: string | null
+          reschedule_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: never
+          next_attempt_at?: string
+          provider_ref?: string | null
+          reschedule_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: never
+          next_attempt_at?: string
+          provider_ref?: string | null
+          reschedule_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reschedule_text_reschedule_id_fkey"
+            columns: ["reschedule_id"]
+            isOneToOne: false
+            referencedRelation: "event_reschedule"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reschedule_text_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_review: {
         Row: {
           comment: string | null
@@ -16939,6 +16996,27 @@ export type Database = {
           reschedule_id: string
         }[]
       }
+      event_reschedule_claim_texts: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          detail: string | null
+          id: number
+          next_attempt_at: string
+          provider_ref: string | null
+          reschedule_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      event_reschedule_queue_texts: {
+        Args: { p_reschedule_id: string }
+        Returns: number
+      }
+      event_reschedule_texts_due: { Args: never; Returns: boolean }
       event_series_add_pass: {
         Args: {
           p_event_id: string
@@ -19121,6 +19199,7 @@ export type Database = {
       run_financial_reconciliation: { Args: never; Returns: Json }
       run_notification_delivery: { Args: never; Returns: undefined }
       run_payment_reconcile_dispatch: { Args: never; Returns: undefined }
+      run_reschedule_text_dispatch: { Args: never; Returns: undefined }
       run_safety_dispatch: { Args: never; Returns: undefined }
       run_scheduled_health_check: { Args: never; Returns: undefined }
       run_storage_purge_dispatch: { Args: never; Returns: undefined }
