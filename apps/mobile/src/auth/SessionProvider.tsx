@@ -116,8 +116,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         // route guard has nothing to send to sign-in. Signing out from a
         // pushed screen used to leave it there ("Couldn't load your
         // dashboard") and bring it back after the next sign-in.
+        // "/" is the Home tab itself: the tabs group alone reopens the tab
+        // last used (often Account, which needs a session), and the route
+        // guard then showed sign-in instead of Home.
         if (router.canDismiss()) router.dismissAll();
-        router.replace("/(app)/(tabs)");
+        router.replace("/");
         // This phone only. The default ("global") ends every session the
         // account has, so signing out on one device (or on a test phone
         // sharing the account) signed the person out of all the others.
