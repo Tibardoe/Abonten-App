@@ -128,7 +128,14 @@ test("event and place reviews pages render publicly with their own canonical URL
 // that also writes it into its own title shows the brand twice in the tab
 // (the Weekly pages did until 2026-09-27).
 test("page titles carry the brand exactly once", async ({ page }) => {
-  for (const path of ["/", "/weekly", "/spotlight", "/help", "/legal"]) {
+  for (const path of [
+    "/",
+    "/weekly",
+    "/spotlight",
+    "/help",
+    "/legal",
+    "/teams",
+  ]) {
     const response = await page.goto(path);
     expect(response?.status(), path).toBeLessThan(400);
     const title = await page.title();
@@ -194,4 +201,23 @@ test("translated pages name their language versions for search engines", async (
   const sitemap = await (await request.get("/sitemap.xml")).text();
   expect(sitemap).toContain('hreflang="fr"');
   expect(sitemap).toMatch(/\/help\/customers\/getting-started\?hl=de/);
+});
+
+// The team accounts guide is shared by link while teams open to businesses
+// one by one: translated (its own canonical and hreflang) but not offered
+// to search engines yet.
+test("the team accounts guide is public, translated and not indexed", async ({
+  page,
+}) => {
+  const response = await page.goto("/teams?hl=fr");
+  expect(response?.status()).toBe(200);
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  );
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/teams\?hl=fr$/,
+  );
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

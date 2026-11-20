@@ -20,6 +20,10 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - A ticket chosen with a pass is no longer a pass itself (it could choose shows of its own, chaining into every show of the run); a show added to a run, or a copy, keeps the listing's seating plan and sections; a listing Abonten has hidden or removed takes no new shows or copies (they came out visible), and the organizer reads why. Migration `20261120120000_pass_choices_and_show_copies` (in-place rewrites of `ticket_pass_state`, `ticket_pass_claim`, `event_add_show`). `architecture/show-passes.md` (1.1), `show-runs.md` (1.1), `assigned-seats.md` (1.1).
 
+## 2026-11-20 — A public guide to team accounts
+
+- New page **abontenhub.com/teams**: what a team account is, the four steps to set one up (make the team, invite people, they accept, work under Managing as), what each role can do, an example line-up and the money rules, with drawn phone sketches in the app's own words. In every language; `noindex` while teams open to businesses one by one (beta), checked in `e2e/seo.spec.ts`. The help page on team accounts now says teams are opening business by business and links to the guide (all five languages).
+
 ## 2026-11-20 — Passes for several shows
 
 - On a run of shows, organizers sell a pass (website Manage › Details › Passes for several shows, app Shows and copies): a ticket type with `pass_shows` added to every show still to come (`event_series_add_pass`; later shows copy it through `event_add_show`). The ticket bought admits to its show and settles with it; its holder chooses the other shows from the ticket (website ticket view, app ticket screen), each choice a ticket of its own from that show's pass stock and seats, price 0, `ticket_checkout.pass_ticket_id` naming the pass (`ticket_pass_claim`, `ticket_pass_state`, service role only). Cancelling or refunding the pass cancels its chosen shows still to come (`ticket_pass_host_cancelled`); a buyer cannot cancel it once a chosen show has started (`buyerCancelGate`); saving a show's ticket types keeps a pass a pass. Migration `20261120100000_show_passes`. New: `architecture/show-passes.md` (1.0); Y10 decided.

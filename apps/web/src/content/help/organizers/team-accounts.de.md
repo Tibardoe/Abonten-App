@@ -2,7 +2,7 @@
 title: Team-Konten
 summary: Führe einen Veranstalter oder einen Ort mit anderen Personen, jede mit eigener Anmeldung und einer Rolle, die festlegt, was sie tun kann.
 order: 90
-lastUpdated: 2026-11-16
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -12,7 +12,7 @@ listed: no
 
 Mit einem Team-Konto führen mehrere Personen gemeinsam einen Veranstalter oder einen Ort. Das Team hat einen eigenen Namen, einen eigenen @Benutzernamen, eigene Events, Orte, Follower, Nachrichten und eigenes Geld. Jedes Mitglied meldet sich mit seinem eigenen Abonten-Konto an und handelt mit einer Rolle für das Team. Niemand teilt ein Passwort.
 
-> **Noch nicht für alle verfügbar.** Team-Konten werden vom Abonten-Team erprobt. Diese Seite beschreibt, wie sie funktionieren, sobald sie geöffnet sind.
+> **Öffnung für Unternehmen nach und nach.** Abonten schaltet Team-Konten für jedes Unternehmen frei, bevor es loslegt. Siehe die [Schritt-für-Schritt-Anleitung](/teams).
 
 ## Wer was tun kann
 
