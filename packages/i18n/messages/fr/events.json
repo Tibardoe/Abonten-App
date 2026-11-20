@@ -519,5 +519,18 @@
   "compNotePlaceholder": "Famille des artistes",
   "giveTickets": "Offrir les billets",
   "couldNotGiveTickets": "Les billets n'ont pas pu être offerts. Réessayez.",
-  "giveTicketsNeedsPublished": "Publiez l'événement pour offrir des billets."
+  "giveTicketsNeedsPublished": "Publiez l'événement pour offrir des billets.",
+  "passesTitle": "Pass pour plusieurs représentations",
+  "passesIntro": "Vendez un seul billet pour plusieurs représentations de cette série. Il est en vente sur chaque représentation à venir ; l'acheteur entre à celle pour laquelle il l'a acheté et choisit les autres depuis son billet.",
+  "passSummary": "{shows, plural, one {# représentation} other {# représentations}} · {price} · {limited, select, yes {{left, plural, one {# restant pour celle-ci} other {# restants pour celle-ci}}} other {sans limite}}",
+  "passName": "Nom du pass",
+  "passNamePlaceholder": "Pass festival",
+  "passShows": "Représentations couvertes (celle de l'achat comprise)",
+  "passPrice": "Prix",
+  "passPriceIn": "Prix ({currency})",
+  "passesPerShow": "Pass acceptés par représentation",
+  "noLimit": "Sans limite",
+  "passesHowItWorks": "Les détenteurs de pass prennent des places sur le stock de pass et les sièges de chaque représentation. L'argent du pass est réglé avec la représentation pour laquelle il a été acheté, 48 heures après celle-ci.",
+  "sellPass": "Mettre ce pass en vente",
+  "couldNotSellPass": "Le pass n'a pas pu être mis en vente. Réessayez."
 }

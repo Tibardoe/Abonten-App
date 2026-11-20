@@ -51,7 +51,16 @@ export default function CheckoutTicketRow({
       }`}
     >
       <div className="flex items-center justify-between px-4">
-        <p>{tierName}</p>
+        <div>
+          <p>{tierName}</p>
+          {/* A pass (docs/architecture/show-passes.md): this show and
+              more chosen from the ticket afterwards. */}
+          {ticket.pass_shows ? (
+            <p className="text-xs text-muted-foreground">
+              {t("passForShows", { shows: ticket.pass_shows })}
+            </p>
+          ) : null}
+        </div>
 
         <QuantityStepper
           label={t("ticketsOfType", { type: tierName })}

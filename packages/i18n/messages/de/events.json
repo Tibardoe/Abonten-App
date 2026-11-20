@@ -519,5 +519,18 @@
   "compNotePlaceholder": "Familie der Mitwirkenden",
   "giveTickets": "Tickets vergeben",
   "couldNotGiveTickets": "Die Tickets konnten nicht vergeben werden. Versuche es erneut.",
-  "giveTicketsNeedsPublished": "Veröffentliche die Veranstaltung, um Tickets zu vergeben."
+  "giveTicketsNeedsPublished": "Veröffentliche die Veranstaltung, um Tickets zu vergeben.",
+  "passesTitle": "Pässe für mehrere Vorstellungen",
+  "passesIntro": "Verkaufe ein Ticket für mehrere Vorstellungen dieser Reihe. Es ist für jede kommende Vorstellung erhältlich; wer es kauft, kommt in die Vorstellung, für die es gekauft wurde, und wählt die übrigen im Ticket.",
+  "passSummary": "{shows, plural, one {# Vorstellung} other {# Vorstellungen}} · {price} · {limited, select, yes {{left, plural, one {# übrig für diese} other {# übrig für diese}}} other {ohne Limit}}",
+  "passName": "Name des Passes",
+  "passNamePlaceholder": "Festivalpass",
+  "passShows": "Abgedeckte Vorstellungen (die gekaufte eingeschlossen)",
+  "passPrice": "Preis",
+  "passPriceIn": "Preis ({currency})",
+  "passesPerShow": "Pässe pro Vorstellung",
+  "noLimit": "Ohne Limit",
+  "passesHowItWorks": "Passinhaber nehmen Plätze aus dem Passkontingent und den Sitzplätzen jeder Vorstellung. Das Geld des Passes wird mit der Vorstellung abgerechnet, für die er gekauft wurde, 48 Stunden danach.",
+  "sellPass": "Diesen Pass verkaufen",
+  "couldNotSellPass": "Der Pass konnte nicht in den Verkauf gehen. Versuche es erneut."
 }

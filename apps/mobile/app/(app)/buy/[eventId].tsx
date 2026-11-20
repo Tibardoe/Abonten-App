@@ -552,6 +552,11 @@ export default function BuyTicketsScreen() {
                       {tCommon("admitsPeopleEachOwnTicket", { count: admits })}
                     </AppText>
                   ) : null}
+                  {tier.pass_shows ? (
+                    <AppText variant="caption" tone="muted">
+                      {tCommon("passForShows", { shows: tier.pass_shows })}
+                    </AppText>
+                  ) : null}
                 </View>
                 {disabled ? (
                   <AppText variant="caption" tone="muted">

@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useDirections } from "@/features/directions/DirectionsSheet";
+import { PassShowsPanel } from "@/features/passes/PassShowsPanel";
 import { TicketSafetyButton } from "@/features/safety/TicketSafetyButton";
 import { TicketCodeRow } from "@/features/ticketTransfers/TicketCodeRow";
 import { TicketSendPanel } from "@/features/ticketTransfers/TicketSendPanel";
@@ -276,6 +277,11 @@ export default function TicketDetailScreen() {
           )}
           <AppText variant="caption">{t("showThisAtEntry")}</AppText>
         </View>
+
+        {/* A pass for several shows (docs/architecture/show-passes.md). */}
+        {ticket.ticket_type.pass_shows && ticket.status !== "cancelled" ? (
+          <PassShowsPanel ticketId={ticket.id} />
+        ) : null}
 
         <View className="w-full gap-3">
           <TicketSendPanel

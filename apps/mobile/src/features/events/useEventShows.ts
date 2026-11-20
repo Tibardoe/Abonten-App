@@ -1,6 +1,10 @@
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import type { AddEventShowsBody, EventShow } from "@abonten/api-client";
+import type {
+  AddEventShowsBody,
+  AddShowPassBody,
+  EventShow,
+} from "@abonten/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Runs of shows (docs/architecture/show-runs.md). The run's upcoming shows
@@ -31,6 +35,20 @@ export function useAddEventShows(eventId: string) {
     onSuccess: (res) => {
       if (res.status === 200) {
         qc.invalidateQueries({ queryKey: ["mobile", "event-shows"] });
+        qc.invalidateQueries({ queryKey: ["mobile", "organizer"] });
+      }
+    },
+  });
+}
+
+/** Sells a pass on every show of the run still to come (show-passes.md). */
+export function useAddShowPass(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddShowPassBody) =>
+      api.organizer.addShowPass(eventId, body),
+    onSuccess: (res) => {
+      if (res.status === 200) {
         qc.invalidateQueries({ queryKey: ["mobile", "organizer"] });
       }
     },

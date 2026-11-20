@@ -93,6 +93,8 @@ import type {
   AddPayoutAccountResult,
   AddPlacePhotoBody,
   AddPlaceServiceBody,
+  AddShowPassBody,
+  AddShowPassResult,
   AddressSuggestion,
   ApiEnvelope,
   AttendanceRow,
@@ -110,6 +112,8 @@ import type {
   CheckoutAttemptResult,
   CheckoutPaymentOptions,
   CheckoutSessionRow,
+  ClaimShowPassBody,
+  ClaimShowPassResult,
   CloudinarySignatureData,
   ContentCampaignCheckoutResult,
   ContentCampaignCreateResult,
@@ -304,6 +308,7 @@ import type {
   SetEventGroupPricesBody,
   SetEventGroupPricesResult,
   SetPlaceStatusBody,
+  ShowPassResult,
   StartVerificationBody,
   StartVerificationResult,
   StoryReplyResult,
@@ -1038,6 +1043,20 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body, auth: true },
         );
       },
+      /** The pass this ticket carries (404 when it is not a pass). */
+      showPass(ticketId: string) {
+        return request<ShowPassResult>(
+          `/api/mobile/tickets/${encodeURIComponent(ticketId)}/pass`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Uses the pass for one more show of its run. */
+      claimShowPass(ticketId: string, body: ClaimShowPassBody) {
+        return request<ClaimShowPassResult>(
+          `/api/mobile/tickets/${encodeURIComponent(ticketId)}/pass`,
+          { method: "POST", body, auth: true },
+        );
+      },
     },
 
     highlights: {
@@ -1600,6 +1619,13 @@ export function createApiClient(options: ApiClientOptions) {
       ) {
         return request<GiveComplimentaryTicketsResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/complimentary`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Sells a pass on every show of the event's run still to come. */
+      addShowPass(eventId: string, body: AddShowPassBody) {
+        return request<AddShowPassResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/passes`,
           { method: "POST", body, auth: true },
         );
       },

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-20 — Passes for several shows
+
+- On a run of shows, organizers sell a pass (website Manage › Details › Passes for several shows, app Shows and copies): a ticket type with `pass_shows` added to every show still to come (`event_series_add_pass`; later shows copy it through `event_add_show`). The ticket bought admits to its show and settles with it; its holder chooses the other shows from the ticket (website ticket view, app ticket screen), each choice a ticket of its own from that show's pass stock and seats, price 0, `ticket_checkout.pass_ticket_id` naming the pass (`ticket_pass_claim`, `ticket_pass_state`, service role only). Cancelling or refunding the pass cancels its chosen shows still to come (`ticket_pass_host_cancelled`); a buyer cannot cancel it once a chosen show has started (`buyerCancelGate`); saving a show's ticket types keeps a pass a pass. Migration `20261120100000_show_passes`. New: `architecture/show-passes.md` (1.0); Y10 decided.
+
 ## 2026-11-20 — Complimentary tickets
 
 - Organizers (and team members who manage events) give free tickets of one of an event's types to a named person by username or phone — website Manage › Details, app "Give free tickets". They are real tickets on that person's account (own codes, seated, checked in, can be sent on), taken from the type's stock and the event's capacity, with no payment, earning or fee and nothing to refund; the person gets a notice and a push, and the door list marks them "Free ticket". One `ticket_checkout` per gift (`paid`, price 0, `complimentary_by`, `complimentary_note`), written by the service-role-only `issue_complimentary_tickets`. Migration `20261120090000_complimentary_tickets`. New: `architecture/complimentary-tickets.md` (1.0); Y11 decided.

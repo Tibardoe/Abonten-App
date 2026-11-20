@@ -92,5 +92,15 @@
   "organizerSendingOff": "El envío de entradas está desactivado",
   "organizerTurnOff": "Desactivar",
   "organizerTurnOn": "Activar",
-  "complimentaryTicket": "Entrada regalada"
+  "complimentaryTicket": "Entrada regalada",
+  "passYourShows": "Tus funciones con este abono",
+  "passShowsLeft": "{left, plural, =0 {Ya elegiste todas las funciones de este abono.} one {Puedes elegir # función más.} other {Puedes elegir # funciones más.}} El abono cubre {total}.",
+  "passBoughtShow": "Comprado para esta función",
+  "passChosen": "Elegida",
+  "passChoose": "Elegir",
+  "passShowCancelled": "Cancelada",
+  "passShowStarted": "Empezó",
+  "passShowFull": "Sin plazas para abonos",
+  "couldNotChooseShow": "No se pudo elegir esa función. Inténtalo de nuevo.",
+  "passCouldNotLoad": "No se pudieron cargar las funciones de este abono. Inténtalo más tarde."
 }

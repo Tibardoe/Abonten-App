@@ -92,5 +92,15 @@
   "organizerSendingOff": "Sending tickets is off",
   "organizerTurnOff": "Turn off",
   "organizerTurnOn": "Turn on",
-  "complimentaryTicket": "Free ticket"
+  "complimentaryTicket": "Free ticket",
+  "passYourShows": "Your shows with this pass",
+  "passShowsLeft": "{left, plural, =0 {Every show of this pass is chosen.} one {You can choose # more show.} other {You can choose # more shows.}} The pass covers {total}.",
+  "passBoughtShow": "Bought for this show",
+  "passChosen": "Chosen",
+  "passChoose": "Choose",
+  "passShowCancelled": "Cancelled",
+  "passShowStarted": "Started",
+  "passShowFull": "No places for passes",
+  "couldNotChooseShow": "That show couldn't be chosen. Try again.",
+  "passCouldNotLoad": "This pass's shows couldn't be loaded. Try again later."
 }
