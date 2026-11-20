@@ -2,7 +2,7 @@
 title: Criar e publicar um evento
 summary: O ciclo de vida de um evento, de rascunho a publicado, o que significa cada campo, tipos de bilhete e preços, eventos com várias datas e alterações depois de publicar.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -33,6 +33,10 @@ O seu progresso fica guardado como **rascunho** à medida que avança. Os rascun
 | Cartaz | Uma imagem, carregada diretamente para o nosso serviço de imagens com uma barra de progresso. |
 | Tipos de bilhete | Gratuito (só inscrição) ou pago. Para cada tipo pago: nome, preço (na moeda do seu país; no Gana, cedis) e quantidade disponível. As quantidades são limites rígidos: as vendas param quando esgotam. |
 | Visibilidade | Publicar já ou manter como rascunho. |
+
+## Várias sessões: uma peça, uma temporada, uma digressão
+
+Um evento com **Várias datas** tem um único stock de bilhetes para todas as datas, e a app só aceita uma hora por dia. Para uma peça ou espetáculo com várias sessões, cada uma com os seus próprios lugares e a sua lista de entrada, crie o evento só com a primeira sessão, publique-o, abra-o e escolha **Sessões e cópias** (app) ou o cartão **Sessões** na sua página de gestão (site). Adicione as sessões uma a uma ou num padrão semanal (por exemplo, ao sábado às 16h e às 19h, e ao domingo às 13h, 16h e 19h). Cada sessão passa a ser um anúncio próprio com os seus bilhetes; os compradores veem a série uma vez e escolhem uma sessão.
 
 ## Preços e taxa de serviço
 

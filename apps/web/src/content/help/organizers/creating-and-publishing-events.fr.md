@@ -2,7 +2,7 @@
 title: Créer et publier un événement
 summary: Le cycle de vie d'un événement, du brouillon à la publication, le sens de chaque champ, les types de billets et les prix, les événements à plusieurs dates, et les modifications après publication.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -33,6 +33,10 @@ Votre progression est enregistrée au fur et à mesure comme **brouillon**. Les 
 | Affiche | Une image, envoyée directement à notre hébergeur d'images avec une barre de progression. |
 | Types de billets | Gratuit (inscription seulement) ou payant. Pour chaque type payant : nom, prix (dans la monnaie de votre pays, en cedis au Ghana) et quantité disponible. Les quantités sont des limites strictes : les ventes s'arrêtent quand elles sont épuisées. |
 | Visibilité | Publier maintenant ou garder en brouillon. |
+
+## Plusieurs séances : une pièce, une série, une tournée
+
+Un événement à **Plusieurs dates** a un seul stock de billets pour toutes ses dates, et l'application n'accepte qu'un horaire par jour. Pour une pièce ou un spectacle en plusieurs séances, chacune avec ses propres places et sa propre liste d'entrée, créez l'événement avec la première séance seulement, publiez-le, puis ouvrez-le et choisissez **Séances et copies** (application) ou la carte **Séances** de sa page de gestion (site web). Ajoutez les séances une par une ou selon un rythme hebdomadaire (par exemple le samedi à 16 h et 19 h, le dimanche à 13 h, 16 h et 19 h). Chaque séance devient une annonce à part avec ses propres billets ; les acheteurs voient la série une fois et choisissent une séance.
 
 ## Prix et frais de service
 

@@ -621,6 +621,7 @@
   "setAddress": "Set address",
   "setReminder": "Set reminder",
   "setSpecificNonConsecutiveDates": "Set specific non-consecutive dates",
+  "multipleDatesShareTicketsHint": "All these dates share one set of tickets. For a play or show with several performances, each with its own seats, choose Single/Range for the first show, then add the others under Shows on the event's Manage page once it's published.",
   "setTime": "Set time",
   "setYourLocation": "Set your location",
   "settlementStatusPendingSettlement": "Settlement status: Pending settlement",

@@ -2,7 +2,7 @@
 title: Ein Event erstellen und veröffentlichen
 summary: Der Weg eines Events vom Entwurf bis zur Veröffentlichung, was jedes Feld bedeutet, Ticketarten und Preise, Events mit mehreren Terminen und Änderungen nach der Veröffentlichung.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -33,6 +33,10 @@ Dein Fortschritt wird laufend als **Entwurf** gespeichert. Entwürfe findest du 
 | Flyer | Ein Bild, das mit Fortschrittsbalken direkt zu unserem Bilddienst hochgeladen wird. |
 | Ticketarten | Kostenlos (nur Anmeldung) oder kostenpflichtig. Für jede kostenpflichtige Art: Name, Preis (in der Währung deines Landes, in Ghana Cedi) und verfügbare Menge. Mengen sind feste Grenzen – der Verkauf endet, wenn sie aufgebraucht sind. |
 | Sichtbarkeit | Jetzt veröffentlichen oder als Entwurf behalten. |
+
+## Mehrere Vorstellungen: ein Stück, eine Reihe, eine Tour
+
+Bei **Mehrere Termine** teilen sich alle Termine eines Events ein Ticketkontingent, und die App erlaubt nur eine Uhrzeit pro Tag. Für ein Stück oder eine Show mit mehreren Vorstellungen, jede mit eigenen Plätzen und eigener Einlassliste, erstelle das Event nur mit der ersten Vorstellung, veröffentliche es, öffne es dann und wähle **Vorstellungen und Kopien** (App) oder die Karte **Vorstellungen** auf seiner Verwaltungsseite (Website). Füge Vorstellungen einzeln oder nach einem Wochenmuster hinzu (zum Beispiel samstags um 16 und 19 Uhr, sonntags um 13, 16 und 19 Uhr). Jede Vorstellung wird ein eigenes Angebot mit eigenen Tickets; Käufer sehen die Reihe einmal und wählen eine Vorstellung.
 
 ## Preise und Servicegebühr
 

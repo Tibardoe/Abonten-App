@@ -236,6 +236,14 @@ export default function EventUploadFormFields({
               />
             </div>
 
+            {/* Every date here shares one stock of tickets: a play with
+                separate seats per show needs the Shows card instead. */}
+            {dateType === "specific" ? (
+              <p className="text-muted-foreground text-xs">
+                {t("multipleDatesShareTicketsHint")}
+              </p>
+            ) : null}
+
             <DateTimePicker
               handleDateAndTime={handleDateAndTime}
               dateType={dateType}

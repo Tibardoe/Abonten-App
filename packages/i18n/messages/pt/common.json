@@ -621,6 +621,7 @@
   "setAddress": "Definir morada",
   "setReminder": "Definir lembrete",
   "setSpecificNonConsecutiveDates": "Definir datas específicas não consecutivas",
+  "multipleDatesShareTicketsHint": "Todas estas datas partilham os mesmos bilhetes. Para uma peça ou espetáculo com várias sessões, cada uma com os seus próprios lugares, escolha Única/intervalo para a primeira sessão e adicione as outras em Sessões, na página de gestão do evento, depois de publicado.",
   "setTime": "Definir hora",
   "setYourLocation": "Defina a sua localização",
   "settlementStatusPendingSettlement": "Estado da liquidação: liquidação pendente",
