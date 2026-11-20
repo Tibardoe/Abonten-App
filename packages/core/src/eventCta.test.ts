@@ -22,6 +22,17 @@ describe("resolveEventCta", () => {
     });
   });
 
+  it("says a postponed event has nothing on sale, and keeps a held ticket reachable", () => {
+    expect(resolveEventCta(t, { ...open, postponed: true })).toEqual({
+      kind: "postponed",
+      label: "Postponed",
+      actionable: false,
+    });
+    expect(
+      resolveEventCta(t, { ...open, postponed: true, attending: true }).kind,
+    ).toBe("going");
+  });
+
   it("keeps a held ticket reachable, even after sales close", () => {
     expect(resolveEventCta(t, { ...open, attending: true }).kind).toBe("going");
     expect(

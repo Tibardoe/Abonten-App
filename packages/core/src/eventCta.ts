@@ -11,6 +11,7 @@ export type EventCtaKind =
   | "rsvp" // free: reserve a spot
   | "going" // the viewer already holds a ticket
   | "canceled"
+  | "postponed" // no date yet: nothing on sale
   | "ended"
   | "in_progress" // started, nothing later left to sell
   | "sold_out"
@@ -26,6 +27,8 @@ export type EventCta = {
 
 export type EventCtaInput = {
   canceled: boolean;
+  /** Postponed with no new date yet (docs/architecture/event-reschedule.md). */
+  postponed?: boolean;
   ended: boolean;
   inProgressNoFuture: boolean;
   soldOut: boolean;
@@ -41,6 +44,7 @@ export function resolveEventCtaKind(input: EventCtaInput): EventCtaKind {
   // A ticket already held stays reachable even once sales have closed —
   // that is exactly when someone at the door needs it.
   if (input.attending) return "going";
+  if (input.postponed) return "postponed";
   if (input.ended) return "ended";
   if (input.inProgressNoFuture) return "in_progress";
   if (input.soldOut) return "sold_out";
@@ -53,6 +57,7 @@ const ACTIONABLE: Record<EventCtaKind, boolean> = {
   rsvp: true,
   going: true,
   canceled: false,
+  postponed: false,
   ended: false,
   in_progress: false,
   sold_out: false,

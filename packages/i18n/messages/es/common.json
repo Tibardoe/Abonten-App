@@ -944,5 +944,7 @@
   "groupDiscount": "Descuento de grupo",
   "saveGroupPrices": "Guardar los precios de grupo",
   "groupPricesSaved": "Precios de grupo guardados",
-  "passForShows": "Un abono para {shows, plural, one {# función} other {# funciones}}: esta, y luego eliges las demás desde tu entrada"
+  "passForShows": "Un abono para {shows, plural, one {# función} other {# funciones}}: esta, y luego eliges las demás desde tu entrada",
+  "thisEventIsPostponed": "Este evento está aplazado. Habrá una nueva fecha: las entradas volverán a la venta entonces.",
+  "eventPostponed": "Aplazado: fecha por confirmar"
 }

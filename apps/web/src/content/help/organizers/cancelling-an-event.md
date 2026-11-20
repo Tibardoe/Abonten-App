@@ -9,7 +9,7 @@ owner: Abonten Hub
 
 # Cancelling an event
 
-Cancelling is **final and cannot be undone**. Before the first ticket is confirmed you can simply edit the date or venue instead; after that they are locked, to protect people who already hold a ticket, and you move the date with **Move to a new date** instead (below).
+Cancelling is **final and cannot be undone**. Before the first ticket is confirmed you can simply edit the date or venue instead; after that they are locked, to protect people who already hold a ticket, and you move or postpone the event with **Move or postpone** instead (below).
 
 ## How to cancel
 
@@ -33,13 +33,18 @@ Earnings from a cancelled event are reversed. If part of an earlier payout alrea
 
 A paid promotion on a cancelled event is not refunded.
 
-## Moving the event to a new date
+## Moving or postponing the event
 
-Before any ticket is confirmed, edit the event's dates. Once people hold tickets, use **Move to a new date** (website: Manage › Details; app: the event's menu): choose the new date, the start and end times, and write a message to ticket holders. Everyone holding a ticket is told at once in the app, by push and by email, with your message.
+Before any ticket is confirmed, edit the event's date and venue. Once people hold tickets, use **Move or postpone** (website: Manage › Details; app: the event's menu) and write a message to ticket holders. You can:
 
-Their tickets stay valid for the new date. Anyone who can't make it can give their tickets back for a full refund, **service fee included**, for 7 days and no later than 48 hours before the new date, whatever refund policy you chose. Your earnings for those tickets are reversed; the rest are paid 48 hours after the new date.
+- **move it to a new date** (the new date, the start and end times), and tick *The venue changes too* to change the venue at the same time;
+- **move it to a new venue** in the same country: one of the places on Abonten or an address. An event with a seating plan can't change venue;
+- **move one date** of an event with several dates: only the people holding that date are told;
+- **postpone it, date to come**: sales stop and the event leaves Explore until you set the new date. Set it with the same button when you have it.
 
-An event can be moved twice at most. An event with several dates can't be moved yet, and the venue can't change: for those, cancel the event and create a new one, and say where to find it in the cancelled event's description.
+Everyone concerned is told at once in the app, by push and by email, with your message. Their tickets stay valid. Anyone who can't make it can give their tickets back for a full refund, **service fee included**, whatever refund policy you chose: for 7 days and no later than 48 hours before the date, or, while the event is postponed, at any time until you set the new date. Your earnings for those tickets are reversed; the rest are paid 48 hours after the event, and nothing is paid while it is postponed.
+
+An event (or each date of an event with several dates) can be moved twice at most, and postponed once. For a change beyond that, or a new venue in another country, cancel the event and create a new one, and say where to find it in the cancelled event's description.
 
 ## Communicating
 

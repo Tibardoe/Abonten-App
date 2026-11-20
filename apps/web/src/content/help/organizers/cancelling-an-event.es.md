@@ -9,7 +9,7 @@ owner: Abonten Hub
 
 # Cancelar un evento
 
-Cancelar es **definitivo y no se puede deshacer**. Mientras no haya ninguna entrada confirmada, puedes cambiar la fecha o el lugar sin más; después quedan bloqueados para proteger a quienes ya tienen entrada, y la fecha se cambia con **Cambiar a una nueva fecha** (más abajo).
+Cancelar es **definitivo y no se puede deshacer**. Mientras no haya ninguna entrada confirmada, puedes cambiar la fecha o el lugar sin más; después quedan bloqueados para proteger a quienes ya tienen entrada, y el evento se cambia o se aplaza con **Cambiar o aplazar** (más abajo).
 
 ## Cómo cancelar
 
@@ -33,13 +33,18 @@ Las ganancias de un evento cancelado se revierten. Si un retiro anterior ya las 
 
 Una promoción pagada de un evento cancelado no se reembolsa.
 
-## Cambiar el evento de fecha
+## Cambiar o aplazar el evento
 
-Mientras no haya ninguna entrada confirmada, cambia las fechas del evento. Cuando ya hay personas con entrada, usa **Cambiar a una nueva fecha** (web: Gestionar › Detalles; app: el menú del evento): elige la nueva fecha, las horas de inicio y fin, y escribe un mensaje para quienes tienen entrada. Todos reciben el aviso al momento en la app, por push y por correo, con tu mensaje.
+Mientras no haya ninguna entrada confirmada, cambia la fecha y el lugar del evento. Cuando ya hay personas con entrada, usa **Cambiar o aplazar** (web: Gestionar › Detalles; app: el menú del evento) y escribe un mensaje para quienes tienen entrada. Puedes:
 
-Sus entradas siguen valiendo para la nueva fecha. Quien no pueda ir puede devolver sus entradas y recibir el reembolso completo, **comisión de servicio incluida**, durante 7 días y como muy tarde 48 horas antes de la nueva fecha, sea cual sea la política de reembolso que elegiste. Tus ingresos por esas entradas se anulan; el resto se paga 48 horas después de la nueva fecha.
+- **cambiarlo a una nueva fecha** (la nueva fecha, las horas de inicio y fin), y marcar *También cambia el lugar* para cambiar el lugar a la vez;
+- **cambiarlo a un nuevo lugar** del mismo país: un lugar de Abonten o una dirección. Un evento con plano de asientos no puede cambiar de lugar;
+- **cambiar una fecha** de un evento con varias fechas: solo reciben el aviso quienes tienen esa fecha;
+- **aplazarlo, fecha por confirmar**: las ventas se detienen y el evento sale de Explorar hasta que fijes la nueva fecha. Fíjala con el mismo botón cuando la tengas.
 
-Un evento se puede cambiar como máximo dos veces. Un evento con varias fechas todavía no se puede cambiar y el lugar no puede cambiar: en esos casos, cancela el evento, crea uno nuevo e indica dónde encontrarlo en la descripción del evento cancelado.
+Todos los afectados reciben el aviso al momento en la app, por push y por correo, con tu mensaje. Sus entradas siguen valiendo. Quien no pueda ir puede devolver sus entradas y recibir el reembolso completo, **comisión de servicio incluida**, sea cual sea la política de reembolso que elegiste: durante 7 días y como muy tarde 48 horas antes de la fecha o, mientras el evento está aplazado, en cualquier momento hasta que fijes la nueva fecha. Tus ingresos por esas entradas se anulan; el resto se paga 48 horas después del evento, y no se paga nada mientras está aplazado.
+
+Un evento (o cada fecha de un evento con varias fechas) se puede cambiar como máximo dos veces, y aplazar una vez. Para un cambio más, o un nuevo lugar en otro país, cancela el evento, crea uno nuevo e indica dónde encontrarlo en la descripción del evento cancelado.
 
 ## Comunicarte
 

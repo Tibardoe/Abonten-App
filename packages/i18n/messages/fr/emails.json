@@ -114,6 +114,22 @@
     "now": "Maintenant",
     "messageLabel": "Message de l'organisateur",
     "openTickets": "Ouvrir mes billets",
-    "questions": "Des questions sur l'événement ? Écrivez à l'organisateur depuis la page de l'événement dans l'application Abonten."
+    "questions": "Des questions sur l'événement ? Écrivez à l'organisateur depuis la page de l'événement dans l'application Abonten.",
+    "subjectVenue": "{eventTitle} change de lieu",
+    "subjectPostponed": "{eventTitle} est reporté",
+    "subjectOneDate": "{eventTitle} : votre date est déplacée au {newWhen}",
+    "previewVenue": "{eventTitle} a désormais lieu à {venue}. Votre billet reste valable.",
+    "previewPostponed": "{eventTitle} est reporté. Une nouvelle date est à venir.",
+    "headingVenue": "Votre événement change de lieu",
+    "headingPostponed": "Votre événement est reporté",
+    "introDateVenue": "{greeting} l'organisateur a déplacé <strong>{eventTitle}</strong> à une nouvelle date et dans un nouveau lieu. Votre billet est valable pour les deux : vous n'avez rien à faire pour le garder.",
+    "introOneDate": "{greeting} l'organisateur a déplacé la date de <strong>{eventTitle}</strong> pour laquelle vous avez un billet. Votre billet est valable pour la nouvelle date : vous n'avez rien à faire pour le garder.",
+    "introVenue": "{greeting} l'organisateur a déplacé <strong>{eventTitle}</strong> dans un nouveau lieu. Votre billet y est valable : vous n'avez rien à faire pour le garder.",
+    "introPostponed": "{greeting} l'organisateur a reporté <strong>{eventTitle}</strong>. Une nouvelle date est à venir et nous vous préviendrons dès qu'elle sera fixée. Votre billet reste valable pour cette date.",
+    "choiceVenue": "Vous ne pouvez pas vous y rendre ? Ouvrez votre billet et choisissez « Être remboursé » avant le {refundUntil} : les billets payants sont remboursés du prix du billet et des frais de service.",
+    "choicePostponed": "Vous préférez être remboursé ? Ouvrez votre billet et choisissez « Être remboursé » à tout moment jusqu'à ce que la nouvelle date soit fixée : les billets payants sont remboursés du prix du billet et des frais de service.",
+    "when": "Quand",
+    "venue": "Lieu",
+    "previousVenue": "Lieu précédent"
   }
 }

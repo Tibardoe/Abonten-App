@@ -338,7 +338,8 @@
     "sold_out": "Sold out",
     "no_tickets": "Tickets not available yet",
     "rsvp": "Reserve spot",
-    "buy": "Buy tickets"
+    "buy": "Buy tickets",
+    "postponed": "Postponed"
   },
   "invite": {
     "share": "Join me on Abonten to find events and places near you: {url}",
@@ -1096,7 +1097,23 @@
     },
     "event_rescheduled": {
       "title": "{title} has moved",
-      "body": "Now {dayTime}. Open your ticket to keep it or get a full refund."
+      "body": "Now {when}. Open your ticket to keep it or get a full refund."
+    },
+    "event_moved_venue": {
+      "title": "{title} has moved",
+      "body": "Now {when} at {venue}. Open your ticket to keep it or get a full refund."
+    },
+    "event_venue_changed": {
+      "title": "{title} has a new venue",
+      "body": "Now at {venue}. Open your ticket to keep it or get a full refund."
+    },
+    "event_date_moved": {
+      "title": "{title}: your date has moved",
+      "body": "{previousWhen} is now {when}. Open your ticket to keep it or get a full refund."
+    },
+    "event_postponed": {
+      "title": "{title} is postponed",
+      "body": "A new date is to come. Open your ticket to keep it or get a full refund."
     }
   },
   "noticeWords": {

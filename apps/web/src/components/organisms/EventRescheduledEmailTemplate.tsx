@@ -12,58 +12,117 @@ import {
   EmailShell,
 } from "./EmailParts";
 
+/** What moved: the date, the date and the venue, the venue, one date of several, or nothing yet (postponed). */
+export type RescheduleEmailKind =
+  | "date"
+  | "date_venue"
+  | "venue"
+  | "one_date"
+  | "postponed";
+
 interface EmailTemplateProp {
   words: EmailWords;
+  kind: RescheduleEmailKind;
   eventTitle: string;
-  /** Both already written in the reader's language and the event's zone. */
+  /** Dates already written in the reader's language and the event's zone. */
   previousWhen: string;
-  newWhen: string;
-  refundUntil: string;
+  /** Null while postponed. */
+  newWhen: string | null;
+  /** The new and the old venue, when the venue changed. */
+  venue: string | null;
+  previousVenue: string | null;
+  /** Null while postponed (open until the new date is set). */
+  refundUntil: string | null;
   /** The organizer's own words, shown as they wrote them. */
   message: string;
   myTicketsUrl: string;
 }
 
+const HEADING: Record<RescheduleEmailKind, string> = {
+  date: "reschedule.heading",
+  date_venue: "reschedule.heading",
+  one_date: "reschedule.heading",
+  venue: "reschedule.headingVenue",
+  postponed: "reschedule.headingPostponed",
+};
+
+const INTRO: Record<RescheduleEmailKind, string> = {
+  date: "reschedule.intro",
+  date_venue: "reschedule.introDateVenue",
+  one_date: "reschedule.introOneDate",
+  venue: "reschedule.introVenue",
+  postponed: "reschedule.introPostponed",
+};
+
 /**
- * "Your event has moved" to every holder of a moved event
- * (docs/architecture/event-reschedule.md): the old and new dates, the
- * organizer's message, and the choice — keep the ticket (nothing to do) or
- * give it back for a full refund until the window closes. Written in the
- * holder's language; built from EmailParts like the cancellation email.
+ * "Your event has moved" (or "has a new venue", "is postponed") to every
+ * holder of a moved event (docs/architecture/event-reschedule.md): what
+ * changed, the organizer's message, and the choice — keep the ticket
+ * (nothing to do) or give it back for a full refund until the window closes
+ * (while postponed: until the new date is set). Written in the holder's
+ * language; built from EmailParts like the cancellation email.
  */
 export default function EventRescheduledEmailTemplate({
   words,
+  kind,
   eventTitle,
   previousWhen,
   newWhen,
+  venue,
+  previousVenue,
   refundUntil,
   message,
   myTicketsUrl,
 }: EmailTemplateProp) {
   const { t, locale, greeting } = words;
+  const preview =
+    kind === "postponed"
+      ? t("reschedule.previewPostponed", { eventTitle })
+      : kind === "venue"
+        ? t("reschedule.previewVenue", { eventTitle, venue: venue ?? "" })
+        : t("reschedule.preview", { eventTitle, newWhen: newWhen ?? "" });
+  const choice =
+    kind === "postponed" || !refundUntil
+      ? t("reschedule.choicePostponed")
+      : kind === "venue"
+        ? t("reschedule.choiceVenue", { refundUntil })
+        : t("reschedule.choice", { refundUntil });
   return (
     <EmailShell
       locale={locale}
-      preview={t("reschedule.preview", { eventTitle, newWhen })}
-      heading={t("reschedule.heading")}
+      preview={preview}
+      heading={t(HEADING[kind])}
       intro={
         <>
           <EmailIntro>
-            {richEmailText(t("reschedule.intro", { greeting, eventTitle }), {
+            {richEmailText(t(INTRO[kind], { greeting, eventTitle }), {
               strong: (chunk) => <strong>{chunk}</strong>,
             })}
           </EmailIntro>
-          <EmailIntro spaced>
-            {t("reschedule.choice", { refundUntil })}
-          </EmailIntro>
+          <EmailIntro spaced>{choice}</EmailIntro>
         </>
       }
     >
       <EmailDivider />
       <EmailSection>
         <EmailDetailRow label={t("reschedule.event")} value={eventTitle} />
-        <EmailDetailRow label={t("reschedule.was")} value={previousWhen} />
-        <EmailDetailRow label={t("reschedule.now")} value={newWhen} />
+        {kind === "venue" ? (
+          <EmailDetailRow label={t("reschedule.when")} value={previousWhen} />
+        ) : (
+          <EmailDetailRow label={t("reschedule.was")} value={previousWhen} />
+        )}
+        {newWhen && kind !== "venue" && kind !== "postponed" ? (
+          <EmailDetailRow label={t("reschedule.now")} value={newWhen} />
+        ) : null}
+        {venue ? (
+          <EmailDetailRow label={t("reschedule.venue")} value={venue} />
+        ) : null}
+        {previousVenue ? (
+          <EmailDetailRow
+            label={t("reschedule.previousVenue")}
+            value={previousVenue}
+          />
+        ) : null}
       </EmailSection>
       <EmailSection>
         <EmailSectionLabel>{t("reschedule.messageLabel")}</EmailSectionLabel>

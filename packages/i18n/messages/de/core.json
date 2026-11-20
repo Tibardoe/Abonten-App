@@ -183,7 +183,8 @@
     "in_progress": "Ticketverkauf geschlossen",
     "no_tickets": "Tickets noch nicht verfügbar",
     "rsvp": "Platz reservieren",
-    "sold_out": "Ausverkauft"
+    "sold_out": "Ausverkauft",
+    "postponed": "Verschoben"
   },
   "eventDates": {
     "notice": "Start- oder Endzeit muss mindestens {hours} Stunden in der Zukunft liegen",
@@ -1025,7 +1026,23 @@
     },
     "event_rescheduled": {
       "title": "{title} wurde verschoben",
-      "body": "Jetzt {dayTime}. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
+      "body": "Jetzt am {when}. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
+    },
+    "event_moved_venue": {
+      "title": "{title} wurde verschoben",
+      "body": "Jetzt am {when}, Ort: {venue}. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
+    },
+    "event_venue_changed": {
+      "title": "{title} hat einen neuen Ort",
+      "body": "Neuer Ort: {venue}. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
+    },
+    "event_date_moved": {
+      "title": "{title}: Dein Termin wurde verschoben",
+      "body": "Statt {previousWhen} jetzt am {when}. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
+    },
+    "event_postponed": {
+      "title": "{title} ist verschoben",
+      "body": "Ein neuer Termin folgt. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
     }
   },
   "openStatus": {

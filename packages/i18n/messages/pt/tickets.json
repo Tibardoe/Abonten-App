@@ -115,5 +115,14 @@
   "rescheduleRefundConfirmTitle": "{count, plural, one {Devolver o seu bilhete?} other {Devolver os seus # bilhetes?}}",
   "rescheduleRefundConfirmPaid": "{amount} volta para o cartão ou o mobile money com que pagou. Não é possível anular.",
   "rescheduleRefundConfirmFree": "O seu lugar volta para o organizador. Não é possível anular.",
-  "couldNotSaveChoice": "Não foi possível guardar. Tente de novo."
+  "couldNotSaveChoice": "Não foi possível guardar. Tente de novo.",
+  "rescheduleBannerTitlePostponed": "Este evento foi adiado",
+  "rescheduleBannerTitleVenue": "Este evento mudou de local",
+  "rescheduleBannerTitleOneDate": "A sua data mudou",
+  "rescheduleBannerPostponed": "Antes: {previous}. Haverá uma nova data.",
+  "rescheduleBannerVenue": "Agora em {venue}.",
+  "rescheduleBannerVenues": "Antes em {previous}. Agora em {venue}.",
+  "rescheduleBannerChoicePostponed": "O seu bilhete continua válido para a nova data. Se preferir não esperar, pode receber o reembolso total, taxa de serviço incluída, até a nova data ser definida.",
+  "rescheduleBannerChoiceVenue": "O seu bilhete vale no novo local. Se não puder ir, pode receber o reembolso total, taxa de serviço incluída, até {refundUntil}.",
+  "rescheduleKeptNoteVenue": "Mantém o seu bilhete para o novo local."
 }

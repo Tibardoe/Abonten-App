@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX_RESCHEDULES,
+  rescheduleMessageProblem,
   rescheduleProblem,
   rescheduleRefundOpen,
   rescheduleRefundUntil,
@@ -67,6 +68,31 @@ describe("moving an event", () => {
     expect(
       rescheduleRefundUntil(at("2026-11-20T17:00:00Z"), now).toISOString(),
     ).toBe("2026-11-20T17:00:00.000Z");
+  });
+
+  it("lets the same date stand when the venue changes or the event was postponed", () => {
+    const same = {
+      ...base,
+      startsAt: base.currentStartsAt,
+      endsAt: base.currentEndsAt,
+    };
+    expect(rescheduleProblem(same)).toBe("unchanged");
+    expect(rescheduleProblem({ ...same, sameDateAllowed: true })).toBeNull();
+    // A postponed event's new date, whatever its old one was.
+    expect(
+      rescheduleProblem({
+        ...base,
+        currentStartsAt: null,
+        currentEndsAt: null,
+      }),
+    ).toBeNull();
+  });
+
+  it("asks every move and postponement for a message", () => {
+    expect(
+      rescheduleMessageProblem("Postponed: the artist is ill."),
+    ).toBeNull();
+    expect(rescheduleMessageProblem("  ")).toBe("message");
   });
 
   it("knows when the window is open", () => {

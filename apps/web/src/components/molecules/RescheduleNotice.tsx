@@ -23,11 +23,12 @@ const WHEN: Intl.DateTimeFormatOptions = {
 };
 
 /**
- * On a ticket for an event the organizer moved
- * (docs/architecture/event-reschedule.md): the old and new dates, their
- * message, and the choice — keep the ticket, or give it back for the ticket
- * price and the service fee while the window is open. Renders nothing for
- * an event that never moved.
+ * On a ticket for an event the organizer moved or postponed
+ * (docs/architecture/event-reschedule.md): what changed (the date, the
+ * venue, one date of several, or no date yet), their message, and the
+ * choice — keep the ticket, or give it back for the ticket price and the
+ * service fee while the window is open (while postponed: until the new
+ * date is set). Renders nothing for an event that never moved.
  */
 export default function RescheduleNotice({
   eventId,
@@ -106,16 +107,48 @@ export default function RescheduleNotice({
   // Keeping is not final: until the window closes the holder may still
   // give the tickets back.
   const canChoose = move.refundOpen && move.activeTickets > 0;
+  const postponed = move.kind === "postpone";
+  const dateChanged =
+    !postponed && !!move.startsAt && move.startsAt !== move.previousStartsAt;
+  const venueOnly = !!move.venue && !dateChanged && !postponed;
+  const heading = postponed
+    ? t("rescheduleBannerTitlePostponed")
+    : move.occurrenceId
+      ? t("rescheduleBannerTitleOneDate")
+      : venueOnly
+        ? t("rescheduleBannerTitleVenue")
+        : t("rescheduleBannerTitle");
 
   return (
     <div className="space-y-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-700 dark:bg-amber-950/40">
-      <p className="font-semibold">{t("rescheduleBannerTitle")}</p>
-      <p>
-        {t("rescheduleBannerDates", {
-          previous: when(move.previousStartsAt),
-          now: when(move.startsAt),
-        })}
-      </p>
+      <p className="font-semibold">{heading}</p>
+      {postponed ? (
+        <p>
+          {t("rescheduleBannerPostponed", {
+            previous: when(move.previousStartsAt),
+          })}
+        </p>
+      ) : (
+        dateChanged &&
+        move.startsAt && (
+          <p>
+            {t("rescheduleBannerDates", {
+              previous: when(move.previousStartsAt),
+              now: when(move.startsAt),
+            })}
+          </p>
+        )
+      )}
+      {move.venue && (
+        <p>
+          {move.previousVenue
+            ? t("rescheduleBannerVenues", {
+                previous: move.previousVenue,
+                venue: move.venue,
+              })
+            : t("rescheduleBannerVenue", { venue: move.venue })}
+        </p>
+      )}
       <div className="space-y-0.5">
         <p className="text-xs text-muted-foreground">
           {t("rescheduleBannerMessageLabel")}
@@ -124,17 +157,29 @@ export default function RescheduleNotice({
       </div>
       {move.activeTickets > 0 &&
         (move.choice === "keep" ? (
-          <p className="text-muted-foreground">{t("rescheduleKeptNote")}</p>
+          <p className="text-muted-foreground">
+            {venueOnly ? t("rescheduleKeptNoteVenue") : t("rescheduleKeptNote")}
+          </p>
         ) : move.refundOpen ? (
           <p className="text-muted-foreground">
-            {t("rescheduleBannerChoice", {
-              refundUntil: when(move.refundUntil),
-            })}
+            {postponed || !move.refundUntil
+              ? t("rescheduleBannerChoicePostponed")
+              : venueOnly
+                ? t("rescheduleBannerChoiceVenue", {
+                    refundUntil: when(move.refundUntil),
+                  })
+                : t("rescheduleBannerChoice", {
+                    refundUntil: when(move.refundUntil),
+                  })}
           </p>
         ) : (
-          <p className="text-muted-foreground">
-            {t("rescheduleClosedNote", { refundUntil: when(move.refundUntil) })}
-          </p>
+          move.refundUntil && (
+            <p className="text-muted-foreground">
+              {t("rescheduleClosedNote", {
+                refundUntil: when(move.refundUntil),
+              })}
+            </p>
+          )
         ))}
       {canChoose && move.refundBlocked && (
         <p className="text-muted-foreground">{move.refundBlocked}</p>

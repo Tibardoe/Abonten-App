@@ -5,8 +5,10 @@
 
 /** The organizer's message to holders. */
 export const MAX_RESCHEDULE_MESSAGE = 1000;
-/** Moves per event. */
+/** Moves per event (per date, for an event with several dates). */
 export const MAX_RESCHEDULES = 2;
+/** "Postponed, new date to come": once per event. */
+export const MAX_POSTPONEMENTS = 1;
 /** The new start is at least this far ahead. */
 export const MIN_HOURS_BEFORE_NEW_START = 2;
 
@@ -24,9 +26,11 @@ export function rescheduleProblem(input: {
   startsAt: Date | null;
   endsAt: Date | null;
   message: string;
-  currentStartsAt: Date;
+  currentStartsAt: Date | null;
   currentEndsAt: Date | null;
   moves: number;
+  /** The venue changes too, or the event is postponed: the same date is a move. */
+  sameDateAllowed?: boolean;
   now?: Date;
 }): RescheduleProblem | null {
   const now = (input.now ?? new Date()).getTime();
@@ -44,16 +48,21 @@ export function rescheduleProblem(input: {
     return "too_soon";
   }
   if (
-    input.startsAt.getTime() === input.currentStartsAt.getTime() &&
+    !input.sameDateAllowed &&
+    input.startsAt.getTime() === input.currentStartsAt?.getTime() &&
     input.endsAt.getTime() === (input.currentEndsAt?.getTime() ?? Number.NaN)
   ) {
     return "unchanged";
   }
-  const message = input.message.trim();
-  if (message.length === 0 || message.length > MAX_RESCHEDULE_MESSAGE) {
-    return "message";
-  }
-  return null;
+  return rescheduleMessageProblem(input.message);
+}
+
+/** The message every move and postponement carries. */
+export function rescheduleMessageProblem(message: string): "message" | null {
+  const text = message.trim();
+  return text.length === 0 || text.length > MAX_RESCHEDULE_MESSAGE
+    ? "message"
+    : null;
 }
 
 /**

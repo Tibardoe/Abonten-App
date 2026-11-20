@@ -424,7 +424,11 @@ export default async function page({
 
       {/* A cancelled, ended or started event says so above the fold, not
           only on the ticket button. */}
-      <EventStatusBanner eventDates={event_dates} eventStatus={event.status} />
+      <EventStatusBanner
+        eventDates={event_dates}
+        eventStatus={event.status}
+        postponed={!!event.postponed_at}
+      />
 
       {/* Main Content. One grid: on phones everything stacks with the ticket
           panel straight after the organizer, so buying never needs a long
@@ -548,6 +552,7 @@ export default async function page({
                 soldOut={soldOut}
                 isAbsolutelyFreeEvent={isAbsolutelyFreeEvent}
                 eventStatus={event.status}
+                postponed={!!event.postponed_at}
               />
 
               {isAbsolutelyFreeEvent && !event.require_registration && (

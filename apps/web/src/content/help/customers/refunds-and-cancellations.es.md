@@ -50,11 +50,11 @@ Si un organizador cancela, Abonten automáticamente:
 
 No tienes que hacer nada. Si un reembolso muestra *Reembolso fallido*, usa *Reintentar reembolso* o contacta con soporte.
 
-## Cuando el organizador cambia un evento de fecha
+## Cuando el organizador cambia o aplaza un evento
 
-Si un organizador cambia un evento a una nueva fecha, recibes el aviso en la app, por push y por correo, con su mensaje. Tu entrada sigue valiendo para la nueva fecha: no tienes que hacer nada para conservarla.
+Si un organizador cambia un evento (una nueva fecha, un nuevo lugar, o la fecha que tienes de un evento con varias fechas) o lo aplaza, recibes el aviso en la app, por push y por correo, con su mensaje. Tu entrada sigue valiendo: no tienes que hacer nada para conservarla.
 
-Si no puedes ir en la nueva fecha, abre tu entrada y elige **Pedir el reembolso** antes de la fecha que indica (7 días como máximo, y como muy tarde 48 horas antes de la nueva fecha). Recuperas el precio de la entrada **y la comisión de servicio**, diga lo que diga la política de reembolso del evento. Una entrada que te enviaron se reembolsa a la persona que la pagó.
+Si no puedes ir, abre tu entrada y elige **Pedir el reembolso** antes de la fecha que indica (7 días como máximo, y como muy tarde 48 horas antes de la fecha). Mientras un evento está aplazado, Pedir el reembolso sigue abierto hasta que el organizador fije la nueva fecha. Recuperas el precio de la entrada **y la comisión de servicio**, diga lo que diga la política de reembolso del evento. Una entrada que te enviaron se reembolsa a la persona que la pagó.
 
 ## Reservas en lugares
 

@@ -23,7 +23,7 @@ complianceReviewRequired: no
 | [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
 | [weekly-highlights.md](weekly-highlights.md) | Abonten Weekly: editions, sections and items, read-time validity, caching, editorial workflow, jobs, switches, rollout |
 | [identity-verification.md](identity-verification.md) | Identity verification: government ID and live selfie through Smile ID, what is kept, duplicates across accounts, requirements, the Safety link, staff access, retention, rollout |
-| [event-reschedule.md](event-reschedule.md) | Moving an event that has tickets to a new date: every holder told, keep the ticket or a full refund with the fee |
+| [event-reschedule.md](event-reschedule.md) | Moving an event that has tickets to a new date or venue, one date of several, or postponing it: every holder told, keep the ticket or a full refund with the fee |
 | [show-passes.md](show-passes.md) | Passes for several shows of a run: sold on every show, the holder chooses the other shows from the ticket, cancelled together |
 | [complimentary-tickets.md](complimentary-tickets.md) | Complimentary tickets: an organizer gives real tickets of a type to a named person, from the stock and seats, with no money moved |
 | [assigned-seats.md](assigned-seats.md) | Assigned seats: seating plans, ticket types selling sections, the database seating every issued ticket (an order side by side), freeing and guards |

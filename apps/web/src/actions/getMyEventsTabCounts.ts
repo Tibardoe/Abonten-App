@@ -33,6 +33,7 @@ type HeldTicketRow = {
       status: string | null;
       starts_at: string | null;
       ends_at: string | null;
+      postponed_at: string | null;
       occurrences: { id: string; starts_at: string; ends_at: string }[] | null;
     } | null;
   } | null;
@@ -88,7 +89,7 @@ export default withActionLocale(async function getMyEventsTabCounts(): Promise<{
       .select(
         `ticket_type:ticket_type_id!inner (
           event:event_id!inner (
-            status, starts_at, ends_at,
+            status, starts_at, ends_at, postponed_at,
             occurrences:event_occurrence ( id, starts_at, ends_at )
           )
         )`,
@@ -155,8 +156,10 @@ export default withActionLocale(async function getMyEventsTabCounts(): Promise<{
     const isPast =
       !!event &&
       (event.status === "canceled" ||
-        getEventStatus(event.starts_at, event.ends_at, event.occurrences) ===
-          "ended");
+        // A postponed event waits for its new date: not over.
+        (!event.postponed_at &&
+          getEventStatus(event.starts_at, event.ends_at, event.occurrences) ===
+            "ended"));
     if (isPast) past += 1;
     else active += 1;
   }

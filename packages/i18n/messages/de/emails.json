@@ -114,6 +114,22 @@
     "now": "Jetzt",
     "messageLabel": "Nachricht des Veranstalters",
     "openTickets": "Meine Tickets öffnen",
-    "questions": "Fragen zum Event? Schreib dem Veranstalter über die Eventseite in der Abonten-App."
+    "questions": "Fragen zum Event? Schreib dem Veranstalter über die Eventseite in der Abonten-App.",
+    "subjectVenue": "{eventTitle} hat einen neuen Ort",
+    "subjectPostponed": "{eventTitle} ist verschoben",
+    "subjectOneDate": "{eventTitle}: Dein Termin ist verschoben auf {newWhen}",
+    "previewVenue": "{eventTitle} hat einen neuen Ort: {venue}. Dein Ticket bleibt gültig.",
+    "previewPostponed": "{eventTitle} ist verschoben. Ein neuer Termin folgt.",
+    "headingVenue": "Dein Event hat einen neuen Ort",
+    "headingPostponed": "Dein Event ist verschoben",
+    "introDateVenue": "{greeting} der Veranstalter hat <strong>{eventTitle}</strong> auf einen neuen Termin und an einen neuen Ort verlegt. Dein Ticket gilt für beides: Du musst nichts tun, um es zu behalten.",
+    "introOneDate": "{greeting} der Veranstalter hat den Termin von <strong>{eventTitle}</strong> verschoben, für den du ein Ticket hast. Dein Ticket gilt für den neuen Termin: Du musst nichts tun, um es zu behalten.",
+    "introVenue": "{greeting} der Veranstalter hat <strong>{eventTitle}</strong> an einen neuen Ort verlegt. Dein Ticket gilt dort: Du musst nichts tun, um es zu behalten.",
+    "introPostponed": "{greeting} der Veranstalter hat <strong>{eventTitle}</strong> verschoben. Ein neuer Termin folgt, und wir sagen dir Bescheid, sobald er feststeht. Dein Ticket bleibt dafür gültig.",
+    "choiceVenue": "Du kommst nicht hin? Öffne dein Ticket und wähle vor dem {refundUntil} „Geld zurück“: Bei bezahlten Tickets bekommst du den Ticketpreis und die Servicegebühr zurück.",
+    "choicePostponed": "Lieber dein Geld zurück? Öffne dein Ticket und wähle „Geld zurück“, jederzeit bis der neue Termin feststeht: Bei bezahlten Tickets bekommst du den Ticketpreis und die Servicegebühr zurück.",
+    "when": "Wann",
+    "venue": "Ort",
+    "previousVenue": "Vorheriger Ort"
   }
 }

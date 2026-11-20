@@ -3143,6 +3143,7 @@ export type Database = {
           moderation_state: string | null
           organizer_id: string
           place_id: string | null
+          postponed_at: string | null
           published_at: string | null
           refund_cutoff_hours: number | null
           refund_policy: string
@@ -3181,6 +3182,7 @@ export type Database = {
           moderation_state?: string | null
           organizer_id: string
           place_id?: string | null
+          postponed_at?: string | null
           published_at?: string | null
           refund_cutoff_hours?: number | null
           refund_policy?: string
@@ -3219,6 +3221,7 @@ export type Database = {
           moderation_state?: string | null
           organizer_id?: string
           place_id?: string | null
+          postponed_at?: string | null
           published_at?: string | null
           refund_cutoff_hours?: number | null
           refund_policy?: string
@@ -3924,43 +3927,64 @@ export type Database = {
       }
       event_reschedule: {
         Row: {
+          address: Json | null
           created_at: string
-          ends_at: string
+          ends_at: string | null
           event_id: string
           holders: number
           id: string
+          kind: string
           message: string
           moved_by: string | null
+          occurrence_id: string | null
+          place_id: string | null
+          previous_address: Json | null
           previous_ends_at: string | null
+          previous_place_id: string | null
           previous_starts_at: string
-          refund_until: string
-          starts_at: string
+          refund_until: string | null
+          starts_at: string | null
+          venue_moved: boolean
         }
         Insert: {
+          address?: Json | null
           created_at?: string
-          ends_at: string
+          ends_at?: string | null
           event_id: string
           holders?: number
           id?: string
+          kind?: string
           message: string
           moved_by?: string | null
+          occurrence_id?: string | null
+          place_id?: string | null
+          previous_address?: Json | null
           previous_ends_at?: string | null
+          previous_place_id?: string | null
           previous_starts_at: string
-          refund_until: string
-          starts_at: string
+          refund_until?: string | null
+          starts_at?: string | null
+          venue_moved?: boolean
         }
         Update: {
+          address?: Json | null
           created_at?: string
-          ends_at?: string
+          ends_at?: string | null
           event_id?: string
           holders?: number
           id?: string
+          kind?: string
           message?: string
           moved_by?: string | null
+          occurrence_id?: string | null
+          place_id?: string | null
+          previous_address?: Json | null
           previous_ends_at?: string | null
+          previous_place_id?: string | null
           previous_starts_at?: string
-          refund_until?: string
-          starts_at?: string
+          refund_until?: string | null
+          starts_at?: string | null
+          venue_moved?: boolean
         }
         Relationships: [
           {
@@ -3968,6 +3992,27 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reschedule_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reschedule_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reschedule_previous_place_id_fkey"
+            columns: ["previous_place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
             referencedColumns: ["id"]
           },
           {
@@ -16875,10 +16920,18 @@ export type Database = {
       event_reschedule: {
         Args: {
           p_actor: string
+          p_address?: Json
+          p_country_code?: string
           p_ends_at: string
           p_event_id: string
+          p_latitude?: number
+          p_longitude?: number
           p_message: string
+          p_occurrence_id?: string
+          p_place_id?: string
+          p_postpone?: boolean
           p_starts_at: string
+          p_timezone?: string
         }
         Returns: {
           holders: number
@@ -17626,12 +17679,16 @@ export type Database = {
       get_event_reschedule: {
         Args: { p_event_id: string }
         Returns: {
+          kind: string
           message: string
           moved_at: string
           moves: number
+          occurrence_id: string
+          postponed: boolean
           previous_starts_at: string
           refund_until: string
           starts_at: string
+          venue_moved: boolean
         }[]
       }
       get_event_shows: {
@@ -17646,6 +17703,7 @@ export type Database = {
           sold_out: boolean
           starts_at: string
           status: string
+          postponed: boolean
           timezone: string
           venue_address: string
           venue_name: string

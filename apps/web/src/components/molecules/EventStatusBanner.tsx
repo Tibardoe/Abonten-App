@@ -13,9 +13,12 @@ import { useEffect, useState } from "react";
 export default function EventStatusBanner({
   eventDates,
   eventStatus,
+  postponed = false,
 }: {
   eventDates: Occurrence[];
   eventStatus: string;
+  /** Postponed with no new date yet (its old date may have passed). */
+  postponed?: boolean;
 }) {
   const t = useTranslations("common");
 
@@ -30,11 +33,13 @@ export default function EventStatusBanner({
 
   const message = isCanceled
     ? t("thisEventHasBeenCancelled2")
-    : state.blockReason === "ended"
-      ? t("thisEventHasEnded")
-      : state.blockReason === "ongoing_no_future"
-        ? t("thisEventIsCurrentlyInProgress")
-        : null;
+    : postponed
+      ? t("thisEventIsPostponed")
+      : state.blockReason === "ended"
+        ? t("thisEventHasEnded")
+        : state.blockReason === "ongoing_no_future"
+          ? t("thisEventIsCurrentlyInProgress")
+          : null;
 
   if (!message) return null;
 

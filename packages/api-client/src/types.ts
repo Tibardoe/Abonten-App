@@ -1310,6 +1310,8 @@ export type EventShow = {
   venue_name: string | null;
   venue_address: string | null;
   city: string | null;
+  /** Postponed with no new date yet. */
+  postponed: boolean;
 };
 
 // ---- complimentary tickets ------------------------------------------------
@@ -1388,12 +1390,21 @@ export type ClaimShowPassResult =
 
 // ---- moving an event ----------------------------------------------------
 // docs/architecture/event-reschedule.md. The organizer moves a published
-// single-date event that has not started, with a message; every holder is
-// told and may keep their tickets or give them back (ticket price and
-// service fee) until refundUntil.
+// event that has not started (or a postponed one) to a new date, a new
+// venue or both, moves one date of an event with several dates, or
+// postpones it with no new date yet, with a message; every holder is told
+// and may keep their tickets or give them back (ticket price and service
+// fee) until refundUntil (while postponed: until the new date is set).
+
+export type RescheduleDate = {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  moves: number;
+};
 
 export type RescheduleSetup = {
-  blocked: "not_published" | "several_dates" | "started" | "too_many" | null;
+  blocked: "not_published" | "started" | "too_many" | null;
   moves: number;
   maxMoves: number;
   holders: number;
@@ -1401,6 +1412,14 @@ export type RescheduleSetup = {
   startsAt: string | null;
   endsAt: string | null;
   timezone: string;
+  /** Postponed and waiting for its new date (since when). */
+  postponedAt: string | null;
+  canPostpone: boolean;
+  /** A seating plan: the venue can't change. */
+  seated: boolean;
+  venue: string | null;
+  /** An event with several dates: those still to come. */
+  dates: RescheduleDate[];
 };
 
 export type RescheduleSetupResult =
@@ -1408,9 +1427,15 @@ export type RescheduleSetupResult =
   | { status: 401 | 403 | 404 | 500; message: string };
 
 export type RescheduleEventBody = {
-  /** Instants, or wall-clock times in the event's zone. */
-  startsAt: string;
-  endsAt: string;
+  /** "Postponed, new date to come" (no date, no venue). */
+  postpone?: boolean;
+  /** One date of an event with several dates. */
+  occurrenceId?: string | null;
+  /** Instants, or wall-clock times in the venue's zone. */
+  startsAt?: string | null;
+  endsAt?: string | null;
+  /** A new venue in the same country. */
+  venue?: ShowVenueBody | null;
   message: string;
 };
 
@@ -1418,7 +1443,12 @@ export type RescheduleEventResult =
   | {
       status: 200;
       message: string;
-      data: { rescheduleId: string; holders: number; refundUntil: string };
+      data: {
+        rescheduleId: string;
+        holders: number;
+        /** Null after a postponement (open until the new date is set). */
+        refundUntil: string | null;
+      };
     }
   | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
 
@@ -1426,12 +1456,22 @@ export type HolderReschedule = {
   rescheduleId: string;
   eventId: string;
   title: string;
+  kind: "move" | "postpone";
+  /** The date of several that moved; null when the whole event moved. */
+  occurrenceId: string | null;
   previousStartsAt: string;
-  startsAt: string;
-  endsAt: string;
+  /** Null while postponed. */
+  startsAt: string | null;
+  endsAt: string | null;
   timezone: string;
+  /** The new venue, when it changed. */
+  venue: string | null;
+  previousVenue: string | null;
+  /** The event is postponed now. */
+  postponed: boolean;
   message: string;
-  refundUntil: string;
+  /** Null while postponed (open until the new date is set). */
+  refundUntil: string | null;
   refundOpen: boolean;
   choice: "keep" | "refund" | null;
   activeTickets: number;

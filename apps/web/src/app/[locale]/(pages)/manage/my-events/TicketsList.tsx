@@ -75,6 +75,7 @@ function TicketCard({
   // for an event that has already ended (or been cancelled) must not keep
   // reading as "Active" in the list.
   const eventEnded =
+    !event.event.postponed_at &&
     getEventStatus(
       event.event.starts_at,
       event.event.ends_at,

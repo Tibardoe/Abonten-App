@@ -14,11 +14,12 @@ const WHEN: Intl.DateTimeFormatOptions = {
   minute: "2-digit",
 };
 
-// On a ticket for an event the organizer moved
-// (docs/architecture/event-reschedule.md): the old and new dates, their
-// message, and the choice — keep the ticket, or give it back for the ticket
-// price and the service fee while the window is open. Nothing for an event
-// that never moved. GET/POST /api/mobile/events/:eventId/reschedule[/keep|
+// On a ticket for an event the organizer moved or postponed
+// (docs/architecture/event-reschedule.md): what changed (the date, the
+// venue, one date of several, or no date yet), their message, and the
+// choice — keep the ticket, or give it back for the ticket price and the
+// service fee while the window is open (while postponed: until the new date
+// is set). Nothing for an event that never moved. GET/POST /api/mobile/events/:eventId/reschedule[/keep|
 // /refund] — the same cores as the website's ticket card.
 export function RescheduleNotice({ eventId }: { eventId: string }) {
   const t = useTranslations("tickets");
@@ -78,6 +79,35 @@ export function RescheduleNotice({ eventId }: { eventId: string }) {
   // Keeping is not final: until the window closes the holder may still
   // give the tickets back.
   const canChoose = move.refundOpen && move.activeTickets > 0;
+  const postponed = move.kind === "postpone";
+  const dateChanged =
+    !postponed && !!move.startsAt && move.startsAt !== move.previousStartsAt;
+  const venueOnly = !!move.venue && !dateChanged && !postponed;
+  const heading = postponed
+    ? t("rescheduleBannerTitlePostponed")
+    : move.occurrenceId
+      ? t("rescheduleBannerTitleOneDate")
+      : venueOnly
+        ? t("rescheduleBannerTitleVenue")
+        : t("rescheduleBannerTitle");
+  const choiceLine =
+    move.choice === "keep"
+      ? venueOnly
+        ? t("rescheduleKeptNoteVenue")
+        : t("rescheduleKeptNote")
+      : move.refundOpen
+        ? postponed || !move.refundUntil
+          ? t("rescheduleBannerChoicePostponed")
+          : venueOnly
+            ? t("rescheduleBannerChoiceVenue", {
+                refundUntil: when(move.refundUntil),
+              })
+            : t("rescheduleBannerChoice", {
+                refundUntil: when(move.refundUntil),
+              })
+        : move.refundUntil
+          ? t("rescheduleClosedNote", { refundUntil: when(move.refundUntil) })
+          : null;
   const busy = keep.isPending || giveBack.isPending;
   const giveBackLabel = amount
     ? t("rescheduleRefundAmount", { amount })
@@ -103,31 +133,39 @@ export function RescheduleNotice({ eventId }: { eventId: string }) {
 
   return (
     <View className="w-full gap-2 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950">
-      <AppText variant="bodyStrong">{t("rescheduleBannerTitle")}</AppText>
-      <AppText variant="small">
-        {t("rescheduleBannerDates", {
-          previous: when(move.previousStartsAt),
-          now: when(move.startsAt),
-        })}
-      </AppText>
+      <AppText variant="bodyStrong">{heading}</AppText>
+      {postponed ? (
+        <AppText variant="small">
+          {t("rescheduleBannerPostponed", {
+            previous: when(move.previousStartsAt),
+          })}
+        </AppText>
+      ) : dateChanged && move.startsAt ? (
+        <AppText variant="small">
+          {t("rescheduleBannerDates", {
+            previous: when(move.previousStartsAt),
+            now: when(move.startsAt),
+          })}
+        </AppText>
+      ) : null}
+      {move.venue ? (
+        <AppText variant="small">
+          {move.previousVenue
+            ? t("rescheduleBannerVenues", {
+                previous: move.previousVenue,
+                venue: move.venue,
+              })
+            : t("rescheduleBannerVenue", { venue: move.venue })}
+        </AppText>
+      ) : null}
       <View className="gap-0.5">
         <AppText variant="caption" tone="muted">
           {t("rescheduleBannerMessageLabel")}
         </AppText>
         <AppText variant="small">{move.message}</AppText>
       </View>
-      {move.activeTickets > 0 ? (
-        <AppText variant="meta">
-          {move.choice === "keep"
-            ? t("rescheduleKeptNote")
-            : move.refundOpen
-              ? t("rescheduleBannerChoice", {
-                  refundUntil: when(move.refundUntil),
-                })
-              : t("rescheduleClosedNote", {
-                  refundUntil: when(move.refundUntil),
-                })}
-        </AppText>
+      {move.activeTickets > 0 && choiceLine ? (
+        <AppText variant="meta">{choiceLine}</AppText>
       ) : null}
       {canChoose && move.refundBlocked ? (
         <AppText variant="meta">{move.refundBlocked}</AppText>

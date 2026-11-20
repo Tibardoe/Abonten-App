@@ -178,8 +178,14 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   event_cancelled_free: n("event_cancelled_free"),
   event_reminder: n("event_reminder"),
   // The organizer moved an event the reader holds a ticket for
-  // (event_reschedule(), migration 20261120170000).
+  // (event_reschedule(), migrations 20261120170000 and 20261120210000): a
+  // new date; a new date and venue; a new venue; one date of several; or
+  // postponed with no date yet.
   event_rescheduled: n("event_rescheduled"),
+  event_moved_venue: n("event_moved_venue"),
+  event_venue_changed: n("event_venue_changed"),
+  event_date_moved: n("event_date_moved"),
+  event_postponed: n("event_postponed"),
   area_launched: n("area_launched"),
   digest_organizer: n("digest_organizer"),
   digest_organizer_unknown: n("digest_organizer_unknown"),
@@ -324,7 +330,8 @@ const isEmpty = (value: unknown) =>
  *    the missing-name case itself instead of the writer storing an English
  *    stand-in like "the place";
  *  - an empty `actor` reads "Someone";
- *  - `startsAt` (+ `timezone`) becomes `when` and `dayTime`, `deadlineAt`
+ *  - `startsAt` (+ `timezone`) becomes `when` and `dayTime`,
+ *    `previousStartsAt` becomes `previousWhen`, `deadlineAt`
  *    becomes `deadline` (same clock), `period` becomes `month` and
  *    `monthYear`, `fromDate` becomes `from`;
  *  - `durationLabel` (a tier's English "3 days") becomes `duration`.
@@ -359,6 +366,10 @@ function valuesFor(
     const tz = typeof params.timezone === "string" ? params.timezone : null;
     values.when = whenText(params.startsAt, tz, locale);
     values.dayTime = dayTimeText(params.startsAt, tz, locale);
+  }
+  if (typeof params.previousStartsAt === "string") {
+    const tz = typeof params.timezone === "string" ? params.timezone : null;
+    values.previousWhen = whenText(params.previousStartsAt, tz, locale);
   }
   if (typeof params.deadlineAt === "string") {
     const tz = typeof params.timezone === "string" ? params.timezone : null;

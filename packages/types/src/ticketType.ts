@@ -102,6 +102,8 @@ export type UserTicketType = {
     flyer_version: string;
     starts_at: string | null;
     ends_at: string | null;
+    /** Postponed with no new date yet (docs/architecture/event-reschedule.md). */
+    postponed_at?: string | null;
     status: string;
     created_at: string;
     event_code: string;

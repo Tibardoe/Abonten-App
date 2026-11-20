@@ -50,11 +50,11 @@ Si un organisateur annule, Abonten, automatiquement :
 
 Vous n'avez rien à faire. Si un remboursement affiche *Échec du remboursement*, utilisez *Relancer le remboursement* ou contactez l'assistance.
 
-## Quand l'organisateur déplace un événement
+## Quand l'organisateur déplace ou reporte un événement
 
-Si un organisateur déplace un événement à une nouvelle date, vous êtes prévenu dans l'application, par push et par e-mail, avec son message. Votre billet reste valable pour la nouvelle date : vous n'avez rien à faire pour le garder.
+Si un organisateur déplace un événement (une nouvelle date, un nouveau lieu, ou la date que vous avez d'un événement à plusieurs dates) ou le reporte, vous êtes prévenu dans l'application, par push et par e-mail, avec son message. Votre billet reste valable : vous n'avez rien à faire pour le garder.
 
-Si vous ne pouvez pas venir à la nouvelle date, ouvrez votre billet et choisissez **Être remboursé** avant la date indiquée (7 jours au plus, et au plus tard 48 heures avant la nouvelle date). Vous récupérez le prix du billet **et les frais de service**, quelle que soit la politique de remboursement de l'événement. Un billet qu'on vous a envoyé est remboursé à la personne qui l'a payé.
+Si vous ne pouvez pas venir, ouvrez votre billet et choisissez **Être remboursé** avant la date indiquée (7 jours au plus, et au plus tard 48 heures avant la date). Tant qu'un événement est reporté, Être remboursé reste possible jusqu'à ce que l'organisateur fixe la nouvelle date. Vous récupérez le prix du billet **et les frais de service**, quelle que soit la politique de remboursement de l'événement. Un billet qu'on vous a envoyé est remboursé à la personne qui l'a payé.
 
 ## Réservations dans les lieux
 

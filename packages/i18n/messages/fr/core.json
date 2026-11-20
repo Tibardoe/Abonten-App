@@ -183,7 +183,8 @@
     "in_progress": "Vente de billets fermée",
     "no_tickets": "Billets pas encore disponibles",
     "rsvp": "Réserver une place",
-    "sold_out": "Complet"
+    "sold_out": "Complet",
+    "postponed": "Reporté"
   },
   "eventDates": {
     "notice": "L'heure de début ou de fin doit être dans au moins {hours} heures",
@@ -1025,7 +1026,23 @@
     },
     "event_rescheduled": {
       "title": "{title} a été déplacé",
-      "body": "Désormais {dayTime}. Ouvrez votre billet pour le garder ou être remboursé intégralement."
+      "body": "Désormais le {when}. Ouvrez votre billet pour le garder ou être remboursé intégralement."
+    },
+    "event_moved_venue": {
+      "title": "{title} a été déplacé",
+      "body": "Désormais le {when} à {venue}. Ouvrez votre billet pour le garder ou être remboursé intégralement."
+    },
+    "event_venue_changed": {
+      "title": "{title} change de lieu",
+      "body": "Désormais à {venue}. Ouvrez votre billet pour le garder ou être remboursé intégralement."
+    },
+    "event_date_moved": {
+      "title": "{title} : votre date a été déplacée",
+      "body": "Le {previousWhen} devient le {when}. Ouvrez votre billet pour le garder ou être remboursé intégralement."
+    },
+    "event_postponed": {
+      "title": "{title} est reporté",
+      "body": "Une nouvelle date est à venir. Ouvrez votre billet pour le garder ou être remboursé intégralement."
     }
   },
   "openStatus": {
