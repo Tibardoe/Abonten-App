@@ -1375,6 +1375,65 @@ export type ClaimShowPassResult =
   | { status: 200; message?: string; data: { ticketId: string } }
   | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
 
+// ---- moving an event ----------------------------------------------------
+// docs/architecture/event-reschedule.md. The organizer moves a published
+// single-date event that has not started, with a message; every holder is
+// told and may keep their tickets or give them back (ticket price and
+// service fee) until refundUntil.
+
+export type RescheduleSetup = {
+  blocked: "not_published" | "several_dates" | "started" | "too_many" | null;
+  moves: number;
+  maxMoves: number;
+  holders: number;
+  title: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  timezone: string;
+};
+
+export type RescheduleSetupResult =
+  | { status: 200; message?: string; data: RescheduleSetup }
+  | { status: 401 | 403 | 404 | 500; message: string };
+
+export type RescheduleEventBody = {
+  /** Instants, or wall-clock times in the event's zone. */
+  startsAt: string;
+  endsAt: string;
+  message: string;
+};
+
+export type RescheduleEventResult =
+  | {
+      status: 200;
+      message: string;
+      data: { rescheduleId: string; holders: number; refundUntil: string };
+    }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+export type HolderReschedule = {
+  rescheduleId: string;
+  eventId: string;
+  title: string;
+  previousStartsAt: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  message: string;
+  refundUntil: string;
+  refundOpen: boolean;
+  choice: "keep" | "refund" | null;
+  activeTickets: number;
+  refund: { cashMinor: number; creditMinor: number; currency: string } | null;
+  refundBlocked: string | null;
+};
+
+export type HolderRescheduleResult =
+  | { status: 200; message?: string; data: HolderReschedule | null }
+  | { status: 401 | 500; message: string };
+
+export type RescheduleChoiceResult = { status: number; message: string };
+
 // ---- group prices -------------------------------------------------------
 // An event's automatic group prices ("10 or more tickets: 10% off"), up to
 // three, a bigger group always getting more off. Editable any time (a

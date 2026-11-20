@@ -102,5 +102,18 @@
   "passShowStarted": "Commencée",
   "passShowFull": "Plus de place pour les pass",
   "couldNotChooseShow": "Cette représentation n'a pas pu être choisie. Réessayez.",
-  "passCouldNotLoad": "Les représentations de ce pass n'ont pas pu être chargées. Réessayez plus tard."
+  "passCouldNotLoad": "Les représentations de ce pass n'ont pas pu être chargées. Réessayez plus tard.",
+  "rescheduleBannerTitle": "Cet événement a été déplacé",
+  "rescheduleBannerDates": "Avant : {previous}. Maintenant : {now}.",
+  "rescheduleBannerMessageLabel": "De la part de l'organisateur",
+  "rescheduleBannerChoice": "Votre billet est valable pour la nouvelle date. Si vous ne pouvez pas venir, vous pouvez être remboursé intégralement, frais de service compris, jusqu'au {refundUntil}.",
+  "rescheduleKeptNote": "Vous gardez votre billet pour la nouvelle date.",
+  "rescheduleClosedNote": "Les remboursements liés à ce changement ont fermé le {refundUntil}. Votre billet est valable pour la nouvelle date.",
+  "rescheduleKeep": "{count, plural, one {Garder mon billet} other {Garder mes billets}}",
+  "rescheduleRefundAmount": "Être remboursé · {amount}",
+  "rescheduleGiveBack": "{count, plural, one {Rendre mon billet} other {Rendre mes billets}}",
+  "rescheduleRefundConfirmTitle": "{count, plural, one {Rendre votre billet ?} other {Rendre vos # billets ?}}",
+  "rescheduleRefundConfirmPaid": "{amount} sera reversé sur la carte ou le mobile money utilisé pour payer. Cette action est définitive.",
+  "rescheduleRefundConfirmFree": "Votre place revient à l'organisateur. Cette action est définitive.",
+  "couldNotSaveChoice": "Impossible d'enregistrer. Réessayez."
 }

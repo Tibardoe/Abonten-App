@@ -345,43 +345,53 @@ export async function updateEventCore(
     };
   }
 
-  // Replace the schedule wholesale: no other table has an FK to
-  // event_occurrence.id (tickets/attendance are keyed by event_id), so a
-  // full delete + reinsert is safe — same approach postEventCore uses.
-  const { error: deleteOccurrenceError } = await supabase
-    .from("event_occurrence")
-    .delete()
-    .eq("event_id", eventId);
-
-  if (deleteOccurrenceError) {
-    return {
-      status: 500,
-      message: userFacingError(
-        "Error updating event dates",
-        deleteOccurrenceError,
-      ),
-    };
-  }
-
-  if (isSpecificEvent && specific_dates) {
-    const occurrencePayload = specific_dates.map((entry) => ({
-      event_id: eventId,
-      starts_at: toIsoString(entry.start),
-      ends_at: toIsoString(entry.end),
-    }));
-
-    const { error: insertOccurrenceError } = await supabase
+  // The schedule is rewritten only when it changed. Tickets, checkouts and
+  // Pay small small plans point at their date (occurrence_id, ON DELETE SET
+  // NULL), so deleting and re-adding unchanged dates on every save cut those
+  // links (dates themselves are locked once a ticket is confirmed, above).
+  const scheduleChanged = haveEventDatesChanged(
+    { starts_at: existingEvent.starts_at, ends_at: existingEvent.ends_at },
+    existingEvent.event_occurrence ?? [],
+    isSpecificEvent ? (specific_dates ?? null) : null,
+    isSpecificEvent ? null : (starts_at ?? null),
+    isSpecificEvent ? null : (ends_at ?? null),
+  );
+  if (scheduleChanged) {
+    const { error: deleteOccurrenceError } = await supabase
       .from("event_occurrence")
-      .insert(occurrencePayload);
+      .delete()
+      .eq("event_id", eventId);
 
-    if (insertOccurrenceError) {
+    if (deleteOccurrenceError) {
       return {
         status: 500,
         message: userFacingError(
-          "Error inserting event occurrences",
-          insertOccurrenceError,
+          "Error updating event dates",
+          deleteOccurrenceError,
         ),
       };
+    }
+
+    if (isSpecificEvent && specific_dates) {
+      const occurrencePayload = specific_dates.map((entry) => ({
+        event_id: eventId,
+        starts_at: toIsoString(entry.start),
+        ends_at: toIsoString(entry.end),
+      }));
+
+      const { error: insertOccurrenceError } = await supabase
+        .from("event_occurrence")
+        .insert(occurrencePayload);
+
+      if (insertOccurrenceError) {
+        return {
+          status: 500,
+          message: userFacingError(
+            "Error inserting event occurrences",
+            insertOccurrenceError,
+          ),
+        };
+      }
     }
   }
 

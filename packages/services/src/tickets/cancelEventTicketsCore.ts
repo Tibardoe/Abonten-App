@@ -26,6 +26,15 @@ import { ticketsOfPayment } from "./ticketsOfPayment";
 // The web actions getEventCancelQuote / cancelEventTickets and
 // POST /api/mobile/tickets/cancel-event[/quote] run this.
 
+/**
+ * After the organizer moved the event (rescheduleRefundCore): the event's
+ * refund policy does not apply, and a cash payment's refund includes the
+ * tickets' share of the service fee (ticket.refund_includes_fee, read by
+ * refund_prepare). Payments with Abonten Credit or Pay small small keep
+ * their whole-payment rules.
+ */
+export type EventCancelOptions = { afterReschedule?: boolean };
+
 type TicketRow = {
   id: string;
   transaction_id: string | null;
@@ -56,6 +65,7 @@ async function planEventCancel(
   supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
+  options: EventCancelOptions = {},
 ): Promise<Plan> {
   const { data, error } = await supabase
     .from("ticket")
@@ -123,7 +133,10 @@ async function planEventCancel(
   // The event's refund policy, or a show that has started: one ticket the
   // buyer may not cancel stops the whole "cancel all" (they share a policy;
   // only a multi-date event's dates differ).
-  const refusal = await buyerCancelGate(targets.map((t) => t.id));
+  // After a move the holder may give tickets back whatever the policy says.
+  const refusal = options.afterReschedule
+    ? null
+    : await buyerCancelGate(targets.map((t) => t.id));
   if (refusal) {
     return { ok: false, status: refusal.status, message: refusal.message };
   }
@@ -167,8 +180,9 @@ export async function eventCancelQuoteCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
+  options: EventCancelOptions = {},
 ): Promise<EventCancelQuoteResult> {
-  const plan = await planEventCancel(supabase, userId, eventId);
+  const plan = await planEventCancel(supabase, userId, eventId, options);
   if (!plan.ok) return { status: plan.status, message: plan.message };
 
   const service = getSupabaseServiceClient();
@@ -185,10 +199,12 @@ export async function eventCancelQuoteCore(
       ? await service.rpc("get_transaction_refundable_amount", {
           p_transaction_id: payment.id,
         })
-      : await service.rpc("refund_quote_amount", {
-          p_transaction_id: payment.id,
-          p_ticket_ids: ticketIds,
-        });
+      : await service.rpc(
+          options.afterReschedule
+            ? "refund_quote_amount_with_fee"
+            : "refund_quote_amount",
+          { p_transaction_id: payment.id, p_ticket_ids: ticketIds },
+        );
     if (error) {
       logger.error(`Failed pricing an event's refund: ${error.message}`);
       priced = false;
@@ -229,8 +245,9 @@ export async function cancelEventTicketsCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
+  options: EventCancelOptions = {},
 ): Promise<CancelEventTicketsResult> {
-  const plan = await planEventCancel(supabase, userId, eventId);
+  const plan = await planEventCancel(supabase, userId, eventId, options);
   if (!plan.ok) return { status: plan.status, message: plan.message };
   if (plan.blocked === "other_events") {
     return { status: 409, message: tr("someOfTheseTicketsWerePaidTogether") };
@@ -246,7 +263,11 @@ export async function cancelEventTicketsCore(
   for (const target of plan.targets) {
     const { data: rows, error } = await service
       .from("ticket")
-      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .update({
+        status: "cancelled",
+        updated_at: new Date().toISOString(),
+        ...(options.afterReschedule ? { refund_includes_fee: true } : {}),
+      })
       .eq("id", target.id)
       .eq("user_id", userId)
       .eq("status", "active")

@@ -2,7 +2,7 @@
 title: Reembolsos y cancelaciones
 summary: Cancelar una entrada, qué se reembolsa (y qué no), cuánto tardan los reembolsos y qué pasa cuando un organizador cancela un evento.
 order: 6
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -49,6 +49,12 @@ Si un organizador cancela, Abonten automáticamente:
 3. te avisa en la aplicación y, si tus entradas eran de pago, por correo.
 
 No tienes que hacer nada. Si un reembolso muestra *Reembolso fallido*, usa *Reintentar reembolso* o contacta con soporte.
+
+## Cuando el organizador cambia un evento de fecha
+
+Si un organizador cambia un evento a una nueva fecha, recibes el aviso en la app, por push y por correo, con su mensaje. Tu entrada sigue valiendo para la nueva fecha: no tienes que hacer nada para conservarla.
+
+Si no puedes ir en la nueva fecha, abre tu entrada y elige **Pedir el reembolso** antes de la fecha que indica (7 días como máximo, y como muy tarde 48 horas antes de la nueva fecha). Recuperas el precio de la entrada **y la comisión de servicio**, diga lo que diga la política de reembolso del evento. Una entrada que te enviaron se reembolsa a la persona que la pagó.
 
 ## Reservas en lugares
 

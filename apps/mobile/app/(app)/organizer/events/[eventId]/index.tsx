@@ -583,6 +583,12 @@ function EventInsightsScreen() {
               label={tEvents("giveFreeTickets")}
             />
           ) : null}
+          {can("events.manage") ? (
+            <TeamNavRow
+              href={`/(app)/organizer/events/${eventId}/reschedule`}
+              label={tEvents("rescheduleTitle")}
+            />
+          ) : null}
         </View>
       ) : null}
 
@@ -734,6 +740,12 @@ function TeamEventPanel() {
           <TeamNavRow
             href={`/(app)/organizer/events/${id}/comps`}
             label={tEvents("giveFreeTickets")}
+          />
+        ) : null}
+        {can("events.manage") ? (
+          <TeamNavRow
+            href={`/(app)/organizer/events/${id}/reschedule`}
+            label={tEvents("rescheduleTitle")}
           />
         ) : null}
         <TeamNavRow

@@ -177,6 +177,9 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   event_cancelled_paid: n("event_cancelled_paid"),
   event_cancelled_free: n("event_cancelled_free"),
   event_reminder: n("event_reminder"),
+  // The organizer moved an event the reader holds a ticket for
+  // (event_reschedule(), migration 20261120170000).
+  event_rescheduled: n("event_rescheduled"),
   area_launched: n("area_launched"),
   digest_organizer: n("digest_organizer"),
   digest_organizer_unknown: n("digest_organizer_unknown"),

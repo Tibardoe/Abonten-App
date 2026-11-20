@@ -1022,6 +1022,10 @@
     "complimentary_tickets": {
       "title": "{actor} vous a offert {count, plural, one {un billet} other {# billets}}",
       "body": "{count, plural, one {Votre billet} other {Vos billets}} pour {title} {count, plural, one {est} other {sont}} dans Billets."
+    },
+    "event_rescheduled": {
+      "title": "{title} a été déplacé",
+      "body": "Désormais {dayTime}. Ouvrez votre billet pour le garder ou être remboursé intégralement."
     }
   },
   "openStatus": {

@@ -102,5 +102,18 @@
   "passShowStarted": "Started",
   "passShowFull": "No places for passes",
   "couldNotChooseShow": "That show couldn't be chosen. Try again.",
-  "passCouldNotLoad": "This pass's shows couldn't be loaded. Try again later."
+  "passCouldNotLoad": "This pass's shows couldn't be loaded. Try again later.",
+  "rescheduleBannerTitle": "This event has moved",
+  "rescheduleBannerDates": "Was {previous}. Now {now}.",
+  "rescheduleBannerMessageLabel": "From the organizer",
+  "rescheduleBannerChoice": "Your ticket is valid for the new date. If you can't make it, you can get a full refund, service fee included, until {refundUntil}.",
+  "rescheduleKeptNote": "You're keeping your ticket for the new date.",
+  "rescheduleClosedNote": "Refunds for this change closed on {refundUntil}. Your ticket is valid for the new date.",
+  "rescheduleKeep": "{count, plural, one {Keep my ticket} other {Keep my tickets}}",
+  "rescheduleRefundAmount": "Get a refund · {amount}",
+  "rescheduleGiveBack": "{count, plural, one {Give my ticket back} other {Give my tickets back}}",
+  "rescheduleRefundConfirmTitle": "{count, plural, one {Give your ticket back?} other {Give your # tickets back?}}",
+  "rescheduleRefundConfirmPaid": "{amount} goes back to the card or mobile money you paid with. This can't be undone.",
+  "rescheduleRefundConfirmFree": "Your place goes back to the organizer. This can't be undone.",
+  "couldNotSaveChoice": "Couldn't save that. Try again."
 }

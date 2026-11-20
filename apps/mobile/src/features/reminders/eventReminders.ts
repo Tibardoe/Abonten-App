@@ -220,7 +220,12 @@ export async function reconcileEventReminder(input: {
     return;
   }
 
-  if (input.startsAtIso !== record.startsAtIso) {
+  // Compared as instants: the same time can come back written differently
+  // ("…+00:00" from the database, "…Z" from elsewhere).
+  if (
+    new Date(input.startsAtIso).getTime() !==
+    new Date(record.startsAtIso).getTime()
+  ) {
     await setEventReminders({
       eventId: input.eventId,
       eventTitle: record.eventTitle,

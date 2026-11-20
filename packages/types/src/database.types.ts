@@ -3922,6 +3922,99 @@ export type Database = {
           },
         ]
       }
+      event_reschedule: {
+        Row: {
+          created_at: string
+          ends_at: string
+          event_id: string
+          holders: number
+          id: string
+          message: string
+          moved_by: string | null
+          previous_ends_at: string | null
+          previous_starts_at: string
+          refund_until: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          event_id: string
+          holders?: number
+          id?: string
+          message: string
+          moved_by?: string | null
+          previous_ends_at?: string | null
+          previous_starts_at: string
+          refund_until: string
+          starts_at: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          event_id?: string
+          holders?: number
+          id?: string
+          message?: string
+          moved_by?: string | null
+          previous_ends_at?: string | null
+          previous_starts_at?: string
+          refund_until?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reschedule_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reschedule_moved_by_fkey"
+            columns: ["moved_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reschedule_choice: {
+        Row: {
+          choice: string
+          decided_at: string
+          reschedule_id: string
+          user_id: string
+        }
+        Insert: {
+          choice: string
+          decided_at?: string
+          reschedule_id: string
+          user_id: string
+        }
+        Update: {
+          choice?: string
+          decided_at?: string
+          reschedule_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reschedule_choice_reschedule_id_fkey"
+            columns: ["reschedule_id"]
+            isOneToOne: false
+            referencedRelation: "event_reschedule"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reschedule_choice_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_review: {
         Row: {
           comment: string | null
@@ -13424,6 +13517,7 @@ export type Database = {
           occurrence_id: string | null
           qr_public_id: string
           qr_version: string
+          refund_includes_fee: boolean
           seat_number: string | null
           status: string
           ticket_checkout_id: string | null
@@ -13447,6 +13541,7 @@ export type Database = {
           occurrence_id?: string | null
           qr_public_id: string
           qr_version: string
+          refund_includes_fee?: boolean
           seat_number?: string | null
           status?: string
           ticket_checkout_id?: string | null
@@ -13468,6 +13563,7 @@ export type Database = {
           occurrence_id?: string | null
           qr_public_id?: string
           qr_version?: string
+          refund_includes_fee?: boolean
           seat_number?: string | null
           status?: string
           ticket_checkout_id?: string | null
@@ -14382,6 +14478,7 @@ export type Database = {
           currency: string
           failed_at: string | null
           failure_detail: string | null
+          fee_amount: number
           id: string
           processed_at: string | null
           provider_refund_id: string | null
@@ -14397,6 +14494,7 @@ export type Database = {
           currency: string
           failed_at?: string | null
           failure_detail?: string | null
+          fee_amount?: number
           id?: string
           processed_at?: string | null
           provider_refund_id?: string | null
@@ -14412,6 +14510,7 @@ export type Database = {
           currency?: string
           failed_at?: string | null
           failure_detail?: string | null
+          fee_amount?: number
           id?: string
           processed_at?: string | null
           provider_refund_id?: string | null
@@ -16767,6 +16866,20 @@ export type Database = {
         }
         Returns: string
       }
+      event_reschedule: {
+        Args: {
+          p_actor: string
+          p_ends_at: string
+          p_event_id: string
+          p_message: string
+          p_starts_at: string
+        }
+        Returns: {
+          holders: number
+          refund_until: string
+          reschedule_id: string
+        }[]
+      }
       event_series_add_pass: {
         Args: {
           p_event_id: string
@@ -17502,6 +17615,17 @@ export type Database = {
         Returns: {
           attendance_count: number
           event_id: string
+        }[]
+      }
+      get_event_reschedule: {
+        Args: { p_event_id: string }
+        Returns: {
+          message: string
+          moved_at: string
+          moves: number
+          previous_starts_at: string
+          refund_until: string
+          starts_at: string
         }[]
       }
       get_event_shows: {
@@ -18803,6 +18927,10 @@ export type Database = {
           provider_reference: string
           provider_transaction_id: string
         }[]
+      }
+      refund_quote_amount_with_fee: {
+        Args: { p_ticket_ids: string[]; p_transaction_id: string }
+        Returns: number
       }
       refund_retry_candidates: {
         Args: { p_limit?: number }

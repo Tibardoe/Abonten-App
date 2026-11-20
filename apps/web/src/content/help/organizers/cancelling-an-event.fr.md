@@ -2,14 +2,14 @@
 title: Annuler un événement
 summary: Ce qu'il advient des billets, des remboursements, des participants et de vos gains quand vous annulez, et les alternatives à l'annulation.
 order: 4
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
 
 # Annuler un événement
 
-L'annulation est **définitive et ne peut pas être défaite**. Tant qu'aucun billet n'est confirmé, vous pouvez simplement modifier la date ou le lieu ; ensuite, ils sont verrouillés pour protéger les personnes qui ont déjà un billet.
+L'annulation est **définitive et ne peut pas être défaite**. Tant qu'aucun billet n'est confirmé, vous pouvez simplement modifier la date ou le lieu ; ensuite, ils sont verrouillés pour protéger les personnes qui ont déjà un billet, et vous changez la date avec **Déplacer à une nouvelle date** (ci-dessous).
 
 ## Comment annuler
 
@@ -35,7 +35,11 @@ Une promotion payante sur un événement annulé n'est pas remboursée.
 
 ## Déplacer l'événement à une autre date
 
-Abonten n'a pas d'état « reporté ». Tant qu'aucun billet n'est confirmé, modifiez les dates de l'événement. Une fois des billets confirmés, la date et le lieu ne peuvent plus changer : annulez l'événement (les acheteurs récupèrent le prix du billet), créez un nouvel événement à la nouvelle date et indiquez où le trouver dans la description de l'événement annulé.
+Tant qu'aucun billet n'est confirmé, modifiez les dates de l'événement. Une fois que des personnes ont des billets, utilisez **Déplacer à une nouvelle date** (site : Gérer › Détails ; application : le menu de l'événement) : choisissez la nouvelle date, les heures de début et de fin, et écrivez un message aux détenteurs de billets. Chaque détenteur est prévenu tout de suite dans l'application, par push et par e-mail, avec votre message.
+
+Leurs billets restent valables pour la nouvelle date. Ceux qui ne peuvent pas venir peuvent rendre leurs billets et être remboursés intégralement, **frais de service compris**, pendant 7 jours et au plus tard 48 heures avant la nouvelle date, quelle que soit la politique de remboursement choisie. Vos revenus sur ces billets sont annulés ; le reste est versé 48 heures après la nouvelle date.
+
+Un événement peut être déplacé deux fois au maximum. Un événement à plusieurs dates ne peut pas encore être déplacé, et le lieu ne peut pas changer : dans ces cas, annulez l'événement, créez-en un nouveau et indiquez où le trouver dans la description de l'événement annulé.
 
 ## Communiquer
 

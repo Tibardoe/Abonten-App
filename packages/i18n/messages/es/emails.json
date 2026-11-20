@@ -102,5 +102,18 @@
       "intro": "La alerta de {person} en Abonten se envió por error. No pasa nada.",
       "button": "Abrir la página"
     }
+  },
+  "reschedule": {
+    "subject": "{eventTitle} cambia al {newWhen}",
+    "preview": "{eventTitle} ahora es el {newWhen}. Tu entrada sigue valiendo.",
+    "heading": "Tu evento ha cambiado de fecha",
+    "intro": "{greeting} el organizador ha cambiado <strong>{eventTitle}</strong> a una nueva fecha. Tu entrada vale para la nueva fecha: no tienes que hacer nada para conservarla.",
+    "choice": "¿No puedes ir en la nueva fecha? Abre tu entrada y elige «Pedir el reembolso» antes del {refundUntil}: las entradas de pago recuperan el precio y la comisión de servicio.",
+    "event": "Evento",
+    "was": "Antes",
+    "now": "Ahora",
+    "messageLabel": "Mensaje del organizador",
+    "openTickets": "Abrir mis entradas",
+    "questions": "¿Preguntas sobre el evento? Escribe al organizador desde la página del evento en la app de Abonten."
   }
 }

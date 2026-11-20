@@ -5,6 +5,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useDirections } from "@/features/directions/DirectionsSheet";
 import { PassShowsPanel } from "@/features/passes/PassShowsPanel";
+import { RescheduleNotice } from "@/features/reschedule/RescheduleNotice";
 import { TicketSafetyButton } from "@/features/safety/TicketSafetyButton";
 import { TicketCodeRow } from "@/features/ticketTransfers/TicketCodeRow";
 import { TicketSendPanel } from "@/features/ticketTransfers/TicketSendPanel";
@@ -217,6 +218,12 @@ export default function TicketDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* The organizer moved the event: new date, their message, keep or
+            give back (nothing when it never moved). */}
+        {ticket.status === "active" && !cancelledByOrganizer && !eventEnded ? (
+          <RescheduleNotice eventId={ticket.event.id} />
+        ) : null}
 
         {/* Refund status — only for a cancelled ticket that had a payment */}
         {ticket.status === "cancelled" && refund ? (
