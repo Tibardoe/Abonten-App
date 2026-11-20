@@ -237,7 +237,10 @@ export async function updateEventTicketTypesCore(
   }
 
   const { data: existingTicketTypes, error: existingTicketTypesError } =
-    await supabase.from("ticket_type").select("id").eq("event_id", eventId);
+    await supabase
+      .from("ticket_type")
+      .select("id, type, pass_shows")
+      .eq("event_id", eventId);
 
   if (existingTicketTypesError) {
     logger.error(
@@ -247,6 +250,13 @@ export async function updateEventTicketTypesCore(
   }
 
   const existingIds = (existingTicketTypes ?? []).map((t) => t.id);
+  // A pass type (docs/architecture/show-passes.md) is set up from the run,
+  // not in this editor: it stays a pass when it is saved again by name.
+  const passShowsByName = new Map(
+    (existingTicketTypes ?? [])
+      .filter((t) => t.pass_shows != null)
+      .map((t) => [(t.type ?? "").trim().toLowerCase(), t.pass_shows]),
+  );
 
   if (existingIds.length > 0) {
     // Self-heal first (same idiom as every checkout kind's expiry sweep) so a
@@ -296,9 +306,13 @@ export async function updateEventTicketTypesCore(
     if (retire) return retire;
   }
 
-  const { error: insertError } = await supabase
-    .from("ticket_type")
-    .insert(ticketTypesPayload.map((t) => ({ ...t, event_id: eventId })));
+  const { error: insertError } = await supabase.from("ticket_type").insert(
+    ticketTypesPayload.map((t) => ({
+      ...t,
+      event_id: eventId,
+      pass_shows: passShowsByName.get(t.type.trim().toLowerCase()) ?? null,
+    })),
+  );
 
   if (insertError) {
     if (insertError.code === CHECK_VIOLATION) {

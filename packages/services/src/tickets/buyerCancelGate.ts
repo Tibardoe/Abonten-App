@@ -101,5 +101,37 @@ export async function buyerCancelGate(
       };
     }
   }
+
+  // A pass (docs/architecture/show-passes.md) is not cancelled once one of
+  // the shows chosen with it has started: its holder has had that show.
+  const { data: chosen, error: chosenError } = await getSupabaseServiceClient()
+    .from("ticket_checkout")
+    .select("pass_ticket_id, event:event_id ( starts_at ), ticket ( status )")
+    .in("pass_ticket_id", ticketIds)
+    .neq("status", "cancelled");
+  if (chosenError) {
+    logger.error(
+      `buyerCancelGate: reading pass shows failed (${chosenError.message})`,
+    );
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  for (const row of (chosen ?? []) as unknown as {
+    event: { starts_at: string | null } | null;
+    ticket: { status: string }[] | null;
+  }[]) {
+    const live = (row.ticket ?? []).some(
+      (t) => t.status === "active" || t.status === "used",
+    );
+    const started =
+      !!row.event?.starts_at &&
+      new Date(row.event.starts_at).getTime() <= now.getTime();
+    if (live && started) {
+      return {
+        status: 409,
+        reason: "started",
+        message: tr("passShowAlreadyStarted"),
+      };
+    }
+  }
   return null;
 }

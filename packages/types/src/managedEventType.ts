@@ -12,6 +12,8 @@ export type ManagedEventTicketType = {
   quantity: number | null;
   /** People one purchase admits (a Couple: 2). */
   admits?: number | null;
+  /** A pass: the shows of the run it covers (docs/architecture/show-passes.md). */
+  pass_shows?: number | null;
   currency: string | null;
   available_from?: string | null;
   available_until?: string | null;

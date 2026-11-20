@@ -519,5 +519,18 @@
   "compNotePlaceholder": "Família do elenco",
   "giveTickets": "Oferecer bilhetes",
   "couldNotGiveTickets": "Não foi possível oferecer os bilhetes. Tente de novo.",
-  "giveTicketsNeedsPublished": "Publique o evento para oferecer bilhetes."
+  "giveTicketsNeedsPublished": "Publique o evento para oferecer bilhetes.",
+  "passesTitle": "Passes para várias sessões",
+  "passesIntro": "Venda um só bilhete para várias sessões desta temporada. Fica à venda em cada sessão que falta; quem o compra entra na sessão para a qual o comprou e escolhe as outras a partir do bilhete.",
+  "passSummary": "{shows, plural, one {# sessão} other {# sessões}} · {price} · {limited, select, yes {{left, plural, one {resta # nesta sessão} other {restam # nesta sessão}}} other {sem limite}}",
+  "passName": "Nome do passe",
+  "passNamePlaceholder": "Passe do festival",
+  "passShows": "Sessões que cobre (incluindo a da compra)",
+  "passPrice": "Preço",
+  "passPriceIn": "Preço ({currency})",
+  "passesPerShow": "Passes por sessão",
+  "noLimit": "Sem limite",
+  "passesHowItWorks": "Quem tem passe ocupa lugares da quota de passes e dos lugares de cada sessão. O dinheiro do passe é liquidado com a sessão para a qual foi comprado, 48 horas depois.",
+  "sellPass": "Pôr este passe à venda",
+  "couldNotSellPass": "Não foi possível pôr o passe à venda. Tente de novo."
 }

@@ -943,5 +943,6 @@
   "groupPriceBeatsPromo": "Your group price is better than this code, so the code isn't used.",
   "groupDiscount": "Group discount",
   "saveGroupPrices": "Save group prices",
-  "groupPricesSaved": "Group prices saved"
+  "groupPricesSaved": "Group prices saved",
+  "passForShows": "A pass for {shows, plural, one {# show} other {# shows}}: this one, then choose the rest from your ticket"
 }

@@ -2,10 +2,12 @@ import { TimeField } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import {
   useAddEventShows,
+  useAddShowPass,
   useEventShows,
 } from "@/features/events/useEventShows";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   type ShowRunSlot,
   type Weekday,
@@ -56,7 +58,9 @@ export default function EventShowsScreen() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event")
-        .select("id, timezone, starts_at, ends_at, series_id")
+        .select(
+          "id, timezone, starts_at, ends_at, series_id, currency, ticket_type(id, type, price, quantity, pass_shows)",
+        )
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -65,6 +69,12 @@ export default function EventShowsScreen() {
   });
   const shows = useEventShows(id, !!event?.series_id).data ?? [];
   const add = useAddEventShows(id);
+  const addPass = useAddShowPass(id);
+  const passes = (event?.ticket_type ?? []).filter((x) => x.pass_shows != null);
+  const [passName, setPassName] = useState("");
+  const [passShows, setPassShows] = useState("3");
+  const [passPrice, setPassPrice] = useState("");
+  const [passQuantity, setPassQuantity] = useState("");
 
   const zone = event?.timezone ?? "Africa/Accra";
   const defaultDuration =
@@ -162,6 +172,23 @@ export default function EventShowsScreen() {
       router.replace(`/(app)/organizer/events/${res.data.shows[0].id}`);
     } else if (res.status !== 200) {
       toast.error(res.message ?? t("couldNotAddShows"));
+    }
+  }
+
+  async function sellPass() {
+    const res = await addPass.mutateAsync({
+      name: passName.trim(),
+      shows: Number(passShows),
+      price: Number(passPrice),
+      quantity: passQuantity.trim() ? Number(passQuantity) : null,
+    });
+    if (res.status === 200) {
+      toast.success(res.message ?? t("sellPass"));
+      setPassName("");
+      setPassPrice("");
+      setPassQuantity("");
+    } else {
+      toast.error(res.message ?? t("couldNotSellPass"));
     }
   }
 
@@ -334,6 +361,81 @@ export default function EventShowsScreen() {
           onPress={makeCopy}
         />
       </View>
+
+      {event?.series_id ? (
+        <View className="gap-3 border-t border-border pt-5">
+          <AppText variant="small" className="font-semibold">
+            {t("passesTitle")}
+          </AppText>
+          <AppText variant="meta">{t("passesIntro")}</AppText>
+          {passes.map((p) => (
+            <View key={p.id} className="flex-row justify-between gap-2">
+              <AppText variant="small" className="font-medium">
+                {p.type}
+              </AppText>
+              <AppText variant="caption" tone="muted">
+                {t("passSummary", {
+                  shows: p.pass_shows ?? 0,
+                  price: formatMoney(event.currency, p.price, { locale }),
+                  limited: p.quantity == null ? "no" : "yes",
+                  left: p.quantity ?? 0,
+                })}
+              </AppText>
+            </View>
+          ))}
+          <Field label={t("passName")}>
+            <Input
+              value={passName}
+              onChangeText={setPassName}
+              maxLength={60}
+              placeholder={t("passNamePlaceholder")}
+            />
+          </Field>
+          <Field label={t("passShows")}>
+            <Input
+              value={passShows}
+              onChangeText={setPassShows}
+              keyboardType="number-pad"
+            />
+          </Field>
+          <Field
+            label={
+              event.currency
+                ? t("passPriceIn", { currency: event.currency })
+                : t("passPrice")
+            }
+          >
+            <Input
+              value={passPrice}
+              onChangeText={setPassPrice}
+              keyboardType="decimal-pad"
+            />
+          </Field>
+          <Field label={t("passesPerShow")}>
+            <Input
+              value={passQuantity}
+              onChangeText={setPassQuantity}
+              keyboardType="number-pad"
+              placeholder={t("noLimit")}
+            />
+          </Field>
+          <AppText variant="caption" tone="muted">
+            {t("passesHowItWorks")}
+          </AppText>
+          <Button
+            title={t("sellPass")}
+            fullWidth
+            loading={addPass.isPending}
+            disabled={
+              addPass.isPending ||
+              !passName.trim() ||
+              Number(passShows) < 2 ||
+              !(Number(passPrice) > 0)
+            }
+            onPress={sellPass}
+          />
+        </View>
+      ) : null}
     </KeyboardAwareScrollView>
   );
 }

@@ -23,7 +23,7 @@ complianceReviewRequired: no
 - **Buyers see the run once.** Explore, every event list, search and the search suggestions keep one entry per run: the earliest show that matches what was asked (a date filter finds the run by its show inside the dates). The event page of any show lists the run's upcoming shows with seats left; picking one opens that show.
 - **Make a copy.** The same copy with one new date and no run: a separate listing to edit afterwards (the same play next season, a second edition of a festival).
 
-The older "several dates on one listing" (`event_occurrence`: one ticket valid on a chosen date, the seats shared by every date) stays as it is, for festivals and passes.
+The older "several dates on one listing" (`event_occurrence`: one ticket valid on a chosen date, the seats shared by every date) stays as it is. A pass for several shows of a run is [show-passes.md](show-passes.md).
 
 ## 2. What a new show copies (`event_add_show`)
 
@@ -34,7 +34,7 @@ One transaction per show, service role only, idempotent on a client request id (
 | Title, description, category and types, flyer, website, venue (point, address, place), capacity, registration setting | As they are. The flyer is shared; deleting a shared image is already guarded (`destroyAssetIfUnused`) |
 | Country, time zone, currency | As they are (fixed at creation) |
 | Refund policy | `refund_policy`, `refund_cutoff_hours` |
-| Ticket types | Name, price, people per ticket; **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
+| Ticket types | Name, price, people per ticket, passes (`pass_shows`, [show-passes.md](show-passes.md), since 2026-11-20); **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
 | Group prices | All tiers |
 | Promo codes | Those still running, with their expiry moved like the date and their uses back to 0 |
 | Promoter commission and promoters | The rate, invited-only, and the promoters still added |

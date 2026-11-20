@@ -256,7 +256,7 @@ The plan in [specifications/shows-seats-and-pricing.md](specifications/shows-sea
 | Y7 | 2 | A long run (an exhibition) | A show per day | Each day sold until it starts | **Decided (2026-11-19, built at the founder's request).** |
 | Y8 | 3 | First version of seating | Built: `seating_plan`, `ticket_seat`, trigger `ticket_assign_seat` ([architecture/assigned-seats.md](architecture/assigned-seats.md)) | Assigned seats, not a map | **Decided (2026-11-19, the founder chose it).** |
 | Y9 | 3 | Who sets up a venue's seating | Organizer's plans, website Manage › Details › Seating | The organizer; a plan reused per venue | **Decided (2026-11-19, built at the founder's request).** |
-| Y10 | 4 | What a pass is | Not built | N show credits for one series, each turned into a show's ticket | Planned default |
+| Y10 | 4 | What a pass is | Built: `ticket_type.pass_shows`, `ticket_pass_claim` ([architecture/show-passes.md](architecture/show-passes.md)) | N shows of one run: the one bought for plus N − 1 chosen from the ticket | **Decided (2026-11-20, built at the founder's request).** |
 | Y11 | 5 | Complimentary tickets | Built: `issue_complimentary_tickets`, website Manage › Details, app Give free tickets ([architecture/complimentary-tickets.md](architecture/complimentary-tickets.md)) | Organizer-issued, counted against seats, not refundable | **Decided (2026-11-20, built at the founder's request).** |
 | Y12 | 6 | What copying a listing keeps | `event_add_show` | Everything but dates, sales, reviews, featuring and photos; running promo codes move with the date | **Decided (2026-11-19, built at the founder's request).** |
 

@@ -943,5 +943,6 @@
   "groupPriceBeatsPromo": "Tu precio de grupo es mejor que este código, así que el código no se usa.",
   "groupDiscount": "Descuento de grupo",
   "saveGroupPrices": "Guardar los precios de grupo",
-  "groupPricesSaved": "Precios de grupo guardados"
+  "groupPricesSaved": "Precios de grupo guardados",
+  "passForShows": "Un abono para {shows, plural, one {# función} other {# funciones}}: esta, y luego eliges las demás desde tu entrada"
 }

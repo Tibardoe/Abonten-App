@@ -22,6 +22,8 @@ export type TicketType = {
   quantity?: number | null;
   /** People one purchase admits (a Couple: 2). */
   admits?: number | null;
+  /** A pass: the shows of the run it covers (docs/architecture/show-passes.md). */
+  pass_shows?: number | null;
   currency?: string;
   type: string;
   available_from?: Date;
@@ -74,6 +76,8 @@ export type UserTicketType = {
     currency: string;
     event_id: string;
     quantity: number;
+    /** A pass: the shows of the run it covers (docs/architecture/show-passes.md). */
+    pass_shows?: number | null;
     created_at: string;
     available_from: string | null;
     available_until: string | null;

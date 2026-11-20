@@ -943,5 +943,6 @@
   "groupPriceBeatsPromo": "Dein Gruppenpreis ist günstiger als dieser Code, daher wird der Code nicht verwendet.",
   "groupDiscount": "Gruppenrabatt",
   "saveGroupPrices": "Gruppenpreise speichern",
-  "groupPricesSaved": "Gruppenpreise gespeichert"
+  "groupPricesSaved": "Gruppenpreise gespeichert",
+  "passForShows": "Ein Pass für {shows, plural, one {# Vorstellung} other {# Vorstellungen}}: diese, die übrigen wählst du dann im Ticket"
 }

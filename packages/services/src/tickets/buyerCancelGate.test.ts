@@ -6,13 +6,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // the refusal from the rows: a started show, no refunds, a passed cut-off.
 
 let rows: unknown[] = [];
+let passRows: unknown[] = [];
 let readError: { message: string } | null = null;
 
 vi.mock("../supabase/serviceClient", () => ({
   getSupabaseServiceClient: () => ({
-    from: () => ({
+    from: (table: string) => ({
       select: () => ({
-        in: async () => ({ data: readError ? null : rows, error: readError }),
+        in: () => {
+          // The tickets, then the shows chosen with a pass among them.
+          const result =
+            table === "ticket_checkout"
+              ? { data: passRows, error: null }
+              : { data: readError ? null : rows, error: readError };
+          return Object.assign(Promise.resolve(result), {
+            neq: async () => result,
+          });
+        },
       }),
     }),
   }),
@@ -50,6 +60,7 @@ function ticket(input: {
 
 beforeEach(() => {
   rows = [];
+  passRows = [];
   readError = null;
 });
 
@@ -57,6 +68,29 @@ describe("buyerCancelGate", () => {
   it("lets a paid ticket go before the start by default", async () => {
     rows = [ticket({ paid: true })];
     expect(await buyerCancelGate(["t-1"], NOW)).toBeNull();
+  });
+
+  it("refuses a pass once a show chosen with it has started", async () => {
+    rows = [ticket({ paid: true })];
+    passRows = [
+      {
+        pass_ticket_id: "t-1",
+        event: { starts_at: hoursFromNow(48) },
+        ticket: [{ status: "active" }],
+      },
+    ];
+    expect(await buyerCancelGate(["t-1"], NOW)).toBeNull();
+    passRows = [
+      {
+        pass_ticket_id: "t-1",
+        event: { starts_at: hoursFromNow(-1) },
+        ticket: [{ status: "used" }],
+      },
+    ];
+    expect(await buyerCancelGate(["t-1"], NOW)).toMatchObject({
+      status: 409,
+      reason: "started",
+    });
   });
 
   it("refuses once the show has started, paid or free", async () => {

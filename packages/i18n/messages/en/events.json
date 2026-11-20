@@ -519,5 +519,18 @@
   "compNotePlaceholder": "Cast family",
   "giveTickets": "Give tickets",
   "couldNotGiveTickets": "The tickets couldn't be given. Try again.",
-  "giveTicketsNeedsPublished": "Publish the event to give tickets."
+  "giveTicketsNeedsPublished": "Publish the event to give tickets.",
+  "passesTitle": "Passes for several shows",
+  "passesIntro": "Sell one ticket for several shows of this run. It goes on sale on every show still to come; the buyer gets in to the show they bought it for and chooses the others from their ticket.",
+  "passSummary": "{shows, plural, one {# show} other {# shows}} · {price} · {limited, select, yes {{left, plural, one {# left at this show} other {# left at this show}}} other {no limit}}",
+  "passName": "Name of the pass",
+  "passNamePlaceholder": "Festival pass",
+  "passShows": "Shows it covers (the one bought for included)",
+  "passPrice": "Price",
+  "passPriceIn": "Price ({currency})",
+  "passesPerShow": "Passes each show takes",
+  "noLimit": "No limit",
+  "passesHowItWorks": "Pass holders take places from each show's pass stock and its seats. The pass's money settles with the show it was bought for, 48 hours after it.",
+  "sellPass": "Sell this pass",
+  "couldNotSellPass": "The pass couldn't be put on sale. Try again."
 }
