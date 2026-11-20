@@ -21,6 +21,7 @@ import {
   showRunProblemMessage,
 } from "@abonten/core/showRuns";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
@@ -32,6 +33,7 @@ import {
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 const UNIQUE_VIOLATION = "23505";
+const CHECK_VIOLATION = "23514";
 const CODE_ATTEMPTS = 3;
 
 export type AddEventShowsInput = {
@@ -196,6 +198,17 @@ export async function addEventShowsCore(
       ) {
         skipped += 1;
         continue;
+      }
+      // A refusal the database explains (a listing Abonten has hidden, a
+      // date gone by) is the person's to read when nothing was made yet.
+      if (lastError?.code === CHECK_VIOLATION && added.length === 0) {
+        return {
+          status: 409,
+          message: userFacingError(
+            `addEventShows: show at ${show.startsAt} refused for ${source.id}`,
+            lastError,
+          ),
+        };
       }
       logger.error(
         `addEventShows: show at ${show.startsAt} failed for ${source.id}: ${lastError?.message}`,

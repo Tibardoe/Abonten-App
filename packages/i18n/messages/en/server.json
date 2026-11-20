@@ -275,6 +275,7 @@
     "aSpotlightHoldsOneMediaItem": "A Spotlight holds one media item",
     "aStoryHoldsAtMostItems": "A Story holds at most {0} items",
     "aTicketCanOnlyBeCheckedIn": "A ticket can only be checked in or have its check-in undone",
+    "abontenHasHiddenThisListingSoIt": "Abonten has hidden this listing, so it can't be copied.",
     "accountRestricted": "Account restricted",
     "addAtLeastOneActiveTerritoryTo": "Add at least one active territory to the region before activating",
     "adjustmentRequestNotFound": "Adjustment request not found",
