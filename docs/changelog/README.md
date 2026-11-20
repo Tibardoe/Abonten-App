@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-20 — A public guide to team accounts
+
+- New page **abontenhub.com/teams**: what a team account is, the four steps to set one up (make the team, invite people, they accept, work under Managing as), what each role can do, an example line-up and the money rules, with drawn phone sketches in the app's own words. In every language; `noindex` while teams open to businesses one by one (beta), checked in `e2e/seo.spec.ts`. The help page on team accounts now says teams are opening business by business and links to the guide (all five languages).
+
 ## 2026-11-19 — Assigned seats
 
 - Organizers describe a venue once as a seating plan (sections, rows front first, seats per row) and choose which section each ticket type sells (website Manage › Details › Seating). When a ticket is issued by any path, the database gives it the best seat left — next to its order's seats, else the run closest to the middle of the frontmost row with room for the whole order — writes it on the ticket ("Stalls · C12") and records it in `ticket_seat` (a seat cannot be given twice). Cancelled tickets free their seat; sent tickets keep it. A section never sells more than its seats (deferred guard). Seats show on the web and app tickets and attendee lists. Migration `20261119220000_assigned_seats`. New: `architecture/assigned-seats.md` (1.0); Y8, Y9 decided.

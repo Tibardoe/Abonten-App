@@ -2,7 +2,7 @@
 title: Cuentas de equipo
 summary: Gestiona un organizador o un lugar con otras personas, cada una con su propio inicio de sesión y un rol que dice lo que puede hacer.
 order: 90
-lastUpdated: 2026-11-16
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -12,7 +12,7 @@ listed: no
 
 Una cuenta de equipo permite que varias personas gestionen juntas un organizador o un lugar. El equipo tiene su propio nombre, @nombre de usuario, eventos, lugares, seguidores, mensajes y dinero. Cada miembro inicia sesión con su propia cuenta de Abonten y actúa para el equipo con un rol. Nadie comparte contraseñas.
 
-> **Todavía no está disponible para todos.** El personal de Abonten está probando las cuentas de equipo. Esta página describe cómo funcionarán cuando se abran.
+> **Se abren a los negocios uno a uno.** Abonten activa las cuentas de equipo para cada negocio antes de que empiece. Consulta la [guía paso a paso](/teams).
 
 ## Quién puede hacer qué
 
