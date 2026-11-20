@@ -109,5 +109,6 @@
   "whatYouArePayingFor": "Wofür du zahlst",
   "youReAlreadyPayingForThisEvent": "Du zahlst dieses Event bereits in Raten.",
   "yourBalance": "deine Guthabenübersicht",
-  "yourPlans": "Ratenzahlungen"
+  "yourPlans": "Ratenzahlungen",
+  "endedEventMoved": "Du hast diesen Plan abgebrochen, nachdem der Veranstalter das Event verschoben hat: Du bekommst alles zurück, was du bezahlt hast."
 }

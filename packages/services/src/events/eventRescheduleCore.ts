@@ -21,7 +21,6 @@ import {
   type RescheduleProblem,
   rescheduleMessageProblem,
   rescheduleProblem,
-  rescheduleRefundOpen,
 } from "@abonten/core/eventReschedule";
 import { readStructuredAddress } from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
@@ -41,6 +40,7 @@ import {
   eventCancelQuoteCore,
 } from "../tickets/cancelEventTicketsCore";
 import { queueRescheduleTextsCore } from "./rescheduleTextsQueue";
+import { isMoveRefundOpen } from "./rescheduleWindow";
 import {
   type EventVenueArgs,
   type EventVenueInput,
@@ -526,14 +526,7 @@ async function relevantReschedule(
   };
 }
 
-function refundIsOpen(
-  row: RescheduleRow,
-  event: { status: string | null; postponed_at: string | null },
-): boolean {
-  if (event.status !== "published") return false;
-  if (row.kind === "postpone") return !!event.postponed_at;
-  return !!row.refund_until && rescheduleRefundOpen(row.refund_until);
-}
+const refundIsOpen = isMoveRefundOpen;
 
 /**
  * The move an event's holder sees on their ticket, or null when it never

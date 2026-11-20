@@ -272,14 +272,23 @@ export async function issueRefundCore(
   ) {
     // A retry after the credit step failed: finish it (idempotent).
     if (hasCredit && Number(transaction.credit_refunded_amount ?? 0) === 0) {
-      const { data: refundableAgain } = await getSupabaseServiceClient().rpc(
-        "get_transaction_refundable_amount",
-        { p_transaction_id: transaction.id },
+      const [{ data: refundableAgain }, { data: feeAgain }] = await Promise.all(
+        [
+          getSupabaseServiceClient().rpc("get_transaction_refundable_amount", {
+            p_transaction_id: transaction.id,
+          }),
+          getSupabaseServiceClient().rpc("whole_payment_fee", {
+            p_transaction_id: transaction.id,
+            p_require_flags: true,
+          }),
+        ],
       );
       const again = tenderSplit(
         transaction,
-        fromMajor(Number(refundableAgain ?? 0), transaction.currency)
-          .amountMinor,
+        fromMajor(
+          Number(refundableAgain ?? 0) + Number(feeAgain ?? 0),
+          transaction.currency,
+        ).amountMinor,
       );
       if (!(await returnCreditShare(transaction, again.creditBackMinor)).ok) {
         return {
@@ -410,6 +419,27 @@ export async function issueRefundCore(
     logger.error(
       `Refundable amount for transaction ${transaction.id} resolved to ${refundableAmount} despite ${ticketCount} linked ticket(s); falling back to full refund`,
     );
+  }
+
+  // Tickets given back after the organizer moved the event bring the
+  // service fee back too (decision RS1): every ticket of a whole payment is
+  // flagged ticket.refund_includes_fee, and the fee is split between cash
+  // (or the plan's parts) and credit like the ticket price.
+  if (refundableMinor > 0) {
+    const { data: fee, error: feeError } = await getSupabaseServiceClient().rpc(
+      "whole_payment_fee",
+      { p_transaction_id: transaction.id, p_require_flags: true },
+    );
+    if (feeError) {
+      logger.error(
+        `Failed reading the fee of transaction ${transaction.id}: ${feeError.message}`,
+      );
+    } else if (Number(fee ?? 0) > 0) {
+      refundableMinor += fromMajor(
+        Number(fee),
+        transaction.currency,
+      ).amountMinor;
+    }
   }
 
   const split = tenderSplit(transaction, refundableMinor);

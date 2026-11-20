@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-20 — The fee back for Abonten Credit and Pay small small after a move
+
+- After an organizer moves or postpones an event, the service fee now comes back for every payment, not only cash ones (decision RS1 extended): a payment partly or wholly in Abonten Credit, or a finished Pay small small purchase, given back after the move gets its fee too, split between credit and cash (or the plan's parts) like the ticket price (`whole_payment_fee()`, `issueRefundCore`, the holder's quote); the replaced `record_fee_refund_adjustment()` records the fee given back. A running Pay small small plan cancelled while the move's refunds are open ends with the new reason `event_moved` and gives back everything paid (the replaced `ticket_plan_release()`, `moveRefundOpenFor`). Migration `20261120230000_reschedule_fee_refunds`. Docs: `architecture/event-reschedule.md` 1.3 §4, `architecture/ticket-plans.md`.
+
 ## 2026-11-20 — Texts when an event moves
 
 - Holders with a verified phone in a Hubtel market (Ghana) now also get a short text, in their language, when an organizer moves or postpones their event (RS3 changed). `event_reschedule_queue_texts()` queues one `event_reschedule_text` row per person right after the move; the transport sends after the response and the new `reschedule-texts` pg_cron job (`run_reschedule_text_dispatch()` → `POST /api/jobs/reschedule-texts`, notification-delivery token) sends the rest, claimed with row locks. At most 1,000 per move; a refused or unanswered text is not retried; `RESCHEDULE_TEXTS_KILL_SWITCH` stops them. Migration `20261120220000_reschedule_texts`. Docs: `architecture/event-reschedule.md` 1.2 §4a, `operations/scheduled-jobs.md`, `security/secrets-and-environment.md`, `deployment/rollback-and-recovery.md`, `privacy/data-inventory.md`; legal E11 note.

@@ -17,6 +17,10 @@ import {
   vi,
 } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
+import {
+  getEventRescheduleForHolderCore,
+  refundAfterRescheduleCore,
+} from "../events/eventRescheduleCore";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
 import { finalizePayment } from "../payments/finalizePayment";
@@ -516,6 +520,93 @@ describe("paying for tickets with credit", () => {
     // earlier holds and over-credit the organizer).
     await failCashRefund();
     expect(await heldNet()).toBe(-28.57);
+  });
+
+  it("gives back the service fee too, by tender, when the holder gives tickets back after a move", async () => {
+    const { eventId, ticketTypeId } = await newEvent();
+    await setBalance(buyer, 3000);
+    const sessionId = await openCheckout(buyer, eventId, ticketTypeId);
+    const res = await pay(buyer, sessionId, {
+      useCredit: true,
+      paymentMethodId,
+    });
+    expect(res.status).toBe(200);
+    if (res.status !== 200) return;
+    const reference = res.data.payment?.reference as string;
+    paystack.verifyTransaction.mockResolvedValueOnce({
+      id: 2,
+      status: "success",
+      reference,
+      amount: 7500,
+      currency: "GHS",
+      gateway_response: "Approved",
+      fees: 146,
+      paid_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      channel: "card",
+      customer: { email: buyer.email },
+    });
+    expect((await finalizePayment(res.data.attempts[0].id, deps)).status).toBe(
+      "succeeded",
+    );
+    const txn = await transactionOf(res.data.attempts[0].id);
+    await setBalance(buyer, 0);
+
+    // The organizer moves the event.
+    const newStart = new Date(Date.now() + 10 * 86_400_000);
+    const { error: moveError } = await service.rpc("event_reschedule", {
+      p_event_id: eventId,
+      p_actor: organizer.id,
+      p_starts_at: newStart.toISOString(),
+      p_ends_at: new Date(newStart.getTime() + 2 * 3_600_000).toISOString(),
+      p_message: "The hall needs repairs.",
+    });
+    expect(moveError).toBeNull();
+
+    // The quote: everything paid comes back, GH₵ 105 = 75 cash + 30 credit.
+    const view = await getEventRescheduleForHolderCore(
+      buyer.client,
+      buyer.id,
+      eventId,
+    );
+    expect(view.status === 200 && view.data?.refund).toEqual({
+      cashMinor: 7500,
+      creditMinor: 3000,
+      currency: "GHS",
+    });
+
+    const back = await refundAfterRescheduleCore(
+      buyer.client,
+      buyer.id,
+      eventId,
+    );
+    expect(back.status, back.message).toBe(200);
+    expect(paystack.refundTransaction).toHaveBeenCalledWith(
+      expect.anything(),
+      reference,
+      7500,
+    );
+    expect(await transactionOf(res.data.attempts[0].id)).toMatchObject({
+      status: "refund_pending",
+      credit_refunded_amount: 30,
+    });
+    const { data: summary } = await service
+      .from("credit_account")
+      .select("available_minor")
+      .eq("user_id", buyer.id)
+      .single();
+    expect(summary?.available_minor).toBe(3000);
+    const { data: adjustment } = await service
+      .from("platform_fee_entry")
+      .select("ticket_revenue, service_fee, net_revenue")
+      .eq("transaction_id", txn?.id as string)
+      .eq("entry_type", "fee_refund_adjustment")
+      .single();
+    expect(adjustment).toEqual({
+      ticket_revenue: -100,
+      service_fee: -5,
+      net_revenue: -5,
+    });
   });
 
   it("refunds orders paid entirely with credit when the organizer cancels the event", async () => {

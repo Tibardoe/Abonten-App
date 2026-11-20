@@ -5348,6 +5348,7 @@
         "endedBuyer",
         "endedDeadline",
         "endedEventCancelled",
+        "endedEventMoved",
         "endedHoldExpired",
         "enterAValidAmount",
         "feeKept",

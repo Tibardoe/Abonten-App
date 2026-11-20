@@ -62,6 +62,7 @@ const ENDED_KEY: Record<TicketPlanEndReason, string> = {
   event_cancelled: "endedEventCancelled",
   account_closed: "endedAccountClosed",
   admin: "endedAdmin",
+  event_moved: "endedEventMoved",
 };
 
 export default function TicketPlanScreen() {

@@ -24,7 +24,9 @@ export type TicketPlanEndReason =
   | "buyer"
   | "event_cancelled"
   | "account_closed"
-  | "admin";
+  | "admin"
+  /** The buyer ended it while a move of the event left refunds open: everything paid comes back. */
+  | "event_moved";
 
 export type TicketPlanRefundStatus = "none" | "pending" | "refunded" | "failed";
 

@@ -109,5 +109,6 @@
   "whatYouArePayingFor": "Ce que vous payez",
   "youReAlreadyPayingForThisEvent": "Vous payez déjà cet événement en plusieurs fois.",
   "yourBalance": "votre solde",
-  "yourPlans": "Paiements en plusieurs fois"
+  "yourPlans": "Paiements en plusieurs fois",
+  "endedEventMoved": "Vous avez annulé ce plan après le déplacement de l'événement : tout ce que vous avez payé vous est remboursé."
 }

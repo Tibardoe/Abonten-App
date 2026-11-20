@@ -12,6 +12,7 @@ import type {
   TicketPlanStatus,
   TicketPlanSummary,
 } from "@abonten/types/ticketPlanType";
+import { moveRefundOpenFor } from "../events/rescheduleWindow";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Reading plans for their owner. Every read is the service role scoped to
@@ -195,6 +196,12 @@ export async function loadPlanDetail(
     partMinMinor: Number(row.part_min_minor),
   };
   const pastDeadline = new Date(row.deadline_at).getTime() <= Date.now();
+  // While a move of the event leaves refunds open, ending the plan gives
+  // back everything paid, fee included (decision RS1).
+  const moved =
+    status === "active" || status === "awaiting_payment"
+      ? await moveRefundOpenFor(row.event_id, row.occurrence_id)
+      : false;
 
   return {
     ...toSummary(
@@ -221,7 +228,7 @@ export async function loadPlanDetail(
       paidMinor: amounts.paidMinor,
       ticketMinor: Number(row.ticket_minor),
       totalMinor: amounts.totalMinor,
-      keepFeeOnRefund: row.keep_fee_on_refund,
+      keepFeeOnRefund: row.keep_fee_on_refund && !moved,
     }),
     ticketIds,
   };

@@ -30,6 +30,7 @@ import type {
   TicketPlanSummary,
 } from "@abonten/types/ticketPlanType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { moveRefundOpenFor } from "../events/rescheduleWindow";
 import { coreT, requestLocale, tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { initiateChargeForAttempt } from "../payments/chargeInit";
@@ -648,7 +649,7 @@ export async function cancelTicketPlanCore(
 > {
   const { data: plan, error } = await getSupabaseServiceClient()
     .from("ticket_plan")
-    .select("id, status")
+    .select("id, status, event_id, occurrence_id")
     .eq("id", planId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -661,7 +662,14 @@ export async function cancelTicketPlanCore(
     return { status: 409, message: tr("thisPlanIsFullyPaidYourTickets") };
   }
 
-  const ended = await endTicketPlan(plan.id, "cancelled", "buyer");
+  // The organizer moved or postponed the event and refunds are open:
+  // everything paid comes back, fee included (decision RS1).
+  const moved = await moveRefundOpenFor(plan.event_id, plan.occurrence_id);
+  const ended = await endTicketPlan(
+    plan.id,
+    "cancelled",
+    moved ? "event_moved" : "buyer",
+  );
   if (ended.outcome === "busy") {
     return { status: 409, message: tr("aPaymentForThisPlanIs") };
   }

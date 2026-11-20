@@ -28,10 +28,10 @@ import { ticketsOfPayment } from "./ticketsOfPayment";
 
 /**
  * After the organizer moved the event (rescheduleRefundCore): the event's
- * refund policy does not apply, and a cash payment's refund includes the
- * tickets' share of the service fee (ticket.refund_includes_fee, read by
- * refund_prepare). Payments with Abonten Credit or Pay small small keep
- * their whole-payment rules.
+ * refund policy does not apply, and the refund includes the service fee
+ * (ticket.refund_includes_fee): a cash payment's tickets' share of it
+ * (refund_prepare), and the whole fee of a payment refunded as a whole
+ * (Abonten Credit, Pay small small: whole_payment_fee in issueRefundCore).
  */
 export type EventCancelOptions = {
   afterReschedule?: boolean;
@@ -218,7 +218,20 @@ export async function eventCancelQuoteCore(
       priced = false;
       continue;
     }
-    const minor = fromMajor(Number(amount ?? 0), payment.currency).amountMinor;
+    let minor = fromMajor(Number(amount ?? 0), payment.currency).amountMinor;
+    if (whole && options.afterReschedule && minor > 0) {
+      // After a move the payment's service fee comes back too.
+      const { data: fee, error: feeError } = await service.rpc(
+        "whole_payment_fee",
+        { p_transaction_id: payment.id, p_require_flags: false },
+      );
+      if (feeError) {
+        logger.error(`Failed pricing a payment's fee: ${feeError.message}`);
+        priced = false;
+      } else {
+        minor += fromMajor(Number(fee ?? 0), payment.currency).amountMinor;
+      }
+    }
     if (whole) {
       const split = tenderSplit(
         { ...payment, credit_amount: Number(payment.credit_amount ?? 0) },

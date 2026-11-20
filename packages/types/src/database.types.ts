@@ -19778,6 +19778,10 @@ export type Database = {
         }
         Returns: string
       }
+      whole_payment_fee: {
+        Args: { p_require_flags?: boolean; p_transaction_id: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
