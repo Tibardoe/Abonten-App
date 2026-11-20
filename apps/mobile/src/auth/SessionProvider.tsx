@@ -4,6 +4,7 @@ import {
   forgetActingTeam,
   restoreActingTeam,
 } from "@/features/teams/actingTeam";
+import { noteSignOut } from "@/lib/authRedirect";
 import { deleteQueryCacheFiles } from "@/lib/queryCacheFiles";
 import { queryClient } from "@/lib/queryClient";
 import { supabase } from "@/lib/supabase";
@@ -119,6 +120,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         // "/" is the Home tab itself: the tabs group alone reopens the tab
         // last used (often Account, which needs a session), and the route
         // guard then showed sign-in instead of Home.
+        noteSignOut();
         if (router.canDismiss()) router.dismissAll();
         router.replace("/");
         // This phone only. The default ("global") ends every session the

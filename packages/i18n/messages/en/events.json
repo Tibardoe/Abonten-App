@@ -534,7 +534,7 @@
   "sellPass": "Sell this pass",
   "couldNotSellPass": "The pass couldn't be put on sale. Try again.",
   "rescheduleTitle": "Move to a new date",
-  "rescheduleIntro": "People already hold tickets, so the date can't be edited above. Move the event here: everyone holding a ticket is told by notice, push and email, and can keep their ticket or get a full refund, service fee included.",
+  "rescheduleIntro": "People already hold tickets, so the date is locked. Move the event here: everyone holding a ticket is told by notice, push and email, and can keep their ticket or get a full refund, service fee included.",
   "rescheduleCurrent": "Now on {when}.",
   "rescheduleNewDate": "New date",
   "rescheduleStartTime": "Starts",

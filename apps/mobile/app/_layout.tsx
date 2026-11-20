@@ -8,6 +8,7 @@ import { OfflineBanner } from "@/components/app/OfflineBanner";
 import {
   consumePendingRedirect,
   isProtectedPath,
+  justSignedOut,
   setPendingRedirect,
 } from "@/lib/authRedirect";
 import { installGlobalErrorHandler } from "@/lib/errorTracking";
@@ -115,6 +116,12 @@ function useProtectedRoute() {
         const next = consumePendingRedirect();
         router.replace(next ?? "/(app)");
       } else if (redirectingToSignIn) {
+        // Signed out on purpose: Home, whatever was left showing.
+        if (justSignedOut()) {
+          if (router.canDismiss()) router.dismissAll();
+          router.navigate("/");
+          return;
+        }
         setPendingRedirect(pathname);
         router.replace("/(auth)/sign-in");
       }
