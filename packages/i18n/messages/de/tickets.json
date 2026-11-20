@@ -95,7 +95,7 @@
   "complimentaryTicket": "Freikarte",
   "passYourShows": "Deine Vorstellungen mit diesem Pass",
   "passShowsLeft": "{left, plural, =0 {Alle Vorstellungen dieses Passes sind gewählt.} one {Du kannst noch # Vorstellung wählen.} other {Du kannst noch # Vorstellungen wählen.}} Der Pass gilt für {total}.",
-  "passBoughtShow": "Für diese gekauft",
+  "passBoughtShow": "Dieses Ticket",
   "passChosen": "Gewählt",
   "passChoose": "Wählen",
   "passShowCancelled": "Abgesagt",

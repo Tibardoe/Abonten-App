@@ -117,8 +117,12 @@ export default function ManageEventShowsCard({
       if (res.status === 200 && "data" in res) {
         requestId.current = crypto.randomUUID();
         toast.success(res.message);
+        // The whole form starts again: dates left from the last run would
+        // quietly apply to the next one.
         setDays([]);
         setTimes([]);
+        setFromDate("");
+        setUntilDate("");
         qc.invalidateQueries({ queryKey: key });
         router.refresh();
       } else {

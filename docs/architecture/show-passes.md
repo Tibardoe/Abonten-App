@@ -4,7 +4,7 @@ purpose: How an organizer sells one ticket for several shows of a run (a festiva
 audience: Engineering, operations and support
 scope: ticket_type.pass_shows, ticket_checkout.pass_ticket_id, event_series_add_pass, ticket_pass_state, ticket_pass_claim, the ticket_pass_host_cancelled trigger and event_add_show carrying passes (migration 20261120100000); @abonten/core/showPasses; @abonten/services passes/showPassCore and the pass rule in tickets/buyerCancelGate; the website's pass card and ticket panel; the app's shows screen and ticket panel.
 status: Review required
-version: 1.1
+version: 1.2
 lastReviewed: 2026-11-20
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -42,7 +42,7 @@ The pass's money is never split across shows: an organizer who cancels the show 
 | Only the organizer side (or a team member with `events.manage`) sells one; a paid pass may need a checked identity | `addShowPassCore` (`requireVerifiedIdentity` "paid_events") |
 | Only the holder sees and uses the pass; one choice at a time (the pass ticket is locked) | `ticket_pass_state`, `ticket_pass_claim` |
 | A ticket chosen with a pass is not a pass itself: it has no shows to choose (its checkout names a pass). A pass given as a free ticket is a pass. Fixed 2026-11-20 (migration 20261120120000): before it, a chosen ticket could choose shows of its own, again and again | `ticket_pass_state`, `ticket_pass_claim` |
-| A choice needs a show of the same run, published, not started, with no dates of its own, selling the pass with places left | `ticket_pass_claim` |
+| A choice needs a show of the same run, published, not hidden or removed by Abonten (since 2026-11-20, migration 20261120150000), not started, with no dates of its own, selling the pass with places left. A hidden show is not offered either; the pass's own show and shows already chosen stay listed | `ticket_pass_claim`, `ticket_pass_state` |
 | Saving a show's ticket types again keeps a pass a pass (matched by name) | `updateEventTicketTypesCore` |
 | All pass functions are service-role only | grants; everything goes through `@abonten/services/passes` |
 

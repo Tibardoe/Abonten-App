@@ -95,7 +95,7 @@
   "complimentaryTicket": "Free ticket",
   "passYourShows": "Your shows with this pass",
   "passShowsLeft": "{left, plural, =0 {Every show of this pass is chosen.} one {You can choose # more show.} other {You can choose # more shows.}} The pass covers {total}.",
-  "passBoughtShow": "Bought for this show",
+  "passBoughtShow": "This ticket",
   "passChosen": "Chosen",
   "passChoose": "Choose",
   "passShowCancelled": "Cancelled",
