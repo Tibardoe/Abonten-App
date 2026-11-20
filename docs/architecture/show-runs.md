@@ -4,8 +4,8 @@ purpose: How an organizer turns one listing into a run of shows (a play on sever
 audience: Engineering, operations and support
 scope: event_series, event.series_id, event_add_show, get_event_shows and the run-once rewrite of _explore_event_candidates, search_events and search_suggest (migration 20261119210000); @abonten/core/showRuns; @abonten/services events/eventShowsCore; the web Manage › Details "Shows" card and event page show picker; the app's Shows and copies screen and event show picker.
 status: Review required
-version: 1.0
-lastReviewed: 2026-11-19
+version: 1.1
+lastReviewed: 2026-11-20
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -35,12 +35,15 @@ One transaction per show, service role only, idempotent on a client request id (
 | Country, time zone, currency | As they are (fixed at creation) |
 | Refund policy | `refund_policy`, `refund_cutoff_hours` |
 | Ticket types | Name, price, people per ticket, passes (`pass_shows`, [show-passes.md](show-passes.md), since 2026-11-20); **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
+| Seating | The seating plan (`event_seating`) and each ticket type's section ([assigned-seats.md](assigned-seats.md)), since 2026-11-20 |
 | Group prices | All tiers |
 | Promo codes | Those still running, with their expiry moved like the date and their uses back to 0 |
 | Promoter commission and promoters | The rate, invited-only, and the promoters still added |
 | Pay small small and sending switches | The organizer's per-event settings |
 
-Not copied: dates, sales, attendees, reviews, featuring (promotions are bought per show), photos (`event_media`).
+Not copied: dates, sales, attendees, seats given, reviews, featuring (promotions are bought per show), photos (`event_media`).
+
+Refused: a listing that is not published, and (since 2026-11-20, migration 20261120120000) one Abonten has hidden or removed — its new shows would have come out visible. The organizer reads "Abonten has hidden this listing, so it can't be copied."
 
 ## 3. Lists show a run once
 

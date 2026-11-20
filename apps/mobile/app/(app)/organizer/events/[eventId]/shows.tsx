@@ -8,6 +8,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatDateTime } from "@abonten/core/i18n/format";
 import {
   type ShowRunSlot,
   type Weekday,
@@ -20,8 +21,10 @@ import {
   Button,
   Chip,
   Field,
+  Icon,
   Input,
   KeyboardAwareScrollView,
+  PressableScale,
   useToast,
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
@@ -288,14 +291,23 @@ export default function EventShowsScreen() {
         {times.length > 0 ? (
           <View className="flex-row flex-wrap gap-2">
             {times.map((time) => (
-              <Chip
+              <PressableScale
                 key={time}
-                label={t("removeTime", { time })}
-                selected
+                accessibilityRole="button"
+                accessibilityLabel={t("removeTime", {
+                  time: clockTime(time, locale),
+                })}
                 onPress={() =>
                   setTimes((prev) => prev.filter((x) => x !== time))
                 }
-              />
+                haptic
+                className="min-h-[44px] flex-row items-center gap-1.5 rounded-full bg-primary px-3.5"
+              >
+                <AppText className="text-[13px] font-semibold text-primary-foreground">
+                  {clockTime(time, locale)}
+                </AppText>
+                <Icon name="close" size={14} tone="inverse" />
+              </PressableScale>
             ))}
           </View>
         ) : null}
@@ -438,4 +450,14 @@ export default function EventShowsScreen() {
       ) : null}
     </KeyboardAwareScrollView>
   );
+}
+
+/** A show time ("18:30") on the app's clock style ("6:30 PM" in English). */
+function clockTime(time: string, locale: string): string {
+  const [hours, minutes] = time.split(":").map(Number);
+  return formatDateTime(Date.UTC(2000, 0, 1, hours, minutes), locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
 }

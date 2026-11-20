@@ -4,8 +4,8 @@ purpose: How an organizer describes a venue's seats once, gives an event's ticke
 audience: Engineering, operations and support
 scope: seating_plan, seating_section, event_seating, ticket_type.seating_section_id, ticket_seat, the ticket_assign_seat and ticket_release_seat triggers and the section stock guard (migration 20261119220000); @abonten/core/seating; @abonten/services seating/seatingCore; the website's Manage › Details › Seating card; where the seat is shown.
 status: Review required
-version: 1.0
-lastReviewed: 2026-11-19
+version: 1.1
+lastReviewed: 2026-11-20
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -25,7 +25,8 @@ complianceReviewRequired: no
    - otherwise the run of free seats for the whole order closest to the middle of the frontmost row that has one;
    - otherwise the best single seat left.
    The seat is written on the ticket (`ticket.seat_number`, "Stalls · C12") and recorded in `ticket_seat`, whose key makes a seat impossible to give twice.
-4. **A cancelled ticket frees its seat** (`ticket_release_seat`); the label stays on the cancelled ticket as history. **A ticket sent to a friend keeps its seat** (the transfer moves the same ticket).
+4. **Shows added to a run, and copies, keep the seating**: the plan and each ticket type's section come with the new show (`event_add_show`, since 2026-11-20), each show with its own seats.
+5. **A cancelled ticket frees its seat** (`ticket_release_seat`); the label stays on the cancelled ticket as history. **A ticket sent to a friend keeps its seat** (the transfer moves the same ticket).
 
 Issuance is never refused for want of a seat: the section stock guard keeps every seated type's places for sale plus the seats given at or below the section's seats (`ticket_type_section_check`, deferred), and a ticket that still found none is issued unseated for the organizer to place.
 

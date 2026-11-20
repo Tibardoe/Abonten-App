@@ -7,6 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // to sections, and seats given by the database when tickets are inserted.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
+import { addEventShowsCore } from "../events/eventShowsCore";
 import {
   type PostEventCoreInput,
   postEventCore,
@@ -72,6 +73,10 @@ describe("assigned seats", () => {
 
   afterAll(async () => {
     await service.from("event").delete().eq("organizer_id", organizer.id);
+    await service
+      .from("event_series")
+      .delete()
+      .eq("organizer_id", organizer.id);
     await service.from("seating_plan").delete().eq("owner_id", organizer.id);
     await Promise.all(
       [organizer, buyer, other].map((u) => deleteTestUser(service, u.id)),
@@ -221,6 +226,115 @@ describe("assigned seats", () => {
       .select("ticket_id", { count: "exact", head: true })
       .eq("event_id", eventId);
     expect(count).toBe(6);
+  });
+
+  it("keeps the seating on a show added to the run; a hidden listing takes none", async () => {
+    const created = await postEventCore(
+      organizer.client,
+      organizer.id,
+      baseInput({ clientRequestId: crypto.randomUUID() }),
+    );
+    if (created.status !== 200) throw new Error("event");
+    const eventId = created.eventId;
+    const saved = await saveSeatingPlanCore(organizer.id, {
+      name: "Run hall",
+      sections: [
+        { name: "Stalls", rows: [{ label: "A", seats: 5 }] },
+        { name: "Balcony", rows: [{ label: "C", seats: 4 }] },
+      ],
+    });
+    if (saved.status !== 200) throw new Error("plan");
+    const setup = await getEventSeatingCore(
+      organizer.client,
+      organizer.id,
+      eventId,
+    );
+    if (setup.status !== 200) throw new Error("setup");
+    const sections = setup.data.plans.find(
+      (p) => p.id === saved.data.planId,
+    )?.sections;
+    if (!sections) throw new Error("sections");
+    const [stalls, balcony] = sections;
+    const typeId = (name: string) =>
+      setup.data.ticketTypes.find((t) => t.type === name)?.id as string;
+    const set = await setEventSeatingCore(organizer.client, organizer.id, {
+      eventId,
+      planId: saved.data.planId,
+      sections: {
+        [typeId("Stalls")]: stalls.id,
+        [typeId("Balcony")]: balcony.id,
+      },
+    });
+    expect(set.status, "message" in set ? set.message : "").toBe(200);
+
+    const start = inDays(11);
+    const added = await addEventShowsCore(organizer.client, organizer.id, {
+      eventId,
+      shows: [
+        {
+          startsAt: start.toISOString(),
+          endsAt: new Date(start.getTime() + 2 * 3_600_000).toISOString(),
+        },
+      ],
+      clientRequestId: crypto.randomUUID(),
+    });
+    expect(added.status, "message" in added ? added.message : "").toBe(200);
+    if (added.status !== 200) return;
+    const showId = added.data.shows[0].id;
+
+    const { data: plan } = await service
+      .from("event_seating")
+      .select("plan_id")
+      .eq("event_id", showId)
+      .single();
+    expect(plan?.plan_id).toBe(saved.data.planId);
+    const { data: types } = await service
+      .from("ticket_type")
+      .select("id, type, quantity, seating_section_id")
+      .eq("event_id", showId)
+      .order("type");
+    expect(
+      types?.map(({ type, quantity, seating_section_id }) => ({
+        type,
+        quantity,
+        seating_section_id,
+      })),
+    ).toEqual([
+      { type: "Balcony", quantity: 4, seating_section_id: balcony.id },
+      { type: "Stalls", quantity: 5, seating_section_id: stalls.id },
+    ]);
+
+    // A ticket for the new show gets a seat of its own.
+    const order = await validateCheckoutCore(buyer.client, buyer.id, {
+      eventId: showId,
+      quantities: {
+        [types?.find((t) => t.type === "Stalls")?.id as string]: 1,
+      },
+    });
+    expect(order.status, order.message).toBe(200);
+    const seats = await issue(order.checkoutSessionId as string, buyer.id);
+    expect(seats.map((t) => t.seat_number)).toEqual(["Stalls · A3"]);
+
+    // Once Abonten hides the listing, it takes no new shows or copies.
+    await service
+      .from("event")
+      .update({ moderation_state: "hidden" })
+      .eq("id", eventId);
+    const later = inDays(12);
+    const hidden = await addEventShowsCore(organizer.client, organizer.id, {
+      eventId,
+      shows: [
+        {
+          startsAt: later.toISOString(),
+          endsAt: new Date(later.getTime() + 2 * 3_600_000).toISOString(),
+        },
+      ],
+      clientRequestId: crypto.randomUUID(),
+    });
+    expect(hidden.status).toBe(409);
+    expect("message" in hidden ? hidden.message : "").toBe(
+      "Abonten has hidden this listing, so it can't be copied.",
+    );
   });
 
   it("refuses what it should", async () => {

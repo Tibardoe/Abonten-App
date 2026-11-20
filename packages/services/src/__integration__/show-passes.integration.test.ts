@@ -239,6 +239,28 @@ describe("passes for several shows", () => {
     expect(chosenTicket?.ticket_type?.event_id).toBe(second);
     expect(chosenTicket?.ticket_type?.quantity).toBe(9);
 
+    // A ticket chosen with the pass is not a pass itself: it has no shows
+    // to choose (it could otherwise chain into every show of the run).
+    expect((await getShowPassCore(buyer.id, chose.data.ticketId)).status).toBe(
+      404,
+    );
+    expect(
+      (
+        await claimShowPassCore(buyer.id, {
+          ticketId: chose.data.ticketId,
+          eventId: fourth,
+        })
+      ).status,
+    ).toBe(404);
+    const chained = await service.rpc("ticket_pass_claim", {
+      p_pass_ticket: chose.data.ticketId,
+      p_holder: buyer.id,
+      p_event_id: fourth,
+      p_expires_at: inDays(9).toISOString(),
+      p_ticket: {},
+    });
+    expect(chained.error?.message).toBe("This ticket is not a pass.");
+
     // The same show twice is refused; a third show fills the pass.
     expect(
       (await claimShowPassCore(buyer.id, { ticketId: host, eventId: second }))
