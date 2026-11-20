@@ -2,7 +2,7 @@
 title: Comptes d'équipe
 summary: Gérez un organisateur ou un lieu avec d'autres personnes, chacune avec sa propre connexion et un rôle qui dit ce qu'elle peut faire.
 order: 90
-lastUpdated: 2026-11-16
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -12,7 +12,7 @@ listed: no
 
 Un compte d'équipe permet à plusieurs personnes de gérer ensemble un organisateur ou un lieu. L'équipe a son propre nom, son @nom d'utilisateur, ses événements, ses lieux, ses abonnés, ses messages et son argent. Chaque membre se connecte avec son propre compte Abonten et agit pour l'équipe avec un rôle. Personne ne partage de mot de passe.
 
-> **Pas encore ouvert à tous.** Les comptes d'équipe sont testés par le personnel d'Abonten. Cette page décrit leur fonctionnement une fois ouverts.
+> **Ouverture aux entreprises une par une.** Abonten active les comptes d'équipe pour chaque entreprise avant qu'elle commence. Voir le [guide pas à pas](/teams).
 
 ## Qui peut faire quoi
 

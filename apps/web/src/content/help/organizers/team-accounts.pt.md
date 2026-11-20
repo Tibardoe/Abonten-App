@@ -2,7 +2,7 @@
 title: Contas de equipa
 summary: Gira um organizador ou um local com outras pessoas, cada uma com o seu próprio início de sessão e uma função que diz o que pode fazer.
 order: 90
-lastUpdated: 2026-11-16
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -12,7 +12,7 @@ listed: no
 
 Uma conta de equipa permite que várias pessoas giram juntas um organizador ou um local. A equipa tem o seu próprio nome, @nome de utilizador, eventos, locais, seguidores, mensagens e dinheiro. Cada membro inicia sessão com a sua própria conta Abonten e age pela equipa com uma função. Ninguém partilha palavras-passe.
 
-> **Ainda não está disponível para todos.** As contas de equipa estão a ser testadas pela equipa da Abonten. Esta página descreve como funcionam quando abrirem.
+> **A abrir aos negócios um a um.** A Abonten ativa as contas de equipa para cada negócio antes de começar. Veja o [guia passo a passo](/teams).
 
 ## Quem pode fazer o quê
 

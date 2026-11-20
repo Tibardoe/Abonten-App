@@ -2,7 +2,7 @@
 title: Team accounts
 summary: Run an organizer or a place with other people, each with their own sign-in and a role that says what they can do.
 order: 90
-lastUpdated: 2026-11-16
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -12,7 +12,7 @@ listed: no
 
 A team account lets several people run one organizer or one place together. The team has its own name, @username, events, places, followers, messages and money. Each member signs in with their own Abonten account and acts for the team with a role. Nobody shares a password.
 
-> **Not available to everyone yet.** Team accounts are being tried by Abonten staff. This page describes how they work once they open.
+> **Opening to businesses one by one.** Abonten switches team accounts on for each business before it starts. See the [step-by-step guide](/teams).
 
 ## Who can do what
 
