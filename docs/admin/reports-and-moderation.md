@@ -4,8 +4,8 @@ purpose: Work the report queue — triage, investigate, act on content, resolve 
 audience: moderator, operations, super_admin
 scope: /reports, /reports/[id], grouped view, bulk resolution
 status: Approved
-version: 1.1
-lastReviewed: 2026-11-17
+version: 1.2
+lastReviewed: 2026-11-20
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -36,7 +36,7 @@ Source: `packages/services/src/admin/reports/reportsAdminCore.ts`, `moderation/a
 | Escalate | `reports.escalate` | status `escalated`, priority raised; the founder reviews escalated reports |
 | Add note | `reports.note` | immutable `admin_note` |
 | **Restrict** target | `moderation.restrict` | `moderation_state = restricted`: still visible, cannot be featured/promoted |
-| **Hide** target | `moderation.hide` | `hidden`: disappears from every public read (discovery RPCs and RLS); the owner still sees it on their own management pages |
+| **Hide** target | `moderation.hide` | `hidden`: disappears from every public read (discovery RPCs and RLS); the owner still sees it on their own management pages, and people holding tickets for an event still see that event with their tickets |
 | **Remove** target | `moderation.remove` | `removed`: as hidden, but signals a final decision; also used to clear a review response (`clearReviewResponseCore`) |
 | **Restore** | `moderation.restore` | back to `visible` |
 | Resolve / Dismiss / Mark false report | `reports.resolve` / `reports.mark_false` | terminal status with a written resolution |
@@ -62,4 +62,4 @@ Expected result: target state changed (visible in Content); report terminal; aud
 
 ## Dangerous actions
 
-Remove on an event with sold tickets does not cancel it or refund anyone — if the event is fraudulent, coordinate with finance: cancel the event (refunds) and ban the organizer, and hold their payout. Hide or Remove also takes the event off its ticket holders' My Tickets lists (web and app), because a holder may not read a hidden event; their tickets stay valid and nothing is refunded, so tell holders or refund them through Admin › Finance. Hiding a place hides its bookings and reviews from the public too.
+Remove on an event with sold tickets does not cancel it or refund anyone — if the event is fraudulent, coordinate with finance: cancel the event (refunds) and ban the organizer, and hold their payout. Hide keeps the event on its ticket holders' My Tickets lists (web and app) with their QR codes, since 2026-11-20 (policy `event_select_ticket_holder`): they can still get in and see refunds. Remove takes it off those lists, because a holder may not read a removed event; their tickets stay valid and nothing is refunded, so tell holders or refund them through Admin › Finance. Hiding a place hides its bookings and reviews from the public too.

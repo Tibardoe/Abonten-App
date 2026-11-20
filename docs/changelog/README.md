@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-20 — Ticket holders keep hidden events; small fixes
+
+- When Abonten hides a listing, people holding tickets for it still see it with their tickets in My Tickets (web and app): a second SELECT policy on `event` for signed-in people, `event_select_ticket_holder`, reading the person's ticket events once per statement through `ticket_holder_event_ids()` (SECURITY DEFINER, not executable by anon). Removed listings stay invisible to holders. Migration `20261120140000_ticket_holders_see_hidden_events`. The app's sign-out takes the app Home first, so no signed-in screen stays behind with a load error; the run form (web and app) clears its dates after adding shows; a pass's own show reads "This ticket" (it said "Bought for this show", wrong for a pass given free). `admin/reports-and-moderation.md` (1.2).
+
 ## 2026-11-20 — Passes, run copies: fixes from the phone walk
 
 - A ticket chosen with a pass is no longer a pass itself (it could choose shows of its own, chaining into every show of the run); a show added to a run, or a copy, keeps the listing's seating plan and sections; a listing Abonten has hidden or removed takes no new shows or copies (they came out visible), and the organizer reads why. Migration `20261120120000_pass_choices_and_show_copies` (in-place rewrites of `ticket_pass_state`, `ticket_pass_claim`, `event_add_show`). `architecture/show-passes.md` (1.1), `show-runs.md` (1.1), `assigned-seats.md` (1.1).

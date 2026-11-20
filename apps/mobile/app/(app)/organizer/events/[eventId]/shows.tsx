@@ -149,8 +149,12 @@ export default function EventShowsScreen() {
     if (res.status === 200) {
       requestId.current = uuidv4();
       toast.success(res.message ?? t("addShows"));
+      // The whole form starts again: dates left from the last run would
+      // quietly apply to the next one.
       setDays([]);
       setTimes([]);
+      setRange({ start: null, end: null });
+      setDuration("");
     } else {
       toast.error(res.message ?? t("couldNotAddShows"));
     }

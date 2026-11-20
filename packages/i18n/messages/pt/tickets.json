@@ -95,7 +95,7 @@
   "complimentaryTicket": "Bilhete oferecido",
   "passYourShows": "As suas sessões com este passe",
   "passShowsLeft": "{left, plural, =0 {Todas as sessões deste passe estão escolhidas.} one {Pode escolher mais # sessão.} other {Pode escolher mais # sessões.}} O passe cobre {total}.",
-  "passBoughtShow": "Comprado para esta sessão",
+  "passBoughtShow": "Este bilhete",
   "passChosen": "Escolhida",
   "passChoose": "Escolher",
   "passShowCancelled": "Cancelada",

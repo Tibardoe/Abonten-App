@@ -95,7 +95,7 @@
   "complimentaryTicket": "Entrada regalada",
   "passYourShows": "Tus funciones con este abono",
   "passShowsLeft": "{left, plural, =0 {Ya elegiste todas las funciones de este abono.} one {Puedes elegir # función más.} other {Puedes elegir # funciones más.}} El abono cubre {total}.",
-  "passBoughtShow": "Comprado para esta función",
+  "passBoughtShow": "Esta entrada",
   "passChosen": "Elegida",
   "passChoose": "Elegir",
   "passShowCancelled": "Cancelada",
