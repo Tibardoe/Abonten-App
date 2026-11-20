@@ -2,6 +2,7 @@
 
 import checkInTicket from "@/actions/checkInTicket";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { isComplimentary } from "@abonten/core/complimentary";
 import { personName } from "@abonten/core/personName";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { AttendanceRow as Attendee } from "@abonten/services/organizer/organizerReadQuery";
@@ -82,6 +83,12 @@ function AttendanceRow({
           {attendee.ticket?.seat_number ? (
             <span className="text-sm font-semibold">
               {tt("seat", { seat_number: attendee.ticket.seat_number })}
+            </span>
+          ) : null}
+
+          {isComplimentary(attendee.ticket?.metadata) ? (
+            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
+              {tt("complimentaryTicket")}
             </span>
           ) : null}
 

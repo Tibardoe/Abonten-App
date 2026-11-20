@@ -13543,6 +13543,8 @@ export type Database = {
           admits: number
           checkout_session_id: string | null
           completed_at: string | null
+          complimentary_by: string | null
+          complimentary_note: string | null
           created_at: string | null
           discount: number | null
           discounted_units: number
@@ -13568,6 +13570,8 @@ export type Database = {
           admits?: number
           checkout_session_id?: string | null
           completed_at?: string | null
+          complimentary_by?: string | null
+          complimentary_note?: string | null
           created_at?: string | null
           discount?: number | null
           discounted_units?: number
@@ -13593,6 +13597,8 @@ export type Database = {
           admits?: number
           checkout_session_id?: string | null
           completed_at?: string | null
+          complimentary_by?: string | null
+          complimentary_note?: string | null
           created_at?: string | null
           discount?: number | null
           discounted_units?: number
@@ -18333,6 +18339,19 @@ export type Database = {
       }
       is_event_settled: { Args: { p_event_id: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      issue_complimentary_tickets: {
+        Args: {
+          p_event_id: string
+          p_expires_at: string
+          p_given_by: string
+          p_note: string
+          p_occurrence_id: string
+          p_recipient_id: string
+          p_ticket_type_id: string
+          p_tickets: Json
+        }
+        Returns: string
+      }
       issue_free_ticket: {
         Args: {
           p_event_id: string

@@ -508,5 +508,16 @@
   "notSeated": "Ohne nummerierten Platz",
   "sellsSeats": "{seats, plural, one {Verkauft # Platz} other {Verkauft # Plätze}}",
   "saveSeating": "Sitzplätze speichern",
-  "stopSeating": "Nummerierte Plätze beenden"
+  "stopSeating": "Nummerierte Plätze beenden",
+  "giveFreeTickets": "Freikarten vergeben",
+  "giveFreeTicketsIntro": "Für Mitwirkende, Presse, Sponsoren oder Familie: echte Tickets im Konto der Person, aus deinen Plätzen genommen und am Einlass wie alle anderen geprüft. Es fließt kein Geld, und sie können nicht erstattet werden.",
+  "giveTo": "An",
+  "giveToPlaceholder": "@Benutzername oder Telefonnummer",
+  "howMany": "Wie viele",
+  "forDate": "Für den Termin",
+  "noteOptional": "Notiz (optional, nur dein Team sieht sie)",
+  "compNotePlaceholder": "Familie der Mitwirkenden",
+  "giveTickets": "Tickets vergeben",
+  "couldNotGiveTickets": "Die Tickets konnten nicht vergeben werden. Versuche es erneut.",
+  "giveTicketsNeedsPublished": "Veröffentliche die Veranstaltung, um Tickets zu vergeben."
 }

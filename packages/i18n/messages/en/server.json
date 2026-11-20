@@ -336,6 +336,7 @@
     "fixedExponentMoneyArithmeticRemainsIn": "Fixed-exponent money arithmetic remains in: {0}",
     "functionWasNotRewrittenPatternNotFound": "Function {0} was not rewritten (pattern not found)",
     "getUserTransactionSummaryChangedSince20260925100000": "get_user_transaction_summary changed since 20260925100000; re-derive this fix",
+    "giveFrom1To40TicketsAt": "Give from 1 to 40 tickets at a time.",
     "goodwillLimitReachedForThisUserThis": "Goodwill limit reached for this user this month (used {0}, limit {1})",
     "identityAccountIneligible": "identity_account_ineligible",
     "identityInvalidTransition": "identity_invalid_transition",
@@ -385,6 +386,7 @@
     "onboardingModeMustMatchTheMemberS": "Onboarding mode must match the member's role",
     "onboardingNotFound": "Onboarding not found",
     "onlyLeftForThisEvent": "Only {0} {1} left for this event.",
+    "onlyOfTheseTicketsAreLeft": "Only {0} of these tickets are left.",
     "onlyABookingSStatusCanChange": "Only a booking's status can change",
     "onlyACompletedPayoutCanBeReversed": "Only a completed payout can be reversed (this one is {0})",
     "onlyADraftBatchCanBeApproved": "Only a draft batch can be approved",
@@ -494,8 +496,10 @@
     "thisEventHasNoFreeRegistrationAvailable": "This event has no free registration available",
     "thisEventIsNoLongerAcceptingRsvps": "This event is no longer accepting RSVPs.",
     "thisEventIsNotCurrentlyOnSale": "This event is not currently on sale.",
+    "thisEventIsNotOn": "This event is not on.",
     "thisEventIsNotOpenForRegistration": "This event is not open for registration.",
     "thisEventIsNotOpenForTicket": "This event is not open for ticket sales.",
+    "thisEventIsOver": "This event is over.",
     "thisEventIsSoldOut": "This event is sold out.",
     "thisEventStillHasActivePromoCodes": "This event still has active promo codes. Remove or deactivate them before making it free.",
     "thisEventWasCancelled": "This event was cancelled.",
@@ -1468,5 +1472,9 @@
   "seatingPlanSaved": "Seating plan saved.",
   "seatingLockedAfterFirstTicket": "This event has tickets, so its seating can no longer change.",
   "seatingSectionNotInPlan": "A section isn't part of the chosen plan.",
-  "seatingSaved": "Seating saved."
+  "seatingSaved": "Seating saved.",
+  "giveFromOneToTickets": "Give from 1 to {max} tickets at a time.",
+  "chooseADateForTheseTickets": "Choose the date these tickets are for.",
+  "noAccountForComplimentary": "No Abonten account has that username or phone number. Ask them to sign up first.",
+  "complimentaryTicketsGiven": "{count, plural, one {# ticket} other {# tickets}} given to {name}."
 }

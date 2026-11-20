@@ -508,5 +508,16 @@
   "notSeated": "No numbered seats",
   "sellsSeats": "{seats, plural, one {Sells # seat} other {Sells # seats}}",
   "saveSeating": "Save seating",
-  "stopSeating": "Stop numbered seats"
+  "stopSeating": "Stop numbered seats",
+  "giveFreeTickets": "Give free tickets",
+  "giveFreeTicketsIntro": "For cast, press, sponsors or family: real tickets on the person's account, taken from your seats and checked in at the door like any other. No money changes hands and they can't be refunded.",
+  "giveTo": "Give to",
+  "giveToPlaceholder": "@username or phone number",
+  "howMany": "How many",
+  "forDate": "For the date",
+  "noteOptional": "Note (optional, only your team sees it)",
+  "compNotePlaceholder": "Cast family",
+  "giveTickets": "Give tickets",
+  "couldNotGiveTickets": "The tickets couldn't be given. Try again.",
+  "giveTicketsNeedsPublished": "Publish the event to give tickets."
 }

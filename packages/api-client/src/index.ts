@@ -175,6 +175,8 @@ export type {
   AddEventShowsBody,
   AddEventShowsResult,
   EventShow,
+  GiveComplimentaryTicketsBody,
+  GiveComplimentaryTicketsResult,
   GroupDiscountTierBody,
   ShowRunSlotBody,
   SetEventGroupPricesBody,

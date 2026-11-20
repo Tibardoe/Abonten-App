@@ -508,5 +508,16 @@
   "notSeated": "Sem lugar numerado",
   "sellsSeats": "{seats, plural, one {Vende # lugar} other {Vende # lugares}}",
   "saveSeating": "Guardar lugares",
-  "stopSeating": "Deixar de numerar lugares"
+  "stopSeating": "Deixar de numerar lugares",
+  "giveFreeTickets": "Oferecer bilhetes",
+  "giveFreeTicketsIntro": "Para o elenco, a imprensa, os patrocinadores ou a família: bilhetes reais na conta da pessoa, tirados dos seus lugares e validados à entrada como os outros. Não há dinheiro envolvido e não são reembolsáveis.",
+  "giveTo": "Para",
+  "giveToPlaceholder": "@utilizador ou número de telefone",
+  "howMany": "Quantos",
+  "forDate": "Para a data",
+  "noteOptional": "Nota (opcional, só a sua equipa a vê)",
+  "compNotePlaceholder": "Família do elenco",
+  "giveTickets": "Oferecer bilhetes",
+  "couldNotGiveTickets": "Não foi possível oferecer os bilhetes. Tente de novo.",
+  "giveTicketsNeedsPublished": "Publique o evento para oferecer bilhetes."
 }

@@ -220,6 +220,8 @@ import type {
   FollowTargetKind,
   FreeRsvpBody,
   FreeRsvpResult,
+  GiveComplimentaryTicketsBody,
+  GiveComplimentaryTicketsResult,
   HighlightPlaybackBody,
   HighlightPlaybackResult,
   LoyaltyProgressResult,
@@ -1582,11 +1584,6 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       /**
-       * Replace the caller's event's automatic group prices (an empty list
-       * removes them). Editable any time; 403 when group pricing is not
-       * switched on for the organizer.
-       */
-      /**
        * Adds shows to a listing's run (a weekly pattern or dates), or makes
        * a separate copy with one date (body.separate).
        */
@@ -1596,6 +1593,21 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body, auth: true },
         );
       },
+      /** Gives free tickets of one of the event's types to a named person. */
+      giveComplimentaryTickets(
+        eventId: string,
+        body: GiveComplimentaryTicketsBody,
+      ) {
+        return request<GiveComplimentaryTicketsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/complimentary`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * Replace the caller's event's automatic group prices (an empty list
+       * removes them). Editable any time; 403 when group pricing is not
+       * switched on for the organizer.
+       */
       setEventGroupPrices(eventId: string, body: SetEventGroupPricesBody) {
         return request<SetEventGroupPricesResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(

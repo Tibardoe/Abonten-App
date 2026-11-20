@@ -1,6 +1,7 @@
 "use client";
 
 import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
+import GiveComplimentaryCard from "@/events/molecules/GiveComplimentaryCard";
 import ManageEventSeatingCard from "@/events/molecules/ManageEventSeatingCard";
 import ManageEventShowsCard from "@/events/molecules/ManageEventShowsCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
@@ -154,6 +155,11 @@ export default function ManageEventView({
                   startsAt={event.starts_at}
                   endsAt={event.ends_at}
                 />
+              </div>
+            )}
+            {event.status === "published" && (
+              <div className="mt-8">
+                <GiveComplimentaryCard event={event} />
               </div>
             )}
           </>
