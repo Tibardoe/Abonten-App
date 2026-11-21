@@ -24,7 +24,7 @@ import { useMarketContext } from "@/hooks/useMarketContext";
 import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
 import { GROUP_PRICING_FLAG } from "@abonten/core/groupPricing";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 type EventUploadFormFieldsProps = Pick<
   ReturnType<typeof useEventUploadForm>,
@@ -72,7 +72,11 @@ type EventUploadFormFieldsProps = Pick<
   | "isPlacePreselected"
   | "hasAttemptedSubmit"
   | "invalidSection"
-> & { className?: string };
+> & {
+  className?: string;
+  /** "Publishing as", above the fields (EventUploadModal owns its switch). */
+  publishingAs?: ReactNode;
+};
 
 // The event-details fields shared by every step-2 (details) screen of the
 // event upload flow. Previously pasted twice (once per desktop/mobile
@@ -128,6 +132,7 @@ export default function EventUploadFormFields({
   hasAttemptedSubmit,
   invalidSection,
   className,
+  publishingAs,
 }: EventUploadFormFieldsProps) {
   const t = useTranslations("common");
   // Group tickets and group prices: switched on per organizer by staff.
@@ -154,6 +159,8 @@ export default function EventUploadFormFields({
     <Form {...form}>
       <form className={className} onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-6 py-5 font-normal">
+          {publishingAs}
+
           {/* Event basics -- what is the event? */}
           <div className="space-y-4 text-sm">
             <FormField

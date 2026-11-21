@@ -1,4 +1,11 @@
 {
-  "EventUploadModal": ["common", "core", "events", "places", "validation"],
-  "PlaceUploadModal": ["common", "core", "places", "validation"]
+  "EventUploadModal": [
+    "common",
+    "core",
+    "events",
+    "places",
+    "teams",
+    "validation"
+  ],
+  "PlaceUploadModal": ["common", "core", "places", "teams", "validation"]
 }

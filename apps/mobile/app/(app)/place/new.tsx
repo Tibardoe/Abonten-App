@@ -10,7 +10,7 @@ import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { FormSkeleton } from "@/components/skeletons";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
-import { PublishingAsBanner } from "@/features/teams/ManagingAs";
+import { PublishingAsChooser } from "@/features/teams/ManagingAs";
 import {
   AppText,
   Hero,
@@ -160,7 +160,15 @@ export default function CreatePlaceScreen() {
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4"
       >
-        <PublishingAsBanner />
+        {/* Who it goes out as, at the start and again before Publish. A
+            resumed draft already has its account. */}
+        {w.step === 0 || w.step === LAST_STEP ? (
+          <PublishingAsChooser
+            capability="places.manage"
+            locked={!!draftId}
+            disabled={w.isSubmitting || w.uploadingPhotos}
+          />
+        ) : null}
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
             <StepDots step={w.step} total={STEPS.length} />
