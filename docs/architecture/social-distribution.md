@@ -2,7 +2,7 @@
 title: Social distribution — posting listings, tagged links and the weekly views note
 purpose: How Abonten posts new events and places on its own social channels, how the links it posts are tagged so a listing's views record which channel brought them, and how listers are told every Monday what their listings drew.
 audience: Engineering, operations and support
-scope: "@abonten/core/social/linkSources; the source column on event_analytics_event and place_analytics_event, listing_views_weekly_run, listing_views_weekly_notices() and the listing-views-weekly job (migration 20261121230000); the website's EventViewLogger / PlaceViewLogger and logEventView / logPlaceEngagement; the app's useLogEventView / useLogPlaceView and +native-intent.ts; the listing_views_weekly notice; @abonten/core/social/appLinks, qrLinkTarget's open/src referrer, GetTheAppLink, the Smart App Banner on event and place pages, apps/mobile/src/lib/installReferrer.ts and useInstallListingOpen."
+scope: "@abonten/core/social/linkSources; the source column on event_analytics_event and place_analytics_event, listing_views_weekly_run, listing_views_weekly_notices() and the listing-views-weekly job (migration 20261121230000); the website's EventViewLogger / PlaceViewLogger and logEventView / logPlaceEngagement; the app's useLogEventView / useLogPlaceView and +native-intent.ts; the listing_views_weekly notice; @abonten/core/social/appLinks, qrLinkTarget's open/src referrer, GetTheAppLink, the Smart App Banner on event and place pages, apps/mobile/src/lib/installReferrer.ts and useInstallListingOpen; social_queue_setting, social_post, social_queue_listings(), social_queue_roundup(), the social-queue-listings and social-queue-roundups jobs, @abonten/services/admin/social and Admin › Social."
 status: Review required
 version: 1.0
 lastReviewed: 2026-11-21
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Social distribution
 
-**State (2026-11-21): built.** Three parts, built together:
+**State (2026-11-21): built, not yet live.** Three parts, built together:
 
 1. **Admin › Social posting queue** — a daily list of new events and places to post, with the picture, the caption and a tagged link for each channel (section 4).
 2. **Tagged links and the weekly views note** — the links Abonten posts carry `?src=<channel>`; a listing's page view records the channel, and every Monday each lister is told how many views their listings had and how many came from Abonten's own posts (sections 1–3).
@@ -55,7 +55,17 @@ To send it by hand (for example after the job failed): `select public.listing_vi
 
 ## 4. Admin › Social posting queue
 
-Built in a separate change; this section is completed when that change lands.
+Admin › Social is the daily list of what to post on Abonten's own channels (migration `20261121220000_social_queue`; handbook [admin/social.md](../admin/social.md)). Nothing is posted automatically: staff post and then mark each item.
+
+- **Tables** (service role only):
+  - `social_queue_setting` is one row: `enabled` (on), `daily_cap` (12 new listings a day, on Accra's calendar), `excluded_account_ids` (seeded with the App Review sample organizer) and the job's `queue_watermark`.
+  - `social_post` is one row per subject per channel. A subject is an event, a place, or a roundup (`week:<Monday>` / `weekend:<Friday>` with its `event_ids` in order). Channels are `ig_story`, `ig_feed`, `x`, `wa_channel`; status `pending`, `posted` or `skipped`, with who and when. The same subject is never queued twice on a channel.
+- **New listings.** The `social-queue-listings` job (every 15 minutes, `social_queue_listings()`) takes listings published at least 5 minutes earlier, past the watermark. An event qualifies when the Explore rule (`_explore_event_candidates`, run once per batch) lists it, its next date has not started, it is visible and its organizer is active and not excluded; a run of shows is queued once. A place qualifies when it is published, visible, not closed, in an open market and its owner is active and not excluded. Each goes to `ig_story`, `x` and `wa_channel`. Past the day's cap the rest wait for the next day.
+- **Roundups.** The `social-queue-roundups` job (07:00 UTC on Mondays and Fridays, `social_queue_roundup()`) queues "What's on in Accra this week" or "This weekend in Accra": up to 10 events on in the window within the Accra city radius (`market_region` `accra`, the city named by `ROUNDUP_CITY` in `@abonten/core/social/roundups`), featured or promoted first, for `ig_feed`, `x` and `wa_channel`. The cover picture is `/api/share/roundups/<kind>-<date>/cover`.
+- **Computed when the page is read, never stored**, in `@abonten/services/admin/social`: the English captions (X kept within 280 the way X counts, a link as 23), the links tagged with the channel through `withLinkSource` (`?src=ig`, `x`, `wa`), and the share-kit pictures. Never hand out a link without its tag: it is how listers see what the posts brought (section 3).
+- **Who posts what.** The founder posts Instagram (Story with a link sticker, feed with "link in bio") by hand from the phone; Instagram is never driven by a program. An operator posts X and the WhatsApp Channel. Each post is then marked posted or skipped (audited `social.post.posted`, `.skipped`, `.reopened`; settings `social.settings.update`).
+- **Permissions**: `social.view` and `social.manage` (operations and moderator; super_admin in code; no step-up). The admin console serves the pictures from its own address (`/social/image`, which accepts only a share-kit kind, key and format).
+- **Switching it off**: the settings card on the page (`enabled`). There is no environment kill switch.
 
 ## 5. Install then open the listing
 
