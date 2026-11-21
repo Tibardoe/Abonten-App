@@ -15,7 +15,11 @@ import {
   shareImageFileName,
   shareImagePath,
 } from "@abonten/core/shareKit/shareKit";
-import { withLinkSource } from "@abonten/core/social/linkSources";
+import { APP_OPEN_PARAM, appOpenTarget } from "@abonten/core/social/appLinks";
+import {
+  LINK_SOURCE_PARAM,
+  withLinkSource,
+} from "@abonten/core/social/linkSources";
 import {
   ROUNDUP_CITY,
   type Roundup,
@@ -97,6 +101,19 @@ function tagged(path: string, channel: SocialChannel): string {
     `${PUBLIC_SITE_ORIGIN}${path}`,
     SOCIAL_CHANNEL_SOURCE[channel],
   );
+}
+
+/**
+ * "Get the app" for a post. For an event or a place it names the listing
+ * (/go/app?open=/events/<code>&src=wa): an Android phone without the app
+ * installs from Google Play and then opens that listing
+ * (@abonten/core/social/appLinks). "/" stays readable, as a query allows.
+ * A roundup has no one listing: the plain link.
+ */
+function appLinkFor(path: string, channel: SocialChannel): string {
+  const target = appOpenTarget(path);
+  if (!target) return tagged("/go/app", channel);
+  return `${PUBLIC_SITE_ORIGIN}/go/app?${APP_OPEN_PARAM}=${target.path}&${LINK_SOURCE_PARAM}=${SOCIAL_CHANNEL_SOURCE[channel]}`;
 }
 
 type PostRow = {
@@ -371,7 +388,7 @@ function captionOf(
   path: string,
 ): { caption: string; link: string; xLength: number | null } {
   const link = tagged(path, row.channel);
-  const caption = build({ link, appLink: tagged("/go/app", row.channel) });
+  const caption = build({ link, appLink: appLinkFor(path, row.channel) });
   return {
     caption,
     link,

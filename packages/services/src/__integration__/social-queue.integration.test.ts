@@ -419,8 +419,9 @@ describe("social posting queue", () => {
     expect(story?.link).toMatch(/\?src=ig$/);
     expect(story?.images[0]?.format).toBe("story");
     const wa = listing?.items.find((i) => i.channel === "wa_channel");
-    expect(wa?.caption).toContain(
-      "Get the app: https://abontenhub.com/go/app?src=wa",
+    // "Get the app" names the listing, so an Android install lands on it.
+    expect(wa?.caption).toMatch(
+      /Get the app: https:\/\/abontenhub\.com\/go\/app\?open=\/places\/[a-z0-9_-]+&src=wa/,
     );
 
     const roundup = subjects.find((s) => s.key === `roundup:${roundupKeys[0]}`);
