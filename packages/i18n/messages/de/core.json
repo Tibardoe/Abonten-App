@@ -197,7 +197,8 @@
   },
   "eventStatus": {
     "ended": "Event beendet",
-    "ongoing": "Läuft gerade"
+    "ongoing": "Läuft gerade",
+    "postponed": "Verschoben"
   },
   "eventTypes": {
     "academicSeminars": "Akademische Seminare",
@@ -1508,5 +1509,6 @@
     "rowLabel": "Jede Reihe braucht eine Bezeichnung mit bis zu 6 Zeichen.",
     "duplicateRow": "Zwei Reihen eines Bereichs haben dieselbe Bezeichnung.",
     "rowSeats": "Eine Reihe hat 1 bis {max} Plätze."
-  }
+  },
+  "postponedNewDateToCome": "Verschoben, neuer Termin folgt"
 }

@@ -263,13 +263,16 @@ export default function EventDetailScreen() {
     null,
   );
   const approxPrice = estimate(lowest, event.currency ?? "");
-  const when = getFormattedEventDate(
-    event.starts_at,
-    event.ends_at,
-    event.event_occurrence,
-    event.timezone,
-    locale,
-  );
+  // A postponed event has no date to show: its old one would mislead.
+  const when = event.postponed_at
+    ? { date: tc("postponedNewDateToCome"), time: "" }
+    : getFormattedEventDate(
+        event.starts_at,
+        event.ends_at,
+        event.event_occurrence,
+        event.timezone,
+        locale,
+      );
   const tags = parseEventTypes(event.event_type);
   const canceled = event.status === "canceled";
   const occ = event.event_occurrence ?? [];
@@ -577,7 +580,11 @@ export default function EventDetailScreen() {
             <InfoRow
               icon="location-outline"
               label={address ?? t("locationUnavailable")}
-              sub={event.place ? `At ${event.place.name}` : undefined}
+              sub={
+                event.place
+                  ? t("atPlaceName", { name: event.place.name })
+                  : undefined
+              }
             />
             {/* Turnout once someone is going; before that, just the
                 capacity ("0 attending" reads as a warning sign). */}
@@ -814,7 +821,7 @@ export default function EventDetailScreen() {
                   {t("youReGoing")}
                 </AppText>
                 <AppText variant="bodyStrong" numberOfLines={1}>
-                  {when.date} · {when.time}
+                  {when.time ? `${when.date} · ${when.time}` : when.date}
                 </AppText>
               </>
             ) : (

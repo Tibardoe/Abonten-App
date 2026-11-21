@@ -64,6 +64,7 @@ export default function OrganizerManagedEventsList({
           event.starts_at,
           event.ends_at,
           event.occurrences,
+          !!event.postponed_at,
         );
         const draftOrTerminalStatus =
           event.status && STATUS_LABELS[event.status]

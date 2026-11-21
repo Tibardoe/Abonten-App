@@ -26,6 +26,7 @@ export default function EventCard({
   address,
   starts_at,
   ends_at,
+  postponed_at,
   occurrences,
   min_price,
   attendanceCount,
@@ -60,6 +61,7 @@ export default function EventCard({
     starts_at,
     ends_at,
     occurrences,
+    !!postponed_at,
   );
   const attendees = attendanceCount ?? attendance_count ?? 0;
   // Room under the headcount cap and stock left in the ticket tiers are two
