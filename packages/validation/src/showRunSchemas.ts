@@ -50,3 +50,13 @@ export const addEventShowsSchema = z
     path: ["rule"],
   });
 export type AddEventShowsSchemaInput = z.infer<typeof addEventShowsSchema>;
+
+/** The account's other runs that could join this listing's run. */
+export const joinableRunsSchema = z.object({ eventId: z.string().uuid() });
+
+/** Brings another listing (with every show of its run) into this run. */
+export const joinEventRunsSchema = z.object({
+  eventId: z.string().uuid(),
+  otherEventId: z.string().uuid(),
+});
+export type JoinEventRunsSchemaInput = z.infer<typeof joinEventRunsSchema>;

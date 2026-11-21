@@ -232,6 +232,9 @@ import type {
   HighlightPlaybackBody,
   HighlightPlaybackResult,
   HolderRescheduleResult,
+  JoinEventRunsBody,
+  JoinEventRunsResult,
+  JoinableRunsResult,
   LoyaltyProgressResult,
   MarkConversationReadBody,
   MarkConversationUnreadBody,
@@ -1638,6 +1641,20 @@ export function createApiClient(options: ApiClientOptions) {
       addEventShows(eventId: string, body: AddEventShowsBody) {
         return request<AddEventShowsResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/shows`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** The account's other runs that could join this listing's run. */
+      joinableRuns(eventId: string) {
+        return request<JoinableRunsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/shows/join`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Brings another listing, with every show of its run, into this run. */
+      joinEventRuns(eventId: string, body: JoinEventRunsBody) {
+        return request<JoinEventRunsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/shows/join`,
           { method: "POST", body, auth: true },
         );
       },

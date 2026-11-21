@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { supabase } from "@/lib/supabase";
 import type {
   AddEventShowsBody,
@@ -49,6 +50,34 @@ export function useAddShowPass(eventId: string) {
       api.organizer.addShowPass(eventId, body),
     onSuccess: (res) => {
       if (res.status === 200) {
+        qc.invalidateQueries({ queryKey: ["mobile", "organizer"] });
+      }
+    },
+  });
+}
+
+/**
+ * The account's other runs that could join this listing's run, and the
+ * join itself (show-runs.md §2b); acts for the chosen team like the rest.
+ */
+export function useJoinableRuns(eventId: string, enabled = true) {
+  return useQuery({
+    queryKey: ["mobile", "event-shows", "joinable", eventId],
+    enabled: !!eventId && enabled,
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.joinableRuns(eventId)),
+    staleTime: 30_000,
+  });
+}
+
+export function useJoinEventRuns(eventId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (otherEventId: string) =>
+      api.organizer.joinEventRuns(eventId, { otherEventId }),
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        qc.invalidateQueries({ queryKey: ["mobile", "event-shows"] });
         qc.invalidateQueries({ queryKey: ["mobile", "organizer"] });
       }
     },

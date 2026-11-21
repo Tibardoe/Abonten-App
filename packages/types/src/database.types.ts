@@ -16974,6 +16974,10 @@ export type Database = {
         }
         Returns: string
       }
+      event_join_runs: {
+        Args: { p_account: string; p_event_id: string; p_other_event_id: string }
+        Returns: Json
+      }
       event_reschedule: {
         Args: {
           p_actor: string

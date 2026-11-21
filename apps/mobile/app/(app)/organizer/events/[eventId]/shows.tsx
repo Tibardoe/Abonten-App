@@ -1,5 +1,6 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
+import { JoinRunsSection } from "@/features/events/JoinRunsSection";
 import {
   ShowVenueField,
   type ShowVenueState,
@@ -465,6 +466,8 @@ export default function EventShowsScreen() {
           onPress={makeCopy}
         />
       </View>
+
+      {id ? <JoinRunsSection eventId={id} /> : null}
 
       {event?.series_id ? (
         <View className="gap-3 border-t border-border pt-5">

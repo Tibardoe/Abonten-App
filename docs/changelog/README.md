@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-21 — Join another run
+
+- An organizer (or a team member who manages events) can now bring another of their upcoming listings, with every show of its run, into a listing's run, so a play copied for its second week is listed once again (website Manage › Details › Shows › Join another run; app Shows and copies). `public.event_join_runs()` (service role only) refuses another account's listing, an unpublished or ended one, the same run, another country or currency, a run with a pass, and two shows at the same time at one venue. `listJoinableRunsCore` / `joinEventRunsCore`; `GET`/`POST /api/mobile/organizer/events/:eventId/shows/join`. Migration `20261121210000_join_runs`. Docs: `architecture/show-runs.md` 1.3 §2b.
+
 ## 2026-11-21 — Move events into a team
 
 - An Owner of a team can now move one of their own events into it, the whole run of shows at once, while nobody has bought or registered (website Manage › Details › Move to a team; app Organizer › the event › Move to a team). The seating plan and the conversations about the events move too, and the person then manages it as the team. `public.team_move_events()` (service role only) holds the rules; `getMoveEventToTeamOptionsCore` / `moveEventToTeamCore`; `GET`/`POST /api/mobile/organizer/events/:eventId/move-to-team`. "Make this a team" (`team_convert_account`) now also moves runs of shows and seating plans. Migration `20261121200000_team_move_events`. Docs: `architecture/team-accounts.md` §4f, §4f2.
