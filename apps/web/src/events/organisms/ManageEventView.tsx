@@ -6,6 +6,7 @@ import ManageEventPassCard from "@/events/molecules/ManageEventPassCard";
 import ManageEventRescheduleCard from "@/events/molecules/ManageEventRescheduleCard";
 import ManageEventSeatingCard from "@/events/molecules/ManageEventSeatingCard";
 import ManageEventShowsCard from "@/events/molecules/ManageEventShowsCard";
+import MoveEventToTeamCard from "@/events/molecules/MoveEventToTeamCard";
 import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
@@ -179,6 +180,8 @@ export default function ManageEventView({
                 <GiveComplimentaryCard event={event} />
               </div>
             )}
+            {/* The person's own event: an Owner of a team may move it in. */}
+            {teamRole === null && <MoveEventToTeamCard eventId={event.id} />}
           </>
         )}
 

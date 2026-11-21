@@ -7,6 +7,8 @@ import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
 import { useToast } from "@/hooks/useToast";
+import PublishingAsChoice from "@/teams/atoms/PublishingAsChoice";
+import { useSwitchActingTeamInForm } from "@/teams/useActingContext";
 import { invalidatePlaceListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
@@ -71,6 +73,9 @@ export default function PlaceUploadModal({
   const [step, setStep] = useState<Step>(1);
   const [showCrop, setShowCrop] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  // "Publishing as": owned here, not by a step, because the pages behind
+  // the form are reloaded only once the whole modal closes.
+  const switchPublishingAs = useSwitchActingTeamInForm();
 
   const {
     imagePreview,
@@ -157,6 +162,18 @@ export default function PlaceUploadModal({
   const coverPreview =
     croppedPreview ?? imagePreview ?? existingCoverPreviewUrl ?? null;
 
+  // Who the place goes out as, on the first step and again before Publish.
+  // A resumed draft already has its account.
+  const publishingAs = (
+    <PublishingAsChoice
+      capability="places.manage"
+      onSwitch={switchPublishingAs}
+      locked={!!draftId}
+      disabled={isUploading}
+      className="w-full md:w-[60%] mx-auto mt-3"
+    />
+  );
+
   return (
     <>
       <ModalShell
@@ -187,6 +204,7 @@ export default function PlaceUploadModal({
                   disabled: isUploading || isResolvingLocation,
                 }}
               />
+              {publishingAs}
               <PlaceCreateStepBasicInfo
                 {...placeUploadForm}
                 className="space-y-4 w-full md:w-[60%] mx-auto py-5 overflow-y-auto"
@@ -257,6 +275,7 @@ export default function PlaceUploadModal({
                   disabled: isUploading,
                 }}
               />
+              {publishingAs}
               <PlaceCreateStepReview
                 {...placeUploadForm}
                 coverPreview={coverPreview}

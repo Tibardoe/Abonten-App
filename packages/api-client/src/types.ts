@@ -74,6 +74,8 @@ import type {
 import type {
   ActingTeams,
   InviteTarget,
+  MoveEventToTeamResult as MoveEventToTeamData,
+  MoveEventToTeamOptions,
   TeamConversion,
   TeamDetail,
   TeamInviteSent,
@@ -2617,6 +2619,9 @@ export type ConvertAccountToTeamBody = {
   termsVersion?: string | null;
 };
 export type ConvertAccountToTeamResult = ApiEnvelope<TeamConversion>;
+export type MoveEventToTeamOptionsResult = ApiEnvelope<MoveEventToTeamOptions>;
+export type MoveEventToTeamBody = { teamId: string };
+export type MoveEventToTeamResult = ApiEnvelope<MoveEventToTeamData>;
 export type TeamDetailResult = ApiEnvelope<TeamDetail>;
 export type RenameTeamResult = ApiEnvelope<{ name: string }>;
 export type TeamInviteeResult = ApiEnvelope<TicketTransferRecipient>;

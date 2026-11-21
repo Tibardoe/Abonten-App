@@ -3,6 +3,7 @@ import { useEventInsights } from "@/features/organizer/useEventInsights";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
 import { ShareKitSection } from "@/features/shareKit/ShareKitSection";
 import { TeamNavRow } from "@/features/teams/ManagingAs";
+import { useMoveEventToTeamOptions } from "@/features/teams/useMoveEventToTeam";
 import { useActingTeams } from "@/features/teams/useTeams";
 import { EventTicketPlansSection } from "@/features/ticketPlans/EventTicketPlansSection";
 import { EventTicketTransfersSection } from "@/features/ticketTransfers/EventTicketTransfersSection";
@@ -478,6 +479,21 @@ function ReturningSection({
   );
 }
 
+/** "Move to a team", only for people who are an Owner of a team. */
+function MoveToTeamRow({ eventId }: { eventId: string }) {
+  const tEvents = useTranslations("events");
+  const options = useMoveEventToTeamOptions(eventId);
+  const res = options.data;
+  const teams = res?.status === 200 ? (res.data?.teams ?? []) : [];
+  if (teams.length === 0) return null;
+  return (
+    <TeamNavRow
+      href={`/(app)/organizer/events/${eventId}/move-to-team`}
+      label={tEvents("moveToTeamTitle")}
+    />
+  );
+}
+
 function EventInsightsScreen() {
   const { locale } = useLocale();
 
@@ -589,6 +605,8 @@ function EventInsightsScreen() {
               label={tEvents("rescheduleTitle")}
             />
           ) : null}
+          {/* The person's own event: an Owner of a team may move it in. */}
+          {!current ? <MoveToTeamRow eventId={eventId} /> : null}
         </View>
       ) : null}
 

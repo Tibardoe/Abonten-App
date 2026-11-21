@@ -56,8 +56,82 @@ export function ManagingAsCard() {
 }
 
 /**
- * On the publish screens: says the listing goes out as the team, with a way
- * back to the person's own account.
+ * On the event and place create screens: who the listing goes out as.
+ * Shown to anyone in a team whose role covers publishing it, and to anyone
+ * managing as a team, so a listing never lands on the wrong account
+ * unnoticed (it happened: twelve events on an organizer's own account that
+ * his team could not manage). The choices are the person's own account and
+ * each such team. `locked` (a resumed draft, or an event started from a
+ * place's page): the account is already decided, so it is only shown.
+ * `disabled`: while publishing.
+ */
+export function PublishingAsChooser({
+  capability,
+  locked = false,
+  disabled = false,
+}: {
+  capability: "events.manage" | "places.manage";
+  locked?: boolean;
+  disabled?: boolean;
+}) {
+  const t = useTranslations("teams");
+  const { teams, current } = useActingTeams();
+  const switchTo = useSwitchActingTeam();
+  const eligible = teams.filter((team) => teamRoleCan(team.role, capability));
+  if (!current && eligible.length === 0) return null;
+
+  const currentCovers = !current || teamRoleCan(current.role, capability);
+  const canSwitch = !locked && !disabled;
+  // The remembered team, until the list arrives from the server.
+  const remembered =
+    current && currentCovers && !teams.some((tm) => tm.id === current.teamId);
+
+  return (
+    <View className="gap-2 rounded-xl border border-border bg-card p-3">
+      <Overline>{t("publishingAsLabel")}</Overline>
+      <View className="flex-row flex-wrap gap-2">
+        {!locked || !current ? (
+          <Chip
+            label={t("yourAccount")}
+            selected={!current}
+            onPress={canSwitch ? () => switchTo(null) : undefined}
+          />
+        ) : null}
+        {remembered ? <Chip label={current.name ?? ""} selected /> : null}
+        {eligible
+          .filter((team) => !locked || current?.teamId === team.id)
+          .map((team) => (
+            <Chip
+              key={team.id}
+              label={team.name ?? `@${team.username ?? ""}`}
+              selected={current?.teamId === team.id}
+              onPress={
+                canSwitch
+                  ? () =>
+                      switchTo({
+                        teamId: team.id,
+                        name: team.name,
+                        role: team.role,
+                      })
+                  : undefined
+              }
+            />
+          ))}
+      </View>
+      {!currentCovers ? (
+        <AppText variant="small" tone="error">
+          {t("publishingAsRoleCannot", { team: current?.name ?? "" })}
+        </AppText>
+      ) : !locked ? (
+        <AppText variant="meta">{t("publishingAsHint")}</AppText>
+      ) : null}
+    </View>
+  );
+}
+
+/**
+ * On the Spotlight and Story screens: says the post goes out as the team,
+ * with a way back to the person's own account.
  */
 export function PublishingAsBanner() {
   const t = useTranslations("teams");
