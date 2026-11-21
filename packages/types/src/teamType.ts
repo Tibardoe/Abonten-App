@@ -141,6 +141,24 @@ export type TeamsOverview = {
 };
 
 /** What "make this a team" moved to the new team. */
+/**
+ * Moving one's own event (its whole run) into a team the person is an
+ * Owner of (docs/architecture/team-accounts.md, "Move events into a team").
+ */
+export type MoveEventToTeamOptions = {
+  /** Active teams the person is an Owner of; empty: nothing to offer. */
+  teams: { id: string; name: string | null; username: string | null }[];
+  /** How many listings would move: the event, or every show of its run. */
+  eventCount: number;
+  /** People bought or registered already: it stays where it is. */
+  hasSales: boolean;
+};
+
+export type MoveEventToTeamResult = {
+  team: { id: string; name: string | null; role: TeamRoleCode };
+  events: number;
+};
+
 export type TeamConversion = {
   team: TeamSummary;
   events: number;

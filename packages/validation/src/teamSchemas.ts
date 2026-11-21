@@ -76,6 +76,16 @@ export const noInputSchema = z.object({});
 
 export const teamIdSchema = z.object({ teamId: uuid });
 
+/** What "Move to a team" can offer for one of the person's events. */
+export const moveEventToTeamOptionsSchema = z.object({ eventId: uuid });
+
+/** An Owner moves one of their own events (its whole run) into the team. */
+export const moveEventToTeamSchema = z.object({
+  eventId: uuid,
+  teamId: uuid,
+});
+export type MoveEventToTeamSchemaInput = z.infer<typeof moveEventToTeamSchema>;
+
 /** An Owner accepts the published team terms for the team (N4). */
 export const acceptTeamTermsSchema = z.object({
   teamId: uuid,

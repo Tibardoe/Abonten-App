@@ -55,6 +55,7 @@
     "emails:ticket.event",
     "events:event",
     "events:eventsIn",
+    "events:moveToTeamChoose",
     "events:optional",
     "events:promoterUsernamePlaceholder",
     "events:tabs.details",
