@@ -1,5 +1,11 @@
+import { isEnglishLike } from "@abonten/core/i18n/coreStrings";
 import { AppText, Icon, Sheet } from "@abonten/ui-native";
-import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -10,17 +16,20 @@ import {
   View,
 } from "react-native";
 
-// A polished, iPhone-alarm-style time picker: three snapping wheels
-// (hour 1–12, minute 00–59, AM/PM) over a centred selection band, in a
-// bottom sheet. Pure JS — no native module. Values cross the boundary as
-// "HH:MM" 24-hour strings so the event/place wizards' existing state and
-// serialisation are untouched; the wheel UI is 12-hour for familiarity.
+// A polished, iPhone-alarm-style time picker: snapping wheels over a
+// centred selection band, in a bottom sheet. Pure JS — no native module.
+// The clock follows the app's language: 12-hour with AM/PM in English
+// (hour 1–12, minute, AM/PM), 24-hour everywhere else (hour 00–23,
+// minute), as people read times there. Values cross the boundary as
+// "HH:MM" 24-hour strings either way, so the wizards' state and
+// serialisation are untouched.
 
 const ITEM_H = 44;
 const VISIBLE = 5; // odd, so one row sits dead-centre
 const PAD = ((VISIBLE - 1) / 2) * ITEM_H;
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1); // 1..12
+const HOURS_24 = Array.from({ length: 24 }, (_, i) => i); // 0..23
 const MINUTES = Array.from({ length: 60 }, (_, i) => i); // 0..59
 const PERIODS = ["AM", "PM"] as const;
 
@@ -41,10 +50,25 @@ function toHHMM(h12: number, m: number, pm: boolean): string {
   return `${String(h24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** "6:05 PM" — the human label shown on the trigger and review screens. */
-export function prettyTime(value: string | null): string {
+/** Whether times read on a 12-hour clock in this language. */
+function twelveHour(locale: string | null | undefined): boolean {
+  return isEnglishLike(locale);
+}
+
+/**
+ * "6:05 PM" in English, "18:05" elsewhere — the human label shown on the
+ * trigger and review screens, in the app's language.
+ */
+export function prettyTime(
+  value: string | null,
+  locale: string | null = getCurrentLocale(),
+): string {
   if (!value) return translatorFor("common")("setTime");
   const { h12, m, pm } = parse(value);
+  if (!twelveHour(locale)) {
+    const h24 = pm ? (h12 % 12) + 12 : h12 % 12;
+    return `${String(h24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
   return `${h12}:${String(m).padStart(2, "0")} ${pm ? "PM" : "AM"}`;
 }
 
@@ -162,24 +186,34 @@ export function TimeField({
   invalid?: boolean;
 }) {
   const t = useTranslations("common");
+  const { locale } = useLocale();
+  const twelve = twelveHour(locale);
 
   const c = useThemeColors();
   const [open, setOpen] = useState(false);
   const initial = useMemo(() => parse(value), [value]);
-  const [hIdx, setHIdx] = useState(initial.h12 - 1);
+  const hourIndex = (p: { h12: number; pm: boolean }) =>
+    twelve ? p.h12 - 1 : p.pm ? (p.h12 % 12) + 12 : p.h12 % 12;
+  const [hIdx, setHIdx] = useState(hourIndex(initial));
   const [mIdx, setMIdx] = useState(initial.m);
   const [pIdx, setPIdx] = useState(initial.pm ? 1 : 0);
 
   function openSheet() {
     const p = parse(value);
-    setHIdx(p.h12 - 1);
+    setHIdx(hourIndex(p));
     setMIdx(p.m);
     setPIdx(p.pm ? 1 : 0);
     setOpen(true);
   }
 
   function confirm() {
-    onChange(toHHMM(HOURS[hIdx], MINUTES[mIdx], pIdx === 1));
+    onChange(
+      twelve
+        ? toHHMM(HOURS[hIdx], MINUTES[mIdx], pIdx === 1)
+        : `${String(HOURS_24[hIdx]).padStart(2, "0")}:${String(
+            MINUTES[mIdx],
+          ).padStart(2, "0")}`,
+    );
     setOpen(false);
   }
 
@@ -188,7 +222,7 @@ export function TimeField({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={
-          label ? `${label}: ${prettyTime(value)}` : undefined
+          label ? `${label}: ${prettyTime(value, locale)}` : undefined
         }
         onPress={openSheet}
         className={[
@@ -203,7 +237,7 @@ export function TimeField({
               : "text-[15px] text-muted-foreground"
           }
         >
-          {prettyTime(value)}
+          {prettyTime(value, locale)}
         </AppText>
         <Icon name="time-outline" size={18} tone="muted" />
       </Pressable>
@@ -240,10 +274,10 @@ export function TimeField({
               }}
             />
             <Wheel
-              data={HOURS}
+              data={twelve ? HOURS : HOURS_24}
               index={hIdx}
               onIndex={setHIdx}
-              format={(v) => String(v)}
+              format={(v) => (twelve ? String(v) : String(v).padStart(2, "0"))}
               width={64}
             />
             <AppText className="px-1 text-[22px] font-bold text-foreground">
@@ -256,13 +290,15 @@ export function TimeField({
               format={(v) => String(v).padStart(2, "0")}
               width={64}
             />
-            <Wheel
-              data={PERIODS}
-              index={pIdx}
-              onIndex={setPIdx}
-              format={(v) => v}
-              width={64}
-            />
+            {twelve ? (
+              <Wheel
+                data={PERIODS}
+                index={pIdx}
+                onIndex={setPIdx}
+                format={(v) => v}
+                width={64}
+              />
+            ) : null}
           </View>
         </View>
       </Sheet>

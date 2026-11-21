@@ -8,14 +8,17 @@ import type { CoreTranslator } from "./i18n/translator";
  * call site) so the "Ongoing"/"Event ended" words live in one place
  * (`eventStatus.*` of the core namespace). "Upcoming" and "no date info"
  * both render no overlay, matching the existing card UI which only
- * overlays ongoing/ended/sold-out/canceled.
+ * overlays ongoing/ended/sold-out/canceled. A postponed event says so: its
+ * old date passing does not end it.
  */
 export function getEventStatusOverlay(
   t: CoreTranslator,
   starts_at: Date | string | null | undefined,
   ends_at: Date | string | null | undefined,
   event_dates?: Occurrence[] | null,
+  postponed = false,
 ): string | null {
+  if (postponed) return t("eventStatus.postponed");
   const status = getEventStatus(starts_at, ends_at, event_dates);
 
   if (status === "ongoing") return t("eventStatus.ongoing");
