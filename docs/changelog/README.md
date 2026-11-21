@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-21 — Where listing views come from, and the Monday note
+
+- Links Abonten posts on its own channels carry `?src=<channel>` (`@abonten/core/social/linkSources`: ig, x, wa, tt, fb). Event and place page views on the website and in the app now record that channel in `event_analytics_event.source` / `place_analytics_event.source` (unknown tags are stored as none; the app's link handler carries the tag to the screen). Every Monday at 09:00 UTC the `listing-views-weekly` job (`listing_views_weekly_notices()`, service role only, once a week) tells each account whose listings were viewed: the views, the most viewed listing and how many came from Abonten's own posts, in the inbox and as an optional (`social`) push; a team's Owners get copies. Migration `20261121230000_listing_view_sources`. Docs: new `architecture/social-distribution.md` 1.0; `operations/scheduled-jobs.md` 1.8; `architecture/feature-inventory.md` 1.9; `privacy/data-inventory.md` 1.5; `privacy/cookies-and-storage-inventory.md` 1.3.
+
 ## 2026-11-21 — Join another run
 
 - An organizer (or a team member who manages events) can now bring another of their upcoming listings, with every show of its run, into a listing's run, so a play copied for its second week is listed once again (website Manage › Details › Shows › Join another run; app Shows and copies). `public.event_join_runs()` (service role only) refuses another account's listing, an unpublished or ended one, the same run, another country or currency, a run with a pass, and two shows at the same time at one venue. `listJoinableRunsCore` / `joinEventRunsCore`; `GET`/`POST /api/mobile/organizer/events/:eventId/shows/join`. Migration `20261121210000_join_runs`. Docs: `architecture/show-runs.md` 1.3 §2b.

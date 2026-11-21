@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { normalizeLinkSource } from "@abonten/core/social/linkSources";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
@@ -25,12 +26,17 @@ export function logPlacePromotionImpression(placeId: string): void {
  * the app's twin of the web PlaceViewLogger, so owners' "Place views" count
  * both.
  */
-export function useLogPlaceView(placeId: string | undefined): void {
+export function useLogPlaceView(
+  placeId: string | undefined,
+  /** The `src` of the Abonten link that opened the screen, if any. */
+  source?: string | null,
+): void {
+  const tag = normalizeLinkSource(source);
   useEffect(() => {
     if (!placeId) return;
     void supabase
       .from("place_analytics_event")
-      .insert({ place_id: placeId, event_type: "view", platform })
+      .insert({ place_id: placeId, event_type: "view", platform, source: tag })
       .then(() => {});
-  }, [placeId]);
+  }, [placeId, tag]);
 }

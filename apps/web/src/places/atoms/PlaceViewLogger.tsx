@@ -2,6 +2,10 @@
 
 import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import {
+  LINK_SOURCE_PARAM,
+  normalizeLinkSource,
+} from "@abonten/core/social/linkSources";
 import { useEffect } from "react";
 
 type PlaceViewLoggerProps = {
@@ -16,7 +20,11 @@ type PlaceViewLoggerProps = {
 // Renders nothing.
 export default function PlaceViewLogger({ placeId }: PlaceViewLoggerProps) {
   useEffect(() => {
-    logPlaceEngagement(placeId, "view").catch(actionUnreachable);
+    // The address's ?src= (a link Abonten posted on its own socials).
+    const source = normalizeLinkSource(
+      new URLSearchParams(window.location.search).get(LINK_SOURCE_PARAM),
+    );
+    logPlaceEngagement(placeId, "view", source).catch(actionUnreachable);
   }, [placeId]);
 
   return null;

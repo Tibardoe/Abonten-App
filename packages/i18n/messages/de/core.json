@@ -1044,6 +1044,10 @@
     "event_postponed": {
       "title": "{title} ist verschoben",
       "body": "Ein neuer Termin folgt. Öffne dein Ticket, um es zu behalten oder den vollen Betrag zurückzubekommen."
+    },
+    "listing_views_weekly": {
+      "title": "{views, plural, one {Deine Angebote hatten diese Woche # Aufruf} other {Deine Angebote hatten diese Woche # Aufrufe}}",
+      "body": "{social, plural, =0 {Am häufigsten angesehen: {top}.} one {Am häufigsten angesehen: {top}. # kam über Abontens eigene Beiträge.} other {Am häufigsten angesehen: {top}. # kamen über Abontens eigene Beiträge.}}"
     }
   },
   "openStatus": {

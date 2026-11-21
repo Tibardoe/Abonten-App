@@ -3274,6 +3274,7 @@ export type Database = {
           event_type: string
           id: string
           platform: string | null
+          source: string | null
         }
         Insert: {
           created_at?: string
@@ -3281,6 +3282,7 @@ export type Database = {
           event_type?: string
           id?: string
           platform?: string | null
+          source?: string | null
         }
         Update: {
           created_at?: string
@@ -3288,6 +3290,7 @@ export type Database = {
           event_type?: string
           id?: string
           platform?: string | null
+          source?: string | null
         }
         Relationships: [
           {
@@ -6809,6 +6812,24 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_views_weekly_run: {
+        Row: {
+          notices: number
+          ran_at: string
+          week_start: string
+        }
+        Insert: {
+          notices?: number
+          ran_at?: string
+          week_start: string
+        }
+        Update: {
+          notices?: number
+          ran_at?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       market: {
         Row: {
           address_schema: Json | null
@@ -8999,6 +9020,7 @@ export type Database = {
           id: string
           place_id: string
           platform: string | null
+          source: string | null
         }
         Insert: {
           created_at?: string
@@ -9006,6 +9028,7 @@ export type Database = {
           id?: string
           place_id: string
           platform?: string | null
+          source?: string | null
         }
         Update: {
           created_at?: string
@@ -9013,6 +9036,7 @@ export type Database = {
           id?: string
           place_id?: string
           platform?: string | null
+          source?: string | null
         }
         Relationships: [
           {
@@ -18711,6 +18735,10 @@ export type Database = {
       listing_market_visible: {
         Args: { p_country_code: string }
         Returns: boolean
+      }
+      listing_views_weekly_notices: {
+        Args: { p_now?: string }
+        Returns: number
       }
       loyalty_progress: { Args: { p_user_id: string }; Returns: Json }
       major_to_minor: {

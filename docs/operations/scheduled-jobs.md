@@ -4,8 +4,8 @@ purpose: Every scheduled job in production — what it does, when it runs, how t
 audience: Engineering, operations
 scope: pg_cron jobs in supabase/migrations
 status: Approved
-version: 1.7
-lastReviewed: 2026-10-25
+version: 1.8
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -62,6 +62,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `expire-stale-content-campaign-checkouts` | */5 min | `expire_stale_content_campaign_checkouts()` | Expire unpaid promotion checkouts after 30 minutes (skips a live payment attempt) and return the campaign to draft | Stale checkouts block a new promotion on the same post |
 | `content-attribute-conversions` | :35 hourly | `content_attribute_conversions()` | Credit ticket purchases to a promoted post tapped within 7 days | Conversion counts stop |
 | `content-campaign-reconcile` | :10, :40 | `content_campaign_reconcile()` | Promotion ledger vs paid/delivered/refunded amounts, live-without-payment, missing transaction, spend beyond delivery → critical incidents; completed promotions with unused budget unrefunded after 7 days → medium incident | Money drift goes unnoticed |
+| `listing-views-weekly` | Mondays 09:00 | `listing_views_weekly_notices()` (migration `20261121230000`) | One notice per account whose events or places were viewed in the past seven days: the views, the most viewed listing and how many came from Abonten's own tagged posts; pushed to a person, copied to a team's Owners. Once a week (`listing_views_weekly_run`) | Listers stop hearing what their listings drew; nothing else depends on it. Rerun by hand (`architecture/social-distribution.md` §3) |
 | `retire-ended-events` | 00:00 | `public.retire_ended_events()` (migration `20261004100000`) | Archive every event whose last date is over (its own dates if it has any, else its own end). Nothing is deleted: an archived event leaves discovery and keeps its page, tickets, attendance, reviews and its place on the organizer's profile (decision D8). | Ended events stay unarchived: their dates already keep them out of every list, the "Happening today" lists read a few more rows, and an organizer whose only event has ended keeps Spotlight eligibility longer. Runs in every environment; a failed run shows in Admin › Monitoring. Replaced, on 2026-10-04, the hand-made production job `cleanupExpiredEvents` and the `delete-expired-events` edge function it called (decision S8). |
 | `ensure-future-review-partitions` | 03:00 on the 1st | `ensure_future_review_partitions()` | Keep the next three monthly partitions of `review` made, each with row security on (migration `20261116110000`; the January 2027 one had been made without it) | Reviews fall into `review_default` (still saved, slower reads) |
 

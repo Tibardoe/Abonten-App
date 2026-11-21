@@ -1044,6 +1044,10 @@
     "event_postponed": {
       "title": "{title} est reporté",
       "body": "Une nouvelle date est à venir. Ouvrez votre billet pour le garder ou être remboursé intégralement."
+    },
+    "listing_views_weekly": {
+      "title": "{views, plural, one {Vos annonces ont eu # vue cette semaine} other {Vos annonces ont eu # vues cette semaine}}",
+      "body": "{social, plural, =0 {La plus vue : {top}.} one {La plus vue : {top}. # est venue des publications d'Abonten.} other {La plus vue : {top}. # sont venues des publications d'Abonten.}}"
     }
   },
   "openStatus": {

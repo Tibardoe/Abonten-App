@@ -1044,6 +1044,10 @@
     "event_postponed": {
       "title": "{title} is postponed",
       "body": "A new date is to come. Open your ticket to keep it or get a full refund."
+    },
+    "listing_views_weekly": {
+      "title": "{views, plural, one {Your listings had # view this week} other {Your listings had # views this week}}",
+      "body": "{social, plural, =0 {Most viewed: {top}.} one {Most viewed: {top}. # came from Abonten's own posts.} other {Most viewed: {top}. # came from Abonten's own posts.}}"
     }
   },
   "openStatus": {
