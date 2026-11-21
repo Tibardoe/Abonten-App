@@ -327,7 +327,7 @@ describe("social posting queue", () => {
     ]);
   });
 
-  it("queues a week's roundup once, featured events first", async () => {
+  it("queues a week's roundup of Accra once, featured events first", async () => {
     const monday = farMonday();
     const mondayMs = Date.parse(`${monday}T00:00:00Z`);
     const tuesday = await event(organizer.id, {
@@ -347,6 +347,21 @@ describe("social posting queue", () => {
       startsIn: mondayMs + 3 * DAY - Date.now(),
       title: "Roundup Excluded",
     });
+    // In the week and featured, but in Kumasi (about 200 km away): the post
+    // says "in Accra", so it stays out.
+    const kumasi = await event(organizer.id, {
+      startsIn: mondayMs + DAY + 12 * HOUR - Date.now(),
+      featured: true,
+      title: "Roundup Kumasi Night",
+    });
+    const { error: moved } = await service
+      .from("event")
+      .update({
+        location: "SRID=4326;POINT(-1.6244 6.6885)",
+        address: { full_address: "Adum, Kumasi, Ghana" },
+      } as never)
+      .eq("id", kumasi);
+    expect(moved).toBeNull();
 
     const { data, error } = await service.rpc("social_queue_roundup", {
       p_kind: "week",
@@ -367,6 +382,7 @@ describe("social posting queue", () => {
       "x",
     ]);
     expect(rows?.[0]?.event_ids).toEqual([wednesday, tuesday]);
+    expect(rows?.[0]?.event_ids).not.toContain(kumasi);
 
     const again = await service.rpc("social_queue_roundup", {
       p_kind: "week",

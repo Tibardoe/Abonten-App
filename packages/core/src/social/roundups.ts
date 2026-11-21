@@ -14,10 +14,10 @@ export type RoundupKind = (typeof ROUNDUP_KINDS)[number];
 export const ROUNDUP_MAX_EVENTS = 10;
 
 /**
- * The city a roundup is named after and links to (its Explore page). The
- * roundup lists events in the whole default market; the words name the city
- * nearly all of them are in. The cover's words (server.json › shareKit)
- * name it too.
+ * The city a roundup lists events in, is named after and links to (its
+ * Explore page): social_queue_roundup() keeps to this market_region's radius
+ * around its centre (slug 'accra' in the default market; change the two
+ * together). The cover's words (server.json › shareKit) name it too.
  */
 export const ROUNDUP_CITY = { slug: "accra", name: "Accra" } as const;
 

@@ -21,7 +21,8 @@
 --                            -> ig_story, x, wa_channel
 --   social_queue_roundup()   Monday and Friday 07:00 UTC: "What's on in Accra
 --                            this week" / "This weekend in Accra", up to 10
---                            events on in the window -> ig_feed, x, wa_channel
+--                            events on in the window within the Accra city
+--                            radius -> ig_feed, x, wa_channel
 --
 -- Which events are on is the Explore rule (_explore_event_candidates), the
 -- one rule every event list uses; a run of shows is posted once. Both tables
@@ -293,8 +294,12 @@ comment on function public.social_queue_listings(integer) is
 -- 5. Queueing the weekly roundups
 -- ---------------------------------------------------------------------------
 
--- A roundup lists up to 10 events on in its window, in the default market:
--- featured or promoted events first, then by their date. The window is a
+-- A roundup lists up to 10 events on in its window in Accra: the default
+-- market's city with slug 'accra' (market_region, kept in step with
+-- ROUNDUP_CITY in @abonten/core/social/roundups), within its radius of its
+-- centre, because the post's words and link name Accra. Featured or
+-- promoted events first, then by their date; no Accra row, no roundup
+-- (skipped 'no_city'). The window is a
 -- whole week (Monday to Sunday) or a weekend (Friday to Sunday) of the
 -- market's calendar. Without p_kind the day decides (Monday: the week,
 -- Friday: the weekend, other days: nothing); without p_start it is the
@@ -313,6 +318,7 @@ declare
   s         public.social_queue_setting;
   v_now     timestamptz := now();
   v_market  public.market;
+  v_city    public.market_region;
   v_local   date;
   v_kind    text := p_kind;
   v_start   date := p_start;
@@ -334,6 +340,13 @@ begin
     return jsonb_build_object('skipped', 'no_default_market');
   end if;
   v_local := (v_now at time zone v_market.default_timezone)::date;
+
+  select * into v_city
+  from public.market_region r
+  where r.country_code = v_market.country_code and r.slug = 'accra';
+  if not found then
+    return jsonb_build_object('skipped', 'no_city');
+  end if;
 
   if v_kind is null then
     v_kind := case extract(isodow from v_local)::integer
@@ -382,8 +395,10 @@ begin
                          where ep.event_id = e.id
                            and ep.starts_at <= v_now and ep.ends_at > v_now)) desc,
                       oe.sort_start, oe.id) as ord
+    -- The rule keeps events within the radius of the point whether or not
+    -- it measures their distance.
     from public._explore_event_candidates(
-      null, null, null,
+      v_city.centre_lat, v_city.centre_lng, v_city.radius_km::double precision,
       p_start_date => v_from,
       p_end_date => v_to,
       p_with_distance => false
