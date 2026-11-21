@@ -146,6 +146,11 @@ describe("eventJsonLd", () => {
       now: NOW,
     });
     expect(cancelled.eventStatus).toBe("https://schema.org/EventCancelled");
+    const [postponed] = eventJsonLd(
+      event({ postponed_at: "2026-11-20T15:00:00Z" }),
+      { now: NOW },
+    );
+    expect(postponed.eventStatus).toBe("https://schema.org/EventPostponed");
   });
 
   it("names the venue page when the event is at a listed place", () => {

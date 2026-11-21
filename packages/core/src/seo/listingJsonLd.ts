@@ -77,6 +77,8 @@ export type EventForJsonLd = {
   description: string | null;
   event_code: string;
   status: string;
+  /** Postponed with no new date yet: schema.org EventPostponed. */
+  postponed_at?: string | null;
   // Null for a multi-date event, whose sessions are the occurrences.
   starts_at: string | null;
   ends_at: string | null;
@@ -191,7 +193,9 @@ export function eventJsonLd(
     eventStatus:
       event.status === "canceled"
         ? "https://schema.org/EventCancelled"
-        : "https://schema.org/EventScheduled",
+        : event.postponed_at
+          ? "https://schema.org/EventPostponed"
+          : "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     location,
     ...(organizer ? { organizer } : {}),

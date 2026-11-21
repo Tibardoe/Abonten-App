@@ -124,6 +124,8 @@ export type UserPostType = {
   // that build listings from form state.
   starts_at?: string | Date | null;
   ends_at?: string | Date | null;
+  /** Postponed with no new date yet (docs/architecture/event-reschedule.md). */
+  postponed_at?: string | null;
   event_code: string;
   occurrences?: Occurrence[];
   event_occurrence?: Occurrence[];

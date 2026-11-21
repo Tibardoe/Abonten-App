@@ -188,7 +188,9 @@ export default function TicketDetailScreen() {
             <View className="flex-row items-center gap-2">
               <Icon name="calendar-outline" size={15} tone="muted" />
               <AppText variant="meta">
-                {when.date} · {when.time}
+                {ticket.event.postponed_at
+                  ? tc("postponedNewDateToCome")
+                  : `${when.date} · ${when.time}`}
               </AppText>
             </View>
             <View className="flex-row items-center gap-2">

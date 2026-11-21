@@ -587,5 +587,6 @@
   "rescheduleConfirmVenueTitle": "Mudar {title} para {venue}?",
   "rescheduleConfirmDateTitle": "Mudar esta data de {title} para {when}?",
   "thisEventIsPostponed": "Este evento foi adiado. Haverá uma nova data: os bilhetes voltam à venda nessa altura.",
-  "showPostponed": "Adiada"
+  "showPostponed": "Adiada",
+  "atPlaceName": "Em {name}"
 }
