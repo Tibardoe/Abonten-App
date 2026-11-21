@@ -4,8 +4,8 @@ purpose: Record the actual platform differences in the codebase and the true sta
 audience: Product, support, QA, engineering
 scope: apps/mobile
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-21
+version: 1.2
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -31,7 +31,7 @@ User documentation therefore describes **Android only** and says an iPhone versi
 | Maps provider | Google (`PROVIDER_GOOGLE`) with `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Apple Maps default | `NativeMap.tsx`, `SocialMap.tsx`, `MapPickerSheet.tsx` |
 | Push channel | Android notification channel created | APNs via Expo (needs Apple push credentials — unchecked) | `usePushRegistration.ts` |
 | Reminders | `channelId` set | — | `eventReminders.ts` |
-| Install referrer (invites) | Play Install Referrer read once | not available | `inviteCapture.ts` |
+| Install referrer (invites, listing hand-off) | Play Install Referrer: a friend's invite (`ref=`) read once per install; a listing's "Get the app" (`open=<path>&src=<code>`) opens that event or place once, within 48 hours of the install (2026-11-21) | not available; Safari's Smart App Banner on the event and place pages carries the page's address to the app instead | `src/lib/installReferrer.ts`, `inviteCapture.ts`, `src/features/appLinks/useInstallListingOpen.ts` |
 | Opening app settings (permission denied) | intent to app settings | `app-settings:` URL | `TicketScannerSheet.tsx`, `PlaceCheckInSheet.tsx` |
 | Native root background | decor view painted with the theme background (`expo-system-ui`) | window + root view controller painted (`expo-system-ui`) | `app/_layout.tsx`, `src/lib/nativeBackground.ts` |
 | Directions | the same "Get there" sheet on both: Google Maps first, Waze, share location, copy address (2026-10-21) | the same sheet, with Apple Maps between Google Maps and Waze; each app opens through its web link, so no new binary is needed (asking which apps are installed would need `LSApplicationQueriesSchemes`) | `src/lib/directions.ts`, `src/features/directions/DirectionsSheet.tsx` |

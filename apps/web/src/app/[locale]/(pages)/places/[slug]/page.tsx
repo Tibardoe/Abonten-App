@@ -1,6 +1,7 @@
 import { getPlaceBySlug } from "@/actions/getPlaceBySlug";
 import { getPlaceUpcomingEvents } from "@/actions/getPlaceUpcomingEvents";
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
+import GetTheAppLink from "@/components/atoms/GetTheAppLink";
 import JsonLd from "@/components/atoms/JsonLd";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReportButton from "@/components/atoms/ReportButton";
@@ -25,6 +26,7 @@ import FollowButton from "@/spotlight/molecules/FollowButton";
 import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid";
 import { cityAt, isIndexedAccount } from "@/utils/searchIndexing";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
+import { APP_STORE_LISTINGS } from "@abonten/core/brand/qrLinks";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
@@ -38,6 +40,7 @@ import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
 import { placeJsonLd } from "@abonten/core/seo/listingJsonLd";
 import { cityPath, placePath } from "@abonten/core/seo/paths";
 import { snippetText } from "@abonten/core/seo/snippet";
+import { smartAppBanner } from "@abonten/core/social/appLinks";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -120,6 +123,8 @@ export async function generateMetadata({
     title,
     description,
     alternates: languageAlternates(path, locale),
+    // iPhone Safari: Get / Open the app on this place (social/appLinks.ts).
+    itunes: smartAppBanner(path, APP_STORE_LISTINGS.ios) ?? undefined,
     ...(isIndexedAccount(place.owner_id)
       ? {}
       : { robots: { index: false, follow: true } }),
@@ -369,6 +374,8 @@ export default async function page({
                 whatsapp={place.whatsapp}
                 services={services}
               />
+              {/* Android phones only (an iPhone has Safari's banner). */}
+              <GetTheAppLink path={placePath(place.slug)} className="mt-3" />
             </div>
 
             {/* About */}

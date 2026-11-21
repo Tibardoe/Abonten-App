@@ -1,6 +1,7 @@
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
+import GetTheAppLink from "@/components/atoms/GetTheAppLink";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import ReportButton from "@/components/atoms/ReportButton";
 import {
@@ -54,10 +55,12 @@ import JsonLd from "@/components/atoms/JsonLd";
 import IdentityCheckedBadge from "@/identity/molecules/IdentityCheckedBadge";
 import { cityAt, isIndexedAccount } from "@/utils/searchIndexing";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
+import { APP_STORE_LISTINGS } from "@abonten/core/brand/qrLinks";
 import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
 import { eventJsonLd } from "@abonten/core/seo/listingJsonLd";
 import { cityPath, eventPath } from "@abonten/core/seo/paths";
 import { snippetText } from "@abonten/core/seo/snippet";
+import { smartAppBanner } from "@abonten/core/social/appLinks";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -184,6 +187,8 @@ export async function generateMetadata({
     alternates: languageAlternates(path, locale),
     title,
     description,
+    // iPhone Safari: Get / Open the app on this event (social/appLinks.ts).
+    itunes: smartAppBanner(path, APP_STORE_LISTINGS.ios) ?? undefined,
     // Sample listings are not real events (utils/searchIndexing.ts).
     ...(isIndexedAccount(event.organizer_id)
       ? {}
@@ -596,6 +601,8 @@ export default async function page({
                     {t("website")} <FiArrowUpRight className="text-base" />
                   </a>
                 )}
+                {/* Android phones only (an iPhone has Safari's banner). */}
+                <GetTheAppLink path={eventPath(event.event_code)} />
               </div>
 
               <div className="flex justify-center">
