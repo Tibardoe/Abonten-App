@@ -111,6 +111,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "teams.view",
   "teams.configure",
   "teams.manage",
+  "social.view",
+  "social.manage",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -143,6 +145,8 @@ const MODERATOR: AdminPermissionKey[] = [
   "identity.view",
   "identity.review",
   "teams.view",
+  "social.view",
+  "social.manage",
 ];
 
 const FINANCE_ADMIN: AdminPermissionKey[] = [

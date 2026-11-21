@@ -212,3 +212,25 @@ export function formatDate(
 ): string {
   return formatDateTime(value, locale, options);
 }
+
+/**
+ * Two days as one stretch the way the reader's language writes it
+ * ("23–29 Nov 2026", "23 au 29 nov. 2026"), or "" when either is not a date.
+ * The language decides what the two share (month, year) and the dash.
+ */
+export function formatDateRange(
+  from: string | number | Date | null | undefined,
+  to: string | number | Date | null | undefined,
+  locale?: string | null,
+  options: Intl.DateTimeFormatOptions = DATE,
+): string {
+  const a = toDate(from);
+  const b = toDate(to);
+  if (!a || !b) return "";
+  const format = new Intl.DateTimeFormat(intlLocale(locale), options);
+  // An engine without formatRange (older Hermes) writes both days in full.
+  if (typeof format.formatRange !== "function") {
+    return `${format.format(a)} – ${format.format(b)}`;
+  }
+  return format.formatRange(a, b);
+}

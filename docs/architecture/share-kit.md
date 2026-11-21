@@ -2,10 +2,10 @@
 title: Share kit
 purpose: Describe the share kit — the ready-made images organizers and place owners post to their own socials — how the images are drawn, where they appear and what limits them.
 audience: Engineers, founder, support
-scope: GET /api/share/..., packages/core/src/shareKit, apps/web/src/shareKit, apps/mobile/src/features/shareKit
+scope: GET /api/share/..., packages/core/src/shareKit, packages/core/src/social/roundups.ts, apps/web/src/shareKit, apps/mobile/src/features/shareKit
 status: Approved
-version: 1.0
-lastReviewed: 2026-11-16
+version: 1.1
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -23,6 +23,7 @@ Every public event and place has ready-made images its owner can post to their o
 | Event | `story` (Instagram/TikTok story, WhatsApp Status), `post` (feed, 4:5) | 1080×1920, 1080×1350 |
 | Place | `story`, `post`, `welcome` ("Now on Abonten") | 1080×1920, 1080×1350, 1080×1350 |
 | Organizer profile | `welcome` | 1080×1350 |
+| Weekly roundup (Abonten's own posts) | `cover` | 1080×1350 |
 
 - **Event price line** (`eventShareOffer`): "Tickets from {lowest price}" (or "Tickets {price}" when there is one paid tier), "Free entry" for the FREE tier, nothing otherwise; the button says "Get your tickets", "Reserve your spot" or "See it on Abonten" to match. Prices are formatted in the image's language and the event's currency.
 - **Pictures**: event flyers are shown whole (their words matter); place covers fill the frame. A missing or unreachable picture draws the title in its place, never a failed image.
@@ -39,6 +40,7 @@ Every public event and place has ready-made images its owner can post to their o
 - **Limited**: 40 images per visitor per minute after the cache (`checkRateLimit`, key `share-image:<ip>`), because drawing an image costs server time (the November 2026 Vercel block was about server time).
 - **Outside the proxy** (`apps/web/src/proxy.ts` matcher): no cookie is needed or read.
 - Kinds, formats, paths and file names live in `@abonten/core/shareKit/shareKit` so the website and the app build the same addresses.
+- **Roundup covers** (since 2026-11-21): `GET /api/share/roundups/<week|weekend>-<yyyy-mm-dd>/cover?hl=<locale>` (`apps/web/src/app/api/share/roundups/[key]/cover/route.tsx`) draws the first picture of Abonten's own weekly roundup post (Admin › Social, [admin/social.md](../admin/social.md)): "What's on in Accra" or "This weekend in Accra", the days (`formatDateRange` in the image's language), and abontenhub.com/explore/accra. It reads no data: any real week (from a Monday) or weekend (from a Friday) has one, and anything else answers 404. Same renderer, font, caching and limit as the listing images (`apps/web/src/shareKit/server/shareRoute.ts`); words from `server.json` › `shareKit.roundup*`; names and paths in `@abonten/core/social/roundups`.
 
 ## Where owners find it
 

@@ -4,8 +4,8 @@ purpose: Every scheduled job in production — what it does, when it runs, how t
 audience: Engineering, operations
 scope: pg_cron jobs in supabase/migrations
 status: Approved
-version: 1.7
-lastReviewed: 2026-10-25
+version: 1.8
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -54,6 +54,8 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `ticket-plans-dispatch` | every 5 min | `run_ticket_plan_dispatch()` → `POST /api/maintenance/ticket-plans` (token from `payment_reconcile_config`), only while `ticket_plan_work_due()` finds work | Pay small small: end plans whose first-part hold ran out, whose deadline passed, whose event was cancelled or whose owner closed their account (seats released, refund planned); ask the provider for planned refund shares and hand stuck ones to staff; finish settlements left behind; move deadlines when a date moved earlier; send the 7- and 2-day reminders | Seats held by lapsed plans never go back on sale; buyers' refunds never requested; a fully paid plan's tickets not issued until the reconcile sweep catches the settlement |
 | `ticket-transfers-expire` | every 10 min | `ticket_transfer_expire_due()` | Send a ticket to a friend: ends offers nobody accepted in time (the ticket stays with the sender) and tells each sender | Offers stay "Waiting" past their deadline (they can no longer be accepted: the accept checks the deadline itself) and senders are not told |
 | `team-invites-expire` | every 15 min | `team_invite_expire_due()` | Team accounts: ends invitations nobody answered in time and records it in the team's activity | Invitations stay "waiting" past their deadline (they can no longer be accepted: the accept checks the deadline itself) |
+| `social-queue-listings` | */15 min | `social_queue_listings(200)` | Admin › Social: queue newly published public, upcoming events and newly published places (published at least 5 minutes ago, not excluded, one show per run) for Abonten's own Instagram story, X and WhatsApp Channel, at most `social_queue_setting.daily_cap` new listings a day (Accra's calendar); moves `queue_watermark` ([admin/social.md](../admin/social.md)) | New listings stop appearing in the posting queue; nothing else depends on it. Re-running catches up from the watermark |
+| `social-queue-roundups` | 07:00 Mon and Fri | `social_queue_roundup()` | Admin › Social: on Mondays "What's on in Accra this week", on Fridays "This weekend in Accra": up to 10 events on in those days in the default market, featured or promoted first, queued once per week or weekend for Instagram feed, X and WhatsApp Channel | No roundup that day; queue it by hand with `select public.social_queue_roundup('week')` (or `'weekend'`) |
 | `content-stats-rollup` | :20 hourly | `content_rollup_stats(20000)` | Fold valid Spotlight/Story views and clicks into `content_post_daily_stat` | Creator insights and the admin overview stop moving (raw events are kept) |
 | `content-trending-refresh` | :25 hourly | `content_trending_refresh()` | Recompute `trending_score` over the trending window | Trending tab goes stale |
 | `content-housekeeping` | 03:50 | `content_housekeeping()` | Archive ended Stories, apply retention to deleted posts and raw views, queue unused uploads for Cloudinary deletion | Tables and Cloudinary storage grow; retention promise broken |
