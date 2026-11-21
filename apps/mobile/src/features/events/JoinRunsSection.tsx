@@ -40,9 +40,11 @@ export function JoinRunsSection({ eventId }: { eventId: string }) {
 
   const confirmJoin = () => {
     if (!run) return;
+    // A short title and the question as the message: Android cuts an alert
+    // title after two lines.
     Alert.alert(
+      t("joinRunsTitle"),
       t("joinRunsConfirm", { title: run.title, count: run.showCount }),
-      undefined,
       [
         { text: t("cancel"), style: "cancel" },
         {

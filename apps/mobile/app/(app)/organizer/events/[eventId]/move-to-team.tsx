@@ -34,9 +34,11 @@ export default function MoveEventToTeamScreen() {
 
   const confirmMove = () => {
     if (!team || !data) return;
+    // A short title and the question as the message: Android cuts an alert
+    // title after two lines, which hid "This can't be undone in the app".
     Alert.alert(
+      t("moveToTeamTitle"),
       t("moveToTeamConfirm", { count: data.eventCount, team: teamName }),
-      undefined,
       [
         { text: t("cancel"), style: "cancel" },
         {
