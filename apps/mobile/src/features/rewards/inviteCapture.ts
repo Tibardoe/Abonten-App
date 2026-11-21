@@ -1,5 +1,10 @@
 import { api } from "@/lib/api";
 import {
+  canReadInstallReferrer,
+  firstTimeOnThisInstall,
+  getInstallReferrer,
+} from "@/lib/installReferrer";
+import {
   INVITE_WINDOW_DAYS,
   type InviteSource,
   codeFromInstallReferrer,
@@ -7,9 +12,7 @@ import {
 } from "@abonten/core/rewards/invite";
 import { normalizeReferralCode } from "@abonten/core/rewards/referralCode";
 import type { ReferralBindOutcome } from "@abonten/types/rewards";
-import { requireOptionalNativeModule } from "expo-modules-core";
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
 
 // A friend's invite this device holds until the person is signed in: from
 // an abontenhub.com/invite/CODE link, a code typed on the sign-in screen, or
@@ -72,28 +75,30 @@ export async function clearPendingInvite(): Promise<void> {
   }
 }
 
+let referrerCapture: Promise<void> | null = null;
+
 /**
  * First launch after installing from a Play Store invite link
- * (…&referrer=ref%3DCODE): Google Play hands the referrer to the app once.
- * Checked once per install; never throws.
+ * (…&referrer=ref%3DCODE): Google Play hands the referrer to the app.
+ * Checked once per install; callers in one run share the one check, so a
+ * second caller waits for the invite to be held instead of finding the
+ * check already marked done. Never throws. (A listing's "Get the app"
+ * reads the same referrer for its own part: useInstallListingOpen.)
  */
-export async function captureInstallReferrer(): Promise<void> {
-  if (Platform.OS !== "android") return;
-  // Only when the native module is in this build (it is in current builds;
-  // the guard keeps an older binary from crashing on the import).
-  if (!requireOptionalNativeModule("ExpoApplication")) return;
-  try {
-    if (await SecureStore.getItemAsync(INSTALL_REFERRER_CHECKED)) return;
-    await SecureStore.setItemAsync(INSTALL_REFERRER_CHECKED, "1");
-    const Application = await import("expo-application");
-    const referrer = await Application.getInstallReferrerAsync();
-    const code = codeFromInstallReferrer(referrer);
-    if (!code) return;
-    await captureInvite(code, "install_referrer");
-    api.rewards.touch({ code, source: "install_referrer" }).catch(() => {});
-  } catch {
-    // no Play Store (emulator / sideloaded build) or no referrer
+export function captureInstallReferrer(): Promise<void> {
+  if (!referrerCapture) {
+    referrerCapture = (async () => {
+      if (!canReadInstallReferrer()) return;
+      if (!(await firstTimeOnThisInstall(INSTALL_REFERRER_CHECKED))) return;
+      const code = codeFromInstallReferrer(await getInstallReferrer());
+      if (!code) return;
+      await captureInvite(code, "install_referrer");
+      api.rewards.touch({ code, source: "install_referrer" }).catch(() => {});
+    })().catch(() => {
+      // no Play Store (emulator / sideloaded build) or no referrer
+    });
   }
+  return referrerCapture;
 }
 
 let inflight: Promise<ReferralBindOutcome | null> | null = null;

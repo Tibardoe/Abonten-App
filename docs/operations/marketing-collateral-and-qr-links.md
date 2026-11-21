@@ -4,8 +4,8 @@ purpose: How printed and digital marketing pieces link into the product, how to 
 audience: Founder, marketing, field team leads, engineering
 scope: The /go/<code> short links (apps/web), the collateral set kept in the brand workspace (Desktop\Abonten-Brand\07-collateral), and the rules for printing it. Not the brand identity itself (PROJECT.md §48).
 status: Approved
-version: 1.4
-lastReviewed: 2026-11-17
+version: 1.5
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -34,7 +34,7 @@ Printed pieces (flyers, rack cards, stickers, posters, signs) cannot be changed 
 | `places` | place-owner flyer | `/help/place-owners/managing-your-place` |
 | `owner` | welcome card left with a new place owner | `/manage/places` (sign-in first when signed out) |
 | `tickets` | ticket-check sign at event entrances | `/help/customers/your-tickets` |
-| `app` | "Get the app" pieces (apps edition) | iPhone → App Store, Android → Google Play once `APP_STORE_LISTINGS` has that listing (Android follows `ANDROID_APP_LISTED` in `packages/core/src/rewards/invite.ts`); otherwise `/` |
+| `app` | "Get the app" pieces (apps edition); the "Get the app" button on event and place pages (Android) | iPhone → App Store, Android → Google Play once `APP_STORE_LISTINGS` has that listing (Android follows `ANDROID_APP_LISTED` in `packages/core/src/rewards/invite.ts`); otherwise `/`. `/go/app?open=/events/<code>` or `?open=/places/<slug>` (plus `&src=<code>`) adds that pair to the Google Play link as its install referrer, so the app opens the listing after the install; any other `open` value is ignored (`packages/core/src/social/appLinks.ts`) |
 
 Per-place stickers and counter cards use the place's own page, `/places/<slug>`; the slug is fixed when the place is created (`postPlaceCore.ts`) and is not changed by edits. Per-event pieces use `/events/<code>`.
 

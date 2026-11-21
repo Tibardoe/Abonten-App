@@ -1,5 +1,6 @@
 import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
+import { useInstallListingOpen } from "@/features/appLinks/useInstallListingOpen";
 import { ExploreFiltersProvider } from "@/features/discovery/ExploreFiltersProvider";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
 import { useLocaleSync } from "@/features/i18n/useLocaleSync";
@@ -34,6 +35,9 @@ function StackHost() {
   useRemindersSync();
   // Apply a friend's invite held on this device once someone is signed in.
   useInviteBinding();
+  // Android: open the event or place whose "Get the app" brought this
+  // install, once, after start-up (Play install referrer).
+  useInstallListingOpen();
   // Mirror the app language onto the account (notifications, emails).
   useLocaleSync();
   // The one owner of the signed-in user's `inbox:<id>` channel. Mounted here,

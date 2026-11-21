@@ -3,6 +3,18 @@ import {
   APP_STORE_URL,
   playStoreUrl,
 } from "../rewards/invite";
+import {
+  APP_OPEN_PARAM,
+  type AppOpenTarget,
+  appOpenQuery,
+  appOpenTarget,
+  withInstallReferrer,
+} from "../social/appLinks";
+import {
+  LINK_SOURCE_PARAM,
+  type LinkSource,
+  normalizeLinkSource,
+} from "../social/linkSources";
 import { PUBLIC_SITE_ORIGIN } from "./socialLinks";
 
 // Short links for printed QR codes: abontenhub.com/go/<code>.
@@ -67,6 +79,8 @@ export const QR_LINKS: Readonly<Record<QrLinkCode, QrLink>> = {
   },
   // "Get the app": the phone's own store once that listing is public
   // (APP_STORE_LISTINGS); until then, and on anything else, the website.
+  // A listing page's "Get the app" adds ?open=<listing path>&src=<code>,
+  // which Android carries through the install (social/appLinks.ts).
   app: {
     destination: "/",
     audience: "Anyone who scanned a Get-the-app code",
@@ -106,18 +120,44 @@ export function qrLinkUrl(
 
 /**
  * Where a scan of `code` should go: for `app`, the scanning phone's store
- * when that listing is public; otherwise the code's site path.
+ * when that listing is public; otherwise the code's site path. On Android,
+ * `/go/app?open=<listing path>&src=<code>` adds the pair to the Play Store
+ * link as its install referrer, so the app opens that listing after the
+ * install; an `open` that is not an event or a place is ignored. The App
+ * Store has no referrer: an iPhone gets the plain listing.
  */
 export function qrLinkTarget(
   code: string,
   userAgent: string | null,
   listings: { ios: string | null; android: string | null } = APP_STORE_LISTINGS,
+  query: URLSearchParams | null = null,
 ): string {
   const key = code.trim().toLowerCase();
   if (key === "app" && userAgent) {
     if (/iPhone|iPad|iPod/i.test(userAgent) && listings.ios)
       return listings.ios;
-    if (/Android/i.test(userAgent) && listings.android) return listings.android;
+    if (/Android/i.test(userAgent) && listings.android) {
+      const target = appOpenTarget(query?.get(APP_OPEN_PARAM));
+      if (!target) return listings.android;
+      return withInstallReferrer(
+        listings.android,
+        appOpenQuery(
+          target,
+          normalizeLinkSource(query?.get(LINK_SOURCE_PARAM)),
+        ),
+      );
+    }
   }
   return qrLinkDestination(key);
+}
+
+/**
+ * The website's "Get the app" link for a listing page:
+ * /go/app?open=<listing path>[&src=<code>].
+ */
+export function getTheAppPath(
+  target: AppOpenTarget,
+  source: LinkSource | null,
+): string {
+  return `${QR_LINK_PREFIX}/app?${appOpenQuery(target, source)}`;
 }
