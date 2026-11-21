@@ -79,6 +79,8 @@ export default function JoinRunsSection({ eventId }: { eventId: string }) {
       setChosen("");
       qc.invalidateQueries({ queryKey: key });
       qc.invalidateQueries({ queryKey: ["event-shows", eventId] });
+      // "Move to a team" counts the run's shows: it grew.
+      qc.invalidateQueries({ queryKey: ["move-event-to-team"] });
       router.refresh();
     });
 

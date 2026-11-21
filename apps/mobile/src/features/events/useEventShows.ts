@@ -79,6 +79,8 @@ export function useJoinEventRuns(eventId: string) {
       if (res.status === 200) {
         qc.invalidateQueries({ queryKey: ["mobile", "event-shows"] });
         qc.invalidateQueries({ queryKey: ["mobile", "organizer"] });
+        // "Move to a team" counts the run's shows: it grew.
+        qc.invalidateQueries({ queryKey: ["mobile", "teams"] });
       }
     },
   });
