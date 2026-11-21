@@ -5,6 +5,8 @@ import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
+import PublishingAsChoice from "@/teams/atoms/PublishingAsChoice";
+import { useSwitchActingTeamInForm } from "@/teams/useActingContext";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
@@ -84,6 +86,9 @@ export default function EventUploadModal({
   );
   const [showCrop, setShowCrop] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  // "Publishing as": owned here, not by the details step, because the
+  // pages behind the form are reloaded only once the whole modal closes.
+  const switchPublishingAs = useSwitchActingTeamInForm();
 
   const {
     cropped,
@@ -277,6 +282,16 @@ export default function EventUploadModal({
                 <EventUploadFormFields
                   {...eventUploadForm}
                   className="space-y-4 w-full md:w-1/2 md:h-full md:overflow-y-auto"
+                  publishingAs={
+                    // A resumed draft, or an event started from a place's
+                    // page, already has its account.
+                    <PublishingAsChoice
+                      capability="events.manage"
+                      onSwitch={switchPublishingAs}
+                      locked={!!draftId || !!preselectedPlaceId}
+                      disabled={isUploading}
+                    />
+                  }
                 />
               </div>
             </>

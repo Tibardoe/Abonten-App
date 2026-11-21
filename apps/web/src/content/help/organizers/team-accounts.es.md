@@ -2,7 +2,7 @@
 title: Cuentas de equipo
 summary: Gestiona un organizador o un lugar con otras personas, cada una con su propio inicio de sesión y un rol que dice lo que puede hacer.
 order: 90
-lastUpdated: 2026-11-20
+lastUpdated: 2026-11-21
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -39,7 +39,7 @@ Los Propietarios invitan a personas por su @nombre de usuario o su número de te
 
 ## Actuar para el equipo
 
-Elige el equipo en **Gestionar como** para trabajar en sus eventos, lugares, dinero o mensajes. Todo lo que haces queda registrado en la actividad del equipo con tu nombre, y cada Propietario puede verlo. Vuelve a tu propia cuenta de la misma forma.
+Elige el equipo en **Gestionar como** para trabajar en sus eventos, lugares, dinero o mensajes. Todo lo que haces queda registrado en la actividad del equipo con tu nombre, y cada Propietario puede verlo. Vuelve a tu propia cuenta de la misma forma. Cuando creas un evento o un lugar, el formulario indica en nombre de quién se publicará y te permite elegir ahí el equipo. Lo que publicas en tu propia cuenta sigue siendo tuyo: los miembros del equipo no pueden gestionarlo.
 
 ## El dinero del equipo
 

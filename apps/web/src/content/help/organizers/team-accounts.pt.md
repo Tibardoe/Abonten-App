@@ -2,7 +2,7 @@
 title: Contas de equipa
 summary: Gira um organizador ou um local com outras pessoas, cada uma com o seu próprio início de sessão e uma função que diz o que pode fazer.
 order: 90
-lastUpdated: 2026-11-20
+lastUpdated: 2026-11-21
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -39,7 +39,7 @@ Os Proprietários convidam pessoas pelo @nome de utilizador ou pelo número de t
 
 ## Agir pela equipa
 
-Escolha a equipa em **Gerir como** para trabalhar nos seus eventos, locais, dinheiro ou mensagens. Tudo o que faz fica registado na atividade da equipa com o seu nome, que todos os Proprietários podem ver. Volte à sua própria conta da mesma forma.
+Escolha a equipa em **Gerir como** para trabalhar nos seus eventos, locais, dinheiro ou mensagens. Tudo o que faz fica registado na atividade da equipa com o seu nome, que todos os Proprietários podem ver. Volte à sua própria conta da mesma forma. Quando cria um evento ou um local, o formulário indica em nome de quem será publicado e permite-lhe escolher aí a equipa. O que publicar na sua própria conta continua a ser seu: os membros da equipa não o podem gerir.
 
 ## O dinheiro da equipa
 

@@ -2,7 +2,7 @@
 title: Team-Konten
 summary: Führe einen Veranstalter oder einen Ort mit anderen Personen, jede mit eigener Anmeldung und einer Rolle, die festlegt, was sie tun kann.
 order: 90
-lastUpdated: 2026-11-20
+lastUpdated: 2026-11-21
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -39,7 +39,7 @@ Inhaber laden Personen über ihren @Benutzernamen oder ihre Telefonnummer ein un
 
 ## Für das Team handeln
 
-Wähle das Team unter **Verwalten als**, um an seinen Events, Orten, Finanzen oder Nachrichten zu arbeiten. Alles, was du tust, wird mit deinem Namen in der Aktivität des Teams festgehalten, die jeder Inhaber sehen kann. Auf dieselbe Weise wechselst du zurück zu deinem eigenen Konto.
+Wähle das Team unter **Verwalten als**, um an seinen Events, Orten, Finanzen oder Nachrichten zu arbeiten. Alles, was du tust, wird mit deinem Namen in der Aktivität des Teams festgehalten, die jeder Inhaber sehen kann. Auf dieselbe Weise wechselst du zurück zu deinem eigenen Konto. Wenn du ein Event oder einen Ort erstellst, zeigt das Formular, als wer es veröffentlicht wird, und du kannst dort das Team wählen. Was du auf deinem eigenen Konto veröffentlichst, bleibt deins: Die Mitglieder des Teams können es nicht verwalten.
 
 ## Das Geld des Teams
 

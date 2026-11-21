@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-21 — "Publishing as" on the create forms
+
+- An organizer (Roverman) made a team, then published twelve events on his own account by mistake, which his team's members could not manage: nothing said who a listing was being published as unless a team was already chosen. The event and place create forms (website modals, app wizards) now show a **Publishing as** choice to anyone in a team whose role covers publishing (`events.manage` / `places.manage`) or managing as a team: their own account and each such team, the current one selected, switching "Managing as"; a resumed draft or an event started from a place's page only shows its account. The server still decides the owner (`actingFor` / `mobileActingFor`). Messages `teams.publishingAsLabel`, `teams.publishingAsHint`, `teams.publishingAsRoleCannot`. Docs: `architecture/team-accounts.md` 1.14 §4a; help page `organizers/team-accounts` (five languages) says the create form lets you choose the team.
+
 ## 2026-11-20 — Several shows on one day point to Shows and copies
 
 - An organizer (Roverman) tried to add a second show on the same day with the app's **Multiple dates**, which takes one time per day and shares one stock of tickets across its dates, and only read "That date is already in the list". The app now says where to go instead (publish with the first show, then add the others in Shows and copies: each show gets its own seats), and both create forms (app and website) say under **Multiple dates** that its dates share one set of tickets and point plays with several performances to Shows. Messages `events.sameDayShowsUseShowsAndCopies` (replaces `thatDateIsAlreadyInThe`), `events.multipleDatesShareTicketsHint`, `common.multipleDatesShareTicketsHint`. Help page `organizers/creating-and-publishing-events` gains "Several shows: a play, a run, a tour" in five languages.

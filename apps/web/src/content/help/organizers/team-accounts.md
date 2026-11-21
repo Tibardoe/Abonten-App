@@ -2,7 +2,7 @@
 title: Team accounts
 summary: Run an organizer or a place with other people, each with their own sign-in and a role that says what they can do.
 order: 90
-lastUpdated: 2026-11-20
+lastUpdated: 2026-11-21
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -39,7 +39,7 @@ Owners invite people by their @username or their phone number and choose their r
 
 ## Acting for the team
 
-Choose the team under **Managing as** to work on its events, places, money or messages. Everything you do is recorded in the team's activity with your name, which every Owner can see. Switch back to your own account the same way.
+Choose the team under **Managing as** to work on its events, places, money or messages. Everything you do is recorded in the team's activity with your name, which every Owner can see. Switch back to your own account the same way. When you create an event or a place, the form says who it will be published as and lets you choose the team there. Something published on your own account stays yours: the team's members can't manage it.
 
 ## The team's money
 

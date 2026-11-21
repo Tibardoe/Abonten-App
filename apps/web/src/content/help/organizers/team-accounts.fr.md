@@ -2,7 +2,7 @@
 title: Comptes d'équipe
 summary: Gérez un organisateur ou un lieu avec d'autres personnes, chacune avec sa propre connexion et un rôle qui dit ce qu'elle peut faire.
 order: 90
-lastUpdated: 2026-11-20
+lastUpdated: 2026-11-21
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -39,7 +39,7 @@ Les Propriétaires invitent des personnes par leur @nom d'utilisateur ou leur nu
 
 ## Agir pour l'équipe
 
-Choisissez l'équipe sous **Gérer en tant que** pour travailler sur ses événements, ses lieux, son argent ou ses messages. Tout ce que vous faites est noté dans l'activité de l'équipe avec votre nom, que chaque Propriétaire peut voir. Revenez à votre propre compte de la même façon.
+Choisissez l'équipe sous **Gérer en tant que** pour travailler sur ses événements, ses lieux, son argent ou ses messages. Tout ce que vous faites est noté dans l'activité de l'équipe avec votre nom, que chaque Propriétaire peut voir. Revenez à votre propre compte de la même façon. Quand vous créez un événement ou un lieu, le formulaire indique au nom de qui il sera publié et vous permet d'y choisir l'équipe. Ce que vous publiez sur votre propre compte reste à vous : les membres de l'équipe ne peuvent pas le gérer.
 
 ## L'argent de l'équipe
 
