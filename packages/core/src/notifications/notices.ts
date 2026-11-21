@@ -186,6 +186,9 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   event_venue_changed: n("event_venue_changed"),
   event_date_moved: n("event_date_moved"),
   event_postponed: n("event_postponed"),
+  // Monday note to listers: their views and how many came from Abonten's
+  // own posts (written by the database, migration 20261121230000).
+  listing_views_weekly: n("listing_views_weekly"),
   area_launched: n("area_launched"),
   digest_organizer: n("digest_organizer"),
   digest_organizer_unknown: n("digest_organizer_unknown"),

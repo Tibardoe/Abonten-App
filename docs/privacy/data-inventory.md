@@ -4,8 +4,8 @@ purpose: Record every category of personal data Abonten processes, where it is s
 audience: Privacy reviewer, engineering, support leads
 scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems), and the pilot's tester list kept in Google Workspace
 status: Review required
-version: 1.4
-lastReviewed: 2026-11-09
+version: 1.5
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -129,7 +129,7 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 | Request-timing metrics (mobile) | `app_request_metric` | No retention job |
 | Health-check results | `health_check_result` | No retention job |
 | Rate-limit buckets (keyed by user id or IP) | `rate_limit_bucket` | Purged daily (1-day window) |
-| Listing page views and place clicks: listing id, type, platform (web / ios / android), server time. No account, device or address; the listing owner's own rows are dropped by trigger | `event_analytics_event` (since 2026-10-18), `place_analytics_event` (platform since 2026-10-18) | No retention job (legal B3). Organizer / owner read their own listing's rows; admin console through the service role |
+| Listing page views and place clicks: listing id, type, platform (web / ios / android), server time, and for a view the Abonten channel whose tagged link was followed (`source`: ig / x / wa / tt / fb, since 2026-11-21). No account, device or address; the listing owner's own rows are dropped by trigger | `event_analytics_event` (since 2026-10-18), `place_analytics_event` (platform since 2026-10-18) | No retention job (legal B3). Organizer / owner read their own listing's rows; admin console through the service role |
 | Server logs (Vercel) | Vercel | Vercel's retention |
 | Website page views: page address (private pages cut to their first segment, only `utm_*` kept), route pattern, referrer, country, device, OS, browser | Vercel Web Analytics (production website only) | Vercel's plan retention; no cookies, no account id; read in the Vercel dashboard or its API |
 

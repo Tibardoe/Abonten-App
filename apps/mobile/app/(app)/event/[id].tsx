@@ -130,13 +130,15 @@ export default function EventDetailScreen() {
   const tc = useTranslations("core");
 
   const toast = useToast();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `src`: the tag of an Abonten link that opened this screen (a post on
+  // Abonten's own socials); it goes with the view.
+  const { id, src } = useLocalSearchParams<{ id: string; src?: string }>();
   const router = useRouter();
   const similarCardWidth = useCarouselCardWidth();
   const detail = useEventDetail(id);
   const { data, isError, error, isRefetching, refetch } = detail;
   const detailView = useQueryView(detail);
-  useLogEventView(data?.event.id);
+  useLogEventView(data?.event.id, src);
   const { session } = useSession();
   const { estimate } = useMarket();
   const messageOrganizer = useOpenConversation();

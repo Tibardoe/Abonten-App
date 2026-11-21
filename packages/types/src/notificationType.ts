@@ -37,7 +37,12 @@ export type NotificationEntityKind =
   /** A team the reader runs or is invited to (team accounts). */
   | "team"
   /** A team's payout account or payout: opens Finances managing as it. */
-  | "team_money";
+  | "team_money"
+  /**
+   * The Monday note to listers ("Your listings had N views this week"):
+   * routed by its link, the most viewed listing's manage page.
+   */
+  | "listing_views";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;

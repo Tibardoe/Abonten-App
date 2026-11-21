@@ -17,7 +17,13 @@ export type NotificationCategory =
   | "rewards"
   | "recommendations";
 
-const SOCIAL_TYPES = new Set(["message", "review_received", "review_reply"]);
+const SOCIAL_TYPES = new Set([
+  "message",
+  "review_received",
+  "review_reply",
+  // The Monday note about a lister's views (migration 20261121230000).
+  "listing_views_weekly",
+]);
 
 const REWARD_TYPES = new Set([
   "reward_available",

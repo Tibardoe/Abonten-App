@@ -3274,6 +3274,7 @@ export type Database = {
           event_type: string
           id: string
           platform: string | null
+          source: string | null
         }
         Insert: {
           created_at?: string
@@ -3281,6 +3282,7 @@ export type Database = {
           event_type?: string
           id?: string
           platform?: string | null
+          source?: string | null
         }
         Update: {
           created_at?: string
@@ -3288,6 +3290,7 @@ export type Database = {
           event_type?: string
           id?: string
           platform?: string | null
+          source?: string | null
         }
         Relationships: [
           {
@@ -6809,6 +6812,24 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_views_weekly_run: {
+        Row: {
+          notices: number
+          ran_at: string
+          week_start: string
+        }
+        Insert: {
+          notices?: number
+          ran_at?: string
+          week_start: string
+        }
+        Update: {
+          notices?: number
+          ran_at?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       market: {
         Row: {
           address_schema: Json | null
@@ -8999,6 +9020,7 @@ export type Database = {
           id: string
           place_id: string
           platform: string | null
+          source: string | null
         }
         Insert: {
           created_at?: string
@@ -9006,6 +9028,7 @@ export type Database = {
           id?: string
           place_id: string
           platform?: string | null
+          source?: string | null
         }
         Update: {
           created_at?: string
@@ -9013,6 +9036,7 @@ export type Database = {
           id?: string
           place_id?: string
           platform?: string | null
+          source?: string | null
         }
         Relationships: [
           {
@@ -12885,6 +12909,130 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "seating_plan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_post: {
+        Row: {
+          channel: string
+          created_at: string
+          event_id: string | null
+          event_ids: string[]
+          id: string
+          note: string | null
+          place_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          queued_on: string
+          roundup_key: string | null
+          status: string
+          subject_key: string | null
+          subject_kind: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          event_id?: string | null
+          event_ids?: string[]
+          id?: string
+          note?: string | null
+          place_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          queued_on: string
+          roundup_key?: string | null
+          status?: string
+          subject_key?: string | null
+          subject_kind: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          event_id?: string | null
+          event_ids?: string[]
+          id?: string
+          note?: string | null
+          place_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          queued_on?: string
+          roundup_key?: string | null
+          status?: string
+          subject_key?: string | null
+          subject_kind?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_post_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_post_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_post_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_post_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_queue_setting: {
+        Row: {
+          daily_cap: number
+          enabled: boolean
+          excluded_account_ids: string[]
+          id: number
+          queue_watermark: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          daily_cap?: number
+          enabled?: boolean
+          excluded_account_ids?: string[]
+          id?: number
+          queue_watermark?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          daily_cap?: number
+          enabled?: boolean
+          excluded_account_ids?: string[]
+          id?: number
+          queue_watermark?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_queue_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
             referencedColumns: ["id"]
           },
         ]
@@ -18712,6 +18860,10 @@ export type Database = {
         Args: { p_country_code: string }
         Returns: boolean
       }
+      listing_views_weekly_notices: {
+        Args: { p_now?: string }
+        Returns: number
+      }
       loyalty_progress: { Args: { p_user_id: string }; Returns: Json }
       major_to_minor: {
         Args: { p_amount: number; p_currency: string }
@@ -19427,6 +19579,11 @@ export type Database = {
           p_muted?: boolean
         }
         Returns: undefined
+      }
+      social_queue_listings: { Args: { p_limit?: number }; Returns: Json }
+      social_queue_roundup: {
+        Args: { p_kind?: string; p_start?: string }
+        Returns: Json
       }
       stamp_checkout_referral: {
         Args: {

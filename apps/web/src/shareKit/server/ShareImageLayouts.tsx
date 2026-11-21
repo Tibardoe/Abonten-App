@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- next/og (Satori) draws plain <img>; next/image cannot run inside it. */
 import { SHARE_IMAGE_SIZES } from "@abonten/core/shareKit/shareKit";
+import { ROUNDUP_COVER_SIZE } from "@abonten/core/social/roundups";
 import { SHARE_FONT } from "./shareAssets";
 
 // The share images, drawn by next/og (Satori): flexbox only, and every
@@ -406,6 +407,133 @@ export function WelcomeImage({ card }: { card: WelcomeCard }) {
           }}
         >
           <img src={card.qr} width={170} height={170} alt="" />
+        </div>
+        <div style={{ display: "flex", fontSize: 30, color: MUTED }}>
+          {card.displayUrl}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export type RoundupCoverCard = {
+  /** "What's on in Accra", "This weekend in Accra". */
+  heading: string;
+  /** "23 – 29 November". */
+  dates: string;
+  line: string;
+  cta: string;
+  /** abontenhub.com/explore/accra */
+  displayUrl: string;
+  mark: string;
+  wordmark: string;
+};
+
+/**
+ * 1080×1350: the cover of a weekly roundup, first in the carousel of
+ * Abonten's own post (Admin › Social). Words only: the events' own images
+ * follow it.
+ */
+export function RoundupCoverImage({ card }: { card: RoundupCoverCard }) {
+  const { width, height } = ROUNDUP_COVER_SIZE;
+  return (
+    <div
+      style={{
+        ...base,
+        width,
+        height,
+        padding: 72,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Two faint mint rings in the corner, clear of the words. */}
+      <div
+        style={{
+          position: "absolute",
+          display: "flex",
+          width: 700,
+          height: 700,
+          right: -260,
+          top: -390,
+          borderRadius: 999,
+          border: `4px solid ${MINT}`,
+          opacity: 0.18,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          display: "flex",
+          width: 460,
+          height: 460,
+          right: -140,
+          top: -210,
+          borderRadius: 999,
+          border: `4px solid ${MINT}`,
+          opacity: 0.35,
+        }}
+      />
+      <Brand mark={card.mark} wordmark={card.wordmark} size={56} />
+      <div style={{ display: "flex", flexGrow: 1 }} />
+      <div
+        style={{
+          display: "flex",
+          width: 120,
+          height: 10,
+          borderRadius: 999,
+          backgroundColor: MINT,
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          marginTop: 44,
+          fontSize: card.heading.length > 24 ? 104 : 128,
+          fontWeight: 700,
+          lineHeight: 1.04,
+          maxWidth: 920,
+        }}
+      >
+        {clampText(card.heading, 48)}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          marginTop: 40,
+          fontSize: 60,
+          fontWeight: 700,
+          color: MINT,
+        }}
+      >
+        {card.dates}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          marginTop: 28,
+          fontSize: 38,
+          color: MUTED,
+          maxWidth: 880,
+          lineHeight: 1.3,
+        }}
+      >
+        {clampText(card.line, 110)}
+      </div>
+      <div style={{ display: "flex", flexGrow: 1 }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        <div
+          style={{
+            display: "flex",
+            backgroundColor: MINT,
+            color: NIGHT,
+            fontSize: 36,
+            fontWeight: 700,
+            padding: "20px 34px",
+            borderRadius: 999,
+          }}
+        >
+          {card.cta}
         </div>
         <div style={{ display: "flex", fontSize: 30, color: MUTED }}>
           {card.displayUrl}

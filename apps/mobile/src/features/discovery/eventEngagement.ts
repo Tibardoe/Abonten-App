@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { normalizeLinkSource } from "@abonten/core/social/linkSources";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
@@ -10,7 +11,12 @@ import { Platform } from "react-native";
  * (offline) is ignored. The signed-in session goes with it, so the database
  * leaves out the organizer's own views; the row keeps no account id.
  */
-export function useLogEventView(eventId: string | undefined): void {
+export function useLogEventView(
+  eventId: string | undefined,
+  /** The `src` of the Abonten link that opened the screen, if any. */
+  source?: string | null,
+): void {
+  const tag = normalizeLinkSource(source);
   useEffect(() => {
     if (!eventId) return;
     void supabase
@@ -19,7 +25,8 @@ export function useLogEventView(eventId: string | undefined): void {
         event_id: eventId,
         event_type: "view",
         platform: Platform.OS === "ios" ? "ios" : "android",
+        source: tag,
       })
       .then(() => {});
-  }, [eventId]);
+  }, [eventId, tag]);
 }

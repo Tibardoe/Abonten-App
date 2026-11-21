@@ -227,7 +227,11 @@
     "ctaPlace": "Encontre-nos no Abonten",
     "welcomeHeading": "Agora no Abonten",
     "welcomeOrganizer": "Siga-nos no Abonten e não perca o nosso próximo evento.",
-    "welcomePlace": "Encontre-nos no Abonten: veja o que há e envie um pedido de reserva."
+    "welcomePlace": "Encontre-nos no Abonten: veja o que há e envie um pedido de reserva.",
+    "roundupWeekHeading": "O que fazer em Accra",
+    "roundupWeekendHeading": "Este fim de semana em Accra",
+    "roundupLine": "As nossas sugestões para os próximos dias. Bilhetes e detalhes no Abonten.",
+    "roundupCta": "Veja o que há"
   },
   "theDeadlineToFinishPayingHas": "O prazo para concluir o pagamento já passou.",
   "thisEventIsTooSoonToPay": "Este evento está demasiado próximo para pagar em prestações. Compre antes os bilhetes de uma só vez.",

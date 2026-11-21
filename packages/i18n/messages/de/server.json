@@ -227,7 +227,11 @@
     "ctaPlace": "Finde uns auf Abonten",
     "welcomeHeading": "Jetzt auf Abonten",
     "welcomeOrganizer": "Folge uns auf Abonten und verpasse keine Veranstaltung mehr.",
-    "welcomePlace": "Finde uns auf Abonten: Sieh, was los ist, und sende eine Buchungsanfrage."
+    "welcomePlace": "Finde uns auf Abonten: Sieh, was los ist, und sende eine Buchungsanfrage.",
+    "roundupWeekHeading": "Was ist los in Accra",
+    "roundupWeekendHeading": "Dieses Wochenende in Accra",
+    "roundupLine": "Unsere Tipps für die nächsten Tage. Tickets und Infos auf Abonten.",
+    "roundupCta": "Programm ansehen"
   },
   "theDeadlineToFinishPayingHas": "Die Frist zum Abschließen der Zahlung ist abgelaufen.",
   "thisEventIsTooSoonToPay": "Dieses Event ist zu bald, um es in Raten zu zahlen. Kaufe deine Tickets stattdessen auf einmal.",

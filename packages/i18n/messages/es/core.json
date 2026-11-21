@@ -1044,6 +1044,10 @@
     "event_postponed": {
       "title": "{title} se aplaza",
       "body": "Habrá una nueva fecha. Abre tu entrada para conservarla o pedir el reembolso completo."
+    },
+    "listing_views_weekly": {
+      "title": "{views, plural, one {Tus anuncios tuvieron # visita esta semana} other {Tus anuncios tuvieron # visitas esta semana}}",
+      "body": "{social, plural, =0 {El más visto: {top}.} one {El más visto: {top}. # llegó desde las publicaciones de Abonten.} other {El más visto: {top}. # llegaron desde las publicaciones de Abonten.}}"
     }
   },
   "openStatus": {

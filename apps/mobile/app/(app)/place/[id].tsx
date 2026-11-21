@@ -116,13 +116,19 @@ export default function PlaceDetailScreen() {
 
   const toast = useToast();
   // `visit`: opened from a place's check-in QR code (Rewards Phase 8).
-  const { id, visit } = useLocalSearchParams<{ id: string; visit?: string }>();
+  // `src`: the tag of an Abonten link that opened this screen; it goes with
+  // the view.
+  const { id, visit, src } = useLocalSearchParams<{
+    id: string;
+    visit?: string;
+    src?: string;
+  }>();
   const router = useRouter();
   const pathname = usePathname();
   const carouselCardWidth = useCarouselCardWidth();
   const detail = usePlaceDetail(id);
   const { data: place, isError, error, isRefetching, refetch } = detail;
-  useLogPlaceView(place?.id);
+  useLogPlaceView(place?.id, src);
   const { markets } = useMarket();
   // Service prices are in the place's market currency.
   const placeCurrency =

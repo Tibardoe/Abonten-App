@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   APP_STORE_LISTINGS,
   QR_LINKS,
+  getTheAppPath,
   qrLinkDestination,
   qrLinkTarget,
   qrLinkUrl,
@@ -86,6 +87,71 @@ describe("QR short links", () => {
       );
       expect(qrLinkTarget("app", iphone)).toBe(APP_STORE_LISTINGS.ios);
       expect(qrLinkTarget("app", android)).toBe(APP_STORE_LISTINGS.android);
+    });
+
+    it("hands an event or place through an Android install", () => {
+      const query = new URLSearchParams("open=/events/ABCD1234&src=ig");
+      const target = qrLinkTarget("app", android, listed, query);
+      const url = new URL(target);
+      expect(url.origin + url.pathname).toBe(
+        "https://play.google.com/store/apps/details",
+      );
+      expect(url.searchParams.get("id")).toBe("com.abonten.app");
+      expect(url.searchParams.get("referrer")).toBe(
+        "open=%2Fevents%2Fabcd1234&src=ig",
+      );
+      expect(
+        new URL(
+          qrLinkTarget(
+            "app",
+            android,
+            listed,
+            new URLSearchParams("open=%2Fplaces%2Fkiosk-1a2b&src=nope"),
+          ),
+        ).searchParams.get("referrer"),
+      ).toBe("open=%2Fplaces%2Fkiosk-1a2b");
+    });
+
+    it("ignores an open path that is not a listing", () => {
+      for (const open of [
+        "/manage/places",
+        "https://evil.example/",
+        "//evil.example/events/ABCD1234",
+        "/events/ABCD1234/../../manage",
+      ]) {
+        expect(
+          qrLinkTarget(
+            "app",
+            android,
+            listed,
+            new URLSearchParams({ open, src: "ig" }),
+          ),
+        ).toBe(listed.android);
+      }
+    });
+
+    it("keeps the iPhone and computer answers with a listing", () => {
+      const query = new URLSearchParams("open=/events/ABCD1234&src=ig");
+      expect(qrLinkTarget("app", iphone, listed, query)).toBe(listed.ios);
+      expect(qrLinkTarget("app", desktop, listed, query)).toBe("/");
+      expect(qrLinkTarget("tickets", android, listed, query)).toBe(
+        "/help/customers/your-tickets",
+      );
+    });
+
+    it("builds the website's Get-the-app link for a listing", () => {
+      expect(
+        getTheAppPath(
+          { kind: "event", code: "ABCD1234", path: "/events/abcd1234" },
+          "wa",
+        ),
+      ).toBe("/go/app?open=%2Fevents%2Fabcd1234&src=wa");
+      expect(
+        getTheAppPath(
+          { kind: "place", slug: "kiosk-1a2b", path: "/places/kiosk-1a2b" },
+          null,
+        ),
+      ).toBe("/go/app?open=%2Fplaces%2Fkiosk-1a2b");
     });
 
     it("leaves every other code alone", () => {

@@ -4,8 +4,8 @@ purpose: The complete role model as enforced — how end-user roles are derived,
 audience: Engineering, security/compliance reviewers
 scope: user_info, admin_* tables, fieldops_team_member, RLS policies in supabase/migrations
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-25
+version: 1.4
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -76,6 +76,8 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `transfers.configure` | Ticket transfer switches, audience and rules — in `STEP_UP_PERMISSIONS` | finance_admin, operations |
 | `teams.view` | Admin › Teams: the settings, every team with its Owners and member count, one team's members and activity | operations, support_admin, moderator |
 | `teams.configure` | Team account switches, audience and limits — in `STEP_UP_PERMISSIONS` | operations |
+| `social.view` | Admin › Social: the posting queue for Abonten's own channels (pictures, captions, tagged links) and its settings ([admin/social.md](../admin/social.md)) | operations, moderator |
+| `social.manage` | Mark queued posts posted or skipped, put them back, change the queue settings (no step-up) | operations, moderator |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

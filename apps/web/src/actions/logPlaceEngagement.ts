@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { normalizeLinkSource } from "@abonten/core/social/linkSources";
 import { tr } from "@abonten/services/i18n/requestLocale";
 
 // Mirrors place_analytics_event_type_check in the migration exactly --
@@ -31,7 +32,11 @@ function isAllowedEventType(value: string): value is PlaceEngagementEventType {
 // runtime check is real defense-in-depth against a caller that bypasses
 // TypeScript, not just a compile-time-only guard.
 export const logPlaceEngagement = withActionLocale(
-  async function logPlaceEngagement(placeId: string, eventType: string) {
+  async function logPlaceEngagement(
+    placeId: string,
+    eventType: string,
+    source?: string | null,
+  ) {
     if (!isAllowedEventType(eventType)) {
       return {
         status: 400,
@@ -48,6 +53,8 @@ export const logPlaceEngagement = withActionLocale(
       place_id: placeId,
       event_type: eventType,
       platform: "web",
+      // Views only: the ?src= of an Abonten link the visitor followed.
+      source: eventType === "view" ? normalizeLinkSource(source) : null,
     });
 
     if (error) {

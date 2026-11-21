@@ -510,6 +510,42 @@ export const rebateRunSchema = z.object({
   reason: creditReason,
 });
 
+// ── Admin › Social, the posting queue (docs/admin/social.md) ─────────
+
+/** Mark one queued post as posted or skipped, or put it back in the queue. */
+export const socialPostStatusSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["posted", "skipped", "pending"]),
+  note: z
+    .string()
+    .trim()
+    .max(500, "Keep the note under 500 characters")
+    .optional()
+    .nullable(),
+});
+
+export const socialQueueSettingsSchema = z.object({
+  expectedUpdatedAt: z.string().min(1),
+  patch: z
+    .object({
+      enabled: z.boolean(),
+      dailyCap: z
+        .number()
+        .int("The daily cap is a whole number")
+        .min(0, "The daily cap can't be below 0")
+        .max(200, "The daily cap can't be above 200"),
+      excludedAccountIds: z
+        .array(z.string().uuid("Each excluded account is a user id"))
+        .max(100, "At most 100 excluded accounts"),
+    })
+    .partial(),
+});
+
+export type SocialPostStatusInput = z.infer<typeof socialPostStatusSchema>;
+export type SocialQueueSettingsInput = z.infer<
+  typeof socialQueueSettingsSchema
+>;
+
 export type ReportResolveInput = z.infer<typeof reportResolveSchema>;
 export type ModerationActionInput = z.infer<typeof moderationActionSchema>;
 export type SetUserStatusInput = z.infer<typeof setUserStatusSchema>;

@@ -4,8 +4,8 @@ purpose: Explain the Abonten admin console (admin.abontenhub.com) — signing in
 audience: Abonten staff with admin access; the founder; engineers supporting them
 scope: apps/admin, the admin service layer in packages/services/src/admin, the RBAC tables
 status: Approved
-version: 1.4
-lastReviewed: 2026-10-25
+version: 1.5
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -47,6 +47,7 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Discovery | `discovery.view` | [discovery.md](discovery.md) |
 | Spotlight & Stories | `spotlight.view` | [spotlight.md](spotlight.md) |
 | Abonten Weekly | `weekly.view` | [weekly.md](weekly.md) |
+| Social | `social.view` | [social.md](social.md) |
 | Safety | `safety.view` | [safety.md](safety.md) |
 | Identity | `identity.view` | [identity.md](identity.md) |
 | Pay small small | `plans.view` | [ticket-plans.md](ticket-plans.md) |

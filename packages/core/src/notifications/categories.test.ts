@@ -27,6 +27,7 @@ describe("notificationCategory", () => {
       "review_reply",
       "place_booking_confirmed",
       "place_booking_declined",
+      "listing_views_weekly",
     ]) {
       expect(notificationCategory(type)).toBe("social");
     }

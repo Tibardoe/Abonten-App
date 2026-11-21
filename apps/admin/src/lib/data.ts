@@ -4,6 +4,10 @@ import {
   type ResolvedAdminRange,
   parseAdminRangeParams,
 } from "@abonten/core/admin/adminDateRange";
+import type {
+  SocialChannel,
+  SocialPostStatus,
+} from "@abonten/core/social/socialChannels";
 import { getPlatformAnalyticsCore } from "@abonten/services/admin/analytics/analyticsAdminCore";
 import { listAuditLogCore } from "@abonten/services/admin/audit/listAuditLogCore";
 import {
@@ -141,6 +145,10 @@ import {
   getRoleMatrixCore,
   listAdminStaffCore,
 } from "@abonten/services/admin/settings/adminSettingsCore";
+import {
+  getSocialQueueSettingsCore,
+  listSocialQueueCore,
+} from "@abonten/services/admin/social/socialQueueAdminCore";
 import {
   type ListSupportFilters,
   getSupportConversationDetailCore,
@@ -1059,6 +1067,20 @@ export async function loadTicketTransfers(filter: {
     filter,
   );
   return { ctx, list };
+}
+
+/** Admin › Social: one tab of the posting queue, and its settings. */
+export async function loadSocialQueue(filter: {
+  status: SocialPostStatus;
+  channel: SocialChannel | null;
+}) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [queue, settings] = await Promise.all([
+    listSocialQueueCore(svc, ctx, filter),
+    getSocialQueueSettingsCore(svc, ctx),
+  ]);
+  return { ctx, queue, settings };
 }
 
 /** Admin › Teams: the programme switches and limits. */

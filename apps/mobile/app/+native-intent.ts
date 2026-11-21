@@ -2,6 +2,10 @@ import { captureInvite } from "@/features/rewards/inviteCapture";
 import { captureReferral } from "@/features/rewards/referralCapture";
 import { supabase } from "@/lib/supabase";
 import { parseSharedReviewId } from "@abonten/core/reviews/reviewList";
+import {
+  LINK_SOURCE_PARAM,
+  normalizeLinkSource,
+} from "@abonten/core/social/linkSources";
 
 // Translates an incoming Universal / App Link (https://abontenhub.com/...)
 // into the matching in-app route. The native detail screens are keyed by
@@ -77,13 +81,17 @@ export async function redirectSystemPath({
     // review_list decides whether it is still public).
     const reviewParam = parseSharedReviewId(url.searchParams.get("review"));
     const reviewsSuffix = reviewParam ? `?review=${reviewParam}` : "";
+    // A link Abonten posted on its own socials carries ?src= (Instagram,
+    // X, WhatsApp…); the listing screen records it with the view.
+    const source = normalizeLinkSource(url.searchParams.get(LINK_SOURCE_PARAM));
+    const sourceSuffix = source ? `?src=${source}` : "";
     if (parts[0] === "events" && parts[1]) {
       const id = await resolveEvent(decodeURIComponent(parts[1]));
       if (id && ref) void captureReferral(ref, { eventId: id });
       if (id && parts[2] === "reviews") {
         return `/(app)/reviews/event/${id}${reviewsSuffix}`;
       }
-      return id ? `/(app)/event/${id}` : "/(app)/(tabs)";
+      return id ? `/(app)/event/${id}${sourceSuffix}` : "/(app)/(tabs)";
     }
     if (parts[0] === "places" && parts[1]) {
       const id = await resolvePlace(decodeURIComponent(parts[1]));
@@ -97,7 +105,7 @@ export async function redirectSystemPath({
       if (id && parts[2] === "reviews") {
         return `/(app)/reviews/place/${id}${reviewsSuffix}`;
       }
-      return id ? `/(app)/place/${id}` : "/(app)/(tabs)";
+      return id ? `/(app)/place/${id}${sourceSuffix}` : "/(app)/(tabs)";
     }
     // Abonten Weekly: /weekly (this week, Ghana or the explored area),
     // /weekly/<area> (this week for that area) and /weekly/<area>/<monday>.
