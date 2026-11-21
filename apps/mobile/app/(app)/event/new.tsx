@@ -13,7 +13,7 @@ import { FormSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
 import { useVenuePlaces } from "@/features/events/useVenuePlaces";
-import { PublishingAsBanner } from "@/features/teams/ManagingAs";
+import { PublishingAsChooser } from "@/features/teams/ManagingAs";
 import {
   AppText,
   Hero,
@@ -191,7 +191,16 @@ export default function CreateEventScreen() {
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4"
       >
-        <PublishingAsBanner />
+        {/* Who it goes out as, at the start and again before Publish. A
+            resumed draft or an event started from a place's page already
+            has its account. */}
+        {w.step === 0 || w.step === LAST_STEP ? (
+          <PublishingAsChooser
+            capability="events.manage"
+            locked={!!draftId || !!placeId}
+            disabled={w.isSubmitting}
+          />
+        ) : null}
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
             <StepDots
