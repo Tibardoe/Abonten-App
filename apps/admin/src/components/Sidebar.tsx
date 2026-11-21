@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   MapPinned,
+  Megaphone,
   Menu,
   Newspaper,
   PiggyBank,
@@ -161,6 +162,12 @@ const ITEMS: Item[] = [
     label: "Abonten Weekly",
     icon: Newspaper,
     permission: "weekly.view",
+  },
+  {
+    href: "/social",
+    label: "Social",
+    icon: Megaphone,
+    permission: "social.view",
   },
   {
     href: "/safety",
