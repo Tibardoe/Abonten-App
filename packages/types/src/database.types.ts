@@ -19538,6 +19538,10 @@ export type Database = {
         Args: { p_by: string; p_name: string; p_team: string }
         Returns: undefined
       }
+      team_move_events: {
+        Args: { p_event_ids: string[]; p_person: string; p_team: string }
+        Returns: Json
+      }
       team_notice_capability: { Args: { p_type: string }; Returns: string }
       acting_account_for: {
         Args: { p_account: string; p_caps: string[] }

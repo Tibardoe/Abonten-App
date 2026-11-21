@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-21 — Move events into a team
+
+- An Owner of a team can now move one of their own events into it, the whole run of shows at once, while nobody has bought or registered (website Manage › Details › Move to a team; app Organizer › the event › Move to a team). The seating plan and the conversations about the events move too, and the person then manages it as the team. `public.team_move_events()` (service role only) holds the rules; `getMoveEventToTeamOptionsCore` / `moveEventToTeamCore`; `GET`/`POST /api/mobile/organizer/events/:eventId/move-to-team`. "Make this a team" (`team_convert_account`) now also moves runs of shows and seating plans. Migration `20261121200000_team_move_events`. Docs: `architecture/team-accounts.md` §4f, §4f2.
+
 ## 2026-11-21 — "Publishing as" on the create forms
 
 - An organizer (Roverman) made a team, then published twelve events on his own account by mistake, which his team's members could not manage: nothing said who a listing was being published as unless a team was already chosen. The event and place create forms (website modals, app wizards) now show a **Publishing as** choice to anyone in a team whose role covers publishing (`events.manage` / `places.manage`) or managing as a team: their own account and each such team, the current one selected, switching "Managing as"; a resumed draft or an event started from a place's page only shows its account. The server still decides the owner (`actingFor` / `mobileActingFor`). Messages `teams.publishingAsLabel`, `teams.publishingAsHint`, `teams.publishingAsRoleCannot`. Docs: `architecture/team-accounts.md` 1.14 §4a; help page `organizers/team-accounts` (five languages) says the create form lets you choose the team.

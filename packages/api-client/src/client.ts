@@ -50,6 +50,9 @@ import type {
   IdentityOverviewResult,
   InviteTeamMemberBody,
   InviteTeamMemberResult,
+  MoveEventToTeamBody,
+  MoveEventToTeamOptionsResult,
+  MoveEventToTeamResult,
   PayTicketPlanPartBody,
   PayTicketPlanPartResult,
   RenameTeamResult,
@@ -1635,6 +1638,23 @@ export function createApiClient(options: ApiClientOptions) {
       addEventShows(eventId: string, body: AddEventShowsBody) {
         return request<AddEventShowsResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/shows`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * What "Move to a team" can offer for one of the caller's own events:
+       * the teams they own, how many listings move, whether sales stop it.
+       */
+      moveEventToTeamOptions(eventId: string) {
+        return request<MoveEventToTeamOptionsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/move-to-team`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Moves one of the caller's own events (its whole run) into a team. */
+      moveEventToTeam(eventId: string, body: MoveEventToTeamBody) {
+        return request<MoveEventToTeamResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/move-to-team`,
           { method: "POST", body, auth: true },
         );
       },

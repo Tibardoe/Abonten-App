@@ -4,6 +4,8 @@ import { parsePhone } from "@abonten/core/phone";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type {
   InviteTarget,
+  MoveEventToTeamOptions,
+  MoveEventToTeamResult,
   TeamActivityEntry,
   TeamConversion,
   TeamDetail,
@@ -19,6 +21,7 @@ import type {
 } from "@abonten/types/teamType";
 import type { TicketTransferRecipient } from "@abonten/types/ticketTransferType";
 import { requestLocale, tr } from "../i18n/requestLocale";
+import { requireVerifiedIdentity } from "../identity/identityCore";
 import {
   isAccountRestricted,
   restrictedAccountMessage,
@@ -104,6 +107,10 @@ const SQL_ERRORS: Record<string, { status: Fail["status"]; key: string }> = {
   under_age: { status: 409, key: "teamUnderAge" },
   role_not_limited: { status: 409, key: "teamRoleNotLimited" },
   place_not_team: { status: 400, key: "teamPlaceNotTeam" },
+  not_yours: { status: 404, key: "eventNotFound" },
+  whole_run: { status: 409, key: "teamMoveWholeRun" },
+  has_sales: { status: 409, key: "teamMoveHasSales" },
+  seating_shared: { status: 409, key: "teamMoveSeatingShared" },
 };
 
 /** K7: they said they are 18 or older; the database keeps when. */
@@ -788,6 +795,236 @@ export async function convertAccountToTeamCore(
       followers: Number(counts.followers ?? 0),
       personUsername: counts.person_username ?? "",
       badgeBackInReview: counts.badge_back_in_review === true,
+    },
+  };
+}
+
+// --- Move events into a team -------------------------------------------------
+//
+// An organizer who made a team after listing events moves them into it
+// (docs/architecture/team-accounts.md, "Move events into a team"): only
+// their own, a whole run of shows at once, and only while nobody has bought
+// or registered (money already earned stays with the account that earned
+// it). public.team_move_events holds the rules under row locks; this layer
+// adds the kill switch, the account check and the ID check a team's paid
+// events need, and works out the run.
+
+type MovableEvent = {
+  id: string;
+  organizer_id: string;
+  series_id: string | null;
+};
+
+/** The event and, when it is in a run, every show of the run. */
+async function eventsToMove(
+  svc: ServiceRoleClient,
+  userId: string,
+  eventId: string,
+): Promise<{ ids: string[] } | { fail: Fail }> {
+  const { data, error } = await svc
+    .from("event")
+    .select("id, organizer_id, series_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (error) {
+    logger.error(`teams eventsToMove: ${error.message}`);
+    return { fail: { status: 500, message: tr("somethingWentWrong") } };
+  }
+  const event = data as MovableEvent | null;
+  if (!event || event.organizer_id !== userId) {
+    return { fail: { status: 404, message: tr("eventNotFound") } };
+  }
+  if (!event.series_id) return { ids: [event.id] };
+  const { data: shows, error: showsError } = await svc
+    .from("event")
+    .select("id")
+    .eq("series_id", event.series_id);
+  if (showsError) {
+    logger.error(`teams eventsToMove shows: ${showsError.message}`);
+    return { fail: { status: 500, message: tr("somethingWentWrong") } };
+  }
+  return { ids: (shows ?? []).map((s) => (s as { id: string }).id) };
+}
+
+/** Whether anyone has bought or registered for any of the events. */
+async function eventsHaveSales(
+  svc: ServiceRoleClient,
+  ids: string[],
+): Promise<boolean | null> {
+  const { data: types, error: typesError } = await svc
+    .from("ticket_type")
+    .select("id")
+    .in("event_id", ids);
+  if (typesError) {
+    logger.error(`teams eventsHaveSales types: ${typesError.message}`);
+    return null;
+  }
+  const typeIds = (types ?? []).map((t) => (t as { id: string }).id);
+  const [tickets, checkouts, ledger] = await Promise.all([
+    typeIds.length
+      ? svc
+          .from("ticket")
+          .select("id", { count: "exact", head: true })
+          .in("ticket_type_id", typeIds)
+      : Promise.resolve({ count: 0, error: null }),
+    svc
+      .from("ticket_checkout")
+      .select("id", { count: "exact", head: true })
+      .in("event_id", ids)
+      .in("status", ["pending", "on_plan", "paid"]),
+    svc
+      .from("organizer_ledger_entry")
+      .select("id", { count: "exact", head: true })
+      .in("event_id", ids),
+  ]);
+  const failed = tickets.error ?? checkouts.error ?? ledger.error;
+  if (failed) {
+    logger.error(`teams eventsHaveSales: ${failed.message}`);
+    return null;
+  }
+  return (
+    (tickets.count ?? 0) + (checkouts.count ?? 0) + (ledger.count ?? 0) > 0
+  );
+}
+
+/** Active teams the person is an Owner of. */
+async function ownedTeams(
+  svc: ServiceRoleClient,
+  userId: string,
+): Promise<MoveEventToTeamOptions["teams"] | null> {
+  const { data: memberships, error } = await svc
+    .from("team_member")
+    .select("team_id")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .eq("role", "owner");
+  if (error) {
+    logger.error(`teams ownedTeams: ${error.message}`);
+    return null;
+  }
+  const ids = (memberships ?? []).map(
+    (m) => (m as { team_id: string }).team_id,
+  );
+  if (ids.length === 0) return [];
+  const [teams, profiles] = await Promise.all([
+    svc
+      .from("team")
+      .select("account_id")
+      .in("account_id", ids)
+      .eq("status", "active"),
+    svc.from("user_info").select("id, full_name, username").in("id", ids),
+  ]);
+  if (teams.error || profiles.error) {
+    logger.error(
+      `teams ownedTeams: ${teams.error?.message ?? profiles.error?.message}`,
+    );
+    return null;
+  }
+  const active = new Set(
+    (teams.data ?? []).map((t) => (t as { account_id: string }).account_id),
+  );
+  return (
+    (profiles.data ?? []) as {
+      id: string;
+      full_name: string | null;
+      username: string | null;
+    }[]
+  )
+    .filter((p) => active.has(p.id))
+    .map((p) => ({ id: p.id, name: p.full_name, username: p.username }));
+}
+
+/**
+ * What "Move to a team" can offer for one of the person's own events: the
+ * teams they own, how many listings would move, and whether sales keep it
+ * where it is. Teams switched off: nothing to offer.
+ */
+export async function getMoveEventToTeamOptionsCore(
+  svc: ServiceRoleClient,
+  userId: string,
+  eventId: string,
+): Promise<Ok<MoveEventToTeamOptions> | Fail> {
+  if (isTeamsKillSwitchOn()) {
+    return { status: 200, data: { teams: [], eventCount: 0, hasSales: false } };
+  }
+  const run = await eventsToMove(svc, userId, eventId);
+  if ("fail" in run) return run.fail;
+  const [teams, hasSales] = await Promise.all([
+    ownedTeams(svc, userId),
+    eventsHaveSales(svc, run.ids),
+  ]);
+  if (teams === null || hasSales === null) {
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  return {
+    status: 200,
+    data: { teams, eventCount: run.ids.length, hasSales },
+  };
+}
+
+/** Moves one of the person's own events (its whole run) into their team. */
+export async function moveEventToTeamCore(
+  svc: ServiceRoleClient,
+  userId: string,
+  input: { eventId: string; teamId: string },
+): Promise<Ok<MoveEventToTeamResult> | Fail> {
+  if (isTeamsKillSwitchOn()) return unavailable();
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: restrictedAccountMessage() };
+  }
+  const membership = await activeMembership(svc, input.teamId, userId);
+  if (!membership) return { status: 404, message: tr("teamNotMember") };
+  if (membership.role !== "owner") {
+    return { status: 403, message: tr("teamNotAllowed") };
+  }
+  const run = await eventsToMove(svc, userId, input.eventId);
+  if ("fail" in run) return run.fail;
+
+  // Selling tickets as the team needs its Owners' ID check, when required.
+  const { data: paid, error: paidError } = await svc
+    .from("ticket_type")
+    .select("id")
+    .in("event_id", run.ids)
+    .gt("price", 0)
+    .limit(1);
+  if (paidError) {
+    logger.error(`moveEventToTeamCore paid types: ${paidError.message}`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  if ((paid ?? []).length > 0) {
+    const gate = await requireVerifiedIdentity(
+      svc,
+      input.teamId,
+      "paid_events",
+    );
+    if (gate) {
+      return {
+        status: gate.status === 503 ? 500 : 409,
+        message: gate.message ?? tr("somethingWentWrong"),
+      };
+    }
+  }
+
+  const { data, error } = await svc.rpc("team_move_events", {
+    p_team: input.teamId,
+    p_person: userId,
+    p_event_ids: run.ids,
+  });
+  if (error) return failFromDb(error, "moveEventToTeamCore");
+  const moved = Number((data as { events?: number } | null)?.events ?? 0);
+
+  const { data: profile } = await svc
+    .from("user_info")
+    .select("full_name")
+    .eq("id", input.teamId)
+    .maybeSingle();
+  const name = (profile as { full_name: string | null } | null)?.full_name;
+  return {
+    status: 200,
+    message: tr("teamEventsMoved", { count: moved, team: name ?? "" }),
+    data: {
+      team: { id: input.teamId, name: name ?? null, role: "owner" },
+      events: moved,
     },
   };
 }
