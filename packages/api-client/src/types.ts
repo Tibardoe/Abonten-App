@@ -1296,6 +1296,23 @@ export type AddEventShowsResult =
     }
   | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
 
+/** One of the account's other runs that could join this listing's run. */
+export type JoinableRun = {
+  eventId: string;
+  title: string;
+  showCount: number;
+  firstStartsAt: string | null;
+  lastStartsAt: string | null;
+  timezone: string;
+};
+export type JoinableRunsResult =
+  | { status: 200; message?: string; data: JoinableRun[] }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+export type JoinEventRunsBody = { otherEventId: string };
+export type JoinEventRunsResult =
+  | { status: 200; message: string; data: { shows: number } }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
 export type EventShow = {
   id: string;
   event_code: string;

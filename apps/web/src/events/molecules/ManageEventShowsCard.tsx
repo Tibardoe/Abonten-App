@@ -19,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
+import JoinRunsSection from "./JoinRunsSection";
 import ShowVenueChooser, { type ShowVenueState } from "./ShowVenueChooser";
 
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
@@ -429,6 +430,8 @@ export default function ManageEventShowsCard({
           </Button>
         </div>
       </div>
+
+      <JoinRunsSection eventId={eventId} />
     </div>
   );
 }

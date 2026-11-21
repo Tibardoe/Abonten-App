@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-21 — Join another run
+
+- An organizer (or a team member who manages events) can now bring another of their upcoming listings, with every show of its run, into a listing's run, so a play copied for its second week is listed once again (website Manage › Details › Shows › Join another run; app Shows and copies). `public.event_join_runs()` (service role only) refuses another account's listing, an unpublished or ended one, the same run, another country or currency, a run with a pass, and two shows at the same time at one venue. `listJoinableRunsCore` / `joinEventRunsCore`; `GET`/`POST /api/mobile/organizer/events/:eventId/shows/join`. Migration `20261121210000_join_runs`. Docs: `architecture/show-runs.md` 1.3 §2b.
+
 ## 2026-11-21 — A postponed event shows no old date; the app's clock follows the language
 
 - A postponed event no longer shows its old date as if it stood: the app's ticket list and ticket screen, the app and website event pages say "Postponed, new date to come" (`core.postponedNewDateToCome`); event cards and the organizer's event list show a "Postponed" overlay instead of "Event ended" once the old date passes (`getEventStatusOverlay`, `eventStatus.postponed`); the event's structured data says `EventPostponed`.

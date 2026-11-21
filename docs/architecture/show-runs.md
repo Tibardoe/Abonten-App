@@ -4,8 +4,8 @@ purpose: How an organizer turns one listing into a run of shows (a play on sever
 audience: Engineering, operations and support
 scope: event_series, event.series_id, event_add_show, get_event_shows and the run-once rewrite of _explore_event_candidates, search_events and search_suggest (migration 20261119210000); tours, shows at other venues (migration 20261120190000); @abonten/core/showRuns; @abonten/services events/eventShowsCore; the web Manage › Details "Shows" card (ShowVenueChooser) and event page show picker; the app's Shows and copies screen (ShowVenueField) and event show picker.
 status: Review required
-version: 1.2
-lastReviewed: 2026-11-20
+version: 1.3
+lastReviewed: 2026-11-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -47,6 +47,16 @@ One transaction per show, service role only, idempotent on a client request id (
 Not copied: dates, sales, attendees, seats given, reviews, featuring (promotions are bought per show), photos (`event_media`).
 
 Refused: a listing that is not published, and (since 2026-11-20, migration 20261120120000) one Abonten has hidden or removed — its new shows would have come out visible. The organizer reads "Abonten has hidden this listing, so it can't be copied."
+
+## 2b. Bringing another run into this one (2026-11-21)
+
+**Why.** An organizer who made a separate copy for the second week of a play and then added shows to the copy had two runs of the same play, listed twice to buyers (Roverman's *Fame In Flames*: 27–29 November and 4–6 December), and no way to put them together.
+
+**What.** On the Shows card (website, *Join another run*) and the Shows and copies screen (app), the organizer, or a team member whose role covers `events.manage`, picks another of the account's upcoming published listings; it joins this run **with every show of its own run**. Each show stays its own event: tickets, seats, door lists and payouts don't change, and buyers now see one listing with all the shows.
+
+**Refused** (`public.event_join_runs(account, event, other)`, service role only; the service resolves the acting account): not both the account's (`not_yours`); not both published and current (`not_published`); already the same run (`same_run`); another country or currency (`other_country`, as for a tour); a pass in either run (`has_passes`: a pass is sold for the shows of its own run); two shows at the same time at the same venue (`same_time`, the rule `event_add_show` keeps; a tour may play two cities at once). The other run's `event_series` row is deleted once empty.
+
+**Where.** `listJoinableRunsCore` / `joinEventRunsCore` in `@abonten/services/events/eventShowsCore`; website actions `getJoinableRuns`, `joinEventRuns`, `events/molecules/JoinRunsSection`; app `GET`/`POST /api/mobile/organizer/events/:eventId/shows/join`, `features/events/JoinRunsSection`. Migration `20261121210000_join_runs`.
 
 ## 3a. Tours: shows at other venues
 

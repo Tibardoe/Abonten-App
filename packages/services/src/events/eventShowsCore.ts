@@ -272,3 +272,139 @@ export async function addEventShowsCore(
     data: { shows: added, skipped },
   };
 }
+
+// --- Bringing another run into this one -------------------------------------
+//
+// An organizer who copied a listing for a second week and then added shows
+// to the copy has two runs of the same play, listed twice. They can bring
+// the other listing (with every show of its run) into this run:
+// public.event_join_runs holds the rules (both theirs and published, same
+// country and currency, no pass in either run, no two shows at the same
+// time at one venue). Each show stays its own event.
+
+/** One of the account's other runs (or single listings) that could join. */
+export type JoinableRun = {
+  /** The earliest upcoming show: what the join is asked with. */
+  eventId: string;
+  title: string;
+  showCount: number;
+  firstStartsAt: string | null;
+  lastStartsAt: string | null;
+  timezone: string;
+};
+
+export type ListJoinableRunsResult =
+  | { status: 200; data: JoinableRun[] }
+  | { status: 404 | 500; message: string };
+
+type RunCandidate = {
+  id: string;
+  title: string;
+  series_id: string | null;
+  starts_at: string | null;
+  timezone: string | null;
+};
+
+export async function listJoinableRunsCore(
+  supabase: SupabaseClient<Database>,
+  accountId: string,
+  eventId: string,
+): Promise<ListJoinableRunsResult> {
+  const { data: target, error } = await supabase
+    .from("event")
+    .select("id, series_id, country_code, currency")
+    .eq("id", eventId)
+    .eq("organizer_id", accountId)
+    .maybeSingle();
+  if (error) {
+    logger.error(`listJoinableRuns: listing read failed (${error.message})`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  if (!target) {
+    return { status: 404, message: tr("eventNotFoundOrUnauthorized") };
+  }
+
+  // The account's other published listings still to come, in this market.
+  let query = supabase
+    .from("event")
+    .select("id, title, series_id, starts_at, timezone")
+    .eq("organizer_id", accountId)
+    .eq("status", "published")
+    .is("archived_at", null)
+    .gt("starts_at", new Date().toISOString())
+    .neq("id", target.id)
+    .order("starts_at", { ascending: true })
+    .limit(500);
+  if (target.country_code)
+    query = query.eq("country_code", target.country_code);
+  if (target.currency) query = query.eq("currency", target.currency);
+  const { data: rows, error: listError } = await query;
+  if (listError) {
+    logger.error(`listJoinableRuns: list failed (${listError.message})`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+
+  const runs = new Map<string, JoinableRun>();
+  for (const row of (rows ?? []) as RunCandidate[]) {
+    if (target.series_id && row.series_id === target.series_id) continue;
+    const key = row.series_id ?? row.id;
+    const run = runs.get(key);
+    if (!run) {
+      runs.set(key, {
+        eventId: row.id,
+        title: row.title,
+        showCount: 1,
+        firstStartsAt: row.starts_at,
+        lastStartsAt: row.starts_at,
+        timezone: row.timezone ?? "Africa/Accra",
+      });
+    } else {
+      run.showCount += 1;
+      run.lastStartsAt = row.starts_at;
+    }
+  }
+  return { status: 200, data: [...runs.values()].slice(0, 50) };
+}
+
+export type JoinEventRunsResult =
+  | { status: 200; message: string; data: { shows: number } }
+  | { status: 403 | 404 | 409 | 500; message: string };
+
+const JOIN_ERRORS: Record<string, { status: 404 | 409; key: string }> = {
+  not_yours: { status: 404, key: "eventNotFoundOrUnauthorized" },
+  not_published: { status: 409, key: "joinRunsNotPublished" },
+  same_run: { status: 409, key: "joinRunsSameRun" },
+  other_country: { status: 409, key: "aShowMustBeInTheSameCountry" },
+  has_passes: { status: 409, key: "joinRunsHasPasses" },
+  same_time: { status: 409, key: "joinRunsSameTime" },
+};
+
+export async function joinEventRunsCore(
+  accountId: string,
+  input: { eventId: string; otherEventId: string },
+): Promise<JoinEventRunsResult> {
+  if (await isAccountRestricted(accountId)) {
+    return { status: 403, message: restrictedAccountMessage() };
+  }
+  const { data, error } = await getSupabaseServiceClient().rpc(
+    "event_join_runs",
+    {
+      p_account: accountId,
+      p_event_id: input.eventId,
+      p_other_event_id: input.otherEventId,
+    },
+  );
+  if (error) {
+    const code = /join_runs:([a-z_]+)/.exec(error.message ?? "")?.[1];
+    const known = code ? JOIN_ERRORS[code] : undefined;
+    if (known) return { status: known.status, message: tr(known.key) };
+    logger.error(`joinEventRuns failed for ${input.eventId}: ${error.message}`);
+    return { status: 500, message: tr("somethingWentWrong") };
+  }
+  const shows = Number((data as { shows?: number } | null)?.shows ?? 0);
+  return {
+    status: 200,
+    message: tr("joinRunsDone", { count: shows }),
+    data: { shows },
+  };
+}
