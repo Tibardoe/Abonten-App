@@ -2,7 +2,7 @@
 title: Crear y publicar un evento
 summary: El ciclo de vida de un evento de borrador a publicado, qué significa cada campo, tipos de entrada y precios, eventos con varias fechas y cambios después de publicar.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -33,6 +33,10 @@ Tu progreso se guarda como **borrador** sobre la marcha. Los borradores están e
 | Cartel | Una imagen, que se sube directamente a nuestro servicio de imágenes con una barra de progreso. |
 | Tipos de entrada | Gratis (solo registro) o de pago. Para cada tipo de pago: nombre, precio (en la moneda de tu país; en Ghana, cedis) y cantidad disponible. Las cantidades son límites estrictos: las ventas se detienen cuando se agotan. |
 | Visibilidad | Publicar ya o dejarlo como borrador. |
+
+## Varias funciones: una obra, una temporada, una gira
+
+Un evento con **Varias fechas** tiene un solo cupo de entradas para todas sus fechas, y la app solo admite una hora por día. Para una obra o un espectáculo con varias funciones, cada una con sus propias plazas y su propia lista de acceso, crea el evento solo con la primera función, publícalo, ábrelo y elige **Funciones y copias** (app) o la tarjeta **Funciones** de su página de gestión (web). Añade las funciones de una en una o con un patrón semanal (por ejemplo, el sábado a las 16:00 y a las 19:00, y el domingo a las 13:00, 16:00 y 19:00). Cada función pasa a ser un anuncio propio con sus propias entradas; los compradores ven la serie una vez y eligen una función.
 
 ## Precios y tarifa de servicio
 

@@ -621,6 +621,7 @@
   "setAddress": "Adresse festlegen",
   "setReminder": "Erinnerung einrichten",
   "setSpecificNonConsecutiveDates": "Einzelne, nicht aufeinanderfolgende Termine festlegen",
+  "multipleDatesShareTicketsHint": "Alle diese Termine teilen sich dieselben Tickets. Für ein Stück oder eine Show mit mehreren Vorstellungen, jede mit eigenen Plätzen, wähle Einzeln/Zeitraum für die erste Vorstellung und füge die anderen nach dem Veröffentlichen unter Vorstellungen auf der Verwaltungsseite des Events hinzu.",
   "setTime": "Uhrzeit festlegen",
   "setYourLocation": "Lege deinen Standort fest",
   "settlementStatusPendingSettlement": "Abrechnungsstatus: Abrechnung ausstehend",

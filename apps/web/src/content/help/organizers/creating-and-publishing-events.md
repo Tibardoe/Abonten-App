@@ -2,7 +2,7 @@
 title: Creating and publishing an event
 summary: The event lifecycle from draft to published, what each field means, ticket types and pricing, multi-date events, editing after publishing.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-20
 status: Draft
 owner: Abonten Hub
 ---
@@ -33,6 +33,10 @@ Your progress is saved as a **draft** as you go. Drafts live under Manage › Dr
 | Flyer | One image, uploaded straight to our image host with a progress bar. |
 | Ticket types | Free (register only) or paid. For each paid type: name, price (in your country's currency, Ghana cedis in Ghana) and quantity available. Quantities are hard limits — sales stop when they run out. |
 | Visibility | Publish now or keep as a draft. |
+
+## Several shows: a play, a run, a tour
+
+An event with **Multiple dates** has one stock of tickets shared by every date, and the app takes one time per day. For a play or show with several performances, each with its own seats and door list, create the event with the first show only, publish it, then open it and choose **Shows and copies** (app) or the **Shows** card on its Manage page (web). Add shows one at a time or on a weekly pattern (for example Saturday at 4pm and 7pm, Sunday at 1pm, 4pm and 7pm). Each show becomes its own listing with its own tickets; buyers see the run once and pick a show.
 
 ## Pricing and the service fee
 

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-20 — Several shows on one day point to Shows and copies
+
+- An organizer (Roverman) tried to add a second show on the same day with the app's **Multiple dates**, which takes one time per day and shares one stock of tickets across its dates, and only read "That date is already in the list". The app now says where to go instead (publish with the first show, then add the others in Shows and copies: each show gets its own seats), and both create forms (app and website) say under **Multiple dates** that its dates share one set of tickets and point plays with several performances to Shows. Messages `events.sameDayShowsUseShowsAndCopies` (replaces `thatDateIsAlreadyInThe`), `events.multipleDatesShareTicketsHint`, `common.multipleDatesShareTicketsHint`. Help page `organizers/creating-and-publishing-events` gains "Several shows: a play, a run, a tour" in five languages.
+
 ## 2026-11-20 — The fee back for Abonten Credit and Pay small small after a move
 
 - After an organizer moves or postpones an event, the service fee now comes back for every payment, not only cash ones (decision RS1 extended): a payment partly or wholly in Abonten Credit, or a finished Pay small small purchase, given back after the move gets its fee too, split between credit and cash (or the plan's parts) like the ticket price (`whole_payment_fee()`, `issueRefundCore`, the holder's quote); the replaced `record_fee_refund_adjustment()` records the fee given back. A running Pay small small plan cancelled while the move's refunds are open ends with the new reason `event_moved` and gives back everything paid (the replaced `ticket_plan_release()`, `moveRefundOpenFor`). Migration `20261120230000_reschedule_fee_refunds`. Docs: `architecture/event-reschedule.md` 1.3 §4, `architecture/ticket-plans.md`.

@@ -621,6 +621,7 @@
   "setAddress": "Establecer dirección",
   "setReminder": "Configurar recordatorio",
   "setSpecificNonConsecutiveDates": "Establecer fechas concretas no consecutivas",
+  "multipleDatesShareTicketsHint": "Todas estas fechas comparten las mismas entradas. Para una obra o un espectáculo con varias funciones, cada una con sus propias plazas, elige Única/intervalo para la primera función y añade las demás en Funciones, en la página de gestión del evento, cuando esté publicado.",
   "setTime": "Establecer hora",
   "setYourLocation": "Establece tu ubicación",
   "settlementStatusPendingSettlement": "Estado de liquidación: pendiente de liquidación",

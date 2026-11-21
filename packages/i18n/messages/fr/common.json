@@ -621,6 +621,7 @@
   "setAddress": "Définir l'adresse",
   "setReminder": "Définir un rappel",
   "setSpecificNonConsecutiveDates": "Définir des dates précises non consécutives",
+  "multipleDatesShareTicketsHint": "Toutes ces dates partagent les mêmes billets. Pour une pièce ou un spectacle en plusieurs séances, chacune avec ses propres places, choisissez Unique/plage pour la première séance, puis ajoutez les autres dans Séances, sur la page de gestion de l'événement, une fois l'annonce publiée.",
   "setTime": "Définir l'heure",
   "setYourLocation": "Définissez votre position",
   "settlementStatusPendingSettlement": "Statut du règlement : en attente de règlement",

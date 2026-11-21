@@ -33,8 +33,11 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
     if (!draftDate || !TIME_RE.test(draftStart) || !TIME_RE.test(draftEnd)) {
       return;
     }
+    // One time per day here: a second show on the same day belongs in Shows
+    // and copies (its own listing and seats), so say where to go instead of
+    // only refusing it.
     if (w.occurrences.some((o) => o.dateIso === draftDate)) {
-      setDateError(t("thatDateIsAlreadyInThe"));
+      setDateError(t("sameDayShowsUseShowsAndCopies"));
       return;
     }
     const startAt = combineDateAndTime(draftDate, draftStart);
@@ -140,6 +143,11 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
         </View>
       ) : (
         <View className="gap-3">
+          {/* Every date here shares one stock of tickets: a play with
+              separate seats per show needs Shows and copies instead. */}
+          <AppText variant="caption" tone="muted">
+            {t("multipleDatesShareTicketsHint")}
+          </AppText>
           {w.occurrences.length > 0 ? (
             <AppText variant="overline">
               {t("date2", { length: w.occurrences.length })}
