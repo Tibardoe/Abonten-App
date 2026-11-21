@@ -303,13 +303,16 @@ export default async function page({
     )[0] ?? null;
 
   const postedAt = getRelativeTime(event.created_at, undefined, locale);
-  const eventDateAndTime = getFormattedEventDate(
-    event.starts_at,
-    event.ends_at,
-    event.event_occurrence,
-    event.timezone,
-    locale,
-  );
+  // A postponed event has no date to show: its old one would mislead.
+  const eventDateAndTime = event.postponed_at
+    ? { date: tc("postponedNewDateToCome"), time: "" }
+    : getFormattedEventDate(
+        event.starts_at,
+        event.ends_at,
+        event.event_occurrence,
+        event.timezone,
+        locale,
+      );
 
   const tags = parseEventTypes(event.event_type);
 

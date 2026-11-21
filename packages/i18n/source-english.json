@@ -1588,6 +1588,7 @@
     "periods.transactions.all": "dbad49d8",
     "eventStatus.ongoing": "2e0254c2",
     "eventStatus.ended": "4f8efa04",
+    "eventStatus.postponed": "b444b460",
     "ticketTiers.paidNeedsPrice": "dc9d8e7e",
     "ticketTiers.freeReserved": "8a25e841",
     "ticketTiers.freeEventPromoCodes": "46736ad8",
@@ -2309,7 +2310,8 @@
     "seating.tooManyRows": "cd8473fb",
     "seating.rowLabel": "21e55ec5",
     "seating.duplicateRow": "c33b9921",
-    "seating.rowSeats": "912c1cee"
+    "seating.rowSeats": "912c1cee",
+    "postponedNewDateToCome": "89928dc7"
   },
   "discovery": {
     "aboutNewPostsFrom": "c0cd83e2",
@@ -3059,7 +3061,8 @@
     "rescheduleConfirmVenueTitle": "e871513a",
     "rescheduleConfirmDateTitle": "2550ce8e",
     "thisEventIsPostponed": "8e9c7b3c",
-    "showPostponed": "b444b460"
+    "showPostponed": "b444b460",
+    "atPlaceName": "06bb94e0"
   },
   "explore": {
     "abontenHasnTLaunchedHereYet": "b1e552b7",

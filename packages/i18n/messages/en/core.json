@@ -445,7 +445,8 @@
   },
   "eventStatus": {
     "ongoing": "Ongoing",
-    "ended": "Event ended"
+    "ended": "Event ended",
+    "postponed": "Postponed"
   },
   "ticketTiers": {
     "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free.",
@@ -1508,5 +1509,6 @@
     "rowLabel": "Each row needs a label of up to 6 characters.",
     "duplicateRow": "Two rows of a section have the same label.",
     "rowSeats": "A row has from 1 to {max} seats."
-  }
+  },
+  "postponedNewDateToCome": "Postponed, new date to come"
 }

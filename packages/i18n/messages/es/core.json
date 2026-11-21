@@ -197,7 +197,8 @@
   },
   "eventStatus": {
     "ended": "Evento finalizado",
-    "ongoing": "En curso"
+    "ongoing": "En curso",
+    "postponed": "Aplazado"
   },
   "eventTypes": {
     "academicSeminars": "Seminarios académicos",
@@ -1508,5 +1509,6 @@
     "rowLabel": "Cada fila necesita una etiqueta de hasta 6 caracteres.",
     "duplicateRow": "Dos filas de una sección tienen la misma etiqueta.",
     "rowSeats": "Una fila tiene de 1 a {max} asientos."
-  }
+  },
+  "postponedNewDateToCome": "Aplazado, fecha por confirmar"
 }

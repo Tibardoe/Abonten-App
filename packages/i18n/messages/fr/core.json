@@ -197,7 +197,8 @@
   },
   "eventStatus": {
     "ended": "Événement terminé",
-    "ongoing": "En cours"
+    "ongoing": "En cours",
+    "postponed": "Reporté"
   },
   "eventTypes": {
     "academicSeminars": "Séminaires universitaires",
@@ -1508,5 +1509,6 @@
     "rowLabel": "Chaque rangée a besoin d'une étiquette de 6 caractères au plus.",
     "duplicateRow": "Deux rangées d'une section ont la même étiquette.",
     "rowSeats": "Une rangée compte de 1 à {max} places."
-  }
+  },
+  "postponedNewDateToCome": "Reporté, nouvelle date à venir"
 }

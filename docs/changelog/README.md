@@ -20,6 +20,12 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - An Owner of a team can now move one of their own events into it, the whole run of shows at once, while nobody has bought or registered (website Manage › Details › Move to a team; app Organizer › the event › Move to a team). The seating plan and the conversations about the events move too, and the person then manages it as the team. `public.team_move_events()` (service role only) holds the rules; `getMoveEventToTeamOptionsCore` / `moveEventToTeamCore`; `GET`/`POST /api/mobile/organizer/events/:eventId/move-to-team`. "Make this a team" (`team_convert_account`) now also moves runs of shows and seating plans. Migration `20261121200000_team_move_events`. Docs: `architecture/team-accounts.md` §4f, §4f2.
 
+## 2026-11-21 — A postponed event shows no old date; the app's clock follows the language
+
+- A postponed event no longer shows its old date as if it stood: the app's ticket list and ticket screen, the app and website event pages say "Postponed, new date to come" (`core.postponedNewDateToCome`); event cards and the organizer's event list show a "Postponed" overlay instead of "Event ended" once the old date passes (`getEventStatusOverlay`, `eventStatus.postponed`); the event's structured data says `EventPostponed`.
+- The app's time picker (`TimeField`, `prettyTime`) is on a 24-hour clock in every language but English (it showed AM/PM in French, Spanish, German and Portuguese); values are still "HH:MM".
+- The app's event screen said "At <place>" in English in every language (`events.atPlaceName`).
+
 ## 2026-11-20 — Several shows on one day point to Shows and copies
 
 - An organizer (Roverman) tried to add a second show on the same day with the app's **Multiple dates**, which takes one time per day and shares one stock of tickets across its dates, and only read "That date is already in the list". The app now says where to go instead (publish with the first show, then add the others in Shows and copies: each show gets its own seats), and both create forms (app and website) say under **Multiple dates** that its dates share one set of tickets and point plays with several performances to Shows. Messages `events.sameDayShowsUseShowsAndCopies` (replaces `thatDateIsAlreadyInThe`), `events.multipleDatesShareTicketsHint`, `common.multipleDatesShareTicketsHint`. Help page `organizers/creating-and-publishing-events` gains "Several shows: a play, a run, a tour" in five languages.
