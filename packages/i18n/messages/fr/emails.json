@@ -14,6 +14,7 @@
   },
   "common": {
     "contactUsThroughTheApp": "Pour toute question, contactez-nous depuis l'application Abonten.",
+    "followAbonten": "Suivez Abonten pour savoir ce qui se passe à {city}",
     "copyright": "© {year} {entity}",
     "hi": "Bonjour {name},",
     "there": "à vous"

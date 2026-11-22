@@ -3,6 +3,7 @@
 import { cancelTicketPlan } from "@/actions/ticketPlans/cancelTicketPlan";
 import { getTicketPlan } from "@/actions/ticketPlans/getTicketPlan";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
+import FollowAbonten from "@/components/molecules/FollowAbonten";
 import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -406,6 +407,11 @@ export default function TicketPlanView({ planId }: { planId: string }) {
             {t("cancelPlan")}
           </button>
         </section>
+      ) : null}
+
+      {/* A finished plan is a purchase: Abonten's channels close the page. */}
+      {plan.status === "completed" && plan.refundStatus === "none" ? (
+        <FollowAbonten />
       ) : null}
     </div>
   );

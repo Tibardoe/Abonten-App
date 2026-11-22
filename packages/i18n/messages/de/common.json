@@ -907,7 +907,12 @@
   "abontenOnNetwork": {
     "x": "Abonten auf X (ehemals Twitter)",
     "instagram": "Abonten auf Instagram",
-    "tiktok": "Abonten auf TikTok"
+    "tiktok": "Abonten auf TikTok",
+    "whatsapp": "Abontens WhatsApp-Kanal"
+  },
+  "followAbonten": {
+    "title": "Folge Abonten und erfahre, was in {city} los ist",
+    "body": "Neue Events und Orte und unsere Tipps für die Woche und das Wochenende."
   },
   "featured": "Hervorgehoben",
   "paidPlacement": "Bezahlte Platzierung",

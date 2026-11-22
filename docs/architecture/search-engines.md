@@ -4,8 +4,8 @@ purpose: Describe what the public website tells search engines (titles, descript
 audience: Engineering, anyone adding or changing a public web page, the founder (owner steps)
 scope: apps/web public pages (homepage, Explore city pages, event, place, profile, help, legal, Weekly), app/sitemap.ts, app/robots.ts, app/manifest.ts, @abonten/core/seo, utils/searchIndexing.ts, the IndexNow script. Not covered - search inside Abonten (discovery-search-and-recommendations.md, search-languages.md), the app stores' listings (../deployment/store-listings.md), web analytics.
 status: Approved
-version: 1.0
-lastReviewed: 2026-10-25
+version: 1.1
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -60,7 +60,7 @@ One `<script type="application/ld+json">` per page, a single `@graph` (`jsonLdGr
 
 | Page | Nodes |
 | --- | --- |
-| Homepage | `Organization` (name, legal name, logo `abonten-app-icon-512.png`, the official profiles from `@abonten/core/brand/socialLinks` without their share-sheet query, support email) and `WebSite` (the site name search engines show beside the address) |
+| Homepage | `Organization` (name, legal name, logo `abonten-app-icon-512.png`, the official profiles from `@abonten/core/brand/socialLinks` without their share-sheet query (those marked `profile`: X, Instagram, TikTok; not the WhatsApp Channel, whose address is an invite code that names no one and whose page only offers to open WhatsApp), support email) and `WebSite` (the site name search engines show beside the address) |
 | Event | one `Event` per date still to come (at most 10; once all are over, the last), with the venue (`Place`, its page when the event is at a listed place, `PostalAddress` with the market city and country, coordinates), the organizer, one `Offer` per tier (price in the currency's own precision, sold out, sale window) and `isAccessibleForFree`; then `BreadcrumbList` Home › city › event |
 | Place | the closest schema.org kind for the category (`placeSchemaType`: Restaurant, BarOrPub, NightClub, MovieTheater, Hotel, ExerciseGym, …, else LocalBusiness), address, coordinates, phone, website and social profiles (`sameAs`), opening hours, rating; then `BreadcrumbList` |
 | City | `BreadcrumbList` Home › city |

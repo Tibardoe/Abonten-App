@@ -53,6 +53,7 @@ import {
   subscribeDrawerEdgeClaims,
 } from "./drawerGesture";
 import { useMenuSheet } from "./menuSheet";
+import { SOCIAL_ICON } from "./socialIcons";
 
 // Full-screen navigation drawer — the native stand-in for the web header's
 // hamburger -> <SideBar> sheet. Slides in from the left. Two ways in: the
@@ -77,11 +78,6 @@ import { useMenuSheet } from "./menuSheet";
 // moment on each platform. A menu that is visibly re-summoned is worse
 // than one that stays closed; nothing is remembered now.
 
-const SOCIAL_ICON: Record<(typeof SOCIAL_LINKS)[number]["key"], IoniconName> = {
-  x: "logo-x",
-  instagram: "logo-instagram",
-  tiktok: "logo-tiktok",
-};
 const OPEN_MS = 260;
 const CLOSE_MS = 200;
 const EDGE_WIDTH = 22;

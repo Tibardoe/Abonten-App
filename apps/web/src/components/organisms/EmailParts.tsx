@@ -1,6 +1,8 @@
 import { ABONTEN_LOGO_EMAIL_TILE_URL } from "@/config/brandAssets";
 import type { EmailWords } from "@/lib/email/emailWords";
 import { LEGAL_ENTITY_NAME } from "@abonten/core/brand/legalEntity";
+import { SOCIAL_LINKS } from "@abonten/core/brand/socialLinks";
+import { ROUNDUP_CITY } from "@abonten/core/social/roundups";
 import {
   Body,
   Button,
@@ -11,12 +13,13 @@ import {
   Hr,
   Html,
   Img,
+  Link,
   Preview,
   Row,
   Section,
   Text,
 } from "@react-email/components";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 /**
  * Building blocks shared by every Abonten email (ticket purchase, event
@@ -256,6 +259,46 @@ export function EmailFooter({
         </EmailFinePrint>
       </Section>
     </>
+  );
+}
+
+/**
+ * "Follow Abonten for what's on in Accra" and the official channels as
+ * plain text links (no icons: nothing is fetched from the networks, and a
+ * blocked image would leave an empty box). Goes after the email's call to
+ * action, never before it.
+ */
+export function EmailFollowAbonten({ words }: { words: EmailWords }) {
+  return (
+    <Section style={{ padding: "0 32px 28px", textAlign: "center" }}>
+      <Text style={{ ...emailText, fontSize: "14px", color: MUTED }}>
+        {words.t("common.followAbonten", { city: ROUNDUP_CITY.name })}
+      </Text>
+      <Text
+        style={{
+          ...emailText,
+          fontSize: "14px",
+          fontWeight: 700,
+          margin: "6px 0 0",
+        }}
+      >
+        {SOCIAL_LINKS.map((link, index) => (
+          <Fragment key={link.key}>
+            {index > 0 ? (
+              <span aria-hidden="true" style={{ color: FAINT }}>
+                {" · "}
+              </span>
+            ) : null}
+            <Link
+              href={link.href}
+              style={{ color: EMAIL_BRAND, textDecoration: "underline" }}
+            >
+              {link.label}
+            </Link>
+          </Fragment>
+        ))}
+      </Text>
+    </Section>
   );
 }
 

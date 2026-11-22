@@ -4,8 +4,8 @@ purpose: What `npm run check:docs` verifies, how to run it, and how to fix each 
 audience: Engineers, documentation maintainers
 scope: scripts/check-docs.mjs; docs/**, apps/web/src/content/**, footers and mobile link constants
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-04
+version: 1.3
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -30,7 +30,7 @@ npm run check:docs -- --external  # also probe external links (network)
 | **Internal links** | A relative Markdown link (`.md`, `.md#anchor`, or a folder) does not resolve on disk; a site link (`/legal/...`, `/help/...`) has no matching content file | Fix the path |
 | **Code references** | A backticked path that looks like a repo file (`apps/…`, `packages/…`, `scripts/…`, `supabase/…`, `docs/…`, `.github/…`) does not exist | Update the reference (the code moved) or remove it |
 | **Placeholders** | `href="#"` in the footers/sidebar components; `abonten.com/` legal URLs; `example.com`, `TODO_URL`, `lorem ipsum` anywhere in docs or content | Replace with the real link |
-| **Social links** | Any of the three official URLs is missing from `packages/core/src/brand/socialLinks.ts`, or a different `x.com/`, `instagram.com/`, `tiktok.com/` Abonten URL appears elsewhere | Use the constants |
+| **Social links** | Any of the four official URLs (X, Instagram, TikTok, the WhatsApp Channel) is missing from `packages/core/src/brand/socialLinks.ts`, or a different `x.com/`, `instagram.com/`, `tiktok.com/` Abonten URL, or any other `whatsapp.com/channel/` URL, appears elsewhere | Use the constants |
 | **Secrets** | Patterns that look like live credentials (`sk_live_…`, `sk_test_…`, JWT `eyJ…` ≥ 60 chars, `service_role` followed by a key-like token, `AKIA…`, `-----BEGIN … PRIVATE KEY`, `re_[A-Za-z0-9]{20,}`, or `<ENV_NAME>=<value>` for a known env name) | Remove it; rotate it if real |
 | **Public/internal separation** | A file under `apps/web/src/content/` contains a repo path, an env-var name from the known list, a `fieldops_`/`credit_`/`admin_` table name, or a permission key like `users.view_pii` | Rewrite in user language |
 | **Terminology** | `venue owner` (outside "venue rebate"), `wallet credit`, `Abonten Credits` (plural), `Twitter` used as the current brand in UI copy | Use the standard term |
