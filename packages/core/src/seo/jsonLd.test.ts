@@ -18,6 +18,9 @@ describe("organization and website", () => {
     const sameAs = org.sameAs as string[];
     expect(sameAs.length).toBeGreaterThan(0);
     for (const href of sameAs) expect(href).not.toContain("?");
+    // The WhatsApp Channel is followed, not an identity page.
+    expect(sameAs).toContain("https://x.com/abontenhub");
+    expect(sameAs.some((href) => href.includes("whatsapp.com"))).toBe(false);
     const site = websiteJsonLd("fr");
     expect(site.inLanguage).toBe("fr");
     expect(site.publisher).toEqual({ "@id": org["@id"] });

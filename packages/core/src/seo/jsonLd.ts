@@ -40,7 +40,11 @@ export function organizationJsonLd(): Record<string, unknown> {
       width: 512,
       height: 512,
     },
-    sameAs: SOCIAL_LINKS.map((link) => plainProfileUrl(link.href)),
+    // Profiles only: the WhatsApp Channel's address identifies nothing
+    // (see SocialLink.profile).
+    sameAs: SOCIAL_LINKS.filter((link) => link.profile).map((link) =>
+      plainProfileUrl(link.href),
+    ),
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",

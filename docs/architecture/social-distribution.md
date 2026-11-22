@@ -2,10 +2,10 @@
 title: Social distribution — posting listings, tagged links and the weekly views note
 purpose: How Abonten posts new events and places on its own social channels, how the links it posts are tagged so a listing's views record which channel brought them, and how listers are told every Monday what their listings drew.
 audience: Engineering, operations and support
-scope: "@abonten/core/social/linkSources; the source column on event_analytics_event and place_analytics_event, listing_views_weekly_run, listing_views_weekly_notices() and the listing-views-weekly job (migration 20261121230000); the website's EventViewLogger / PlaceViewLogger and logEventView / logPlaceEngagement; the app's useLogEventView / useLogPlaceView and +native-intent.ts; the listing_views_weekly notice; @abonten/core/social/appLinks, qrLinkTarget's open/src referrer, GetTheAppLink, the Smart App Banner on event and place pages, apps/mobile/src/lib/installReferrer.ts and useInstallListingOpen; social_queue_setting, social_post, social_queue_listings(), social_queue_roundup(), the social-queue-listings and social-queue-roundups jobs, @abonten/services/admin/social and Admin › Social."
+scope: "@abonten/core/social/linkSources; the source column on event_analytics_event and place_analytics_event, listing_views_weekly_run, listing_views_weekly_notices() and the listing-views-weekly job (migration 20261121230000); the website's EventViewLogger / PlaceViewLogger and logEventView / logPlaceEngagement; the app's useLogEventView / useLogPlaceView and +native-intent.ts; the listing_views_weekly notice; @abonten/core/social/appLinks, qrLinkTarget's open/src referrer, GetTheAppLink, the Smart App Banner on event and place pages, apps/mobile/src/lib/installReferrer.ts and useInstallListingOpen; social_queue_setting, social_post, social_queue_listings(), social_queue_roundup(), the social-queue-listings and social-queue-roundups jobs, @abonten/services/admin/social and Admin › Social; SOCIAL_LINKS and the Follow Abonten blocks (web FollowAbonten, app FollowAbonten, EmailFollowAbonten)."
 status: Review required
-version: 1.0
-lastReviewed: 2026-11-21
+version: 1.1
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -82,3 +82,19 @@ A posted link is the listing's own address (`abontenhub.com/events/<code>`, `/pl
 - `packages/core/src/social/linkSources.test.ts` — the codes and both helpers.
 - `packages/services/src/__integration__/listing-views-weekly.integration.test.ts` — the note's numbers, most viewed listing, push, a team Owner's pushed copy, nothing for an account with no views, once a week, and an unknown tag refused by the database.
 - `packages/core/src/notifications/categories.test.ts` — the type is optional (`social`).
+
+## 7. Follow links: Abonten's own channels
+
+Decided by the founder on 2026-11-22: Abonten's own accounts had few followers, so everyone who buys a ticket, registers or reads Abonten Weekly is invited to follow them, in places Abonten already owns.
+
+- **The list.** `SOCIAL_LINKS` in `@abonten/core/brand/socialLinks` is the only list of official channels: X, Instagram, TikTok and the WhatsApp Channel (key `whatsapp`, `https://whatsapp.com/channel/0029Vb9N5fXCRs1lYPBl7Q00`, added 2026-11-22). The footers, the app's drawer and every Follow block read it; `scripts/check-docs.mjs` asserts the four addresses and refuses any other `whatsapp.com/channel/` address. A link's accessible name is `common:abontenOnNetwork.<key>`; the network's own name (`label`, never translated) is shown beside its icon.
+- **Not in `sameAs`.** The homepage's `Organization` lists only links marked `profile` (X, Instagram, TikTok). The channel's address is an opaque invite code with no handle, and its web page only offers to open WhatsApp, so it identifies nothing to a search engine (and it would change if the channel were ever made again).
+- **Where the block appears**, always after the screen's main content, never above a ticket:
+  - **Website** (`apps/web/src/components/molecules/FollowAbonten.tsx`; icons `SocialNetworkIcon`, the footer's SVG set, with `public/assets/images/whatsapp.svg` added): the checkout page once a ticket payment succeeded and nothing else is left to pay (`TicketPurchaseSuccessPanel` in `PendingCheckoutsBasket.tsx`; above checkouts still to pay it would push them down, so it is left out there); the event page right after a free registration (`AttendingButton.tsx`); a completed Pay small small plan (`TicketPlanView.tsx`); every Abonten Weekly page (`WeeklyPage.tsx`, after the edition, the fallback or the staff loader). On Weekly it is a server component with nothing personal in it, so the pages stay cached (`revalidate = 60`).
+  - **App** (`apps/mobile/src/components/app/FollowAbonten.tsx`; Ionicons from `socialIcons.ts`, shared with the drawer): the payment screen once a ticket payment succeeded (`app/(app)/payment/[attemptId].tsx`, kind `ticket`, not a plan's part); the free registration card right after registering (`FreeRsvpCard.tsx`); a completed plan (`app/(app)/ticket-plans/[id].tsx`). Links open with `Linking.openURL`, so the network's own app takes them when installed.
+  - **Ticket email** (one template for purchases and free registrations): the channels as plain text links after the button (`EmailFollowAbonten` in `EmailParts.tsx`), in the recipient's language (`emails:common.followAbonten`); no image is fetched from the networks.
+- **Not shown**: a free checkout from the basket goes straight to My tickets (no success screen); the staff preview of an edition.
+- **Words**: `common:followAbonten.title` ("Follow Abonten for what's on in {city}"; the city is `ROUNDUP_CITY` from `@abonten/core/social/roundups`, the one the channels' roundups cover) and `common:followAbonten.body`, in en, fr, es, de, pt (Akan in English).
+- **No `?src=` tag**: these links lead to Abonten's own profiles, not to a listing.
+- **Release**: the website and the email with a deploy; the app part with an app update (JavaScript only, no native build).
+- **Checks**: `packages/core/src/brand/socialLinks.test.ts`, `packages/core/src/seo/jsonLd.test.ts` (`sameAs` without the channel), `apps/web/e2e/seo.spec.ts` (the footer link, the block on `/weekly`, `sameAs`).

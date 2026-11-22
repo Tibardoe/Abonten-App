@@ -904,7 +904,12 @@
   "abontenOnNetwork": {
     "x": "Abonten on X (formerly Twitter)",
     "instagram": "Abonten on Instagram",
-    "tiktok": "Abonten on TikTok"
+    "tiktok": "Abonten on TikTok",
+    "whatsapp": "Abonten's WhatsApp Channel"
+  },
+  "followAbonten": {
+    "title": "Follow Abonten for what's on in {city}",
+    "body": "New events and places, and our picks for the week and the weekend."
   },
   "featured": "Featured",
   "paidPlacement": "Paid placement",

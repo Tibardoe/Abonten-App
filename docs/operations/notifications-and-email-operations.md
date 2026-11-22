@@ -4,8 +4,8 @@ purpose: How in-app notifications, push and email are produced and delivered, ho
 audience: Operations, engineering, support
 scope: notification, device_token, web_push_subscription, push_receipt, notification_delivery queue, Expo push, web push, Resend, Supabase Auth SMTP
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-27
+version: 1.3
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -64,6 +64,8 @@ DMARC: `_dmarc` with `p=none` (reports only, to an internal mailbox). Never add 
 ## Templates
 
 `apps/web/src/components/organisms/{TicketPurchaseEmailTemplate,EventCancellationEmailTemplate,RewardUpdateEmailTemplate,RecommendationDigestEmailTemplate}.tsx` (+ `EmailParts.tsx`), Tailwind email config `apps/web/tailwind.email.config.ts`. Supabase Auth templates (Magic Link with `{{ .Token }}`, Confirm email change) are configured in the Supabase dashboard — see `../architecture/email-auth.md`.
+
+The ticket email (a purchase or a free registration) ends, after its button, with "Follow Abonten for what's on in Accra" and the official channels as plain text links (`EmailFollowAbonten` in `EmailParts.tsx`, words `emails:common.followAbonten`, links from `@abonten/core/brand/socialLinks`); no image is fetched from the networks.
 
 ## Retention
 

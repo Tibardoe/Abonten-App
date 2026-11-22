@@ -3,6 +3,7 @@ import {
   useNeedsEmailToPay,
 } from "@/components/account/EmailRequiredCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { FollowAbonten } from "@/components/app/FollowAbonten";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   PaymentChoiceList,
@@ -420,6 +421,11 @@ export default function TicketPlanScreen() {
               </AppText>
             </Pressable>
           </View>
+        ) : null}
+
+        {/* A finished plan is a purchase: Abonten's channels close the screen. */}
+        {plan.status === "completed" && plan.refundStatus === "none" ? (
+          <FollowAbonten />
         ) : null}
       </KeyboardAwareScrollView>
 

@@ -1,4 +1,5 @@
 import { RecommendationPromptCard } from "@/components/alerts/RecommendationPromptCard";
+import { FollowAbonten } from "@/components/app/FollowAbonten";
 import type { FreeRsvpFlow } from "@/features/checkout/useFreeRsvpFlow";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
@@ -57,6 +58,7 @@ export function FreeRsvpCard({
             context={{ context: "rsvp", eventId: event.id }}
           />
         ) : null}
+        {justRsvped ? <FollowAbonten /> : null}
       </View>
     );
   }
