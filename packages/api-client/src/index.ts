@@ -148,6 +148,8 @@ export type {
   PreparedCheckoutPayment,
   PreparedCheckoutSession,
   ProfileData,
+  ProfileUpdateBody,
+  ProfileUpdateResult,
   RequestPayoutBody,
   RequestPayoutResult,
   RequestMomoCodeBody,

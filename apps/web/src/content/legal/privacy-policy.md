@@ -1,9 +1,9 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.9-draft
+version: 1.10-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-10-24
+lastUpdated: 2026-11-22
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -27,7 +27,7 @@ We collect only what the service needs to work. The table below lists every cate
 | Category | Examples | Source | Why |
 |---|---|---|---|
 | Account | Your Google account email or the phone number / email you sign in with; a unique account id; when you signed up and last signed in | You, via sign-in | To create and secure your account |
-| Profile | Username, full name, bio, website, avatar image; whether your profile is complete | You | To show who you are to other users |
+| Profile | Username, full name, bio, website, the social media accounts you choose to add (Instagram, X, TikTok, Facebook), avatar image; whether your profile is complete | You | To show who you are to other users; when Abonten posts your events on its own social media, to tag the accounts you added |
 | Contact details | Phone number (verified by SMS code), email address | You | Sign-in codes, ticket emails, contact for bookings and claims |
 | Location | The town or area you choose to explore; your device location when you allow it (to show what's near you); the approximate country from your network address; the city or rough area (about 1 km) you ask us to tell you about when Abonten launches there, kept until the notice is sent or you cancel it; for field-team members, GPS position when checking in and submitting work | You / your device / network | Discovery, distance sorting, launch notices you asked for, field-work verification |
 | Events, places and content | Events you create, places you list, photos, videos, highlights, reviews, responses to reviews, opening hours, services | You | To publish your listings and content |
@@ -89,7 +89,7 @@ Because some providers are outside Ghana, your information may be transferred ab
 
 Some information is visible to other users by design:
 
-- **Public profile**: your username, name, avatar, bio, website, the events and places you have published, your public highlights and your reviews.
+- **Public profile**: your username, name, avatar, bio, website, the social media accounts you added, the events and places you have published, your public highlights and your reviews.
 - **Organizers** see the name and contact details of people holding tickets to their events, so they can run the event and check people in.
 - **Place owners** see the details in booking requests sent to them, and the name and review of anyone who reviews their place.
 - **Message recipients** see what you send them and when you were last active in the conversation.

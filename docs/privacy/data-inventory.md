@@ -4,8 +4,8 @@ purpose: Record every category of personal data Abonten processes, where it is s
 audience: Privacy reviewer, engineering, support leads
 scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems), and the pilot's tester list kept in Google Workspace
 status: Review required
-version: 1.5
-lastReviewed: 2026-11-21
+version: 1.6
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -21,7 +21,7 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 | Data | Tables / stores | Purpose | Who can read it | Notes |
 |---|---|---|---|---|
 | Auth identity: email, phone (E.164), Google identity, sign-in timestamps, password hash for phone sign-in | `auth.users` (Supabase Auth) | Sign-in, account recovery | The user (via session); admin console with `users.view_pii`; service role | Phone sign-in uses a password derived on the server for each account, never sent to a device (`phoneAuthCore.ts`) |
-| Profile: username (citext), full name, bio, website, avatar (Cloudinary public id + version), status (Active/Suspended/Banned), `is_admin`, profile-completion flag | `user_info`, `user_status`, `user_image_history`, view `user_profile_details` | Public profile, moderation | **Public SELECT** on `user_info` (`user_info_public_select`); status and `is_admin` changes only by staff (trigger-guarded) | Username and avatar are public by design |
+| Profile: username (citext), full name, bio, website, social accounts (Instagram, X, TikTok, Facebook profile addresses, optional, since 2026-11-22; cleared when the account is deleted), avatar (Cloudinary public id + version), status (Active/Suspended/Banned), `is_admin`, profile-completion flag | `user_info`, `user_status`, `user_image_history`, view `user_profile_details` | Public profile, moderation; social accounts: tagging the person when Abonten posts their events on its own social media (Admin › Social) | **Public SELECT** on `user_info` (`user_info_public_select`); status and `is_admin` changes only by staff (trigger-guarded) | Username and avatar are public by design |
 | Phone-verification state: purpose, phone, Hubtel request id, attempts | `phone_otp_state`, `phone_otp_send_log` (IP, timestamps) | Verify phone ownership, rate limit sends | Service role only | Hubtel holds the code; Abonten never sees it |
 | Texts sent when an event moved: person, move, status, provider reference (no phone number; the number is read from `auth.users` when the text is sent) | `event_reschedule_text` | Tell ticket holders by text that their event moved or was postponed | Service role only | Deleted with the move (cascade) or the account |
 | Device push tokens (Expo), platform | `device_token` | Push notifications | Owner; service role | Pruned when Expo reports the device unregistered (send ticket or receipt) |

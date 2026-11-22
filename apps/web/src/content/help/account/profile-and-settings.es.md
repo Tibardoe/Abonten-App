@@ -2,7 +2,7 @@
 title: Tu perfil y tus ajustes
 summary: Edita tu perfil y tu foto, cambia tu número de teléfono o tu correo y elige idioma y apariencia.
 order: 1
-lastUpdated: 2026-11-09
+lastUpdated: 2026-11-22
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,7 +15,7 @@ Tu perfil (web: `/user/<nombre de usuario>`; aplicación: Cuenta › tu nombre) 
 
 ## Editar tu perfil
 
-**Ajustes › Editar perfil** (web y aplicación): nombre, nombre de usuario, biografía, sitio web y foto. La foto se recorta en la aplicación o en el navegador y se sube directamente a nuestro servicio de imágenes; una barra muestra el progreso. Los nombres de usuario deben ser únicos. **Ajustes › Configuración de la cuenta** muestra los cinco pasos de una cuenta completa (nombre, un nombre de usuario elegido por ti, foto, correo verificado, teléfono verificado); mientras queden pasos aparece una pequeña tarjeta de recordatorio, y *Ahora no* la oculta durante un tiempo.
+**Ajustes › Editar perfil** (web y aplicación): nombre, nombre de usuario, biografía, sitio web y foto. En **Redes sociales** puedes añadir tu Instagram, X, TikTok y Facebook (el enlace a tu perfil o tu @usuario): cuando Abonten publica tus eventos en sus propias redes sociales, podemos etiquetar estas cuentas para que tus seguidores también vean la publicación. La foto se recorta en la aplicación o en el navegador y se sube directamente a nuestro servicio de imágenes; una barra muestra el progreso. Los nombres de usuario deben ser únicos. **Ajustes › Configuración de la cuenta** muestra los cinco pasos de una cuenta completa (nombre, un nombre de usuario elegido por ti, foto, correo verificado, teléfono verificado); mientras queden pasos aparece una pequeña tarjeta de recordatorio, y *Ahora no* la oculta durante un tiempo.
 
 ## Número de teléfono y correo electrónico
 

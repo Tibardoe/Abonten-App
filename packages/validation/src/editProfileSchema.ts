@@ -1,5 +1,24 @@
+import {
+  type ListerSocialNetwork,
+  parseListerSocialLink,
+} from "@abonten/core/social/listerSocialLinks";
 import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
 import { z } from "zod";
+
+// One social account field: empty, or a profile on that network (an
+// address on its own domains or an @handle). The same rule the server
+// applies before storing it (@abonten/core/social/listerSocialLinks).
+const socialAccount = (network: ListerSocialNetwork) =>
+  z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || !!parseListerSocialLink(network, value),
+      {
+        message:
+          "Enter a link to your profile on this network, or your @handle.",
+      },
+    );
 
 // Usernames are used in public URLs (/user/[username]/...). The database
 // accepts letters, numbers and underscores only (user_info_username_check);
@@ -40,6 +59,18 @@ export const editProfileSchema = z.object({
     .string()
     .trim()
     .max(160, { message: "Bio must be 160 characters or fewer." }),
+
+  // The account's own Instagram, X, TikTok and Facebook: Abonten credits
+  // them when it posts the person's events (Admin › Social). Optional as a
+  // whole, so a form without these fields still validates.
+  social_links: z
+    .object({
+      instagram: socialAccount("instagram"),
+      x: socialAccount("x"),
+      tiktok: socialAccount("tiktok"),
+      facebook: socialAccount("facebook"),
+    })
+    .optional(),
 
   // Not edited by this form (avatar changes go through AvatarUploadModal),
   // but carried through as part of UserDetailsFormType so the submitted

@@ -2,7 +2,7 @@
 title: Your profile and settings
 summary: Edit your profile and avatar, change your phone number or email, pick a language and appearance.
 order: 1
-lastUpdated: 2026-11-09
+lastUpdated: 2026-11-22
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,7 +15,7 @@ Your profile (web: `/user/<username>`; app: Account › your name) shows your av
 
 ## Edit your profile
 
-**Settings › Edit profile** (web and app): name, username, bio, website, and avatar. Avatars are cropped in the app or browser and uploaded straight to our image host; a progress bar shows the upload. Usernames must be unique. **Settings › Account setup** lists the five steps of a complete account (name, a username you choose, photo, verified email, verified phone); a small reminder card shows while steps are left, and *Not now* puts it away for a while.
+**Settings › Edit profile** (web and app): name, username, bio, website, and avatar. Under **Social accounts** you can add your Instagram, X, TikTok and Facebook (a link to your profile, or your @handle): when Abonten posts your events on its own social media, we can tag these accounts so your followers see the post too. Avatars are cropped in the app or browser and uploaded straight to our image host; a progress bar shows the upload. Usernames must be unique. **Settings › Account setup** lists the five steps of a complete account (name, a username you choose, photo, verified email, verified phone); a small reminder card shows while steps are left, and *Not now* puts it away for a while.
 
 ## Phone number and email
 

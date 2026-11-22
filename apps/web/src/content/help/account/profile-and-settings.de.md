@@ -2,7 +2,7 @@
 title: Dein Profil und deine Einstellungen
 summary: Profil und Profilbild bearbeiten, Telefonnummer oder E-Mail-Adresse ändern, Sprache und Erscheinungsbild wählen.
 order: 1
-lastUpdated: 2026-11-09
+lastUpdated: 2026-11-22
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,7 +15,7 @@ Dein Profil (Website: `/user/<Benutzername>`; App: Konto › dein Name) zeigt Pr
 
 ## Dein Profil bearbeiten
 
-**Einstellungen › Profil bearbeiten** (Website und App): Name, Benutzername, Bio, Website und Profilbild. Profilbilder werden in der App oder im Browser zugeschnitten und direkt zu unserem Bilddienst hochgeladen; ein Fortschrittsbalken zeigt den Upload. Benutzernamen müssen eindeutig sein. **Einstellungen › Kontoeinrichtung** zeigt die fünf Schritte eines vollständigen Kontos (Name, selbst gewählter Benutzername, Foto, bestätigte E-Mail-Adresse, bestätigte Telefonnummer); solange Schritte offen sind, erscheint eine kleine Erinnerungskarte, und *Nicht jetzt* legt sie für eine Weile weg.
+**Einstellungen › Profil bearbeiten** (Website und App): Name, Benutzername, Bio, Website und Profilbild. Unter **Social-Media-Konten** kannst du dein Instagram, X, TikTok und Facebook eintragen (einen Link zu deinem Profil oder deinen @Namen): Wenn Abonten deine Events auf seinen eigenen Social-Media-Kanälen postet, können wir diese Konten markieren, damit auch deine Follower den Beitrag sehen. Profilbilder werden in der App oder im Browser zugeschnitten und direkt zu unserem Bilddienst hochgeladen; ein Fortschrittsbalken zeigt den Upload. Benutzernamen müssen eindeutig sein. **Einstellungen › Kontoeinrichtung** zeigt die fünf Schritte eines vollständigen Kontos (Name, selbst gewählter Benutzername, Foto, bestätigte E-Mail-Adresse, bestätigte Telefonnummer); solange Schritte offen sind, erscheint eine kleine Erinnerungskarte, und *Nicht jetzt* legt sie für eine Weile weg.
 
 ## Telefonnummer und E-Mail-Adresse
 

@@ -1,18 +1,26 @@
 import { useSession } from "@/auth/SessionProvider";
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
+import type { ListerSocialNetwork } from "@abonten/core/social/listerSocialLinks";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Native equivalent of the web `updateUserDetails` action — a direct
-// RLS-scoped update on `user_info` (policy `user_info_self_update`,
-// migration 20260825105625). Only the text fields the mobile Edit Profile
-// form exposes; avatar changes are a later pass.
+// Native equivalent of the web `updateUserDetails` action: PATCH
+// /api/mobile/profile, the same service (@abonten/services/profile/
+// updateProfileCore), which checks the social accounts and stores them in
+// their canonical form. Only the text fields the mobile Edit Profile form
+// exposes; the photo has its own upload flow. (Builds before 2026-11-22
+// wrote these fields straight to user_info; the update policy still allows
+// that for them.)
 
 export type ProfileUpdate = {
   username: string;
   full_name: string;
   bio: string;
   website: string;
+  social_links: Record<ListerSocialNetwork, string>;
 };
+
+/** The server answered and refused: its message is in the app's language. */
+export class ProfileUpdateRefused extends Error {}
 
 export function useUpdateProfile() {
   const { session } = useSession();
@@ -21,11 +29,9 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (fields: ProfileUpdate) => {
       if (!session) throw new Error("not-authenticated");
-      const { error } = await supabase
-        .from("user_info")
-        .update(fields)
-        .eq("id", session.user.id);
-      if (error) throw error;
+      const res = await api.profile.update(fields);
+      if (res.status !== 200) throw new ProfileUpdateRefused(res.message ?? "");
+      return res.data ?? null;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["mobile", "profile"] });

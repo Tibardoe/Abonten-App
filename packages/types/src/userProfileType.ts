@@ -123,4 +123,12 @@ export type UserDetailsFormType = {
   avatar_version: string;
   bio: string;
   website: string;
+  /** Instagram, X, TikTok, Facebook: a profile address or an @handle each
+   *  ("" for none). Stored canonical by the service. */
+  social_links?: {
+    instagram: string;
+    x: string;
+    tiktok: string;
+    facebook: string;
+  };
 };

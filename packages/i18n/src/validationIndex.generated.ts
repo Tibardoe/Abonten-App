@@ -38,6 +38,8 @@ export const VALIDATION_SOURCE: Record<string, string> = {
   describeTheChange: "Describe the change",
   describeTheEventInAtLeast: "Describe the event in at least 80 characters",
   eachDateHasToEndAfter: "Each date has to end after it starts",
+  enterALinkToYourProfile:
+    "Enter a link to your profile on this network, or your @handle.",
   enterAValidEmailAddress: "Enter a valid email address",
   enterAValidMobileMoneyNumber: "Enter a valid mobile money number",
   enterAValidWebsiteUrl: "Enter a valid website URL.",

@@ -277,6 +277,8 @@ import type {
   PlaceVisitResultEnvelope,
   PreparedCheckoutPayment,
   ProfileData,
+  ProfileUpdateBody,
+  ProfileUpdateResult,
   PromoPreviewResult,
   PromoteEventResult,
   PromotePlaceResult,
@@ -788,6 +790,16 @@ export function createApiClient(options: ApiClientOptions) {
       get() {
         return request<ApiEnvelope<ProfileData>>("/api/mobile/profile", {
           method: "GET",
+          auth: true,
+        });
+      },
+      /** Edit Profile: username, name, bio, website and the social
+       *  accounts Abonten credits when it posts the person's events. Same
+       *  service as the website's updateUserDetails. */
+      update(body: ProfileUpdateBody) {
+        return request<ProfileUpdateResult>("/api/mobile/profile", {
+          method: "PATCH",
+          body,
           auth: true,
         });
       },

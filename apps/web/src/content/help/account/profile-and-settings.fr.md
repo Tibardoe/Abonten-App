@@ -2,7 +2,7 @@
 title: Votre profil et vos paramètres
 summary: Modifier votre profil et votre photo, changer votre numéro de téléphone ou votre adresse e-mail, choisir une langue et une apparence.
 order: 1
-lastUpdated: 2026-11-09
+lastUpdated: 2026-11-22
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,7 +15,7 @@ Votre profil (site web : `/user/<nom d'utilisateur>` ; application : Compte › 
 
 ## Modifier votre profil
 
-**Paramètres › Modifier le profil** (site web et application) : nom, nom d'utilisateur, bio, site web et photo. La photo est recadrée dans l'application ou le navigateur puis envoyée directement à notre hébergeur d'images ; une barre de progression suit l'envoi. Chaque nom d'utilisateur doit être unique. **Paramètres › Configuration du compte** liste les cinq étapes d'un compte complet (nom, nom d'utilisateur choisi, photo, adresse e-mail vérifiée, téléphone vérifié) ; une petite carte de rappel s'affiche tant qu'il reste des étapes, et *Pas maintenant* la range pour un moment.
+**Paramètres › Modifier le profil** (site web et application) : nom, nom d'utilisateur, bio, site web et photo. Sous **Réseaux sociaux**, vous pouvez ajouter votre Instagram, X, TikTok et Facebook (le lien de votre profil ou votre @identifiant) : quand Abonten publie vos événements sur ses propres réseaux sociaux, nous pouvons identifier ces comptes pour que vos abonnés voient aussi la publication. La photo est recadrée dans l'application ou le navigateur puis envoyée directement à notre hébergeur d'images ; une barre de progression suit l'envoi. Chaque nom d'utilisateur doit être unique. **Paramètres › Configuration du compte** liste les cinq étapes d'un compte complet (nom, nom d'utilisateur choisi, photo, adresse e-mail vérifiée, téléphone vérifié) ; une petite carte de rappel s'affiche tant qu'il reste des étapes, et *Pas maintenant* la range pour un moment.
 
 ## Numéro de téléphone et adresse e-mail
 

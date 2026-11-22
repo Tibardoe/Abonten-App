@@ -317,9 +317,36 @@ export type ProfileData = {
   bio: string | null;
   /** user_info.website, added by the route (absent from older deployments). */
   website?: string | null;
+  /** user_info.social_links: network → canonical profile address, added by
+   *  the route (absent from older deployments). */
+  social_links?: Record<string, string> | null;
   total_posts: number | string | null;
   total_favorites: number | string | null;
   average_rating: number | string | null;
+};
+
+/** PATCH /api/mobile/profile: only the fields sent are written. */
+export type ProfileUpdateBody = {
+  username?: string;
+  full_name?: string;
+  bio?: string;
+  website?: string;
+  /** The whole map (Instagram, X, TikTok, Facebook): a profile address or
+   *  an @handle each, "" for none. Replaces what is stored. */
+  social_links?: Partial<
+    Record<"instagram" | "x" | "tiktok" | "facebook", string>
+  >;
+};
+
+export type ProfileUpdateResult = {
+  status: number;
+  message?: string;
+  data?: {
+    /** What is stored now (canonical addresses), null when none. */
+    socialLinks: Record<string, string> | null;
+    /** On a 400: the networks whose entry is not a profile. */
+    invalidSocialLinks?: string[];
+  };
 };
 
 // ---- checkout -------------------------------------------------------------

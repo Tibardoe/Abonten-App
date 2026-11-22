@@ -307,6 +307,9 @@
         "seeAllAccountSetupStepsOf",
         "selectedAvatar",
         "selectedImage",
+        "socialAccounts",
+        "socialAccountsHint",
+        "socialHandlePlaceholder",
         "somethingWentWrong2",
         "submit",
         "submitting",
@@ -606,7 +609,8 @@
         "you",
         "yourRole",
         "yourTeams"
-      ]
+      ],
+      "validation": "*"
     },
     "(transactions)": {
       "common": [

@@ -27,11 +27,47 @@ export type SocialQueueItem = {
   /** The tagged link (`?src=`) to put in the post, the sticker or the bio. */
   link: string;
   images: SocialQueueImage[];
+  /**
+   * For an Instagram story or feed post when the lister has an Instagram
+   * account: "Mention @handle in the Story (or send a Collab invite on a
+   * feed post), then ask them to reshare." Null otherwise.
+   */
+  listerTip: string | null;
   postedAt: string | null;
   /** Who last marked it posted, skipped or back to pending. */
   decidedBy: { id: string; label: string } | null;
   decidedAt: string | null;
   note: string | null;
+};
+
+/** One of the lister's own social accounts, read from their profile. */
+export type SocialQueueListerHandle = {
+  network: "instagram" | "x" | "tiktok" | "facebook";
+  /** Without the @; null for a Facebook profile known only by number. */
+  handle: string | null;
+  /** The profile's canonical address (never the stored text as typed). */
+  url: string;
+};
+
+/** Whose accounts a listing credits, and which. */
+export type SocialQueueLister = {
+  /**
+   * organizer: the event's organizer (user_info.social_links).
+   * venue: the event's place, because the organizer has none.
+   * place: the place itself (place.social_links).
+   */
+  source: "organizer" | "venue" | "place";
+  /** "@username", the organizer's name, or the place's name. */
+  name: string | null;
+  handles: SocialQueueListerHandle[];
+};
+
+/** The frames of a roundup's vertical video (Reel / TikTok). */
+export type SocialQueueReel = {
+  /** "abonten-week-2026-11-23-reel": the file name, before its extension. */
+  fileBase: string;
+  /** The cover, then each listed event's Story picture, in order. */
+  frames: SocialQueueImage[];
 };
 
 export type SocialQueueSubject = {
@@ -47,6 +83,10 @@ export type SocialQueueSubject = {
   publicUrl: string;
   /** Why posting it now may be wrong: ended, no longer public, … */
   warning: string | null;
+  /** An event's or a place's lister and their accounts; null for a roundup. */
+  lister: SocialQueueLister | null;
+  /** A roundup's video frames; null for a listing. */
+  reel: SocialQueueReel | null;
   items: SocialQueueItem[];
 };
 
