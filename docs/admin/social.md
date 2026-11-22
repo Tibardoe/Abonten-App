@@ -2,10 +2,10 @@
 title: Admin — Social
 purpose: How to work the posting queue for Abonten's own Instagram, X and WhatsApp Channel — what gets queued, how to post each item by hand, and the settings.
 audience: Founder, operations, the operator who posts to X and the WhatsApp Channel
-scope: Admin › Social, the social.view / social.manage permissions, the social-queue-listings and social-queue-roundups jobs, the roundup cover image
+scope: Admin › Social, the social.view / social.manage permissions, the social-queue-listings and social-queue-roundups jobs, the roundup cover image, crediting the lister's accounts, the roundup video for Reels and TikTok
 status: Approved
-version: 1.0
-lastReviewed: 2026-11-21
+version: 1.1
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -42,12 +42,15 @@ The page opens on **To post**, today's first, then earlier days still waiting. E
 - **Caption** — in English, with the date and time in the event's own zone, the venue, the price line ("Tickets from GH₵50", "Free entry") and one or two hashtags (#AccraEvents, #ThingsToDoInAccra). X captions stay under 280 as X counts them (a link counts 23); the counter shows it. For an Instagram story the box holds the **link sticker's words** instead ("Get tickets").
 - **Link** — the listing's page (a roundup's is abontenhub.com/explore/accra) tagged with where it was posted: `?src=ig`, `?src=x` or `?src=wa`. Always use the queue's link, never a plain one: the tag is how organizers are told which channel brought their views.
 
+- **Tag the lister** — Abonten's own accounts are small; a post the lister reshares reaches their followers too. Under the title, each event and place card shows the lister's own accounts (Instagram, X, TikTok, Facebook) with **Copy** beside each and a link to the profile: the place's own links, or for an event its organizer's (from their Edit profile), or the venue's when the organizer has added none ("Tag the venue …"). When there are none the card says so: then nobody is credited. The handles come only from what the lister saved; never type a handle you guessed.
+
 Per channel:
 
-1. **Instagram story** (founder, phone): download the story picture, post it, add a link sticker with the link, set the sticker's words, then **Mark posted**.
-2. **Instagram feed** (founder, phone, roundups): download the pictures, post them as one carousel with the cover first and the caption. Instagram captions don't link: put the link in the bio while the post is new.
-3. **X** (operator): attach the pictures and paste the caption (the link is in it).
+1. **Instagram story** (founder, phone): download the story picture, post it, add a link sticker with the link, set the sticker's words. When the lister has an Instagram account the item says "Mention @handle in the Story (or send a Collab invite on a feed post), then ask them to reshare.": add a mention sticker with that handle (Copy it from the card), and once it is up, message the lister to reshare it to their story. Then **Mark posted**.
+2. **Instagram feed** (founder, phone, roundups): download the pictures, post them as one carousel with the cover first and the caption. Instagram captions don't link: put the link in the bio while the post is new. For a single listing on the feed, send the lister a **Collab** invite (Tag people › Invite collaborator) so the post shows on their profile too.
+3. **X** (operator): attach the pictures and paste the caption (the link is in it). When the lister has an X account the caption already ends with "via @handle" before the link (it is kept within 280; hashtags go first).
 4. **WhatsApp Channel** (operator): send the picture with the caption; the links open on tap.
+5. **Reels and TikTok** (founder, roundups): on a roundup card, **Make video (Reel / TikTok)** draws a vertical 1080×1920 video from the roundup's own pictures (the cover for 3 s, then each event's Story picture for 2.5 s, crossfading; about 28 s for 10 events, never over 30 s) and offers it for download as `abonten-week-<date>-reel.mp4` (or `.webm`). It records in real time: keep the tab in front, and **Cancel** stops it. The card says which format came out: **Instagram needs MP4**, which recent Chrome and Safari make; if it says WebM, make it again in Chrome or Safari. The video has no sound: post it as a Reel and add a trending sound in Instagram. Post the same file on TikTok (@abontenhub) with the Instagram feed caption ("link in bio"), adding a sound there too. A picture that does not load is left out (the card says how many).
 
 **Skip** a post that should not go out (a duplicate, a listing that looks wrong, an event that started); add a note saying why. **Put back in the queue** undoes either. If someone else marked it first, the page says so: reload.
 
@@ -61,3 +64,5 @@ At the bottom of the page (`social.manage`): **Queue new listings and roundups**
 - **No roundup on a Monday or Friday.** No events were on in those days in Accra, the queue is switched off, or the Accra city is missing from Admin › Markets (the job then skips with `no_city`). One can be queued by hand in the SQL editor (production through the operator only): `select public.social_queue_roundup('week');` or `('weekend')`; it queues each week or weekend once.
 - **A picture does not load.** The listing may no longer be public (its share image answers "not found"), or the website was slow to draw it: try again. Pictures come from the website through the console (`/social/image`).
 - **The caption has the wrong date or price.** It is the listing's own data: fix the listing (or ask the organizer to), then reload.
+- **No accounts to tag, or the wrong ones.** They come from the lister: an organizer adds them in Edit profile (website or app, under Social accounts); a place's come with the place. Ask the lister to add or fix them, then reload. A team's events show the venue's accounts for now (teams cannot add their own yet).
+- **The video won't make.** "This browser can't record video" means it has no MediaRecorder: use a recent Chrome or Safari. "The cover picture didn't load": try again in a minute (the website draws it on demand). A video that stops partway usually means the tab went to the background: keep it in front and make it again.

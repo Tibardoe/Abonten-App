@@ -6,6 +6,7 @@ import ProfileCompletionIndicator from "@/components/molecules/ProfileCompletion
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { listerSocialLinkFields } from "@abonten/core/social/listerSocialLinks";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -97,6 +98,7 @@ export default async function page() {
             avatar_version: userDetails.avatar_version ?? "",
             bio: userDetails.bio ?? "",
             website: userDetails.website ?? "",
+            social_links: listerSocialLinkFields(userDetails.social_links),
           }}
         />
       </div>

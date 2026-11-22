@@ -6,10 +6,19 @@ import { ProfileCompletionCard } from "@/components/profile/ProfileCompletionCar
 import { FormSkeleton } from "@/components/skeletons";
 import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
-import { useUpdateProfile } from "@/features/profile/useUpdateProfile";
+import {
+  ProfileUpdateRefused,
+  useUpdateProfile,
+} from "@/features/profile/useUpdateProfile";
 import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import {
+  LISTER_SOCIAL_NETWORKS,
+  LISTER_SOCIAL_NETWORK_NAME,
+  type ListerSocialNetwork,
+  listerSocialLinkFields,
+} from "@abonten/core/social/listerSocialLinks";
 import {
   AppText,
   Avatar,
@@ -27,16 +36,53 @@ import { Pressable, View } from "react-native";
 
 // Native echo of the web EditProfileInputFields — the same
 // @abonten/validation editProfileSchema (username / full_name / website /
-// bio), validated on submit, written straight to `user_info` (RLS
-// self-update), plus the avatar upload (Cloudinary signed direct upload).
-// The profile-completion checklist is still a later pass.
+// bio / social accounts), validated on submit, saved through
+// PATCH /api/mobile/profile (the website's service), plus the avatar upload
+// (Cloudinary signed direct upload). The social accounts are the ones
+// Abonten tags when it posts the person's events (Admin › Social).
 
 type FormState = {
   username: string;
   full_name: string;
   website: string;
   bio: string;
+} & Record<ListerSocialNetwork, string>;
+
+const FORM_KEYS: (keyof FormState)[] = [
+  "username",
+  "full_name",
+  "website",
+  "bio",
+  ...LISTER_SOCIAL_NETWORKS,
+];
+
+const EMPTY_FORM: FormState = {
+  username: "",
+  full_name: "",
+  website: "",
+  bio: "",
+  instagram: "",
+  x: "",
+  tiktok: "",
+  facebook: "",
 };
+
+/** The form as the saved profile fills it. */
+function profileForm(profile: {
+  username: string | null;
+  full_name: string | null;
+  website: string | null;
+  bio: string | null;
+  social_links?: Record<string, string> | null;
+}): FormState {
+  return {
+    username: profile.username ?? "",
+    full_name: profile.full_name ?? "",
+    website: profile.website ?? "",
+    bio: profile.bio ?? "",
+    ...listerSocialLinkFields(profile.social_links ?? null),
+  };
+}
 
 export default function EditProfile() {
   const t = useTranslations("settings");
@@ -53,12 +99,7 @@ export default function EditProfile() {
   const avatarProgress = useUploadProgress();
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
 
-  const [form, setForm] = useState<FormState>({
-    username: "",
-    full_name: "",
-    website: "",
-    bio: "",
-  });
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<
     Partial<Record<keyof FormState, string>>
   >({});
@@ -90,35 +131,23 @@ export default function EditProfile() {
   const serverValues = useRef<FormState | null>(null);
   useEffect(() => {
     if (!profile) return;
-    const next: FormState = {
-      username: profile.username ?? "",
-      full_name: profile.full_name ?? "",
-      website: profile.website ?? "",
-      bio: profile.bio ?? "",
-    };
+    const next = profileForm(profile);
     const previous = serverValues.current;
     serverValues.current = next;
     setForm((current) => {
       if (!previous) return next;
-      const keep = (key: keyof FormState) =>
-        current[key] === previous[key] ? next[key] : current[key];
-      return {
-        username: keep("username"),
-        full_name: keep("full_name"),
-        website: keep("website"),
-        bio: keep("bio"),
-      };
+      const kept = { ...next };
+      for (const key of FORM_KEYS) {
+        if (current[key] !== previous[key]) kept[key] = current[key];
+      }
+      return kept;
     });
   }, [profile]);
 
   const dirty = useMemo(() => {
     if (!profile) return false;
-    return (
-      form.username !== (profile.username ?? "") ||
-      form.full_name !== (profile.full_name ?? "") ||
-      form.bio !== (profile.bio ?? "") ||
-      form.website !== (profile.website ?? "")
-    );
+    const saved = profileForm(profile);
+    return FORM_KEYS.some((key) => form[key] !== saved[key]);
   }, [form, profile]);
 
   function set<K extends keyof FormState>(key: K, value: string) {
@@ -128,7 +157,16 @@ export default function EditProfile() {
 
   function onSave() {
     const candidate = {
-      ...form,
+      username: form.username,
+      full_name: form.full_name,
+      website: form.website,
+      bio: form.bio,
+      social_links: {
+        instagram: form.instagram,
+        x: form.x,
+        tiktok: form.tiktok,
+        facebook: form.facebook,
+      },
       avatar_public_id: profile?.avatar_public_id ?? "",
       avatar_version: profile?.avatar_version ?? "",
     };
@@ -136,21 +174,42 @@ export default function EditProfile() {
     if (!result.success) {
       const next: Partial<Record<keyof FormState, string>> = {};
       for (const issue of result.error.issues) {
-        const key = issue.path[0] as keyof FormState;
+        // A social account's issue is at ["social_links", network].
+        const key = (
+          issue.path[0] === "social_links" ? issue.path[1] : issue.path[0]
+        ) as keyof FormState;
         if (key && !next[key]) next[key] = issue.message;
       }
       setErrors(next);
       return;
     }
     setErrors({});
+    const links = result.data.social_links;
     update.mutate(
       {
         username: result.data.username,
         full_name: result.data.full_name,
         bio: result.data.bio,
         website: result.data.website,
+        social_links: {
+          instagram: links?.instagram ?? "",
+          x: links?.x ?? "",
+          tiktok: links?.tiktok ?? "",
+          facebook: links?.facebook ?? "",
+        },
       },
-      { onSuccess: () => setSaved(true) },
+      {
+        onSuccess: (saved) => {
+          setSaved(true);
+          // What was stored: an @handle comes back as the profile address.
+          if (saved) {
+            setForm((f) => ({
+              ...f,
+              ...listerSocialLinkFields(saved.socialLinks),
+            }));
+          }
+        },
+      },
     );
   }
 
@@ -264,9 +323,35 @@ export default function EditProfile() {
           />
         </Field>
 
+        <View className="gap-3">
+          <View className="gap-1">
+            <AppText variant="bodyStrong">{t("socialAccounts")}</AppText>
+            <AppText variant="caption">{t("socialAccountsHint")}</AppText>
+          </View>
+          {LISTER_SOCIAL_NETWORKS.map((network) => (
+            <Field
+              key={network}
+              label={LISTER_SOCIAL_NETWORK_NAME[network]}
+              error={errors[network]}
+            >
+              <Input
+                value={form[network]}
+                onChangeText={(v) => set(network, v)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder={t("socialHandlePlaceholder")}
+                accessibilityLabel={LISTER_SOCIAL_NETWORK_NAME[network]}
+              />
+            </Field>
+          ))}
+        </View>
+
         {update.isError ? (
           <AppText variant="small" tone="error">
-            {t("weCouldnTUpdateYourProfile")}
+            {update.error instanceof ProfileUpdateRefused &&
+            update.error.message
+              ? update.error.message
+              : t("weCouldnTUpdateYourProfile")}
           </AppText>
         ) : null}
         {saved ? (

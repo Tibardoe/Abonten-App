@@ -4,6 +4,7 @@
       "abontenHub",
       "abontenOnNetwork.instagram",
       "abontenOnNetwork.tiktok",
+      "abontenOnNetwork.whatsapp",
       "abontenOnNetwork.x",
       "abontenOnSocialMedia",
       "actionFailed.offline",
@@ -307,6 +308,9 @@
         "seeAllAccountSetupStepsOf",
         "selectedAvatar",
         "selectedImage",
+        "socialAccounts",
+        "socialAccountsHint",
+        "socialHandlePlaceholder",
         "somethingWentWrong2",
         "submit",
         "submitting",
@@ -606,7 +610,8 @@
         "you",
         "yourRole",
         "yourTeams"
-      ]
+      ],
+      "validation": "*"
     },
     "(transactions)": {
       "common": [
@@ -1143,6 +1148,8 @@
         "failedToStartPaymentPleaseTry",
         "failedToUpdateQuantity",
         "failedToUpdateQuantityPleaseTry",
+        "followAbonten.body",
+        "followAbonten.title",
         "freeReadyToConfirm",
         "groupDiscount",
         "iVeApprovedCheckNow",
@@ -1436,6 +1443,8 @@
         "filters",
         "filtersActive",
         "flyerFor",
+        "followAbonten.body",
+        "followAbonten.title",
         "free",
         "freeEntry",
         "from",
@@ -5276,6 +5285,8 @@
         "enterTheOtpSentToYour",
         "exp",
         "failedToStartPaymentPleaseTry",
+        "followAbonten.body",
+        "followAbonten.title",
         "iVeApprovedCheckNow",
         "keepWaiting",
         "mobileMoney",

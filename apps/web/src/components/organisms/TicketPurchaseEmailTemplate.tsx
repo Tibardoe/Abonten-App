@@ -5,6 +5,7 @@ import {
   EmailDetailRow,
   EmailDivider,
   EmailFinePrint,
+  EmailFollowAbonten,
   EmailFooter,
   EmailIntro,
   EmailSection,
@@ -88,6 +89,8 @@ export default function TicketPurchaseEmailTemplate({
       </EmailSection>
 
       <EmailButton href={myEventsUrl}>{t("ticket.viewMyTickets")}</EmailButton>
+
+      <EmailFollowAbonten words={words} />
 
       <EmailFooter words={words}>
         <EmailFinePrint>{t("ticket.keepSafe")}</EmailFinePrint>

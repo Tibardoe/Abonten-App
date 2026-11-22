@@ -571,6 +571,9 @@
   "reviewPhoto": "Review photo",
   "rotation": "Rotation: {rotate}°",
   "sHighlight": "{username}'s highlight",
+  "socialAccounts": "Social accounts",
+  "socialAccountsHint": "When Abonten posts your events on social media, we can tag these accounts so your followers see the post too.",
+  "socialHandlePlaceholder": "@yourname or a link to your profile",
   "sProfile": "{name}'s profile",
   "salesArePausedInRightNow": "Sales are paused in {marketName} right now.",
   "salesEndOn": "Sales end on {date}",
@@ -904,7 +907,12 @@
   "abontenOnNetwork": {
     "x": "Abonten on X (formerly Twitter)",
     "instagram": "Abonten on Instagram",
-    "tiktok": "Abonten on TikTok"
+    "tiktok": "Abonten on TikTok",
+    "whatsapp": "Abonten's WhatsApp Channel"
+  },
+  "followAbonten": {
+    "title": "Follow Abonten for what's on in {city}",
+    "body": "New events and places, and our picks for the week and the weekend."
   },
   "featured": "Featured",
   "paidPlacement": "Paid placement",

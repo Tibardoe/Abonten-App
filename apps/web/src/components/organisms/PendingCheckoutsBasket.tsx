@@ -8,6 +8,7 @@ import getUserPendingTicketCheckouts, {
 import issueFreeCheckoutTickets from "@/actions/issueFreeCheckoutTickets";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
+import FollowAbonten from "@/components/molecules/FollowAbonten";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
@@ -591,6 +592,7 @@ export default function PendingCheckoutsBasket({
           sessionIds={completedCheckout.sessionIds}
           eventIds={completedCheckout.eventIds}
           ticketCount={completedCheckout.ticketCount}
+          followAbonten
         />
       );
     }
@@ -748,11 +750,17 @@ function TicketPurchaseSuccessPanel({
   sessionIds,
   eventIds,
   ticketCount,
+  followAbonten = false,
 }: {
   sessionIds: string[];
   eventIds: string[];
   /** Tickets bought; the session count when unknown. */
   ticketCount?: number;
+  /**
+   * Offer Abonten's own channels last. Only when nothing else is left to
+   * pay: above the remaining checkouts it would push them down.
+   */
+  followAbonten?: boolean;
 }) {
   const t = useTranslations("common");
 
@@ -778,6 +786,7 @@ function TicketPurchaseSuccessPanel({
           context={{ context: "purchase", eventId: eventIds[0] }}
         />
       ) : null}
+      {followAbonten ? <FollowAbonten /> : null}
     </div>
   );
 }

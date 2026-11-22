@@ -3,9 +3,11 @@ import {
   X_MAX_LENGTH,
   clampWords,
   eventCaption,
+  instagramListerTip,
   listingHashtags,
   placeCaption,
   roundupCaption,
+  xCreditLine,
   xWeightedLength,
 } from "./socialCaptions";
 
@@ -187,5 +189,71 @@ describe("roundupCaption", () => {
     );
     expect(text.startsWith("*This weekend in Accra (27–29 Nov)*")).toBe(true);
     expect(text).toContain(`Tickets and details: ${links.link}`);
+  });
+});
+
+describe("crediting the lister", () => {
+  it("ends an X post with via @handle, before the link", () => {
+    const text = eventCaption("x", event, links, { x: "djkwame" });
+    expect(text).toBe(
+      [
+        "Afrobeats Night at the Beach",
+        "",
+        "📅 Sat, 28th Nov 2026 · 8:00 PM - 11:00 PM",
+        "📍 Labadi Beach Hotel",
+        "🎫 Tickets from GH₵50",
+        "",
+        "via @djkwame",
+        links.link,
+        "#AccraEvents #ThingsToDoInAccra",
+      ].join("\n"),
+    );
+  });
+
+  it("keeps the credit and drops hashtags first when X runs out of room", () => {
+    const long = { ...event, title: "Night ".repeat(25).trim() };
+    // Without a credit, one hashtag still fits.
+    expect(eventCaption("x", long, links)).toContain("#AccraEvents");
+    const text = eventCaption("x", long, links, { x: "a_fifteen_chars" });
+    expect(xWeightedLength(text)).toBeLessThanOrEqual(X_MAX_LENGTH);
+    expect(text).toContain("via @a_fifteen_chars");
+    expect(text).toContain(links.link);
+    // With it, the hashtags went first.
+    expect(text).not.toContain("#");
+  });
+
+  it("credits a place's X account", () => {
+    const text = placeCaption(
+      "x",
+      {
+        name: "Republic Bar & Grill",
+        category: "Bar",
+        area: "Osu, Accra",
+        city: "Accra",
+      },
+      links,
+      { x: "republicosu" },
+    );
+    expect(text.split("\n")).toContain("via @republicosu");
+  });
+
+  it("credits nobody without an X handle, and only on X", () => {
+    expect(eventCaption("x", event, links, { x: null })).not.toContain("via @");
+    expect(eventCaption("x", event, links, {})).toBe(
+      eventCaption("x", event, links),
+    );
+    expect(
+      eventCaption("wa_channel", event, links, { x: "djkwame" }),
+    ).not.toContain("@djkwame");
+    expect(xCreditLine({ x: "@djkwame" })).toBe("via @djkwame");
+    expect(xCreditLine({ x: "  " })).toBeNull();
+  });
+
+  it("tells the founder to mention the Instagram account", () => {
+    expect(instagramListerTip("djkwame")).toBe(
+      "Mention @djkwame in the Story (or send a Collab invite on a feed post), then ask them to reshare.",
+    );
+    expect(instagramListerTip(null)).toBeNull();
+    expect(instagramListerTip("")).toBeNull();
   });
 });

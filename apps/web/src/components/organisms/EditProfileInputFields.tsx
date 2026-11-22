@@ -2,6 +2,12 @@
 
 import { updateUserDetails } from "@/actions/updateUserDetails";
 import { useToast } from "@/hooks/useToast";
+import { useValidationText } from "@/i18n/useValidationText";
+import {
+  LISTER_SOCIAL_NETWORKS,
+  LISTER_SOCIAL_NETWORK_NAME,
+  listerSocialLinkFields,
+} from "@abonten/core/social/listerSocialLinks";
 import type { UserDetailsFormType } from "@abonten/types/userProfileType";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +27,7 @@ type InitialDataProps = {
     avatar_version: string;
     bio: string;
     website: string;
+    social_links: NonNullable<UserDetailsFormType["social_links"]>;
   };
 };
 
@@ -28,6 +35,7 @@ export default function EditProfileInputFields({
   initialData,
 }: InitialDataProps) {
   const t = useTranslations("common");
+  const validationText = useValidationText();
 
   const form = useForm<UserDetailsFormType>({
     defaultValues: initialData,
@@ -76,8 +84,14 @@ export default function EditProfileInputFields({
         toast.success(message);
         // Re-baseline the form against what was just saved, so isDirty
         // (and therefore the Save button/"Unsaved changes" hint) reflects
-        // that there's nothing left to save.
-        form.reset(formData);
+        // that there's nothing left to save. Social accounts come back as
+        // stored: an @handle becomes the profile's address.
+        form.reset({
+          ...formData,
+          social_links: listerSocialLinkFields(
+            profileData.data?.socialLinks ?? null,
+          ),
+        });
       } else {
         toast.error(message);
       }
@@ -170,6 +184,35 @@ export default function EditProfileInputFields({
             </p>
           )}
         </div>
+
+        <fieldset className="space-y-4">
+          <legend className="font-medium md:text-lg">
+            {t("socialAccounts")}
+          </legend>
+          <p className="!mt-1 text-sm text-muted-foreground">
+            {t("socialAccountsHint")}
+          </p>
+          {LISTER_SOCIAL_NETWORKS.map((network) => {
+            const error = errors.social_links?.[network]?.message;
+            return (
+              <div key={network} className="space-y-1.5">
+                <Input
+                  title={LISTER_SOCIAL_NETWORK_NAME[network]}
+                  inputPlaceholder={t("socialHandlePlaceholder")}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  {...register(`social_links.${network}`)}
+                />
+                {error && (
+                  <p className="text-[0.8rem] font-medium text-destructive">
+                    {validationText(error)}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </fieldset>
 
         <div className="flex items-center justify-end gap-3 mb-5 md:mb-0">
           {isDirty && !isPending && (

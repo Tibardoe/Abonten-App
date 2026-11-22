@@ -1,5 +1,6 @@
 import { RecommendationPromptCard } from "@/components/alerts/RecommendationPromptCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { FollowAbonten } from "@/components/app/FollowAbonten";
 import {
   NextCheckLine,
   VerifyCountdown,
@@ -294,6 +295,12 @@ export default function PaymentVerificationScreen() {
           <RecommendationPromptCard
             context={{ context: "purchase", eventId: p.eventId }}
           />
+        ) : null}
+
+        {/* After everything about the purchase itself. A plan's part is not
+          a purchase yet: the plan screen offers this once it completes. */}
+        {state.status === "succeeded" && p.kind === "ticket" ? (
+          <FollowAbonten />
         ) : null}
 
         {state.status === "pending" ? (

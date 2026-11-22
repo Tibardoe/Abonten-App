@@ -4,6 +4,7 @@ import cancelUserTicket from "@/actions/cancelUserTicket";
 import { getEventAttendanceCount } from "@/actions/getAttendace";
 import getUserFreeRegistrationStatus from "@/actions/getUserFreeRegistrationStatus";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
+import FollowAbonten from "@/components/molecules/FollowAbonten";
 import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
@@ -226,6 +227,9 @@ export default function AttendingButton({
           {t("peopleGoing", { count: attendanceCount })}
         </p>
       )}
+
+      {/* Last, after everything about the registration itself. */}
+      {justRegistered && isAttending ? <FollowAbonten /> : null}
     </div>
   );
 }

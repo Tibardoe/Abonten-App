@@ -13,6 +13,8 @@ export type MyProfile = {
   full_name: string | null;
   bio: string | null;
   website: string | null;
+  /** network → canonical profile address (user_info.social_links). */
+  social_links: Record<string, string> | null;
   avatar_public_id: string | null;
   avatar_version: string | null;
   total_posts: number;
@@ -48,6 +50,10 @@ export function useProfile() {
         full_name: str(d.full_name),
         bio: str(d.bio),
         website: str(d.website),
+        social_links:
+          d.social_links && typeof d.social_links === "object"
+            ? d.social_links
+            : null,
         avatar_public_id: str(d.avatar_public_id),
         avatar_version: str(d.avatar_version),
         total_posts: num(d.total_posts),

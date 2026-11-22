@@ -2,7 +2,7 @@
 title: O seu perfil e as suas definições
 summary: Editar o seu perfil e a sua fotografia, mudar o número de telefone ou o e-mail, escolher o idioma e a aparência.
 order: 1
-lastUpdated: 2026-11-09
+lastUpdated: 2026-11-22
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,7 +15,7 @@ O seu perfil (website: `/user/<nome de utilizador>`; aplicação: Conta › o se
 
 ## Editar o seu perfil
 
-**Definições › Editar perfil** (website e aplicação): nome, nome de utilizador, biografia, website e fotografia. A fotografia é recortada na aplicação ou no navegador e carregada diretamente para o nosso serviço de imagens; uma barra mostra o progresso. Os nomes de utilizador têm de ser únicos. **Definições › Configuração da conta** mostra os cinco passos de uma conta completa (nome, um nome de utilizador à sua escolha, fotografia, e-mail verificado, telefone verificado); enquanto houver passos por concluir aparece um pequeno cartão de lembrete, e *Agora não* afasta-o durante algum tempo.
+**Definições › Editar perfil** (website e aplicação): nome, nome de utilizador, biografia, website e fotografia. Em **Redes sociais** pode adicionar o seu Instagram, X, TikTok e Facebook (um link para o seu perfil ou o seu @nome): quando o Abonten publica os seus eventos nas suas próprias redes sociais, podemos identificar estas contas para que os seus seguidores também vejam a publicação. A fotografia é recortada na aplicação ou no navegador e carregada diretamente para o nosso serviço de imagens; uma barra mostra o progresso. Os nomes de utilizador têm de ser únicos. **Definições › Configuração da conta** mostra os cinco passos de uma conta completa (nome, um nome de utilizador à sua escolha, fotografia, e-mail verificado, telefone verificado); enquanto houver passos por concluir aparece um pequeno cartão de lembrete, e *Agora não* afasta-o durante algum tempo.
 
 ## Número de telefone e e-mail
 

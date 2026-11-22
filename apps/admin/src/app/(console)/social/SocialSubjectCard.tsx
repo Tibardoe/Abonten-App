@@ -3,20 +3,24 @@
 import { Badge, Button, Card, cn, timeAgo } from "@/components/ui";
 import { actionUnreachable } from "@/lib/actionUnreachable";
 import { setSocialPostStatus } from "@/server/actions/social";
+import { LISTER_SOCIAL_NETWORK_NAME } from "@abonten/core/social/listerSocialLinks";
 import type {
   SocialQueueImage,
   SocialQueueItem,
+  SocialQueueLister,
   SocialQueueSubject,
 } from "@abonten/types/socialQueueType";
-import { Download, ExternalLink } from "lucide-react";
+import { AtSign, Download, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { CopyButton } from "./CopyButton";
+import { RoundupReelMaker } from "./RoundupReelMaker";
 import {
   SOCIAL_CHANNEL_HINT,
   SOCIAL_CHANNEL_LABEL,
   captionLabel,
 } from "./channelLabels";
+import { imageSrc } from "./imageSrc";
 
 const KIND_LABEL: Record<SocialQueueSubject["kind"], string> = {
   event: "Event",
@@ -32,17 +36,6 @@ const STATUS: Record<
   posted: { label: "Posted", tone: "success" },
   skipped: { label: "Skipped", tone: "neutral" },
 };
-
-/** The console's own address for one share image (see social/image). */
-function imageSrc(image: SocialQueueImage, download = false): string {
-  const q = new URLSearchParams({
-    kind: image.kind,
-    key: image.key,
-    format: image.format,
-  });
-  if (download) q.set("download", "1");
-  return `/social/image?${q.toString()}`;
-}
 
 function Images({ images }: { images: SocialQueueImage[] }) {
   if (images.length === 0) return null;
@@ -84,6 +77,72 @@ function Images({ images }: { images: SocialQueueImage[] }) {
           </a>
         </figure>
       ))}
+    </div>
+  );
+}
+
+const LISTER_WHOSE: Record<SocialQueueLister["source"], string> = {
+  organizer: "Organizer",
+  venue: "Venue",
+  place: "Place",
+};
+
+/**
+ * The lister's own accounts, to tag them: Abonten's accounts are small, so
+ * a post that the lister reshares reaches their followers too. Read from
+ * the organizer's profile (or the venue's, when the organizer has none) or
+ * the place's own links; only profiles that parse are shown, never a
+ * guessed handle.
+ */
+function ListerAccounts({ lister }: { lister: SocialQueueLister }) {
+  const whose = LISTER_WHOSE[lister.source];
+  const name = lister.name ? ` ${lister.name}` : "";
+  if (lister.handles.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {whose}
+        {name}:{" "}
+        {lister.source === "place"
+          ? "no social accounts on the place's listing"
+          : "no social accounts on their Abonten profile"}
+        , so the posts credit nobody.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-1.5 rounded border border-border bg-muted/40 p-2">
+      <p className="text-xs font-medium">
+        Tag the {whose.toLowerCase()}
+        {name}
+        {lister.source === "venue"
+          ? " (the organizer has no accounts on their profile)"
+          : ""}
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {lister.handles.map((h) => {
+          const shown = h.handle ? `@${h.handle}` : h.url;
+          return (
+            <li
+              key={h.network}
+              className="flex items-center gap-2 rounded border border-border bg-card px-2 py-1 text-xs"
+            >
+              <span className="text-muted-foreground">
+                {LISTER_SOCIAL_NETWORK_NAME[h.network]}
+              </span>
+              <a
+                href={h.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="max-w-[16rem] truncate font-mono text-primary hover:underline"
+                title={`Open the ${LISTER_SOCIAL_NETWORK_NAME[h.network]} profile`}
+              >
+                {shown}
+              </a>
+              <CopyButton text={shown} />
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -154,6 +213,12 @@ function ChannelItem({
           <p className="text-xs text-muted-foreground">
             {SOCIAL_CHANNEL_HINT[item.channel]}
           </p>
+          {item.listerTip ? (
+            <p className="flex items-start gap-1.5 rounded border border-primary/30 bg-primary/5 px-2 py-1.5 text-xs">
+              <AtSign className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+              {item.listerTip}
+            </p>
+          ) : null}
           <Images images={item.images} />
 
           <div className="space-y-1">
@@ -291,6 +356,8 @@ export function SocialSubjectCard({
             {subject.warning} Check before posting.
           </p>
         ) : null}
+        {subject.lister ? <ListerAccounts lister={subject.lister} /> : null}
+        {subject.reel ? <RoundupReelMaker reel={subject.reel} /> : null}
       </div>
       {subject.items.map((item) => (
         <ChannelItem key={item.id} item={item} canManage={canManage} />

@@ -3,6 +3,7 @@
     "hi": "Hi {name},",
     "there": "there",
     "contactUsThroughTheApp": "If you have any questions, contact us through the Abonten app.",
+    "followAbonten": "Follow Abonten for what's on in {city}",
     "copyright": "© {year} {entity}"
   },
   "ticket": {

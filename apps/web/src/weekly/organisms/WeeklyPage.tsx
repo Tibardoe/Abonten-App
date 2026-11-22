@@ -1,3 +1,4 @@
+import FollowAbonten from "@/components/molecules/FollowAbonten";
 import { languageAlternates } from "@/i18n/alternates";
 import { getPublicWeeklyEdition } from "@/utils/weeklyPublic";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
@@ -10,6 +11,7 @@ import {
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import WeeklyEditionView from "./WeeklyEditionView";
 import WeeklyFallback from "./WeeklyFallback";
 import WeeklyPersonalEdition from "./WeeklyPersonalEdition";
@@ -32,12 +34,26 @@ export async function WeeklyPage({
   const result = await getPublicWeeklyEdition(scope, week);
   const data = result.data;
 
+  let body: ReactNode;
   if (!data?.available) {
-    return <WeeklyPersonalEdition scope={scope} week={week} />;
+    body = <WeeklyPersonalEdition scope={scope} week={week} />;
+  } else if (data.edition) {
+    body = <WeeklyEditionView doc={data.edition} />;
+  } else {
+    if (result.status === 404) notFound();
+    body = <WeeklyFallback events={data.fallbackEvents} />;
   }
-  if (data.edition) return <WeeklyEditionView doc={data.edition} />;
-  if (result.status === 404) notFound();
-  return <WeeklyFallback events={data.fallbackEvents} />;
+
+  // Abonten's own channels close every Weekly page, after the edition. The
+  // block is the same for everyone, so the page stays cacheable.
+  return (
+    <>
+      {body}
+      <div className="mx-auto mt-10 w-full max-w-7xl md:mt-14">
+        <FollowAbonten className="max-w-2xl" />
+      </div>
+    </>
+  );
 }
 
 const siteOrigin = () =>

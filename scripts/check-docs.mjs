@@ -402,6 +402,7 @@ const OFFICIAL = {
   instagram:
     "https://www.instagram.com/abontenhub?stkn=N3M1N2ZmMHp5YTN0&utm_source=qr",
   tiktok: "https://www.tiktok.com/@abontenhub?_r=1&_t=ZS-99ce4w5TDZx",
+  whatsapp: "https://whatsapp.com/channel/0029Vb9N5fXCRs1lYPBl7Q00",
 };
 const brandFile = join(ROOT, "packages/core/src/brand/socialLinks.ts");
 if (existsSync(brandFile)) {
@@ -417,8 +418,10 @@ const socialScan = [
   ...walk(join(ROOT, "apps/mobile/src"), (f) => /\.tsx?$/.test(f)),
   ...docFiles,
 ];
+// A WhatsApp Channel address carries no handle, so any channel address
+// counts: Abonten links to no channel but its own.
 const SOCIAL_URL =
-  /https?:\/\/(?:www\.)?(x\.com|twitter\.com|instagram\.com|tiktok\.com)\/@?abontenhub[^\s"')`>]*/g;
+  /https?:\/\/(?:www\.)?(?:(?:x\.com|twitter\.com|instagram\.com|tiktok\.com)\/@?abontenhub|whatsapp\.com\/channel\/)[^\s"')`>]*/g;
 for (const file of socialScan) {
   const r = rel(file);
   if (r === rel(brandFile)) continue;

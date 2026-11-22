@@ -14983,6 +14983,7 @@ export type Database = {
           organizer_verified_at: string | null
           search_name: string | null
           search_tsv: unknown
+          social_links: Json | null
           status_id: number
           updated_at: string
           username: string | null
@@ -15011,6 +15012,7 @@ export type Database = {
           organizer_verified_at?: string | null
           search_name?: string | null
           search_tsv?: unknown
+          social_links?: Json | null
           status_id?: number
           updated_at?: string
           username?: string | null
@@ -15039,6 +15041,7 @@ export type Database = {
           organizer_verified_at?: string | null
           search_name?: string | null
           search_tsv?: unknown
+          social_links?: Json | null
           status_id?: number
           updated_at?: string
           username?: string | null
@@ -19580,6 +19583,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      social_links_valid: { Args: { p_links: Json }; Returns: boolean }
       social_queue_listings: { Args: { p_limit?: number }; Returns: Json }
       social_queue_roundup: {
         Args: { p_kind?: string; p_start?: string }

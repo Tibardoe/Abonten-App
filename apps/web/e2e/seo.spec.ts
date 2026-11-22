@@ -71,6 +71,15 @@ test("the homepage and the city pages are what search engines are shown", async 
     (n) => n["@type"],
   );
   expect(types).toEqual(expect.arrayContaining(["Organization", "WebSite"]));
+  // The profiles say who Abonten is; the WhatsApp Channel is followed, not
+  // an identity page, so it stays out of sameAs (SocialLink.profile).
+  const organization = (
+    jsonLd["@graph"] as { "@type": string; sameAs?: string[] }[]
+  ).find((n) => n["@type"] === "Organization");
+  expect(organization?.sameAs).toContain("https://x.com/abontenhub");
+  expect(
+    organization?.sameAs?.some((url) => url.includes("whatsapp.com")),
+  ).toBe(false);
   await expect(page.locator('a[href="/explore/accra"]')).toHaveCount(1);
 
   await page.goto("/explore/accra?lat=5.6037&lng=-0.187");
@@ -122,6 +131,28 @@ test("event and place reviews pages render publicly with their own canonical URL
     );
     await expect(page.getByRole("heading", { name: "Reviews" })).toBeVisible();
   }
+});
+
+// Abonten's own channels: the footer links all four, and every Abonten
+// Weekly page ends with "Follow Abonten" (the same for everyone, so the
+// cached page carries nothing personal).
+test("the footer and Abonten Weekly invite people to follow Abonten", async ({
+  page,
+}) => {
+  const channel = "https://whatsapp.com/channel/0029Vb9N5fXCRs1lYPBl7Q00";
+
+  await page.goto("/");
+  await expect(page.locator(`footer a[href="${channel}"]`)).toHaveCount(1);
+
+  const weekly = await page.goto("/weekly");
+  expect(weekly?.status()).toBe(200);
+  const follow = page.getByRole("region", { name: /^Follow Abonten/ });
+  await expect(follow).toBeVisible();
+  await expect(follow.locator(`a[href="${channel}"]`)).toHaveAttribute(
+    "target",
+    "_blank",
+  );
+  await expect(follow.getByRole("link")).toHaveCount(4);
 });
 
 // The root layout's title template appends " | Abonten Hub" once; a page

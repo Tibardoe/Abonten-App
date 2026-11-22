@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.9
-lastReviewed: 2026-11-21
+version: 1.10
+lastReviewed: 2026-11-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -23,7 +23,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Google sign-in | W A | all | AuthModal / sign-in screen | Supabase OAuth; callback exchanges code | `auth.users`, `user_info` (trigger) | `auth/callback/route.ts`; mobile native | — | redirect not allow-listed | — | help getting-started |
 | Phone OTP sign-in | W A | all | same | request → Abonten-made code by Hubtel SMS → verify → find-or-create → server-only sign-in password → session | `phone_otp_state`, `phone_otp_send_log` | `profile/phoneAuthCore`, `otpProviders/hubtelOtpProvider`, `phoneOtpStore`; actions `requestPhoneVerification`, `verifyPhoneSignIn`; API `auth/phone/{request,verify}` | SMS | rate limits (10/h IP, 60 s, 5 attempts), Hubtel down | health `hubtel` | security/application-security |
 | Email OTP sign-in | W A | all | same | Supabase `signInWithOtp` + app caps → verify | — (Supabase) | `profile/emailAuthCore`; actions `requestEmailOtp`, `verifyEmailSignIn`; API `auth/email/request` | email (Supabase SMTP via Resend) | caps, SMTP misconfig | — | architecture/email-auth |
-| Profile edit / avatar | W A | all | Settings › Edit profile | crop → signed Cloudinary upload → save | `user_info`, `user_image_history` | actions `updateUserDetails`, `getAvatarUploadSignature`, `saveAvatarToSupabase`; API `profile`, `uploads/signature` | — | upload limits | — | help account/profile |
+| Profile edit / avatar | W A | all | Settings › Edit profile; social accounts (Instagram, X, TikTok, Facebook) since 2026-11-22, credited by Admin › Social (`architecture/social-distribution.md`) | crop → signed Cloudinary upload → save | `user_info` (incl. `social_links`), `user_image_history` | actions `updateUserDetails`, `getAvatarUploadSignature`, `saveAvatarToSupabase`; API `profile` (GET, PATCH), `uploads/signature`; service `profile/updateProfileCore` | — | upload limits | — | help account/profile |
 | Change phone / email | W A | all | Settings › Security | OTP to new contact | `phone_otp_state`; Supabase `email_change` | `profile/updateVerifiedPhoneCore`; API `account/phone/*` | SMS / email | limits | — | help account/profile |
 | Delete account | W A | all | Settings › Security | `credit_close_account` → `auth.admin.deleteUser`; cascades | many (see privacy) | `profile/deleteAccountCore`; action `deleteUser`; API `account/delete` | — | credit close non-fatal | none (user-only) | privacy/data-retention |
 | Suspension / ban | C | Ad | Users | `setUserStatusCore`; global sign-out; enforced in proxy + `getMobileAuth` | `user_info.status_id` | `admin/users/usersAdminCore` | — | admin cannot be suspended | `users.suspend/ban/restore`; audit `user.status.*` | admin/users |

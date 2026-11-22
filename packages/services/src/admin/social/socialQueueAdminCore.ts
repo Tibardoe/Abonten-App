@@ -21,6 +21,10 @@ import {
   withLinkSource,
 } from "@abonten/core/social/linkSources";
 import {
+  type ListerHandle,
+  readListerHandles,
+} from "@abonten/core/social/listerSocialLinks";
+import {
   ROUNDUP_CITY,
   type Roundup,
   parseRoundupKey,
@@ -44,6 +48,7 @@ import type {
   SocialQueueDay,
   SocialQueueImage,
   SocialQueueItem,
+  SocialQueueLister,
   SocialQueueSettings,
   SocialQueueSubject,
   SocialQueueView,
@@ -60,9 +65,11 @@ import {
   recordAdminAudit,
 } from "../adminContext";
 import {
+  type CaptionCredit,
   type EventCaptionFacts,
   type RoundupCaptionEvent,
   eventCaption,
+  instagramListerTip,
   placeCaption,
   roundupCaption,
   xWeightedLength,
@@ -73,8 +80,10 @@ import {
 // and social_queue_roundup() decide WHAT to post (social_post rows); this
 // module computes everything else when the queue is read, so it always
 // matches the listing as it is now: the caption per channel, the link tagged
-// with the channel's `?src=` code, and the share-kit images. Marking a post
-// posted or skipped, and changing the settings, are audited.
+// with the channel's `?src=` code, the share-kit images, the lister's own
+// social accounts (credited on X and named in the Instagram tip) and a
+// roundup's video frames. Marking a post posted or skipped, and changing the
+// settings, are audited.
 
 type RequestMeta = Record<string, unknown> | undefined;
 
@@ -148,7 +157,8 @@ type EventRow = {
   archived_at: string | null;
   postponed_at: string | null;
   moderation_state: string | null;
-  place: { name: string | null } | null;
+  place: { name: string | null; social_links: unknown } | null;
+  organizer: OrganizerRow | null;
   event_occurrence: { starts_at: string; ends_at: string }[] | null;
   ticket_type: {
     type: string | null;
@@ -166,15 +176,23 @@ type PlaceRow = {
   status: string;
   moderation_state: string | null;
   temporary_status: string | null;
+  social_links: unknown;
   place_category: { name: string | null; slug: string | null } | null;
+};
+
+type OrganizerRow = {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  social_links: unknown;
 };
 
 const POST_COLUMNS =
   "id, subject_kind, subject_key, event_id, place_id, roundup_key, event_ids, channel, status, queued_on, created_at, posted_at, posted_by, note, updated_at, updated_by";
 const EVENT_COLUMNS =
-  "id, event_code, title, starts_at, ends_at, timezone, address, country_code, status, archived_at, postponed_at, moderation_state, place:place_id(name), event_occurrence(starts_at, ends_at), ticket_type(type, price, currency)";
+  "id, event_code, title, starts_at, ends_at, timezone, address, country_code, status, archived_at, postponed_at, moderation_state, place:place_id(name, social_links), organizer:organizer_id(id, username, full_name, social_links), event_occurrence(starts_at, ends_at), ticket_type(type, price, currency)";
 const PLACE_COLUMNS =
-  "id, slug, name, address, country_code, status, moderation_state, temporary_status, place_category(name, slug)";
+  "id, slug, name, address, country_code, status, moderation_state, temporary_status, social_links, place_category(name, slug)";
 
 /** "Spintex Road, Accra, Ghana" → "Spintex Road, Accra". */
 function shortAddress(full: string): string {
@@ -336,6 +354,59 @@ function listingImage(
   };
 }
 
+/**
+ * Whose accounts an event credits: its organizer's, or, when the organizer
+ * has none on their profile, its venue's. Handles are only those the
+ * profile's links name (never guessed from a name).
+ */
+function eventLister(e: EventRow): SocialQueueLister {
+  const organizer = e.organizer;
+  const own = readListerHandles(organizer?.social_links);
+  // Their name, not their Abonten username: an "@" here would read as a
+  // social handle to tag, which it is not.
+  const organizerName = organizer
+    ? organizer.full_name ||
+      (organizer.username ? `${organizer.username} (on Abonten)` : null)
+    : null;
+  if (own.length > 0 || !e.place) {
+    return { source: "organizer", name: organizerName, handles: own };
+  }
+  const venue = readListerHandles(e.place.social_links);
+  return venue.length > 0
+    ? { source: "venue", name: e.place.name, handles: venue }
+    : { source: "organizer", name: organizerName, handles: [] };
+}
+
+function placeLister(p: PlaceRow): SocialQueueLister {
+  return {
+    source: "place",
+    name: p.name,
+    handles: readListerHandles(p.social_links),
+  };
+}
+
+function handleOn(
+  lister: SocialQueueLister | null,
+  network: ListerHandle["network"],
+): string | null {
+  return lister?.handles.find((h) => h.network === network)?.handle ?? null;
+}
+
+/** What a listing's captions credit, and the Instagram tip, per channel. */
+function creditFor(lister: SocialQueueLister | null): {
+  credit: CaptionCredit;
+  tip: (channel: SocialChannel) => string | null;
+} {
+  const instagram = handleOn(lister, "instagram");
+  return {
+    credit: { x: handleOn(lister, "x") },
+    tip: (channel) =>
+      channel === "ig_story" || channel === "ig_feed"
+        ? instagramListerTip(instagram)
+        : null,
+  };
+}
+
 function coverImage(roundup: Roundup): SocialQueueImage {
   return {
     kind: "roundups",
@@ -405,6 +476,7 @@ function baseItem(
     id: row.id,
     channel: row.channel,
     status: row.status,
+    listerTip: null,
     postedAt: row.posted_at,
     decidedBy: decider
       ? { id: decider, label: people.get(decider) ?? decider.slice(0, 8) }
@@ -535,11 +607,14 @@ export async function listSocialQueueCore(
           adminHref: `/events/${row.event_id}`,
           publicUrl: e ? `${PUBLIC_SITE_ORIGIN}${eventPath(e.event_code)}` : "",
           warning: eventWarning(e, nowMs),
+          lister: e ? eventLister(e) : null,
+          reel: null,
           items: [],
         };
         subjects.set(subjectId, subject);
       }
       if (e) {
+        const { credit, tip } = creditFor(subject.lister);
         const city = cityIn(
           cities,
           e.country_code,
@@ -552,9 +627,10 @@ export async function listSocialQueueCore(
         const format = socialChannelImageFormat(row.channel);
         item = {
           ...base,
+          listerTip: tip(row.channel),
           ...captionOf(
             row,
-            (links) => eventCaption(row.channel, facts, links),
+            (links) => eventCaption(row.channel, facts, links, credit),
             eventPath(e.event_code),
           ),
           images: [
@@ -579,11 +655,14 @@ export async function listSocialQueueCore(
           adminHref: `/places/${row.place_id}`,
           publicUrl: p ? `${PUBLIC_SITE_ORIGIN}${placePath(p.slug)}` : "",
           warning: placeWarning(p),
+          lister: p ? placeLister(p) : null,
+          reel: null,
           items: [],
         };
         subjects.set(subjectId, subject);
       }
       if (p) {
+        const { credit, tip } = creditFor(subject.lister);
         const fullAddress = readEventAddress(p.address).full_address;
         const facts = {
           name: p.name,
@@ -598,9 +677,10 @@ export async function listSocialQueueCore(
         const format = socialChannelImageFormat(row.channel);
         item = {
           ...base,
+          listerTip: tip(row.channel),
           ...captionOf(
             row,
-            (links) => placeCaption(row.channel, facts, links),
+            (links) => placeCaption(row.channel, facts, links, credit),
             placePath(p.slug),
           ),
           images: [
@@ -656,6 +736,21 @@ export async function listSocialQueueCore(
                 : dropped > 0
                   ? `${dropped} of its events ${dropped === 1 ? "is" : "are"} no longer on and ${dropped === 1 ? "was" : "were"} left out.`
                   : null,
+          lister: null,
+          // The vertical video (Reel / TikTok): the cover, then each listed
+          // event's 9:16 Story picture, drawn in the browser.
+          reel:
+            listed.length > 0
+              ? {
+                  fileBase: `abonten-${roundup.slug}-reel`,
+                  frames: [
+                    coverImage(roundup),
+                    ...listed.map((e) =>
+                      listingImage("events", e.event_code, "story", e.title),
+                    ),
+                  ],
+                }
+              : null,
           items: [],
         };
         subjects.set(subjectId, subject);

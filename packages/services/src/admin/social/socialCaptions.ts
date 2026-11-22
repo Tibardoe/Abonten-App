@@ -7,6 +7,13 @@ import type { SocialChannel } from "@abonten/core/social/socialChannels";
 // the event's zone, prices in its currency) is formatted before it arrives
 // here; this module only lays the facts out per channel and keeps an X post
 // under 280.
+//
+// A listing's posts credit its lister when they have an account on the
+// network (docs/architecture/social-distribution.md §4): X ends with
+// "via @handle" (a mention, so the lister sees it and can repost it), and
+// the Instagram items carry a tip to mention them or send a Collab invite.
+// The handle is only ever one read from the lister's own profile
+// (@abonten/core/social/listerSocialLinks), never made up.
 
 /** X's limit, and what X counts any link as. */
 export const X_MAX_LENGTH = 280;
@@ -106,6 +113,31 @@ export type CaptionLinks = {
   appLink: string;
 };
 
+/** The lister's accounts a caption may credit (handles without the @). */
+export type CaptionCredit = {
+  /** The lister's X handle: the X post ends "via @handle". */
+  x?: string | null;
+};
+
+/** The credit line of an X post, or null without an X handle. */
+export function xCreditLine(credit?: CaptionCredit | null): string | null {
+  const handle = credit?.x?.replace(/^@+/, "").trim();
+  return handle ? `via @${handle}` : null;
+}
+
+/**
+ * The tip on an Instagram story or feed item when the lister has an
+ * Instagram account; null without one.
+ */
+export function instagramListerTip(
+  handle: string | null | undefined,
+): string | null {
+  const h = handle?.replace(/^@+/, "").trim();
+  return h
+    ? `Mention @${h} in the Story (or send a Collab invite on a feed post), then ask them to reshare.`
+    : null;
+}
+
 const CTA: Record<EventCaptionFacts["offer"], string> = {
   tickets: "Get your tickets",
   free: "Reserve your spot",
@@ -127,7 +159,8 @@ function lines(...parts: (string | null | false | undefined)[]): string {
 
 /**
  * The longest version of a post that X accepts: every hashtag, then one,
- * then none, then shorter titles.
+ * then none, then shorter titles. Whatever `build` always writes (the link,
+ * the lister's "via @handle") is kept: hashtags go first, then title words.
  */
 function fitForX(
   build: (title: string, tags: string[]) => string,
@@ -154,10 +187,12 @@ export function eventCaption(
   channel: SocialChannel,
   facts: EventCaptionFacts,
   links: CaptionLinks,
+  credit?: CaptionCredit | null,
 ): string {
   const tags = listingHashtags("event", facts.city);
   if (channel === "ig_story") return STICKER[facts.offer];
   if (channel === "x") {
+    const via = xCreditLine(credit);
     return fitForX(
       (title, t) =>
         lines(
@@ -167,6 +202,7 @@ export function eventCaption(
           facts.venue && `📍 ${facts.venue}`,
           facts.price && `🎫 ${facts.price}`,
           "",
+          via,
           links.link,
           t.length > 0 && t.join(" "),
         ),
@@ -206,17 +242,20 @@ export function placeCaption(
   channel: SocialChannel,
   facts: PlaceCaptionFacts,
   links: CaptionLinks,
+  credit?: CaptionCredit | null,
 ): string {
   const tags = listingHashtags("place", facts.city);
   const what = [facts.category, facts.area].filter(Boolean).join(" · ");
   if (channel === "ig_story") return "See it on Abonten";
   if (channel === "x") {
+    const via = xCreditLine(credit);
     return fitForX(
       (name, t) =>
         lines(
           `New on Abonten: ${name}`,
           what || null,
           "",
+          via,
           links.link,
           t.length > 0 && t.join(" "),
         ),
