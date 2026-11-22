@@ -160,6 +160,16 @@ describe("organizer social links", () => {
     });
     expect(bio.status).toBe(200);
     expect(bio.data?.socialLinks).toEqual(saved.data?.socialLinks);
+
+    // The website form carries the avatar through as "" for someone with
+    // no photo: that must not count as changing it (the database refuses
+    // an avatar outside the person's own folder, so the whole save failed).
+    const noPhoto = await updateProfileCore(organizer.client, organizer.id, {
+      full_name: "DJ Kwame",
+      avatar_public_id: "",
+      avatar_version: "",
+    });
+    expect(noPhoto.status).toBe(200);
   });
 
   it("the database refuses other shapes and anyone else's write", async () => {

@@ -362,10 +362,11 @@ function listingImage(
 function eventLister(e: EventRow): SocialQueueLister {
   const organizer = e.organizer;
   const own = readListerHandles(organizer?.social_links);
+  // Their name, not their Abonten username: an "@" here would read as a
+  // social handle to tag, which it is not.
   const organizerName = organizer
-    ? organizer.username
-      ? `@${organizer.username}`
-      : organizer.full_name
+    ? organizer.full_name ||
+      (organizer.username ? `${organizer.username} (on Abonten)` : null)
     : null;
   if (own.length > 0 || !e.place) {
     return { source: "organizer", name: organizerName, handles: own };

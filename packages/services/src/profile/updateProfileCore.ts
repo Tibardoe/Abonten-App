@@ -61,7 +61,19 @@ export async function updateProfileCore(
   const patch: UserInfoUpdate = {};
   for (const field of TEXT_FIELDS) {
     const value = input[field];
-    if (typeof value === "string") patch[field] = value.trim();
+    if (typeof value !== "string") continue;
+    // The forms carry the avatar through unchanged, as "" for someone with
+    // no photo. Writing "" over NULL is a change of avatar, which the
+    // database refuses (enforce_avatar_public_id_owner), so a person
+    // without a photo could not save their profile at all. The avatar is
+    // set by the upload flow, never cleared from here.
+    if (
+      (field === "avatar_public_id" || field === "avatar_version") &&
+      value.trim() === ""
+    ) {
+      continue;
+    }
+    patch[field] = value.trim();
   }
 
   let socialLinks: ListerSocialLinks | null | undefined;
