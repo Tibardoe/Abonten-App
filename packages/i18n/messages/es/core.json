@@ -1545,6 +1545,8 @@
     "aboveMax": "El importe más alto es {max}.",
     "offStep": "Elige {min} o más, en intervalos de {step}.",
     "hint": "De {min} a {max}, en intervalos de {step}",
-    "hintSingle": "El importe es de {min}."
+    "hintSingle": "El importe es de {min}.",
+    "range": "{min} a {max}",
+    "paidAtDoor": "Pagado {amount}"
   }
 }

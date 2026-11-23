@@ -102,6 +102,8 @@ export type UserTicketType = {
     quantity: number;
     /** A pass: the shows of the run it covers (docs/architecture/show-passes.md). */
     pass_shows?: number | null;
+    /** "open": the buyer chose the amount (@abonten/core/openAmountTickets). */
+    amount_mode?: string | null;
     created_at: string;
     available_from: string | null;
     available_until: string | null;

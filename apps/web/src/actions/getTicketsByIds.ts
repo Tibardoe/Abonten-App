@@ -5,6 +5,7 @@ import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
 import { tr } from "@abonten/services/i18n/requestLocale";
+import { fillHeldTicketPaidAmounts } from "@abonten/services/tickets/heldTicketPaidAmountsCore";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import type { UserTicketType } from "@abonten/types/ticketType";
 
@@ -80,5 +81,10 @@ export default withActionLocale(async function getTicketsByIds(
     event: ticket.ticket_type.event,
   }));
 
-  return { status: 200, data: ticketsWithEvents };
+  // The amount chosen on a ticket someone sent this person (open-amount
+  // tickets), which their own session cannot read from the buyer's line.
+  return {
+    status: 200,
+    data: await fillHeldTicketPaidAmounts(userId, ticketsWithEvents),
+  };
 });

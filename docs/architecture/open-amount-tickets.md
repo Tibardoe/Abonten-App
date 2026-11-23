@@ -2,9 +2,9 @@
 title: Open-amount tickets
 purpose: How a ticket type can let the buyer choose the amount (a minimum, a maximum and a step), how such a ticket is priced, checked, paid, refunded and shown at the door, what it can never be combined with, and how staff switch it on for an organizer.
 audience: Engineering, operations and support
-scope: ticket_type.amount_mode / min_amount / max_amount / amount_step and ticket_checkout.open_amount (migration 20261123120000); create_ticket_checkout, create_event, event_add_show and ticket_plan_create; @abonten/core openAmountTickets and checkoutPricing; @abonten/services events/openAmountAccess, checkout/validateCheckoutCore, tickets/checkInTicketCore and the refusals in comps, seating, ticket plans and the basket; the organizer editors, the checkout and the door on the website and in the app; the tickets.open_amount feature flag.
+scope: ticket_type.amount_mode / min_amount / max_amount / amount_step and ticket_checkout.open_amount (migration 20261123120000); create_ticket_checkout, create_event, event_add_show and ticket_plan_create; @abonten/core openAmountTickets and checkoutPricing; @abonten/services events/openAmountAccess, checkout/validateCheckoutCore, tickets/checkInTicketCore, tickets/heldTicketPaidAmountsCore and the refusals in comps, seating, ticket plans and the basket; GET /api/mobile/tickets/:ticketId/paid-amount; the organizer editors, the checkout and the door on the website and in the app; the tickets.open_amount feature flag.
 status: Review required
-version: 1.0
+version: 1.1
 lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -68,6 +68,9 @@ An order of open lines only, with a promo code typed, leaves the code unused and
 | `parseChosenAmount`, `openAmountRangeOf`, `isOpenAmountType` | Reading typed text and ticket type rows |
 | `openAmountQuickPicks(range, currency)` | Up to four amounts to tap: the minimum, then about 2×, 5× and 10× it, each moved up onto the steps and kept within the maximum, plus the maximum when there is room. GH₵50–1,000 in steps of 10 gives 50, 100, 250, 500 |
 | `openAmountRangeHint` | "From GH₵50 to GH₵1,000, in steps of GH₵10" |
+| `openAmountRangeLabel` | "GH₵20 to GH₵1,000": an open type's price wherever one type's price stands on its own (section 11) |
+| `promoCodeEntryShown(picked, offered)` | Whether a checkout offers the promo code entry: not while every line picked is an amount the buyer chose (or, before a pick, every type offered is one) |
+| `checkedInTicketLines(t, ticket, locale)` | What the door shows after a scan: "Paid GH₵150", the type's name, its note (section 8) |
 
 Words come from `openAmount.*` of the `core` namespace in the reader's language (amounts formatted with the currency); `OPEN_AMOUNT_FLAG` is the flag's key.
 
@@ -99,7 +102,11 @@ Nothing new. A refund follows the event's refund policy (`@abonten/core/refundPo
 
 `checkInTicketCore` now returns, after a successful scan, `ticket: { type, note, paidAmount }`. For a ticket of an open type it reads the checkout line with the service role (the caller was authorised just before; a team member cannot read `ticket_checkout` through their own session) **before** the ticket moves to used, so a scan that cannot show the amount admits nobody and can simply be repeated. `paidAmount` is `{ amount, currency }` for an open-amount line, null for a fixed-price ticket. The web action `checkInTicket` and `POST /api/mobile/organizer/tickets/:ticketId/check-in` pass it on (`CheckedInTicket` in `@abonten/api-client`).
 
-The website's check-in (`CheckInByCodeCard`, the attendee list) and the app's scanner (`TicketScannerSheet`) show "Paid GH₵150" in large type with the type's note, so staff load that many credits.
+The website's check-in (`CheckInByCodeCard`, the attendee list, through `CheckedInTicketPanel`) and the app's scanner (`TicketScannerSheet`) show "Paid GH₵150" in large type with the type's name and note, so staff load that many credits. Both render the lines of one rule, `checkedInTicketLines` (`@abonten/core/openAmountTickets`, words `core:openAmount.paidAtDoor`), which `packages/core/src/openAmountTickets.test.ts` checks in English and French; there is no component test harness for the website or the app, so the screens only place those lines.
+
+## 8a. The holder's ticket
+
+The ticket (website `TicketModal`, app `ticket/[id]`) shows "Amount paid: GH₵150" to whoever holds it. The buyer reads it from their own checkout line (`checkout` in `@abonten/core/ticketSelect`, `openAmountPaidOf`). A ticket someone sent them (ticket transfers, PROJECT.md §74) was bought on the sender's line, which the holder's session cannot read (`ticket_checkout` is the buyer's; its access rules are not opened). `@abonten/services/tickets/heldTicketPaidAmountsCore` reads it with the service role only for tickets whose `ticket.user_id` is the caller now, the way `checkInTicketCore` reads it for the door after authorising the scanner: a sender who passed the ticket on, the organizer or anyone else gets nothing. The website's ticket lists fill the line in on the server (`fillHeldTicketPaidAmounts` in `getUserAttendingEvents` and `getTicketsByIds`); the app asks `GET /api/mobile/tickets/:ticketId/paid-amount` (`api.tickets.paidAmount`, `useHeldTicketPaidAmount`) only for an open-amount ticket whose line it could not read. A failed read leaves the ticket as it is, without the amount.
 
 ## 9. Copying and moving
 
@@ -115,8 +122,8 @@ To switch it on for an organizer (Admin › Markets › Feature flags, `markets.
 
 ## 11. Screens
 
-- **Organizer** — the website's event form (Tickets, `TicketInputs`) and Manage › Details; the app's event wizard (Tickets step, `EventWizardTickets`) and Edit event: each named type has **Price: Fixed / Buyer chooses the amount**, and the second shows lowest amount, highest amount and step, with the range checked as it is typed. Shown only when the flag is on (or the type is already open).
-- **Buyer** — the website's checkout dialog and the app's buy screen: an open type shows an amount field with the range hint and quick-pick chips instead of the +/− stepper, the line says "Promo codes and group prices don't apply to amounts you choose", and Pay small small is not offered while an open line is picked. The order summary and checkout show the chosen amount; the ticket (website and app) shows the amount paid.
+- **Organizer** — the website's event form (Tickets, `TicketInputs`) and Manage › Details; the app's event wizard (Tickets step, `EventWizardTickets`) and Edit event: each named type has **Price: Fixed / Buyer chooses the amount**, and the second shows lowest amount, highest amount and step (labelled fields), with the range checked as it is typed. Shown only when the flag is on (or the type is already open). Wherever one type's price stands on its own, an open type shows its range, never the lowest amount alone: the website's ticket list (the hint with the step), Insights › Ticket types on the website (`EventTicketTypeBreakdown`, the ranges from the manage page's ticket types) and the app's event overview (`TicketTypesSection`, the ranges read beside the notes by `useEventTicketNotes`) say "GH₵20 to GH₵1,000" (`openAmountRangeLabel`). The event's headline stays "From" the lowest price, and the website's event page says "From" whenever a type is open, even if it is the only one.
+- **Buyer** — the website's checkout dialog and the app's buy screen: an open type shows an amount field (the currency inside the field, before the amount) with the range hint and quick-pick chips instead of the +/− stepper, the line says "Promo codes and group prices don't apply to amounts you choose", and Pay small small is not offered while an open line is picked. The promo code entry (the website's code box, the app's code field and its checkout's "Have a promo code? Add it" link) is hidden while every line of the order is an amount the buyer chose, and no code is sent then (`promoCodeEntryShown`); one fixed-price line brings it back. The order summary and checkout show the chosen amount; the ticket (website and app) shows the amount paid, also on a ticket someone sent the holder (section 8a).
 - **Door** — section 8.
 
 ## 12. Code map
@@ -130,10 +137,11 @@ To switch it on for an organizer (Admin › Markets › Feature flags, `markets.
 | Saving types | `packages/services/src/events/postEventCore.ts`, `updateEventTicketTypesCore.ts`, `getEventForEditCore.ts` |
 | Checkout | `packages/services/src/checkout/validateCheckoutCore.ts`; `apps/web/src/actions/validateCheckout.ts`; `POST /api/mobile/checkout/validate` |
 | Refusals | `packages/services/src/comps/complimentaryCore.ts`, `packages/services/src/seating/seatingCore.ts`, `packages/services/src/ticketPlans/ticketPlanCore.ts`, `apps/web/src/actions/updateTicketCheckoutQuantity.ts` |
-| Door | `packages/services/src/tickets/checkInTicketCore.ts` |
+| Door | `packages/services/src/tickets/checkInTicketCore.ts`; the words `checkedInTicketLines` in `packages/core/src/openAmountTickets.ts` |
+| The holder's ticket | `packages/services/src/tickets/heldTicketPaidAmountsCore.ts`; `apps/web/src/actions/getUserAttendingEvents.ts`, `getTicketsByIds.ts`; `GET /api/mobile/tickets/:ticketId/paid-amount`; `apps/mobile/src/features/tickets/useHeldTicketPaidAmount.ts` |
 | Tests | `packages/core/src/openAmountTickets.test.ts`; `packages/services/src/__integration__/open-amount-tickets.integration.test.ts` |
 
-The integration suite proves, against the local stack: the flag off (or on for someone else) refuses an open type on create and on edit; a range off the steps or too precise is refused by the service, and the database refuses every bad shape; a GH₵150 choice is one ticket at 150, charged 15,750 pesewas (the 5% fee on top), refundable at 150, earning the organizer 150, and the door returns `paidAmount` 150 GHS with the note, after which the organizer's own session cannot change the range; an open line is never discounted by a promo code or a group price and does not count towards a group; the database refuses an amount outside the range or off the steps, a quantity of 2, a discounted line, a cheap fixed line and a Pay small small plan with an open line; a run's new show keeps the range and the editor stores an open type at its minimum, admitting one.
+The integration suite proves, against the local stack: the flag off (or on for someone else) refuses an open type on create and on edit; a range off the steps or too precise is refused by the service, and the database refuses every bad shape; a GH₵150 choice is one ticket at 150, charged 15,750 pesewas (the 5% fee on top), refundable at 150, earning the organizer 150, and the ticket sent to a friend shows its holder 150 GHS through `heldTicketPaidAmountsCore` (the holder's own session reads no line; the sender and the organizer get nothing), the door returns `paidAmount` 150 GHS with the note, after which the organizer's own session cannot change the range; an open line is never discounted by a promo code or a group price and does not count towards a group; the database refuses an amount outside the range or off the steps, a quantity of 2, a discounted line, a cheap fixed line and a Pay small small plan with an open line; a run's new show keeps the range and the editor stores an open type at its minimum, admitting one.
 
 ## 13. Support
 

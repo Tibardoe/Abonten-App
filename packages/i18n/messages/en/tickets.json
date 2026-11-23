@@ -125,6 +125,5 @@
   "rescheduleBannerChoicePostponed": "Your ticket stays valid for the new date. If you'd rather not wait, you can get a full refund, service fee included, until the new date is set.",
   "rescheduleBannerChoiceVenue": "Your ticket is valid at the new venue. If you can't get there, you can get a full refund, service fee included, until {refundUntil}.",
   "rescheduleKeptNoteVenue": "You're keeping your ticket for the new venue.",
-  "amountPaid": "Amount paid: {amount}",
-  "paidAtDoor": "Paid {amount}"
+  "amountPaid": "Amount paid: {amount}"
 }

@@ -59,6 +59,7 @@ import { hostDisplayName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { refundCutoffDays, refundPolicyOf } from "@abonten/core/refundPolicy";
+import { nextReminderStart } from "@abonten/core/reminderStart";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -332,6 +333,12 @@ export default function EventDetailScreen() {
     !postponed &&
     occurrenceState.blockReason === "ongoing_no_future";
   const salesClosed = postponed || hasEnded || inProgressNoFuture;
+  // The next date that has not begun (the event's own start, or the next
+  // of its dates): what a reminder is set against.
+  const remindStart = nextReminderStart(event.starts_at, occ, {
+    now: nowMs,
+    postponedAt: event.postponed_at,
+  });
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: attendanceCount,
@@ -664,27 +671,18 @@ export default function EventDetailScreen() {
             </View>
           </View>
 
-          {(() => {
-            // Specific-date events have starts_at null — fall back to the
-            // next upcoming occurrence so multi-date events get a reminder.
-            const times = occ
-              .map((o) => String(o.starts_at))
-              .filter(Boolean)
-              .sort();
-            const remindStart =
-              event.starts_at ??
-              times.find((s) => new Date(s).getTime() > Date.now()) ??
-              times[0] ??
-              null;
-            return !canceled && !salesClosed && remindStart ? (
-              <EventReminderButton
-                eventId={event.id}
-                eventTitle={event.title}
-                startsAtIso={remindStart}
-                status={event.status}
-              />
-            ) : null;
-          })()}
+          {/* "Get a reminder before it starts": only while a date is
+              still to come. Once the event (or its last date) is on, even
+              while tickets still sell during it, there is nothing left to
+              remind anyone of (@abonten/core/reminderStart). */}
+          {!canceled && !salesClosed && remindStart ? (
+            <EventReminderButton
+              eventId={event.id}
+              eventTitle={event.title}
+              startsAtIso={remindStart}
+              status={event.status}
+            />
+          ) : null}
 
           {event.website_url ? (
             <Button

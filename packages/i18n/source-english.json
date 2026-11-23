@@ -2359,7 +2359,9 @@
     "openAmount.aboveMax": "6c94460a",
     "openAmount.offStep": "2d53ec30",
     "openAmount.hint": "d614b302",
-    "openAmount.hintSingle": "cf2f83ac"
+    "openAmount.hintSingle": "cf2f83ac",
+    "openAmount.range": "54bad51a",
+    "openAmount.paidAtDoor": "cbda9bf5"
   },
   "discovery": {
     "aboutNewPostsFrom": "c0cd83e2",
@@ -9015,8 +9017,7 @@
     "rescheduleBannerChoicePostponed": "edc4a371",
     "rescheduleBannerChoiceVenue": "5fad3f0d",
     "rescheduleKeptNoteVenue": "0ba15529",
-    "amountPaid": "d3d3844d",
-    "paidAtDoor": "cbda9bf5"
+    "amountPaid": "d3d3844d"
   },
   "transactions": {
     "amount": "43dc8532",

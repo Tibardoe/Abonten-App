@@ -41,6 +41,7 @@ import {
   chosenAmountProblem,
   openAmountRangeOf,
   parseChosenAmount,
+  promoCodeEntryShown,
 } from "@abonten/core/openAmountTickets";
 import {
   hasFreeRegistration,
@@ -205,6 +206,16 @@ export default function BuyTicketsScreen() {
   // An amount the buyer chooses is paid at once: no Pay small small beside it.
   const planOffer = offerData?.available && !hasOpenLine ? offerData : null;
   const paySmallSmall = payMode === "plan" && !!planOffer;
+  // A promo code never applies to an amount the buyer chose: no code entry
+  // while every line picked is one (or, before a pick, every type offered).
+  const promoEntryShown = promoCodeEntryShown(
+    (event?.ticket_type ?? [])
+      .filter((tier) => (purchases[tier.id] ?? 0) > 0)
+      .map((tier) => ({ open: !!openAmountRangeOf(tier) })),
+    (event?.ticket_type ?? []).map((tier) => ({
+      open: !!openAmountRangeOf(tier),
+    })),
+  );
 
   // The whole order, priced by the server's own rule (@abonten/core/
   // checkoutPricing priceOrder): quantities are purchases (a Couple counts
@@ -444,7 +455,7 @@ export default function BuyTicketsScreen() {
       quantities: purchases,
       amounts: chosenAmounts,
       occurrenceId: activeOccurrenceId,
-      promoCode: applied?.code ?? null,
+      promoCode: promoEntryShown ? (applied?.code ?? null) : null,
     };
     let res = await validate.mutateAsync(input);
 
@@ -738,10 +749,13 @@ export default function BuyTicketsScreen() {
         ) : null}
 
         {/* Promo code: an open field, not a "Have a promo code?" link, which
-            pilot testers looked past (2026-10-30). A free event has none. */}
+            pilot testers looked past (2026-10-30). A free event has none,
+            nor an order of amounts the buyer chose only. */}
         <View
           className={
-            paySmallSmall || hasFreeRegistration(event.ticket_type)
+            paySmallSmall ||
+            hasFreeRegistration(event.ticket_type) ||
+            !promoEntryShown
               ? "hidden"
               : "gap-2"
           }

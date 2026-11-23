@@ -56,8 +56,10 @@ import { PAYMENT_METHOD_CODES, paymentMethodLabel } from "../market/types";
 import {
   type ChosenAmountProblem,
   type OpenAmountTypeProblem,
+  checkedInTicketLines,
   chosenAmountProblemMessage,
   openAmountRangeHint,
+  openAmountRangeLabel,
   openAmountTypeProblemMessage,
 } from "../openAmountTickets";
 import {
@@ -445,6 +447,16 @@ describe("core copy keys", () => {
       strict,
       { minAmount: 200, maxAmount: 200, amountStep: 1 },
       "GHS",
+      "en",
+    );
+    openAmountRangeLabel(strict, range, "GHS", "en");
+    checkedInTicketLines(
+      strict,
+      {
+        type: "FREE",
+        note: null,
+        paidAmount: { amount: 150, currency: "GHS" },
+      },
       "en",
     );
   });

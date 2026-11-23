@@ -125,6 +125,5 @@
   "rescheduleBannerChoicePostponed": "Votre billet reste valable pour la nouvelle date. Si vous préférez ne pas attendre, vous pouvez être remboursé intégralement, frais de service compris, jusqu'à ce que la nouvelle date soit fixée.",
   "rescheduleBannerChoiceVenue": "Votre billet est valable dans le nouveau lieu. Si vous ne pouvez pas y aller, vous pouvez être remboursé intégralement, frais de service compris, jusqu'au {refundUntil}.",
   "rescheduleKeptNoteVenue": "Vous gardez votre billet pour le nouveau lieu.",
-  "amountPaid": "Montant payé : {amount}",
-  "paidAtDoor": "Payé {amount}"
+  "amountPaid": "Montant payé : {amount}"
 }

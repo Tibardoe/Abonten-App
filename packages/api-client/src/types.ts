@@ -632,6 +632,9 @@ export type CheckoutSessionRow = {
   discount: number;
   discounted_units: number;
   total_price: number;
+  /** The buyer chose this line's amount (open-amount tickets); absent
+   *  from servers before 2026-11-23. */
+  open_amount?: boolean | null;
   status: string;
   occurrence_id: string | null;
   expires_at: string | null;
@@ -1520,6 +1523,19 @@ export type ClaimShowPassBody = { eventId: string };
 export type ClaimShowPassResult =
   | { status: 200; message?: string; data: { ticketId: string } }
   | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+// ---- the amount paid on a ticket someone sent you ----------------------
+// docs/architecture/open-amount-tickets.md. The holder's own session cannot
+// read the buyer's checkout line, so the server reads the amount the buyer
+// chose for the person who holds the ticket now. null: a fixed-price
+// ticket, or one this person does not hold.
+export type HeldTicketPaidAmountResult =
+  | {
+      status: 200;
+      message?: string;
+      data: { paidAmount: { amount: number; currency: string } | null };
+    }
+  | { status: 400 | 401 | 500; message: string };
 
 // ---- moving an event ----------------------------------------------------
 // docs/architecture/event-reschedule.md. The organizer moves a published

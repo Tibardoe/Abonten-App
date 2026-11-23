@@ -1,4 +1,6 @@
 import { formatMoney } from "@abonten/core/formatMoney";
+import { isKnownCurrency } from "@abonten/core/money/currencies";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
 import {
   type OpenAmountRange,
   chosenAmountProblem,
@@ -87,11 +89,17 @@ export function OpenAmountTicketCard({
               />
             ))}
           </View>
-          <Field label={tCommon("chooseYourAmount")} hint={currency}>
+          {/* The currency sits inside the field, before the amount, as on
+              the website's amount field. */}
+          <Field label={tCommon("chooseYourAmount")}>
             <Input
               value={amountText}
               onChangeText={onAmountTextChange}
               keyboardType="decimal-pad"
+              prefix={
+                isKnownCurrency(currency) ? currencySymbol(currency) : currency
+              }
+              invalid={problem !== null}
               accessibilityLabel={tCommon("chooseYourAmount")}
             />
           </Field>

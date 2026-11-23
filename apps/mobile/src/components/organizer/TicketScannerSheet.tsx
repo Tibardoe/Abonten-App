@@ -1,7 +1,6 @@
 import { useCheckInTicket } from "@/features/organizer/useAttendees";
 import type { CheckedInTicket } from "@abonten/api-client";
-import { formatMoney } from "@abonten/core/formatMoney";
-import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { checkedInTicketLines } from "@abonten/core/openAmountTickets";
 import { AppText, Button, Icon, Sheet } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import {
@@ -55,7 +54,6 @@ export function TicketScannerSheet({
 }) {
   const t = useTranslations("manage");
   const tc = useTranslations("core");
-  const tt = useTranslations("tickets");
   const { locale } = useLocale();
 
   const [permission, requestPermission] = useCameraPermissions();
@@ -122,6 +120,12 @@ export function TicketScannerSheet({
   );
 
   const denied = permission?.granted === false && !permission.canAskAgain;
+
+  // What the door shows for the ticket just admitted.
+  const admitted =
+    outcome?.ok && outcome.ticket && !checkIn.isPending
+      ? checkedInTicketLines(tc, outcome.ticket, locale)
+      : null;
 
   return (
     <Sheet
@@ -216,28 +220,23 @@ export function TicketScannerSheet({
         ) : null}
 
         {/* What to load at the gate: the amount the buyer chose
-            (open-amount tickets), with what the ticket includes. */}
-        {outcome?.ok && outcome.ticket && !checkIn.isPending ? (
+            (open-amount tickets), with what the ticket includes. The words
+            are checkedInTicketLines, the same as the website's check-in. */}
+        {admitted ? (
           <View className="items-center gap-1 rounded-xl border border-border bg-card px-3 py-4">
-            {outcome.ticket.paidAmount ? (
+            {admitted.paid ? (
               <AppText variant="hero" className="text-center">
-                {tt("paidAtDoor", {
-                  amount: formatMoney(
-                    outcome.ticket.paidAmount.currency,
-                    outcome.ticket.paidAmount.amount,
-                    { locale },
-                  ),
-                })}
+                {admitted.paid}
               </AppText>
             ) : null}
-            {outcome.ticket.type ? (
+            {admitted.type ? (
               <AppText variant="bodyStrong" className="text-center">
-                {ticketTypeLabel(tc, outcome.ticket.type)}
+                {admitted.type}
               </AppText>
             ) : null}
-            {outcome.ticket.note ? (
+            {admitted.note ? (
               <AppText variant="muted" className="text-center">
-                {outcome.ticket.note}
+                {admitted.note}
               </AppText>
             ) : null}
           </View>

@@ -10,6 +10,7 @@ import { TicketSafetyButton } from "@/features/safety/TicketSafetyButton";
 import { TicketCodeRow } from "@/features/ticketTransfers/TicketCodeRow";
 import { TicketSendPanel } from "@/features/ticketTransfers/TicketSendPanel";
 import { useCancelTicketFlow } from "@/features/tickets/useCancelTicket";
+import { useHeldTicketPaidAmount } from "@/features/tickets/useHeldTicketPaidAmount";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
 import { coordsFromLocation } from "@/lib/directions";
@@ -18,7 +19,6 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { openAmountPaidOf } from "@abonten/core/openAmountTickets";
 import { ticketCancelDecision } from "@abonten/core/refundPolicy";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
@@ -70,6 +70,9 @@ export default function TicketDetailScreen() {
   const { data: ticket, isRefetching, refetch } = query;
   const cancelFlow = useCancelTicketFlow();
   const receipt = useTicketReceipt();
+  // An amount the buyer chose (open-amount tickets), also on a ticket
+  // someone sent here: what to load at the gate.
+  const paidAmount = useHeldTicketPaidAmount(ticket);
   // Loading, offline and failed are told apart from "no such ticket".
   // Tickets are never cached on disk (a QR code is money), so offline with
   // nothing loaded this session says so rather than "could not be loaded".
@@ -142,7 +145,6 @@ export default function TicketDetailScreen() {
   // A paid ticket someone sent here is refunded to them: say "send it back"
   // instead of offering a cancel the server refuses.
   const sentToHolder = isTicketPaidBySomeoneElse(ticket);
-  const paidAmount = openAmountPaidOf(ticket);
   // The event's refund policy, and no cancelling once the show started
   // (@abonten/core/refundPolicy; the server checks it again).
   const cancelDecision = ticketCancelDecision(ticket);
@@ -250,7 +252,7 @@ export default function TicketDetailScreen() {
             label={ticketTypeLabel(tc, ticket.ticket_type.type)}
           />
           {/* An amount the buyer chose (open-amount tickets): what to load
-              at the gate. Only the buyer can see the line it was bought on. */}
+              at the gate. A sent ticket's amount is read by the server. */}
           {paidAmount ? (
             <Row
               icon="wallet-outline"

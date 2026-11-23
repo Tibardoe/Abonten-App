@@ -3,6 +3,7 @@
 import getAttendanceList from "@/actions/getAttendanceList";
 import EventAnalyticsDashboard from "@/components/organisms/EventAnalyticsDashboard";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import type { OpenAmountRange } from "@abonten/core/openAmountTickets";
 import { useTranslations } from "next-intl";
 import AttendanceListView from "./AttendanceListView";
 
@@ -14,10 +15,16 @@ import AttendanceListView from "./AttendanceListView";
 export default function ManageEventInsightsSection({
   eventId,
   ticketNotes,
+  openAmountRanges,
 }: {
   eventId: string;
   /** What each ticket type includes, by ticket type id. */
   ticketNotes?: Record<string, string | null>;
+  /**
+   * The range of each type whose amount the buyer chooses, by ticket type
+   * id: its price shows as "GH₵20 to GH₵1,000", not the lowest amount.
+   */
+  openAmountRanges?: Record<string, OpenAmountRange>;
 }) {
   const t = useTranslations("events");
 
@@ -27,7 +34,11 @@ export default function ManageEventInsightsSection({
 
   return (
     <div className="flex flex-col gap-8">
-      <EventAnalyticsDashboard eventId={eventId} ticketNotes={ticketNotes} />
+      <EventAnalyticsDashboard
+        eventId={eventId}
+        ticketNotes={ticketNotes}
+        openAmountRanges={openAmountRanges}
+      />
 
       <div>
         <h2 className="font-bold md:text-lg mb-3">{t("attendees")}</h2>

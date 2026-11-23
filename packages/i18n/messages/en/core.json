@@ -1545,6 +1545,8 @@
     "aboveMax": "The highest amount is {max}.",
     "offStep": "Choose {min} or more, in steps of {step}.",
     "hint": "From {min} to {max}, in steps of {step}",
-    "hintSingle": "The amount is {min}."
+    "hintSingle": "The amount is {min}.",
+    "range": "{min} to {max}",
+    "paidAtDoor": "Paid {amount}"
   }
 }

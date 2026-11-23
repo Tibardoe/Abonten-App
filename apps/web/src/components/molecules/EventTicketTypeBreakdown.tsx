@@ -4,6 +4,10 @@ import getEventTicketTypeAnalytics from "@/actions/getEventTicketTypeAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { formatMoney } from "@abonten/core/formatMoney";
+import {
+  type OpenAmountRange,
+  openAmountRangeLabel,
+} from "@abonten/core/openAmountTickets";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +16,7 @@ import { useLocale, useTranslations } from "next-intl";
 export default function EventTicketTypeBreakdown({
   eventId,
   ticketNotes,
+  openAmountRanges,
   period,
   startDate,
   endDate,
@@ -19,6 +24,11 @@ export default function EventTicketTypeBreakdown({
   eventId: string;
   /** What each ticket type includes, by ticket type id. */
   ticketNotes?: Record<string, string | null>;
+  /**
+   * The range of each type whose amount the buyer chooses, by ticket type
+   * id: its price shows as "GH₵20 to GH₵1,000", not the lowest amount.
+   */
+  openAmountRanges?: Record<string, OpenAmountRange>;
   period: DashboardPeriod;
   startDate: string | null;
   endDate: string | null;
@@ -94,9 +104,18 @@ export default function EventTicketTypeBreakdown({
 
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
-                  {row.price > 0
-                    ? formatMoney(row.currency, Number(row.price), { locale })
-                    : t("free")}
+                  {openAmountRanges?.[row.ticket_type_id]
+                    ? openAmountRangeLabel(
+                        tc,
+                        openAmountRanges[row.ticket_type_id],
+                        row.currency,
+                        locale,
+                      )
+                    : row.price > 0
+                      ? formatMoney(row.currency, Number(row.price), {
+                          locale,
+                        })
+                      : t("free")}
                 </span>
                 {row.revenue > 0 && (
                   <span>

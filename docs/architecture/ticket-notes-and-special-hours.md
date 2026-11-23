@@ -4,7 +4,7 @@ purpose: How a ticket type carries a short note of what it includes, why the not
 audience: Engineering, operations and support
 scope: ticket_type.description and the place_special_hours table (migration 20261123091000); create_event and event_add_show (the note); place_is_open_now, _place_open_now, get_filtered_places and get_explore_place_sections (open now); @abonten/core ticketTypeNote, plainNote, placeSpecialHours and computePlaceOpenStatus; @abonten/services events/updateTicketTypeNotesCore and places/placeSpecialHoursCore; the web actions updateTicketTypeNotes, addPlaceSpecialHours and removePlaceSpecialHours and their /api/mobile twins; the ticket editors, checkout and place screens on the website and in the app.
 status: Review required
-version: 1.0
+version: 1.1
 lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -26,7 +26,7 @@ complianceReviewRequired: no
 | Spaces folded and ends trimmed before saving; an empty note is no note | `normalizeTicketTypeNote` |
 | Named ticket types only (the multiple-types editor). The free tier and the single paid tier carry none | the editors |
 
-**Who writes it.** The event's organizer (a person, or a team member with `events.manage`), always with their own session: the organizer rules on `ticket_type` decide. `create_event` takes it from each ticket type it is given (`description` in `p_ticket_types`), the full ticket editor (`updateEventTicketTypesCore`) writes it with the rest before the first sale, and `updateTicketTypeNotesCore` changes notes alone at any time.
+**Who writes it.** The event's organizer (a person, or a team member with `events.manage`), always with their own session: the organizer rules on `ticket_type` decide. `create_event` takes it from each ticket type it is given (`description` in `p_ticket_types`), the full ticket editor (`updateEventTicketTypesCore`) writes it with the rest before the first sale, and `updateTicketTypeNotesCore` changes notes alone at any time. Before the first sale each listed type's note is edited in place in that editor, on the website (`TicketInputs`, the event form and Manage › Details, since 2026-11-23) as in the app, and saved with "Save ticket types"; there is no need to remove a type and add it again.
 
 **Editable after the first sale.** The full ticket editor locks once the event has a confirmed ticket, because price and stock carry money. A note carries none, so the notes-only path stays open: the website's Details tab shows "What each ticket includes" when the editor is locked, the app's Edit event screen the same. It writes only `description`, only for the event's own ticket types, only the notes that changed. No `guard_*` trigger stands in the way: the ticket_type triggers fire on the money and stock columns only.
 

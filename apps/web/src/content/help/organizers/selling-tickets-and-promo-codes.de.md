@@ -31,7 +31,7 @@ Beides ist optional und wirkt zusammen:
 
 ## Was jedes Ticket enthält
 
-Jeder benannte Tickettyp kann eine kurze Notiz tragen, die auf der Veranstaltungsseite und beim Bezahlen unter seinem Namen steht, zum Beispiel „Kinder: 3–12 Jahre“ oder „Eintritt + 50 Fahrguthaben“. Füge sie unter **Was enthalten ist** hinzu, wenn du den Tickettyp anlegst. Es ist einfacher Text: bis zu 140 Zeichen, eine Zeile, keine Links.
+Jeder benannte Tickettyp kann eine kurze Notiz tragen, die auf der Veranstaltungsseite und beim Bezahlen unter seinem Namen steht, zum Beispiel „Kinder: 3–12 Jahre“ oder „Eintritt + 50 Fahrguthaben“. Füge sie unter **Was enthalten ist** hinzu, wenn du den Tickettyp anlegst. Bis das erste Ticket verkauft ist, kannst du sie auch in der Karte des Tickettyps in der Liste (Website) oder im Ticket-Editor (App) ändern und dann auf **Tickettypen speichern** tippen. Es ist einfacher Text: bis zu 140 Zeichen, eine Zeile, keine Links.
 
 Preise, Mengen und die Tickettypen selbst sind nach dem ersten bestätigten Ticket gesperrt, die Notizen nicht: Ändere sie jederzeit im Tab **Details** deiner Veranstaltung (Website) oder unter **Event bearbeiten** (App), im Abschnitt **Was jedes Ticket enthält**. Eine Kopie der Veranstaltung oder eine neue Vorstellung ihrer Reihe übernimmt die Notizen.
 
@@ -41,10 +41,12 @@ Eine Ticketart kann den Käufer wählen lassen, wie viel er zahlt: zum Beispiel 
 
 - Wähle beim Hinzufügen der Ticketart statt eines festen Preises, dass der Käufer den Betrag festlegt, und gib dann den **niedrigsten Betrag**, den **höchsten Betrag** und die **Schrittweite** an. Zum Beispiel von 50 GH₵ bis 1.000 GH₵ in Schritten von 10 GH₵: Käufer können 50 GH₵, 60 GH₵, 70 GH₵ und so weiter bis 1.000 GH₵ wählen.
 - Der höchste Betrag muss der niedrigste Betrag plus ganze Schritte sein. Der niedrigste Betrag wird als Preis des Tickets angezeigt („Ab 50 GH₵“).
+- In deiner Ticketliste und in den **Statistiken** steht als Preis dieser Ticketart ihre Spanne, zum Beispiel „50 GH₵ bis 1.000 GH₵“.
 - Jeder gewählte Betrag ist **ein Ticket** mit einem QR-Code für eine Person.
 - Sag in der Notiz des Tickets, wofür der Betrag ist, zum Beispiel „Wird am Eingang auf deine Karte geladen“.
-- Promo-Codes, Gruppenpreise und Ratenzahlung gelten nie für einen Betrag, den der Käufer wählt, und ein solches Ticket kann kein Pass, kein Sitzplatz und kein verschenktes Ticket sein. Die Servicegebühr kommt wie bei jedem Ticket dazu.
+- Promo-Codes, Gruppenpreise und Ratenzahlung gelten nie für einen Betrag, den der Käufer wählt (das Feld für den Promo-Code erscheint nicht, wenn eine Bestellung nur solche Beträge enthält), und ein solches Ticket kann kein Pass, kein Sitzplatz und kein verschenktes Ticket sein. Die Servicegebühr kommt wie bei jedem Ticket dazu.
 - Am Eingang zeigt der Scan des Tickets den bezahlten Betrag („Bezahlt 150 GH₵“) mit der Notiz, damit dein Team weiß, wie viel es laden soll.
+- Das Ticket zeigt den bezahlten Betrag auch der Person, die es hält, nachdem der Käufer es an einen Freund geschickt hat.
 
 ## Ende des Online-Verkaufs
 

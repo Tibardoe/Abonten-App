@@ -31,7 +31,7 @@ Ambas são opcionais e funcionam em conjunto:
 
 ## O que inclui cada bilhete
 
-Cada tipo de bilhete com nome pode ter uma nota curta, mostrada por baixo do nome na página do evento e no pagamento, por exemplo «Crianças: dos 3 aos 12 anos» ou «Entrada + 50 créditos de diversões». Adicione-a em **O que inclui** ao criar o tipo de bilhete. É texto simples: até 140 caracteres, uma linha, sem ligações.
+Cada tipo de bilhete com nome pode ter uma nota curta, mostrada por baixo do nome na página do evento e no pagamento, por exemplo «Crianças: dos 3 aos 12 anos» ou «Entrada + 50 créditos de diversões». Adicione-a em **O que inclui** ao criar o tipo de bilhete. Até ser vendido o primeiro bilhete, também a pode alterar no cartão do tipo de bilhete, na lista (website) ou no editor de bilhetes (aplicação), e depois tocar em **Guardar tipos de bilhete**. É texto simples: até 140 caracteres, uma linha, sem ligações.
 
 Os preços, as quantidades e os próprios tipos de bilhete ficam bloqueados depois de o primeiro bilhete ser confirmado, mas as notas não: altere-as quando quiser no separador **Detalhes** do seu evento (website) ou em **Editar evento** (aplicação), em **O que inclui cada bilhete**. Uma cópia do evento ou uma nova sessão da sua série mantém as notas.
 
@@ -41,10 +41,12 @@ Um tipo de bilhete pode deixar o comprador escolher quanto paga: por exemplo cr�
 
 - Ao adicionar o tipo de bilhete, escolha que o comprador define o valor em vez de um preço fixo e depois indique o **valor mais baixo**, o **valor mais alto** e o **intervalo**. Por exemplo de 50 GH₵ a 1000 GH₵ em intervalos de 10 GH₵: os compradores podem escolher 50 GH₵, 60 GH₵, 70 GH₵ e assim por diante até 1000 GH₵.
 - O valor mais alto tem de ser o valor mais baixo mais um número inteiro de intervalos. O valor mais baixo aparece como preço do bilhete («A partir de 50 GH₵»).
+- Na sua lista de bilhetes e nas **Estatísticas**, o preço desse tipo de bilhete aparece como o seu intervalo, por exemplo «50 GH₵ a 1000 GH₵».
 - Cada valor escolhido é **um bilhete**, com um código QR, para uma pessoa.
 - Use a nota do bilhete para dizer o que o valor compra, por exemplo «Carregado no seu cartão à entrada».
-- Os códigos promocionais, os preços de grupo e o pagamento aos poucos nunca se aplicam a um valor escolhido pelo comprador, e esse bilhete não pode ser um passe, um lugar marcado nem um bilhete oferecido. A taxa de serviço é acrescentada, como em qualquer bilhete.
+- Os códigos promocionais, os preços de grupo e o pagamento aos poucos nunca se aplicam a um valor escolhido pelo comprador (a caixa do código promocional não aparece quando uma encomenda só tem valores assim), e esse bilhete não pode ser um passe, um lugar marcado nem um bilhete oferecido. A taxa de serviço é acrescentada, como em qualquer bilhete.
 - À entrada, ler o bilhete mostra o valor pago («Pago 150 GH₵») com a nota, para que a sua equipa saiba quanto carregar.
+- O bilhete mostra o valor pago a quem o tiver, também depois de o comprador o enviar a um amigo.
 
 ## Fim da venda online
 

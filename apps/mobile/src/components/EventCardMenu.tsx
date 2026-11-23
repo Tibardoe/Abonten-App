@@ -12,6 +12,7 @@ import {
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { eventShareUrl } from "@/lib/share";
 import { useShareLink } from "@/lib/useShareLink";
+import { nextReminderStart } from "@abonten/core/reminderStart";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import type { UserPostType } from "@abonten/types/postsType";
 import {
@@ -26,23 +27,14 @@ import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Linking, Pressable, View } from "react-native";
 
-function toIso(v: string | Date | undefined | null): string | null {
-  if (!v) return null;
-  return typeof v === "string" ? v : v.toISOString();
-}
-
-// Reminder needs a concrete start time; specific-date events have starts_at
-// null, so fall back to the next upcoming occurrence (else the first).
+// A reminder is set against the next date that has not begun: the event's
+// own start, or the next of its dates (@abonten/core/reminderStart, the
+// same rule as the event screen). Nothing once every date has started.
 function reminderStart(event: UserPostType): string | null {
-  const direct = toIso(event.starts_at);
-  if (direct) return direct;
   const occ: Occurrence[] = event.occurrences ?? event.event_occurrence ?? [];
-  const now = Date.now();
-  const times = occ
-    .map((o) => toIso(o.starts_at))
-    .filter((s): s is string => !!s)
-    .sort();
-  return times.find((s) => new Date(s).getTime() > now) ?? times[0] ?? null;
+  return nextReminderStart(event.starts_at, occ, {
+    postponedAt: event.postponed_at,
+  });
 }
 
 // Own the useEventReminder instance only when the menu can actually show the
@@ -190,10 +182,7 @@ export function EventCardMenu({
   const isOrganizer = !!session && session.user.id === event.organizer_id;
   const isCancelled = event.status === "canceled";
   const remindStart = reminderStart(event);
-  const canRemind =
-    !isCancelled &&
-    !!remindStart &&
-    new Date(remindStart).getTime() > Date.now();
+  const canRemind = !isCancelled && !!remindStart;
 
   function requireAuth(): boolean {
     if (session) return true;

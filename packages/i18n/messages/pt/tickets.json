@@ -125,6 +125,5 @@
   "rescheduleBannerChoicePostponed": "O seu bilhete continua válido para a nova data. Se preferir não esperar, pode receber o reembolso total, taxa de serviço incluída, até a nova data ser definida.",
   "rescheduleBannerChoiceVenue": "O seu bilhete vale no novo local. Se não puder ir, pode receber o reembolso total, taxa de serviço incluída, até {refundUntil}.",
   "rescheduleKeptNoteVenue": "Mantém o seu bilhete para o novo local.",
-  "amountPaid": "Valor pago: {amount}",
-  "paidAtDoor": "Pago {amount}"
+  "amountPaid": "Valor pago: {amount}"
 }

@@ -21,6 +21,10 @@ import type {
 } from "@abonten/api-client";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import {
+  type OpenAmountRange,
+  openAmountRangeLabel,
+} from "@abonten/core/openAmountTickets";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Chip, Overline, Refresher } from "@abonten/ui-native";
 import {
@@ -267,10 +271,13 @@ function FinanceSection({
 function TicketTypesSection({
   rows,
   notes,
+  openRanges,
 }: {
   rows: EventInsightsTicketTypeRow[];
   /** What each type includes, by ticket type id. */
   notes?: Record<string, string>;
+  /** A type whose amount the buyer chooses: its range, by ticket type id. */
+  openRanges?: Record<string, OpenAmountRange>;
 }) {
   const { locale } = useLocale();
   const t = useTranslations("manage");
@@ -289,6 +296,7 @@ function TicketTypesSection({
             const capped = row.quantity_capacity != null;
             const pctSold = Math.min(100, n(row.percent_sold));
             const price = n(row.price);
+            const range = openRanges?.[row.ticket_type_id];
             const revenue = n(row.revenue);
             const cancelled = n(row.cancelled);
             return (
@@ -324,9 +332,11 @@ function TicketTypesSection({
                 ) : null}
                 <View className="flex-row justify-between">
                   <AppText variant="muted">
-                    {price > 0
-                      ? formatMoney(row.currency, price, { locale })
-                      : t("free")}
+                    {range && row.currency
+                      ? openAmountRangeLabel(tc, range, row.currency, locale)
+                      : price > 0
+                        ? formatMoney(row.currency, price, { locale })
+                        : t("free")}
                   </AppText>
                   {revenue > 0 ? (
                     <AppText variant="muted">
@@ -518,7 +528,7 @@ function EventInsightsScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("all");
   const q = useEventInsights(eventId ?? "", period);
-  const ticketNotes = useEventTicketNotes(eventId ?? "").data;
+  const ticketTypeExtras = useEventTicketNotes(eventId ?? "").data;
 
   const result = q.data;
   const insights = result && result.status === 200 ? result.data : null;
@@ -682,7 +692,11 @@ function EventInsightsScreen() {
           </View>
 
           <FinanceSection finance={insights.finance} period={period} />
-          <TicketTypesSection rows={insights.ticketTypes} notes={ticketNotes} />
+          <TicketTypesSection
+            rows={insights.ticketTypes}
+            notes={ticketTypeExtras?.notes}
+            openRanges={ticketTypeExtras?.openRanges}
+          />
           <PromoSection
             rows={insights.promos}
             currency={insights.overview?.currency ?? null}

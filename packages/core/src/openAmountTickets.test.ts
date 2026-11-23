@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { computeCheckoutFee, priceOrder } from "./checkoutPricing";
+import { t, tFr } from "./i18n/testTranslator";
 import {
+  checkedInTicketLines,
   chosenAmountProblem,
   isOpenAmountType,
   openAmountQuickPicks,
+  openAmountRangeLabel,
   openAmountRangeOf,
   openAmountRangeProblem,
   openAmountTypeProblem,
   parseChosenAmount,
+  promoCodeEntryShown,
 } from "./openAmountTickets";
+import { FREE_TICKET_TYPE } from "./ticketTiers";
 
 const GHS = "GHS";
 const XOF = "XOF";
@@ -255,5 +260,107 @@ describe("priceOrder — open amounts", () => {
       },
     ]);
     expect(computeCheckoutFee(order.lines[0].amount, 0.05, GHS)).toBe(7.5);
+  });
+});
+
+describe("openAmountRangeLabel", () => {
+  it("shows both ends of the range in one sentence", () => {
+    expect(
+      openAmountRangeLabel(
+        t,
+        { minAmount: 20, maxAmount: 1000, amountStep: 5 },
+        GHS,
+        "en",
+      ),
+    ).toBe("GH₵20 to GH₵1,000");
+  });
+
+  it("shows one amount when the range holds one", () => {
+    expect(
+      openAmountRangeLabel(
+        t,
+        { minAmount: 200, maxAmount: 200, amountStep: 1 },
+        GHS,
+        "en",
+      ),
+    ).toBe("GH₵200");
+  });
+
+  it("speaks the reader's language", () => {
+    const label = openAmountRangeLabel(tFr, credits, GHS, "fr");
+    expect(label).toContain(" à ");
+    expect(label).not.toContain(" to ");
+  });
+});
+
+describe("promoCodeEntryShown", () => {
+  const fixed = { open: false };
+  const open = { open: true };
+
+  it("is hidden when every line picked is an amount the buyer chose", () => {
+    expect(promoCodeEntryShown([open])).toBe(false);
+    expect(promoCodeEntryShown([open, open], [open, fixed])).toBe(false);
+  });
+
+  it("stays when any fixed-price line is picked", () => {
+    expect(promoCodeEntryShown([open, fixed])).toBe(true);
+    expect(promoCodeEntryShown([fixed])).toBe(true);
+  });
+
+  it("before anything is picked, follows the types on offer", () => {
+    expect(promoCodeEntryShown([], [open, fixed])).toBe(true);
+    expect(promoCodeEntryShown([], [open])).toBe(false);
+    // Nothing known yet: as before, the entry shows.
+    expect(promoCodeEntryShown([], [])).toBe(true);
+    expect(promoCodeEntryShown([])).toBe(true);
+  });
+});
+
+describe("checkedInTicketLines (what the door shows)", () => {
+  it("shows the amount paid for a ticket whose amount the buyer chose", () => {
+    const lines = checkedInTicketLines(
+      t,
+      {
+        type: "RIDE CREDITS",
+        note: "Loaded on your card at the gate",
+        paidAmount: { amount: 150, currency: GHS },
+      },
+      "en",
+    );
+    expect(lines).toEqual({
+      paid: "Paid GH₵150.00",
+      type: "RIDE CREDITS",
+      note: "Loaded on your card at the gate",
+    });
+  });
+
+  it("says it in the reader's language", () => {
+    const lines = checkedInTicketLines(
+      tFr,
+      { type: null, note: null, paidAmount: { amount: 150, currency: GHS } },
+      "fr",
+    );
+    expect(lines.paid).toMatch(/^Payé /);
+    expect(lines.paid).toContain("150");
+  });
+
+  it("shows no amount for a fixed-price ticket", () => {
+    expect(
+      checkedInTicketLines(
+        t,
+        { type: "VIP", note: null, paidAmount: null },
+        "en",
+      ),
+    ).toEqual({ paid: null, type: "VIP", note: null });
+  });
+
+  it("words the FREE tier and skips an empty note", () => {
+    expect(
+      checkedInTicketLines(
+        t,
+        { type: FREE_TICKET_TYPE, note: "  ", paidAmount: null },
+        "en",
+      ),
+    ).toEqual({ paid: null, type: "Free", note: null });
   });
 });

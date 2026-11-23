@@ -47,6 +47,7 @@ import type {
   CreateTeamResult,
   EventTicketPlanSettingResult,
   EventTicketTransferSettingResult,
+  HeldTicketPaidAmountResult,
   IdentityOverviewResult,
   InviteTeamMemberBody,
   InviteTeamMemberResult,
@@ -1082,6 +1083,15 @@ export function createApiClient(options: ApiClientOptions) {
         return request<ClaimShowPassResult>(
           `/api/mobile/tickets/${encodeURIComponent(ticketId)}/pass`,
           { method: "POST", body, auth: true },
+        );
+      },
+      /** The amount the buyer chose for a ticket this person holds
+       *  (open-amount tickets), read by the server: the holder of a ticket
+       *  someone sent them cannot read the buyer's checkout line. */
+      paidAmount(ticketId: string) {
+        return request<HeldTicketPaidAmountResult>(
+          `/api/mobile/tickets/${encodeURIComponent(ticketId)}/paid-amount`,
+          { method: "GET", auth: true },
         );
       },
     },

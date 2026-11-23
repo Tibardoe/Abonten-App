@@ -42,6 +42,12 @@ type TicketInputProp = {
    * step instead of a price.
    */
   openAmountEnabled?: boolean;
+  /**
+   * Each listed type's note ("what's included") is edited in place, saved
+   * with the rest of the types. False once the event has sold: the
+   * separate notes editor (TicketTypeNotesEditor) takes over then.
+   */
+  notesEditable?: boolean;
 };
 
 // An amount field: a number, or null while it is empty.
@@ -68,6 +74,7 @@ export default function TicketInputs({
   handleMultipleTickets,
   groupTicketsEnabled = false,
   openAmountEnabled = false,
+  notesEditable = true,
 }: TicketInputProp) {
   const locale = useLocale();
   const t = useTranslations("common");
@@ -220,6 +227,16 @@ export default function TicketInputs({
     handleMultipleTickets?.(updatedTickets); // Send to parent
   };
 
+  // A listed type's note, kept as typed; the services fold and trim it when
+  // the types are saved (@abonten/core/ticketTypeNote).
+  const handleNoteChange = (category: string | undefined, note: string) => {
+    handleMultipleTickets?.(
+      multipleTickets.map((item) =>
+        item.category === category ? { ...item, description: note } : item,
+      ),
+    );
+  };
+
   return (
     <>
       {ticketType === TICKET_MODE.single && (
@@ -231,6 +248,7 @@ export default function TicketInputs({
               type="number"
               min={0}
               placeholder={t("fee")}
+              aria-label={t("fee")}
               value={singleTicketPrice ?? ""}
               onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
               className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
@@ -241,6 +259,7 @@ export default function TicketInputs({
             type="number"
             min={1}
             placeholder={t("quantityOptional")}
+            aria-label={t("quantityOptional")}
             value={singleTicketQuantity ?? ""}
             onChange={(e) => handleSingleTicketQuantity?.(readQuantity(e))}
           />
@@ -254,6 +273,7 @@ export default function TicketInputs({
               <Input
                 type="text"
                 placeholder={t("categoryName")}
+                aria-label={t("categoryName")}
                 value={newCategory}
                 onChange={(e) => {
                   setNewCategory(e.target.value);
@@ -340,6 +360,7 @@ export default function TicketInputs({
                           value={field.value ?? ""}
                           onChange={(e) => field.onChange(readAmount(e))}
                           aria-invalid={showRangeProblem}
+                          aria-describedby="ticket-amount-range-help"
                           className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
                         />
                       </div>
@@ -347,11 +368,18 @@ export default function TicketInputs({
                   ))}
                 </div>
                 {showRangeProblem && rangeProblem ? (
-                  <p role="alert" className="text-sm text-destructive">
+                  <p
+                    id="ticket-amount-range-help"
+                    role="alert"
+                    className="text-sm text-destructive"
+                  >
                     {openAmountRangeProblemMessage(tc, rangeProblem)}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p
+                    id="ticket-amount-range-help"
+                    className="text-xs text-muted-foreground"
+                  >
                     {t("openAmountEditorHint")}
                   </p>
                 )}
@@ -359,6 +387,7 @@ export default function TicketInputs({
                   type="number"
                   min={1}
                   placeholder={t("quantityOptional")}
+                  aria-label={t("quantityOptional")}
                   value={quantity ?? ""}
                   onChange={(e) => setQuantity(readQuantity(e))}
                 />
@@ -372,6 +401,7 @@ export default function TicketInputs({
                     type="number"
                     min={0}
                     placeholder={t("fee")}
+                    aria-label={t("fee")}
                     value={newPrice ?? ""}
                     onChange={(e) => setNewPrice(Number(e.target.value))}
                     className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
@@ -382,6 +412,7 @@ export default function TicketInputs({
                   type="number"
                   min={1}
                   placeholder={t("quantityOptional")}
+                  aria-label={t("quantityOptional")}
                   value={quantity ?? ""}
                   onChange={(e) => setQuantity(readQuantity(e))}
                 />
@@ -446,7 +477,7 @@ export default function TicketInputs({
 
           {multipleTickets.length > 0 && (
             <ul className="space-y-2">
-              {multipleTickets.map((ticket) => (
+              {multipleTickets.map((ticket, index) => (
                 <li
                   key={ticket.category}
                   className="border border-border rounded-md p-3 shadow-md bg-card text-card-foreground flex flex-col gap-2"
@@ -459,7 +490,7 @@ export default function TicketInputs({
                       <span className="text-sm font-semibold">
                         {ticket.category}
                       </span>
-                      {ticket.description ? (
+                      {!notesEditable && ticket.description ? (
                         <span className="text-xs text-muted-foreground">
                           {ticket.description}
                         </span>
@@ -493,6 +524,29 @@ export default function TicketInputs({
                     </div>
                   </div>
 
+                  {/* What the type includes, edited in place as in the
+                      app; saved with the other ticket types. */}
+                  {notesEditable ? (
+                    <div className="space-y-1">
+                      <label
+                        htmlFor={`ticket-note-${index}`}
+                        className="text-xs text-muted-foreground"
+                      >
+                        {t("ticketNoteLabel")}
+                      </label>
+                      <Input
+                        id={`ticket-note-${index}`}
+                        type="text"
+                        maxLength={TICKET_TYPE_NOTE_MAX}
+                        placeholder={t("ticketNotePlaceholder")}
+                        value={ticket.description ?? ""}
+                        onChange={(e) =>
+                          handleNoteChange(ticket.category, e.target.value)
+                        }
+                      />
+                    </div>
+                  ) : null}
+
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>{t("quantity")}</span>
                     <p>{ticket.quantity ?? t("noLimitOfItsOwn")}</p>
@@ -524,11 +578,12 @@ export default function TicketInputs({
 
                     <button
                       type="button"
+                      aria-label={t("remove")}
                       onClick={(event) =>
                         handleRemove(event, ticket.category ?? "")
                       }
                     >
-                      <LiaTimesSolid className="text-xl" />
+                      <LiaTimesSolid className="text-xl" aria-hidden />
                     </button>
                   </div>
                 </li>

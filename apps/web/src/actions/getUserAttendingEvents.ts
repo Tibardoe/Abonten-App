@@ -13,6 +13,7 @@ import {
 } from "@abonten/core/pagination";
 import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
 import { tr } from "@abonten/services/i18n/requestLocale";
+import { fillHeldTicketPaidAmounts } from "@abonten/services/tickets/heldTicketPaidAmountsCore";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 
@@ -95,7 +96,7 @@ export default withActionLocale(
       return query;
     };
 
-    const buildResult = (
+    const buildResult = async (
       collected: TicketRow[],
       {
         rawExhausted,
@@ -104,7 +105,7 @@ export default withActionLocale(
         rawExhausted: boolean;
         scanCursor: SimpleCursor | null;
       },
-    ): PaginatedResult<UserTicketType> => {
+    ): Promise<PaginatedResult<UserTicketType>> => {
       const { page, hasNextPage: hasMoreCollected } = splitPage<TicketRow>(
         collected,
         pageSize,
@@ -133,7 +134,10 @@ export default withActionLocale(
 
       return {
         status: 200,
-        data: ticketsWithEvents,
+        // A ticket someone sent this person still shows the amount the
+        // buyer chose (open-amount tickets): read for the holder by the
+        // service, since the buyer's checkout line is not theirs to read.
+        data: await fillHeldTicketPaidAmounts(user.id, ticketsWithEvents),
         nextCursor,
         hasNextPage: hasMoreCollected || stoppedEarly,
       };

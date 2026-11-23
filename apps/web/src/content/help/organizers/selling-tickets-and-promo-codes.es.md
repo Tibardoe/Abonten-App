@@ -31,7 +31,7 @@ Ambos son opcionales y funcionan juntos:
 
 ## Qué incluye cada entrada
 
-Cada tipo de entrada con nombre puede llevar una nota breve, que se muestra bajo su nombre en la página del evento y al pagar, por ejemplo «Niños: de 3 a 12 años» o «Entrada + 50 créditos para atracciones». Añádela en **Qué incluye** al crear el tipo de entrada. Es texto simple: hasta 140 caracteres, una línea, sin enlaces.
+Cada tipo de entrada con nombre puede llevar una nota breve, que se muestra bajo su nombre en la página del evento y al pagar, por ejemplo «Niños: de 3 a 12 años» o «Entrada + 50 créditos para atracciones». Añádela en **Qué incluye** al crear el tipo de entrada. Hasta que se venda la primera entrada también puedes cambiarla en la ficha del tipo de entrada, en la lista (web) o en el editor de entradas (aplicación), y después pulsar **Guardar tipos de entrada**. Es texto simple: hasta 140 caracteres, una línea, sin enlaces.
 
 Los precios, las cantidades y los propios tipos de entrada se bloquean cuando se confirma la primera entrada, pero las notas no: cámbialas cuando quieras desde la pestaña **Detalles** de tu evento (web) o **Editar evento** (aplicación), en **Qué incluye cada entrada**. Una copia del evento o una nueva función de su serie conserva las notas.
 
@@ -41,10 +41,12 @@ Un tipo de entrada puede dejar que el comprador elija cuánto paga: por ejemplo 
 
 - Al añadir el tipo de entrada, elige que el comprador fije el importe en lugar de un precio fijo y después indica el **importe más bajo**, el **importe más alto** y el **intervalo**. Por ejemplo de 50 GH₵ a 1.000 GH₵ en intervalos de 10 GH₵: los compradores pueden elegir 50 GH₵, 60 GH₵, 70 GH₵ y así hasta 1.000 GH₵.
 - El importe más alto debe ser el importe más bajo más un número entero de intervalos. El importe más bajo se muestra como precio de la entrada («Desde 50 GH₵»).
+- En tu lista de entradas y en **Estadísticas**, el precio de ese tipo de entrada se muestra como su rango, por ejemplo «50 GH₵ a 1.000 GH₵».
 - Cada importe elegido es **una entrada**, con un código QR, para una persona.
 - Usa la nota de la entrada para decir qué compra el importe, por ejemplo «Se carga en tu tarjeta en la entrada».
-- Los códigos promocionales, los precios de grupo y el pago poco a poco nunca se aplican a un importe que elige el comprador, y esa entrada no puede ser un pase, un asiento numerado ni una entrada regalada. La tarifa de servicio se suma, como en cualquier entrada.
+- Los códigos promocionales, los precios de grupo y el pago poco a poco nunca se aplican a un importe que elige el comprador (el recuadro del código promocional no aparece cuando un pedido solo tiene importes así), y esa entrada no puede ser un pase, un asiento numerado ni una entrada regalada. La tarifa de servicio se suma, como en cualquier entrada.
 - En la puerta, escanear la entrada muestra el importe pagado («Pagado 150 GH₵») con la nota, para que tu equipo sepa cuánto cargar.
+- La entrada muestra el importe pagado a quien la tenga, también después de que el comprador se la envíe a un amigo.
 
 ## Fin de la venta en línea
 
