@@ -3291,6 +3291,8 @@
         "seatingPlan",
         "seatingPlanName",
         "seatingPlanNamePlaceholder",
+        "seatingRunNote",
+        "seatingSoldNote",
         "seatingTitle",
         "seatsPerRow",
         "sectionFor",

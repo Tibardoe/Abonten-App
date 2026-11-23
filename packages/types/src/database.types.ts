@@ -17234,6 +17234,10 @@ export type Database = {
         Returns: number
       }
       event_reschedule_texts_due: { Args: never; Returns: boolean }
+      event_seating_set: {
+        Args: { p_event_id: string; p_plan_id: string; p_sections: Json }
+        Returns: Json
+      }
       event_series_add_pass: {
         Args: {
           p_event_id: string

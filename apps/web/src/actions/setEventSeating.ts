@@ -12,7 +12,8 @@ import {
 
 /**
  * Gives an event a seating plan (or none) and each ticket type a section
- * (docs/architecture/assigned-seats.md). Locked after the first ticket.
+ * (docs/architecture/assigned-seats.md), until a seat has been given; the
+ * tickets already sold for the seated types get their seats on saving.
  */
 export default withActionLocale(async function setEventSeating(
   input: SetEventSeatingInput,

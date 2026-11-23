@@ -354,6 +354,11 @@ const SERVICE_ROLE_ONLY: Call[] = [
     why: "locked 2026-09-25: it trusts the ticket code, QR and expiry it is given",
   },
   {
+    name: "event_seating_set",
+    args: { p_event_id: ABSENT_ID, p_plan_id: null, p_sections: {} },
+    why: "2026-11-24: changes an event's seating and seats its sold tickets once the service has checked the organizer",
+  },
+  {
     name: "phone_otp_claim_send",
     // An invalid number: the service call is refused inside the function,
     // so it proves the signature without writing a send-log row.
