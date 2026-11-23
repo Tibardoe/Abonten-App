@@ -50,7 +50,7 @@ export function useOrganizerDashboardWidgets(period: OrganizerDashboardPeriod) {
   });
 }
 
-export function useOrganizerEvents() {
+export function useOrganizerEvents(options?: { enabled?: boolean }) {
   return useInfiniteQuery({
     queryKey: [...KEY, "events"],
     initialPageParam: null as string | null,
@@ -59,6 +59,7 @@ export function useOrganizerEvents() {
         await api.organizer.events({ cursor: pageParam, pageSize: 20 }),
       ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
+    enabled: options?.enabled ?? true,
   });
 }
 
