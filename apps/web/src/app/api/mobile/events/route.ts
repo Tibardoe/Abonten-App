@@ -16,7 +16,7 @@ import {
 //     requireRegistration, currency, flyerPublicId, flyerVersion,
 //     clientRequestId, capacity?, websiteUrl?, startsAt?, endsAt?,
 //     specificDates?, freeEvent?, singleTicket?, multipleTickets? (each
-//     with admits?), groupDiscounts?,
+//     with admits? and description?), groupDiscounts?,
 //     promoCodes?, placeId? }
 //
 // Publishes an event. The flyer is uploaded from the device first (signed

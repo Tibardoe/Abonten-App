@@ -2,7 +2,7 @@
 title: Deinen Ort hinzufügen und verwalten
 summary: Einen Ort eintragen, Details, Öffnungszeiten, Leistungen und Fotos aktuell halten, einen vorübergehenden Status setzen und deine Statistiken lesen.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -21,7 +21,7 @@ Dein Fortschritt wird bis zur Veröffentlichung als Entwurf gespeichert. Fülle 
 | Lage | Such die Adresse oder setze eine Markierung. Die Markierung nutzen „in deiner Nähe“ und die Routenführung – sei genau. |
 | Kontakt | Telefon, WhatsApp-Nummer, Website. Werden auf deiner Seite als Schaltflächen angezeigt. |
 | Öffnungszeiten | Pro Tag, einschließlich Ruhetagen und geteilter Zeiten. Deine Seite zeigt daraus „jetzt geöffnet“ oder „geschlossen“. |
-| Leistungen | Was man buchen oder anfragen kann (z. B. Tischreservierung, Separee), jeweils mit optionalem Preishinweis. |
+| Leistungen | Was man buchen oder anfragen kann (z. B. Tischreservierung, Separee), jeweils mit optionalem Preishinweis. Eine Leistung mit dem Preis 0 erscheint als **Kostenlos**. |
 | Titel- und Galeriefotos | Werden direkt zu unserem Bilddienst hochgeladen. |
 
 Sieh zuerst auf Abonten nach, ob es für dein Geschäft schon einen Eintrag gibt – falls ja, [beanspruche ihn](/help/place-owners/claiming-and-verifying-a-place), statt ein Duplikat anzulegen.
@@ -37,6 +37,7 @@ Mit der Veröffentlichung wird der Ort in Entdecken, in der Suche, auf der Karte
 - **Bearbeite** Details, Kontakt und Lage.
 - **Fotos:** hinzufügen, entfernen, neu ordnen und das Titelbild festlegen.
 - **Öffnungszeiten** und **Leistungen**.
+- **Sondertage:** ein Feiertag oder ein anderer Tag mit abweichenden Zeiten. Markiere ihn als **den ganzen Tag geschlossen** oder gib ihm eigene Öffnungs- und Schließzeiten (über Mitternacht hinaus, wenn es spät wird), mit einem optionalen Namen wie „Erster Weihnachtstag“. Er ersetzt die üblichen Öffnungszeiten dieses Tages, auch für „jetzt geöffnet“, und deine Seite zeigt die Sondertage der nächsten 30 Tage. Füge sie bis zu ein Jahr im Voraus unter **Öffnungszeiten & Status** › **Sondertage** (Website) oder unter **Ort bearbeiten** (App) hinzu.
 - **Status:** markiere den Ort als **vorübergehend geschlossen** oder **dauerhaft geschlossen**; das Abzeichen erscheint auf deiner Seite, und der Ort taucht nicht mehr unter „jetzt geöffnet“ auf.
 - **Buchungen** und **Bewertungen** – siehe [Buchungen, Bewertungen und Nachrichten](/help/place-owners/bookings-reviews-and-messaging).
 - **Bewerben** – siehe [Deinen Ort bewerben](/help/place-owners/promoting-your-place).

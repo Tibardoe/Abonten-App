@@ -216,7 +216,15 @@ export default function ManageEventView({
         )}
 
         {activeTab === "insights" && (
-          <ManageEventInsightsSection eventId={event.id} />
+          <ManageEventInsightsSection
+            eventId={event.id}
+            ticketNotes={Object.fromEntries(
+              (event.ticket_type ?? []).map((type) => [
+                type.id,
+                type.description ?? null,
+              ]),
+            )}
+          />
         )}
 
         {activeTab === "attendees" && (

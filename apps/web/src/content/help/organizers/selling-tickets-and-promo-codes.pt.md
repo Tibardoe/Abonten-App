@@ -2,7 +2,7 @@
 title: Vender bilhetes, códigos promocionais e comissão de promotores
 summary: Como funcionam as vendas e as reservas, criar códigos promocionais, oferecer uma comissão a promotores e ler as estatísticas das suas vendas.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,12 @@ Ambas são opcionais e funcionam em conjunto:
 - Com lotação, as quantidades definidas não podem somar mais do que ela: vê um aviso (por exemplo, 110 bilhetes no total para uma lotação de 100) e só pode guardar quando estiver dentro do limite.
 - Os tipos de bilhete sem quantidade **partilham o que resta da lotação** depois das quantidades definidas. Com lotação 100, Normal = 60 e VIP em branco, vendem-se no máximo 60 normais e, entre todos os tipos sem quantidade, no máximo mais 40. Se deixar todas as quantidades em branco, os 100 lugares são partilhados.
 - As vendas de um tipo param quando a sua própria quantidade se esgota, e as de todos os tipos partilhados quando os lugares partilhados acabam. Os bilhetes reservados contam até a reserva de 30 minutos expirar.
+
+## O que inclui cada bilhete
+
+Cada tipo de bilhete com nome pode ter uma nota curta, mostrada por baixo do nome na página do evento e no pagamento, por exemplo «Crianças: dos 3 aos 12 anos» ou «Entrada + 50 créditos de diversões». Adicione-a em **O que inclui** ao criar o tipo de bilhete. É texto simples: até 140 caracteres, uma linha, sem ligações.
+
+Os preços, as quantidades e os próprios tipos de bilhete ficam bloqueados depois de o primeiro bilhete ser confirmado, mas as notas não: altere-as quando quiser no separador **Detalhes** do seu evento (website) ou em **Editar evento** (aplicação), em **O que inclui cada bilhete**. Uma cópia do evento ou uma nova sessão da sua série mantém as notas.
 
 ## Política de reembolso
 

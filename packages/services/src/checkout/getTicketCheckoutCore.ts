@@ -15,7 +15,11 @@ export type TicketCheckoutRow =
       ends_at: string | null;
       event_occurrence: Database["public"]["Tables"]["event_occurrence"]["Row"][];
     } | null;
-    ticket_type: { type: string | null; currency: string | null } | null;
+    ticket_type: {
+      type: string | null;
+      currency: string | null;
+      description: string | null;
+    } | null;
   };
 
 export type GetTicketCheckoutCoreResult =
@@ -35,7 +39,7 @@ export async function getTicketCheckoutCore(
   const { data: checkoutData, error: checkoutDataError } = await supabase
     .from("ticket_checkout")
     .select(
-      "*, event:event_id(title, event_code, starts_at, ends_at, event_occurrence(*)),ticket_type:ticket_type_id(type, currency)",
+      "*, event:event_id(title, event_code, starts_at, ends_at, event_occurrence(*)),ticket_type:ticket_type_id(type, currency, description)",
     )
     .eq("checkout_session_id", checkoutSessionId)
     .eq("user_id", userId);

@@ -233,6 +233,9 @@
     "roundupLine": "Our picks for the days ahead. Tickets and details on Abonten.",
     "roundupCta": "See what's on"
   },
+  "specialDateNotFound": "Special date not found.",
+  "specialDateRemoved": "Special date removed.",
+  "specialDateSaved": "Special date saved.",
   "theDeadlineToFinishPayingHas": "The deadline to finish paying has passed.",
   "thisEventIsTooSoonToPay": "This event is too soon to pay small small. Buy your tickets in full instead.",
   "thisEventWasCancelledYourPlan": "This event was cancelled. Your plan has ended and your refund is on its way.",
@@ -241,6 +244,7 @@
   "thisPlanIsFullyPaidYourTickets": "This plan is fully paid. Your tickets are being issued.",
   "thisPlanIsNotTakingPayments": "This plan isn't taking payments any more.",
   "thisPlanWasNotFound": "This plan was not found.",
+  "ticketNotesSaved": "Ticket notes saved.",
   "youCanPaySmallSmallForUp": "{count, plural, one {You can pay small small for # ticket at a time.} other {You can pay small small for up to # tickets at a time.}}",
   "youReAlreadyPayingSmallSmall": "You're already paying small small for this event.",
   "db": {

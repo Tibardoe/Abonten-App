@@ -2,7 +2,7 @@
 title: Vender entradas, códigos promocionales y comisión de promotores
 summary: Cómo funcionan las ventas y las reservas, crear códigos promocionales, ofrecer una comisión a promotores y leer las estadísticas de ventas.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,12 @@ Ambos son opcionales y funcionan juntos:
 - Con aforo, las cantidades que pongas no pueden sumar más que él: verás un aviso (por ejemplo, 110 entradas en total para un aforo de 100) y no podrás guardar hasta que encaje.
 - Los tipos de entrada que dejes sin cantidad **se reparten lo que quede del aforo** después de las cantidades fijadas. Con aforo 100, General = 60 y VIP en blanco, se venden como máximo 60 generales y, entre todos los tipos sin cantidad, como máximo 40 más. Si dejas todas las cantidades en blanco, las 100 plazas son compartidas.
 - La venta de un tipo se detiene cuando se agota su propia cantidad, y la de todos los tipos compartidos cuando se acaban las plazas compartidas. Las entradas reservadas cuentan hasta que caduca su reserva de 30 minutos.
+
+## Qué incluye cada entrada
+
+Cada tipo de entrada con nombre puede llevar una nota breve, que se muestra bajo su nombre en la página del evento y al pagar, por ejemplo «Niños: de 3 a 12 años» o «Entrada + 50 créditos para atracciones». Añádela en **Qué incluye** al crear el tipo de entrada. Es texto simple: hasta 140 caracteres, una línea, sin enlaces.
+
+Los precios, las cantidades y los propios tipos de entrada se bloquean cuando se confirma la primera entrada, pero las notas no: cámbialas cuando quieras desde la pestaña **Detalles** de tu evento (web) o **Editar evento** (aplicación), en **Qué incluye cada entrada**. Una copia del evento o una nueva función de su serie conserva las notas.
 
 ## Política de reembolso
 

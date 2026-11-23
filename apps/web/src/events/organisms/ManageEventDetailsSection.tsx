@@ -7,6 +7,7 @@ import EditEventFormFields from "@/components/molecules/EditEventFormFields";
 import GroupDiscountInputs from "@/components/molecules/GroupDiscountInputs";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
+import TicketTypeNotesEditor from "@/events/molecules/TicketTypeNotesEditor";
 import { TICKET_MODE, type TicketMode } from "@/events/ticketMode";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
@@ -82,6 +83,7 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
       availableUntil: t.available_until
         ? new Date(t.available_until)
         : undefined,
+      description: t.description ?? null,
     })),
     currency,
   };
@@ -325,6 +327,17 @@ export default function ManageEventDetailsSection({
               </p>
             )}
         </fieldset>
+
+        {/* What each type includes stays editable after the first sale:
+            it changes no money (PROJECT.md §90). */}
+        {hasConfirmedParticipation &&
+          initialTicketState.mode === TICKET_MODE.multiple && (
+            <TicketTypeNotesEditor
+              eventId={event.id}
+              ticketTypes={event.ticket_type ?? []}
+              onSaved={onSaved}
+            />
+          )}
 
         {!hasConfirmedParticipation && (
           <button

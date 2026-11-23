@@ -2,6 +2,7 @@ import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplet
 import { useSetEventGroupPrices } from "@/features/events/useSetEventGroupPrices";
 import { useUpdateEvent } from "@/features/events/useUpdateEvent";
 import { useUpdateEventTicketTypes } from "@/features/events/useUpdateEventTicketTypes";
+import { useUpdateTicketTypeNotes } from "@/features/events/useUpdateTicketTypeNotes";
 import { api } from "@/lib/api";
 import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { settleEnvelope } from "@/lib/envelope";
@@ -10,6 +11,7 @@ import type {
   EventForEditData,
   UpdateEventResult,
   UpdateEventTicketTypesResult,
+  UpdateTicketTypeNotesResult,
 } from "@abonten/api-client";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
@@ -39,6 +41,10 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import {
+  normalizeTicketTypeNote,
+  ticketTypeNotesProblemMessage,
+} from "@abonten/core/ticketTypeNote";
 import { wallClockString } from "@abonten/core/time/timeZone";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
@@ -97,6 +103,7 @@ export function useEventEdit(eventId: string) {
   const autocomplete = usePlacesAutocomplete();
   const update = useUpdateEvent();
   const updateTickets = useUpdateEventTicketTypes();
+  const updateNotes = useUpdateTicketTypeNotes();
   const updateGroupPrices = useSetEventGroupPrices();
   const eventSchema = useMemo(
     () =>
@@ -169,6 +176,10 @@ export function useEventEdit(eventId: string) {
   const [ticketPrice, setTicketPrice] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState("");
   const [tiers, setTiers] = useState<TicketTier[]>([]);
+  // What each saved named type includes, by ticket type id — editable after
+  // the first sale too (a note changes no money), with its own save.
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [savedNotes, setSavedNotes] = useState<Record<string, string>>({});
   // Filled from the event (its market's currency) once it loads.
   const [ticketCurrency, setTicketCurrency] = useState("");
 
@@ -277,9 +288,19 @@ export function useEventEdit(eventId: string) {
           // Purchases left (a Couple counts once), as the server returns it.
           quantity: t.quantity != null ? String(t.quantity) : "",
           admits: String(t.admits ?? 1),
+          description: t.description ?? "",
         })),
       );
     }
+    const seededNotes = Object.fromEntries(
+      tt
+        .filter(
+          (t) => t.type !== FREE_TICKET_TYPE && t.type !== SINGLE_TICKET_TYPE,
+        )
+        .map((t) => [t.id, t.description ?? ""]),
+    );
+    setNotes(seededNotes);
+    setSavedNotes(seededNotes);
     const seededGroups = (event.event_group_discount ?? []).map((g) => ({
       id: `${g.min_tickets}`,
       minTickets: String(g.min_tickets),
@@ -618,11 +639,21 @@ export function useEventEdit(eventId: string) {
       price: Number(t.price),
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
       admits: admitsOf(t),
+      description: normalizeTicketTypeNote(t.description),
     }));
     if (parsed.length === 0) {
       toast.error(t("addATicketType"), {
         description: t("addAtLeastOneTicketType"),
       });
+      return null;
+    }
+    // What each type includes: one line, no links (the server checks too).
+    const noteProblem = ticketTypeNotesProblemMessage(
+      tc,
+      parsed.map((p) => p.description),
+    );
+    if (noteProblem) {
+      toast.error(t("checkTheTicketTypes"), { description: noteProblem });
       return null;
     }
     if (
@@ -652,6 +683,29 @@ export function useEventEdit(eventId: string) {
       currency: ticketCurrency,
       multipleTickets: parsed,
     });
+  }
+
+  // The notes that differ from what is saved, as the server takes them.
+  const changedNotes = Object.entries(notes)
+    .filter(([id, text]) => (savedNotes[id] ?? "") !== text)
+    .map(([ticketTypeId, text]) => ({
+      ticketTypeId,
+      description: normalizeTicketTypeNote(text),
+    }));
+
+  async function saveTicketNotes(): Promise<UpdateTicketTypeNotesResult | null> {
+    if (changedNotes.length === 0) return null;
+    const noteProblem = ticketTypeNotesProblemMessage(
+      tc,
+      changedNotes.map((n) => n.description),
+    );
+    if (noteProblem) {
+      toast.error(noteProblem);
+      return null;
+    }
+    const res = await updateNotes.mutateAsync({ eventId, notes: changedNotes });
+    if (res.status === 200) setSavedNotes(notes);
+    return res;
   }
 
   // Group prices as the server takes them, and why they can't be saved.
@@ -778,6 +832,14 @@ export function useEventEdit(eventId: string) {
     ticketCurrency,
     saveTicketTypes,
     isSavingTicketTypes: updateTickets.isPending,
+    // what each ticket includes, after the first sale
+    noteTypes: (eventData?.ticket_type ?? []).filter((x) => x.id in notes),
+    notes,
+    setNote: (ticketTypeId: string, text: string) =>
+      setNotes((prev) => ({ ...prev, [ticketTypeId]: text })),
+    notesChanged: changedNotes.length > 0,
+    saveTicketNotes,
+    isSavingTicketNotes: updateNotes.isPending,
     // group prices
     groupPricingEnabled: !!eventData?.group_pricing_enabled,
     groupPrices,

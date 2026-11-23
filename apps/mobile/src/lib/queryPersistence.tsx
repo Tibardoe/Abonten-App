@@ -55,8 +55,10 @@ import { queryClient } from "./queryClient";
  * is discarded instead of being fed to code that expects the new shape.
  * 3 (2026-11-22): the own profile gained `social_links`; Edit Profile sends
  * the whole map, so a restored profile without it would clear saved links.
+ * 4 (2026-11-23): a place's detail gained `specialHours` (holiday hours,
+ * which decide "open now") and an event's ticket types `description`.
  */
-const QUERY_CACHE_VERSION = 3;
+const QUERY_CACHE_VERSION = 4;
 /** Older than this, a restored cache is more misleading than useful. */
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** Allowlisted queries stay in memory at least this long, so they reach disk. */

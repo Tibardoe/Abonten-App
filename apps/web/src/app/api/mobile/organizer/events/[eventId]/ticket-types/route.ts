@@ -14,7 +14,7 @@ import {
 // PUT /api/mobile/organizer/events/:eventId/ticket-types
 //   { currency?, freeEvent?, singleTicket?: { price, quantity } | null,
 //     multipleTickets?: { type, price, quantity, admits?, availableFrom?,
-//                         availableUntil? }[] | null }
+//                         availableUntil?, description? }[] | null }
 // quantity counts purchases; admits is how many people one purchase lets in.
 //
 // Replaces the caller's event's ticket types. Fully editable until the
@@ -76,6 +76,9 @@ export async function PUT(
             admits: typeof t.admits === "number" ? t.admits : 1,
             availableFrom: str(t.availableFrom),
             availableUntil: str(t.availableUntil),
+            // What the ticket includes; checked by the service.
+            description:
+              typeof t.description === "string" ? t.description : null,
           }))
           .filter((t) => t.type && Number.isFinite(t.price))
       : [];

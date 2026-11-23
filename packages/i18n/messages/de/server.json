@@ -233,6 +233,9 @@
     "roundupLine": "Unsere Tipps für die nächsten Tage. Tickets und Infos auf Abonten.",
     "roundupCta": "Programm ansehen"
   },
+  "specialDateNotFound": "Sondertag nicht gefunden.",
+  "specialDateRemoved": "Sondertag entfernt.",
+  "specialDateSaved": "Sondertag gespeichert.",
   "theDeadlineToFinishPayingHas": "Die Frist zum Abschließen der Zahlung ist abgelaufen.",
   "thisEventIsTooSoonToPay": "Dieses Event ist zu bald, um es in Raten zu zahlen. Kaufe deine Tickets stattdessen auf einmal.",
   "thisEventWasCancelledYourPlan": "Dieses Event wurde abgesagt. Dein Plan wurde beendet, und deine Erstattung ist unterwegs.",
@@ -241,6 +244,7 @@
   "thisPlanIsFullyPaidYourTickets": "Dieser Plan ist vollständig bezahlt. Deine Tickets werden ausgestellt.",
   "thisPlanIsNotTakingPayments": "Dieser Plan nimmt keine Zahlungen mehr an.",
   "thisPlanWasNotFound": "Dieser Plan wurde nicht gefunden.",
+  "ticketNotesSaved": "Ticketnotizen gespeichert.",
   "youCanPaySmallSmallForUp": "{count, plural, one {Du kannst # Ticket auf einmal in Raten zahlen.} other {Du kannst bis zu # Tickets auf einmal in Raten zahlen.}}",
   "youReAlreadyPayingSmallSmall": "Du zahlst dieses Event bereits in Raten.",
   "db": {

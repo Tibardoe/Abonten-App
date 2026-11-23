@@ -233,6 +233,9 @@
     "roundupLine": "Nuestra selección para los próximos días. Entradas y detalles en Abonten.",
     "roundupCta": "Mira qué hay"
   },
+  "specialDateNotFound": "No se encontró la fecha especial.",
+  "specialDateRemoved": "Fecha especial eliminada.",
+  "specialDateSaved": "Fecha especial guardada.",
   "theDeadlineToFinishPayingHas": "Ha pasado la fecha límite para terminar de pagar.",
   "thisEventIsTooSoonToPay": "Este evento está demasiado cerca para pagarlo a plazos. Compra tus entradas de una vez.",
   "thisEventWasCancelledYourPlan": "Este evento se ha cancelado. Tu plan ha terminado y tu reembolso está en camino.",
@@ -241,6 +244,7 @@
   "thisPlanIsFullyPaidYourTickets": "Este plan está pagado por completo. Estamos emitiendo tus entradas.",
   "thisPlanIsNotTakingPayments": "Este plan ya no admite pagos.",
   "thisPlanWasNotFound": "No se ha encontrado este plan.",
+  "ticketNotesSaved": "Notas de las entradas guardadas.",
   "youCanPaySmallSmallForUp": "{count, plural, one {Puedes pagar a plazos # entrada a la vez.} other {Puedes pagar a plazos hasta # entradas a la vez.}}",
   "youReAlreadyPayingSmallSmall": "Ya estás pagando este evento a plazos.",
   "db": {

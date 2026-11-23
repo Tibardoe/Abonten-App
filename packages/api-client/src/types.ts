@@ -545,6 +545,8 @@ export type EventCreateBody = {
         admits?: number | null;
         availableFrom?: string | null;
         availableUntil?: string | null;
+        /** What the ticket includes: one line, at most 140 characters. */
+        description?: string | null;
       }[]
     | null;
   /** Automatic group prices (needs the organizer's group pricing switch). */
@@ -622,7 +624,12 @@ export type CheckoutSessionRow = {
     ends_at: string | null;
     event_occurrence: Record<string, unknown>[] | null;
   } | null;
-  ticket_type: { type: string; currency: string } | null;
+  ticket_type: {
+    type: string;
+    currency: string;
+    /** What the ticket includes; absent from servers before 2026-11-23. */
+    description?: string | null;
+  } | null;
   [key: string]: unknown;
 };
 
@@ -635,6 +642,8 @@ export type PendingCheckoutSessionLine = {
   ticketCheckoutId: string;
   ticketTypeId: string;
   type: string;
+  /** What the ticket includes; absent from servers before 2026-11-23. */
+  description?: string | null;
   /** The price of one purchase (a Couple ticket admitting two). */
   unitPrice: number;
   /** Tickets on the line (people). */
@@ -928,6 +937,8 @@ export type EventDraftTicket = {
   admits?: number | null;
   availableFrom?: string;
   availableUntil?: string;
+  /** What the ticket includes (@abonten/core/ticketTypeNote). */
+  description?: string | null;
 };
 export type EventDraftPromoCode = {
   promoCode: string;
@@ -1221,6 +1232,8 @@ export type EventForEditData = {
         currency: string | null;
         available_from: string | null;
         available_until: string | null;
+        /** What the ticket includes; absent from servers before 2026-11-23. */
+        description?: string | null;
       }[]
     | null;
   /** Automatic group prices, smallest group first. */
@@ -1280,6 +1293,8 @@ export type UpdateEventTicketTypesBody = {
         admits?: number | null;
         availableFrom?: string | null;
         availableUntil?: string | null;
+        /** What the ticket includes: one line, at most 140 characters. */
+        description?: string | null;
       }[]
     | null;
 };
@@ -1287,6 +1302,18 @@ export type UpdateEventTicketTypesBody = {
 export type UpdateEventTicketTypesResult =
   | { status: 200; message?: string }
   | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
+
+/**
+ * What each ticket type includes, changed on its own (allowed after the
+ * first sale). Only the listed types change; null clears a note.
+ */
+export type UpdateTicketTypeNotesBody = {
+  notes: { ticketTypeId: string; description: string | null }[];
+};
+
+export type UpdateTicketTypeNotesResult =
+  | { status: 200; message: string }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
 
 // ---- runs of shows ------------------------------------------------------
 // A run is a series of events, one per show, made from a listing
@@ -1729,7 +1756,7 @@ export type PlaceTemporaryStatus =
 
 // Everything to prefill the per-place management forms — the mobile echo of
 // what manage/places/[placeId]/page.tsx assembles: the editable place row,
-// weekly hours, and services.
+// weekly hours, special dates, and services.
 export type PlaceManageContext = {
   place: {
     id: string;
@@ -1745,6 +1772,8 @@ export type PlaceManageContext = {
     cover_version: string | null;
     temporary_status: PlaceTemporaryStatus;
     temporary_status_note: string | null;
+    /** The place's zone; absent from servers before 2026-11-23. */
+    timezone?: string | null;
   };
   openingHours: {
     day_of_week: number;
@@ -1752,6 +1781,8 @@ export type PlaceManageContext = {
     close_time: string | null;
     is_closed: boolean;
   }[];
+  /** Special dates from today on; absent from servers before 2026-11-23. */
+  specialHours?: PlaceSpecialHoursRow[];
   services: {
     id: string;
     name: string;
@@ -1804,6 +1835,34 @@ export type SetPlaceStatusBody = {
 export type PlaceHoursStatusResult =
   | { status: 200; message: string }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// ---- special dates (holidays) in a place's hours -------------------------
+// place_special_hours (PROJECT.md §90): one row per date of the place's own
+// calendar, replacing that date's weekday hours.
+
+export type PlaceSpecialHoursRow = {
+  id: string;
+  /** "yyyy-mm-dd" on the place's calendar. */
+  special_date: string;
+  open_time: string | null;
+  close_time: string | null;
+  is_closed: boolean;
+  label: string | null;
+};
+
+/** Adds a special date, or replaces the one already set for that date. */
+export type AddPlaceSpecialHoursBody = {
+  date: string;
+  isClosed: boolean;
+  /** "HH:MM"; left out when closed. */
+  openTime?: string | null;
+  closeTime?: string | null;
+  label?: string | null;
+};
+
+export type PlaceSpecialHoursResult =
+  | { status: 200; message: string; data?: PlaceSpecialHoursRow }
+  | { status: 400 | 401 | 403 | 404 | 409 | 500; message: string };
 
 // One `place_service` row as the manage context returns it.
 export type PlaceServiceRow = PlaceManageContext["services"][number];

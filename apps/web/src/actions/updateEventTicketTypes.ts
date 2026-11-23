@@ -66,6 +66,7 @@ export default withActionLocale(async function updateEventTicketTypes(
       admits: ticket.admits ?? 1,
       availableFrom: ticket.availableFrom ?? ticket.available_from ?? null,
       availableUntil: ticket.availableUntil ?? ticket.available_until ?? null,
+      description: ticket.description ?? null,
     })),
   });
 });

@@ -98,6 +98,7 @@ export const postEvent = withActionLocale(async function postEvent(
       admits: ticket.admits ?? 1,
       availableFrom: ticket.availableFrom ?? null,
       availableUntil: ticket.availableUntil ?? null,
+      description: ticket.description ?? null,
     })),
     groupDiscounts: formData.groupDiscounts ?? null,
     promoCodes: formData.promoCodes ?? null,

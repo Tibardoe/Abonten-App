@@ -20,6 +20,10 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import {
+  normalizeTicketTypeNote,
+  ticketTypeNotesProblemMessage,
+} from "@abonten/core/ticketTypeNote";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
 import { userFacingError } from "@abonten/core/userFacingError";
@@ -91,6 +95,8 @@ export type PostEventCoreInput = {
         admits?: number | null;
         availableFrom?: DateInput | null;
         availableUntil?: DateInput | null;
+        /** What the ticket includes (@abonten/core/ticketTypeNote). */
+        description?: string | null;
       }[]
     | null;
   /** Automatic group prices (docs/architecture/group-tickets-and-prices.md). */
@@ -174,6 +180,15 @@ export async function postEventCore(
   );
   if (promoProblem) {
     return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
+  }
+
+  // What each ticket type includes: plain text, one line, no links.
+  if (!input.freeEvent) {
+    const noteProblem = ticketTypeNotesProblemMessage(
+      coreT(),
+      (input.multipleTickets ?? []).map((tier) => tier.description),
+    );
+    if (noteProblem) return { status: 400, message: noteProblem };
   }
 
   // Group tickets and group prices: valid, and switched on for this
@@ -307,6 +322,7 @@ export async function postEventCore(
             available_from: ticket.availableFrom ?? null,
             available_until: ticket.availableUntil ?? null,
             currency,
+            description: normalizeTicketTypeNote(ticket.description),
           };
         }),
       ];

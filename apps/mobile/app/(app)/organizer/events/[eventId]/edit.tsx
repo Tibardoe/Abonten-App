@@ -9,6 +9,8 @@ import { useEventEdit } from "@/features/events/useEventEdit";
 import { TIME_RE, prettyDate } from "@/lib/datetime";
 import { uuidv4 as makeId } from "@/lib/uuid";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { TICKET_TYPE_NOTE_MAX } from "@abonten/core/ticketTypeNote";
 import {
   AppText,
   Button,
@@ -30,6 +32,8 @@ import { ActivityIndicator, Pressable, Switch, View } from "react-native";
 export default function EditEventScreen() {
   const t = useTranslations("manage");
   const tCommon = useTranslations("common");
+  const tEvents = useTranslations("events");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -88,6 +92,19 @@ export default function EditEventScreen() {
       toast.error(res.message ?? t("couldnTSave"), {
         description: t("yourChangesAreStillOnScreen"),
         action: { label: t("retry"), onPress: onSaveGroupPrices },
+      });
+    }
+  }
+
+  async function onSaveTicketNotes() {
+    const res = await w.saveTicketNotes();
+    if (!res) return;
+    if (res.status === 200) {
+      toast.success(res.message ?? tEvents("ticketNotesSaved"));
+    } else {
+      toast.error(res.message ?? t("couldnTSave"), {
+        description: t("yourChangesAreStillOnScreen"),
+        action: { label: t("retry"), onPress: onSaveTicketNotes },
       });
     }
   }
@@ -605,6 +622,26 @@ export default function EditEventScreen() {
                         />
                       </Field>
                     ) : null}
+                    {/* What the ticket includes, shown under its name. */}
+                    <Field
+                      label={tCommon("ticketNoteLabel")}
+                      hint={tCommon("ticketNoteHint", {
+                        max: TICKET_TYPE_NOTE_MAX,
+                      })}
+                    >
+                      <Input
+                        value={tier.description}
+                        onChangeText={(v) =>
+                          w.setTiers((prev) =>
+                            prev.map((x, idx) =>
+                              idx === i ? { ...x, description: v } : x,
+                            ),
+                          )
+                        }
+                        placeholder={tCommon("ticketNotePlaceholder")}
+                        maxLength={TICKET_TYPE_NOTE_MAX}
+                      />
+                    </Field>
                   </View>
                 ))}
                 <Button
@@ -620,6 +657,7 @@ export default function EditEventScreen() {
                         price: "",
                         quantity: "",
                         admits: "1",
+                        description: "",
                       },
                     ])
                   }
@@ -657,6 +695,42 @@ export default function EditEventScreen() {
           </>
         )}
       </View>
+
+      {/* What each ticket includes: its own save, editable after the first
+          sale too (a note changes no money). Before it, the editor above
+          carries the notes. */}
+      {w.locked && w.noteTypes.length > 0 ? (
+        <View className="gap-3">
+          <View className="gap-1">
+            <AppText variant="label">{tEvents("ticketNotes")}</AppText>
+            <AppText variant="meta">{tEvents("ticketNotesAfterSale")}</AppText>
+          </View>
+          {w.noteTypes.map((type) => (
+            <Field
+              key={type.id}
+              label={ticketTypeLabel(tc, type.type)}
+              hint={tCommon("ticketNoteHint", { max: TICKET_TYPE_NOTE_MAX })}
+            >
+              <Input
+                value={w.notes[type.id] ?? ""}
+                onChangeText={(v) => w.setNote(type.id, v)}
+                placeholder={tCommon("ticketNotePlaceholder")}
+                maxLength={TICKET_TYPE_NOTE_MAX}
+                accessibilityLabel={tCommon("ticketNoteLabel")}
+              />
+            </Field>
+          ))}
+          <Button
+            title={
+              w.isSavingTicketNotes ? t("saving") : tEvents("saveTicketNotes")
+            }
+            variant="secondary"
+            loading={w.isSavingTicketNotes}
+            disabled={w.isSavingTicketNotes || !w.notesChanged}
+            onPress={onSaveTicketNotes}
+          />
+        </View>
+      ) : null}
 
       {/* Automatic group prices: their own save, editable after the first
           sale too (a checkout is priced when it is made). */}

@@ -2,7 +2,7 @@
 title: Tickets verkaufen, Promo-Codes und Promoter-Provision
 summary: Wie Verkäufe und Reservierungen ablaufen, Promo-Codes anlegen, eine Promoter-Provision anbieten und deine Verkaufsstatistiken lesen.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,12 @@ Beides ist optional und wirkt zusammen:
 - Mit Kapazität dürfen die festgelegten Mengen zusammen nicht darüber liegen – du siehst einen Hinweis (zum Beispiel 110 Tickets insgesamt bei einer Kapazität von 100) und kannst erst speichern, wenn es passt.
 - Ticketarten ohne Menge **teilen sich, was von der Kapazität übrig ist**, nachdem die festgelegten Mengen abgezogen sind. Bei Kapazität 100, Standard = 60 und VIP leer werden höchstens 60 Standard verkauft und über alle Arten ohne Menge hinweg höchstens 40 weitere. Lässt du alle Mengen leer, werden alle 100 Plätze geteilt.
 - Der Verkauf einer Art endet, wenn ihre eigene Menge aufgebraucht ist, und für alle geteilten Arten, wenn die geteilten Plätze weg sind. Reservierte Tickets zählen mit, bis ihre 30-minütige Reservierung abläuft.
+
+## Was jedes Ticket enthält
+
+Jeder benannte Tickettyp kann eine kurze Notiz tragen, die auf der Veranstaltungsseite und beim Bezahlen unter seinem Namen steht, zum Beispiel „Kinder: 3–12 Jahre“ oder „Eintritt + 50 Fahrguthaben“. Füge sie unter **Was enthalten ist** hinzu, wenn du den Tickettyp anlegst. Es ist einfacher Text: bis zu 140 Zeichen, eine Zeile, keine Links.
+
+Preise, Mengen und die Tickettypen selbst sind nach dem ersten bestätigten Ticket gesperrt, die Notizen nicht: Ändere sie jederzeit im Tab **Details** deiner Veranstaltung (Website) oder unter **Event bearbeiten** (App), im Abschnitt **Was jedes Ticket enthält**. Eine Kopie der Veranstaltung oder eine neue Vorstellung ihrer Reihe übernimmt die Notizen.
 
 ## Erstattungsregel
 

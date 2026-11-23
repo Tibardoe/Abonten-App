@@ -4,8 +4,8 @@ purpose: Explain how the lists of events and places on Explore are built (which 
 audience: Engineering
 scope: public._explore_event_candidates, _event_cards, _place_cards, get_filtered_events, get_nearby_events, get_explore_event_sections, get_explore_place_sections, get_similar_events, get_place_events, get_events_in_window, get_filtered_places, get_nearby_places; @abonten/core exploreSections, explorePlaceSections, exploreFilters and eventAvailability; the web Explore pages and the mobile Explore screens. Not covered - unified search and recommendations (discovery-search-and-recommendations.md) and how typed text is compared (search-languages.md).
 status: Approved
-version: 1.1
-lastReviewed: 2026-11-02
+version: 1.2
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -94,6 +94,8 @@ A page is at most 1,000 rows. Every list returns one row more than asked when th
 
 **Open now.** `place_is_open_now` reads opening hours on the place's own clock and costs about 60 microseconds a place, almost all of it the call. `get_filtered_places` sorts the places in range by distance and then asks "open now" of each in order until the page is full, instead of asking every place in range, and asks it with the same rule written into the query (one index lookup, about 5 microseconds). The cards still show `place_is_open_now`; the integration suite checks the two agree for every kind of opening hours. `get_explore_place_sections` has the same rule written out in its "Open now" row and in `_place_open_now` (the reader's "open now" filter on the other rows), both checked by the same test. Change them all together.
 
+**Special dates** (since 2026-11-23, [ticket-notes-and-special-hours.md](ticket-notes-and-special-hours.md)). A place's holiday or event day (`place_special_hours`, one row per date of its own calendar) replaces that date's weekday hours, and only that date's: yesterday's hours that run past midnight still count after midnight, whichever kind they are. All four copies of the rule read today's and yesterday's special dates first (one lookup on the unique `(place_id, special_date)` index) and the weekly rows of the dates that have none, and `@abonten/core/computePlaceOpenStatus` mirrors them; `explore-lists.integration.test.ts` checks the five agree, special dates included. On the test catalogue the worst case (every place in range asked, none open) did not move (about 120 ms either way). `place_is_open_now` runs once a card inside list functions that force custom plans, and the larger query cost about 0.15 ms of planning a card (a 21-card list 2.4 ms before, 5 ms after), so it now sets `plan_cache_mode = auto` for itself and plans once a session (1.2 ms for that list).
+
 ## 5. The Explore rows
 
 `get_explore_event_sections` returns each event once, with `sections` saying which rows it is in and where: `{"aroundYou": 3, "happeningToday": 1}`.
@@ -179,5 +181,5 @@ Two things decide the cost:
 - An event with no start and no dates of its own, but an end in the future, sorts last and cannot be paged past. The apps cannot create one.
 - A city with tens of thousands of events on at once pays about 3 microseconds an event for every list without an end date: 75 ms for 21,000 events in range.
 - "Happening today" reads every event that started before the end of today and is not archived. The daily `retire-ended-events` job archives the ones that are over, in every environment.
-- "Open now" at night asks every place in range when few are open: about 5 microseconds a place.
+- "Open now" at night asks every place in range when few are open: about 5 microseconds a place, a few more with the special-dates lookup.
 - A list with no point (the older search with filters and no text) reads every event that is on.

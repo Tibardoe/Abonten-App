@@ -17,6 +17,8 @@ export type ManagedEventTicketType = {
   currency: string | null;
   available_from?: string | null;
   available_until?: string | null;
+  /** What the ticket includes (@abonten/core/ticketTypeNote). */
+  description?: string | null;
 };
 
 export type ManagedEvent = Database["public"]["Tables"]["event"]["Row"] & {

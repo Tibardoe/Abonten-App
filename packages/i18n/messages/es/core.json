@@ -1514,5 +1514,18 @@
     "duplicateRow": "Dos filas de una sección tienen la misma etiqueta.",
     "rowSeats": "Una fila tiene de 1 a {max} asientos."
   },
-  "postponedNewDateToCome": "Aplazado, fecha por confirmar"
+  "postponedNewDateToCome": "Aplazado, fecha por confirmar",
+  "ticketTypeNote": {
+    "link": "La nota de una entrada no puede incluir un enlace.",
+    "tooLong": "La nota de la entrada no puede superar los {max} caracteres."
+  },
+  "specialHours": {
+    "dateInvalid": "Elige una fecha.",
+    "datePast": "Elige hoy o una fecha posterior.",
+    "dateTooFar": "Elige una fecha dentro del próximo año.",
+    "labelLink": "El nombre no puede incluir un enlace.",
+    "labelTooLong": "El nombre no puede superar los {max} caracteres.",
+    "timesRequired": "Indica las horas de apertura y cierre, o marca el día como cerrado.",
+    "tooMany": "Un lugar puede tener hasta {max} fechas especiales próximas."
+  }
 }

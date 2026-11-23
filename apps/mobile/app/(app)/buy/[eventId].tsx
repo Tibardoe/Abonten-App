@@ -535,6 +535,12 @@ export default function BuyTicketsScreen() {
                   <AppText variant="body" className="font-medium">
                     {ticketTypeLabel(tc, tier.type)}
                   </AppText>
+                  {/* What the ticket includes ("Kids: ages 3–12"). */}
+                  {tier.description ? (
+                    <AppText variant="caption" tone="muted">
+                      {tier.description}
+                    </AppText>
+                  ) : null}
                   <AppText variant="meta">
                     {tier.price === 0
                       ? t("free")

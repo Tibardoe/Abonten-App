@@ -325,6 +325,10 @@ export function usePlaceEdit(placeId: string) {
   const manageData =
     query.data && query.data.status === 200 ? query.data.data : null;
   const services: PlaceServiceRow[] = manageData?.services ?? [];
+  // Special dates from today on (absent from an older server).
+  const specialHours = manageData?.specialHours ?? [];
+  // The place's zone: "today" for its special dates is its today.
+  const placeTimeZone = manageData?.place.timezone ?? null;
   // Gallery photos + the live cover public_id, read fresh from the query so
   // the Photos section reflects add / remove / set-cover without a reload.
   // Memoised so the empty-while-loading array stays referentially stable
@@ -338,6 +342,8 @@ export function usePlaceEdit(placeId: string) {
     loadView,
     isReady: prefilled,
     services,
+    specialHours,
+    placeTimeZone,
     loadError:
       query.isError ||
       (query.data && query.data.status !== 200 ? query.data.message : false),

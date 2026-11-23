@@ -41,6 +41,10 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import {
+  normalizeTicketTypeNote,
+  ticketTypeNotesProblemMessage,
+} from "@abonten/core/ticketTypeNote";
 import { wallClockString } from "@abonten/core/time/timeZone";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
@@ -103,6 +107,8 @@ export type TicketTier = {
   quantity: string;
   /** People one purchase admits (a Couple: "2"). */
   admits: string;
+  /** What the ticket includes ("Kids: ages 3–12"); "" = no note. */
+  description: string;
 };
 /** An automatic group price being edited ("10" tickets, "10" % off). */
 export type GroupPriceDraft = {
@@ -526,6 +532,7 @@ export function useEventWizard(
           price: String(t.price),
           quantity: t.quantity != null ? String(t.quantity) : "",
           admits: String(t.admits ?? 1),
+          description: t.description ?? "",
         })),
       );
     }
@@ -611,6 +618,7 @@ export function useEventWizard(
               price: Number(t.price) || 0,
               quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
               admits: admitsOf(t),
+              description: normalizeTicketTypeNote(t.description),
             }))
           : undefined,
       groupDiscounts:
@@ -792,10 +800,17 @@ export function useEventWizard(
       price: Number(t.price),
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
       admits: admitsOf(t),
+      description: normalizeTicketTypeNote(t.description),
     }));
     if (parsed.length === 0) {
       return { ok: false, message: t("addAtLeastOneTicketType") };
     }
+    // What each type includes: one line, no links (the server checks too).
+    const noteProblem = ticketTypeNotesProblemMessage(
+      tc,
+      parsed.map((p) => p.description),
+    );
+    if (noteProblem) return { ok: false, message: noteProblem };
     if (
       parsed.some(
         (t) =>

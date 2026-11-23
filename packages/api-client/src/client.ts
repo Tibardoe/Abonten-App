@@ -96,6 +96,7 @@ import type {
   AddPayoutAccountResult,
   AddPlacePhotoBody,
   AddPlaceServiceBody,
+  AddPlaceSpecialHoursBody,
   AddShowPassBody,
   AddShowPassResult,
   AddressSuggestion,
@@ -272,6 +273,7 @@ import type {
   PlacePromotionContextResult,
   PlaceReviewRespondResult,
   PlaceServiceResult,
+  PlaceSpecialHoursResult,
   PlaceVisitBody,
   PlaceVisitPanelResult,
   PlaceVisitResultEnvelope,
@@ -344,6 +346,8 @@ import type {
   UpdatePlaceServiceBody,
   UpdatePromoCodeBody,
   UpdatePromoCodeResult,
+  UpdateTicketTypeNotesBody,
+  UpdateTicketTypeNotesResult,
   UpdateVerificationBody,
   UploadSignatureKind,
   UserPostType,
@@ -1647,6 +1651,18 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       /**
+       * What each ticket type includes (its note), changed on its own:
+       * allowed before and after the first sale (it changes no money).
+       */
+      updateTicketTypeNotes(eventId: string, body: UpdateTicketTypeNotesBody) {
+        return request<UpdateTicketTypeNotesResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/ticket-types/notes`,
+          { method: "PUT", body, auth: true },
+        );
+      },
+      /**
        * Adds shows to a listing's run (a weekly pattern or dates), or makes
        * a separate copy with one date (body.separate).
        */
@@ -2002,6 +2018,27 @@ export function createApiClient(options: ApiClientOptions) {
         return request<PlaceHoursStatusResult>(
           `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/hours`,
           { method: "PUT", body: { openingHours }, auth: true },
+        );
+      },
+      /**
+       * Add a special date (a holiday) to a place's hours, or replace the
+       * one already set for that date. Today or later, up to a year ahead.
+       */
+      addPlaceSpecialHours(placeId: string, body: AddPlaceSpecialHoursBody) {
+        return request<PlaceSpecialHoursResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/special-hours`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Remove one special date from a place's hours. */
+      removePlaceSpecialHours(placeId: string, specialHoursId: string) {
+        return request<PlaceSpecialHoursResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/special-hours/${encodeURIComponent(specialHoursId)}`,
+          { method: "DELETE", auth: true },
         );
       },
       /**

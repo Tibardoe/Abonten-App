@@ -38,6 +38,7 @@ type PendingCheckoutRow = {
     type: string;
     currency: string;
     quantity: number | null;
+    description: string | null;
   };
 };
 
@@ -45,6 +46,8 @@ export type PendingCheckoutSessionLine = {
   ticketCheckoutId: string;
   ticketTypeId: string;
   type: string;
+  /** What the ticket includes (ticket_type.description). */
+  description: string | null;
   /** The price of one purchase (a Couple ticket admitting two). */
   unitPrice: number;
   /** Tickets on the line (people). */
@@ -110,7 +113,7 @@ export async function getUserPendingTicketCheckoutsCore(
        group_discount_percent, unit_price,
        discount, discounted_units, total_price, promo_code, expires_at,
        event:event_id(title, event_code, starts_at, ends_at, timezone, event_occurrence(id, starts_at, ends_at)),
-       ticket_type:ticket_type_id(type, currency, quantity)`,
+       ticket_type:ticket_type_id(type, currency, quantity, description)`,
     )
     .eq("user_id", userId)
     .eq("status", "pending")
@@ -154,6 +157,7 @@ export async function getUserPendingTicketCheckoutsCore(
       ticketCheckoutId: row.id,
       ticketTypeId: row.ticket_type_id,
       type: row.ticket_type.type,
+      description: row.ticket_type.description ?? null,
       unitPrice: row.unit_price,
       quantity: row.quantity,
       admits: Math.max(1, row.admits ?? 1),

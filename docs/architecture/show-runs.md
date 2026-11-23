@@ -37,7 +37,7 @@ One transaction per show, service role only, idempotent on a client request id (
 | Country, currency | As they are (fixed at creation; another venue must be in the same country) |
 | Time zone | The venue's (the listing's, or the other venue's) |
 | Refund policy | `refund_policy`, `refund_cutoff_hours` |
-| Ticket types | Name, price, people per ticket, passes (`pass_shows`, [show-passes.md](show-passes.md), since 2026-11-20); **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
+| Ticket types | Name, price, what the ticket includes (`description`, since 2026-11-23), people per ticket, passes (`pass_shows`, [show-passes.md](show-passes.md), since 2026-11-20); **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
 | Seating | The seating plan (`event_seating`) and each ticket type's section ([assigned-seats.md](assigned-seats.md)), since 2026-11-20; **not** for a show at another venue (a seating plan belongs to its hall: the organizer gives the new show its own) |
 | Group prices | All tiers |
 | Promo codes | Those still running, with their expiry moved like the date and their uses back to 0 |

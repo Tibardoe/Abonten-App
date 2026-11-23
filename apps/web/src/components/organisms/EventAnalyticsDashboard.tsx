@@ -21,8 +21,11 @@ import { useState } from "react";
 
 export default function EventAnalyticsDashboard({
   eventId,
+  ticketNotes,
 }: {
   eventId: string;
+  /** What each ticket type includes, by ticket type id. */
+  ticketNotes?: Record<string, string | null>;
 }) {
   const locale = useLocale();
 
@@ -105,6 +108,7 @@ export default function EventAnalyticsDashboard({
       />
       <EventTicketTypeBreakdown
         eventId={eventId}
+        ticketNotes={ticketNotes}
         period={period}
         startDate={startDate}
         endDate={endDate}

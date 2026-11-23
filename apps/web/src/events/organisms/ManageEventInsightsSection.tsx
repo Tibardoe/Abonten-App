@@ -13,8 +13,11 @@ import AttendanceListView from "./AttendanceListView";
  */
 export default function ManageEventInsightsSection({
   eventId,
+  ticketNotes,
 }: {
   eventId: string;
+  /** What each ticket type includes, by ticket type id. */
+  ticketNotes?: Record<string, string | null>;
 }) {
   const t = useTranslations("events");
 
@@ -24,7 +27,7 @@ export default function ManageEventInsightsSection({
 
   return (
     <div className="flex flex-col gap-8">
-      <EventAnalyticsDashboard eventId={eventId} />
+      <EventAnalyticsDashboard eventId={eventId} ticketNotes={ticketNotes} />
 
       <div>
         <h2 className="font-bold md:text-lg mb-3">{t("attendees")}</h2>

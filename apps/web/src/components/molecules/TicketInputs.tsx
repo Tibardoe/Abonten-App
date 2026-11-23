@@ -2,6 +2,10 @@ import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { TICKET_MODE } from "@/events/ticketMode";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { MAX_TICKET_ADMITS } from "@abonten/core/groupPricing";
+import {
+  TICKET_TYPE_NOTE_MAX,
+  normalizeTicketTypeNote,
+} from "@abonten/core/ticketTypeNote";
 import type { Ticket } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -62,6 +66,9 @@ export default function TicketInputs({
 
   const [newPrice, setNewPrice] = useState<number | null>(null);
 
+  // What the ticket includes ("Kids: ages 3–12"), optional.
+  const [newNote, setNewNote] = useState("");
+
   const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
   const { data: currency } = useQuery({
@@ -97,6 +104,7 @@ export default function TicketInputs({
         admits: groupTicketsEnabled ? admits : 1,
         availableFrom: date,
         availableUntil: endDate,
+        description: normalizeTicketTypeNote(newNote),
       };
 
       const updatedTickets = [...multipleTickets, newTicket];
@@ -108,6 +116,7 @@ export default function TicketInputs({
       setQuantity(null);
       setAdmits(1);
       setNewPrice(null);
+      setNewNote("");
       setDate(undefined);
       setEndDate(undefined);
       setDuplicateError(null);
@@ -171,6 +180,26 @@ export default function TicketInputs({
                   {duplicateError}
                 </p>
               )}
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="ticket-note"
+                className="text-sm text-muted-foreground"
+              >
+                {t("ticketNoteLabel")}
+              </label>
+              <Input
+                id="ticket-note"
+                type="text"
+                maxLength={TICKET_TYPE_NOTE_MAX}
+                placeholder={t("ticketNotePlaceholder")}
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("ticketNoteHint", { max: TICKET_TYPE_NOTE_MAX })}
+              </p>
             </div>
 
             <div className="flex justify-between items-center gap-2">
@@ -267,6 +296,11 @@ export default function TicketInputs({
                       <span className="text-sm font-semibold">
                         {ticket.category}
                       </span>
+                      {ticket.description ? (
+                        <span className="text-xs text-muted-foreground">
+                          {ticket.description}
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="flex flex-col text-right">

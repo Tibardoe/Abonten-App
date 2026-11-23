@@ -2,7 +2,7 @@
 title: Adding and managing your place
 summary: Create a place listing, keep details, opening hours, services and photos current, set a temporary status, and read your insights.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -21,7 +21,7 @@ Your progress is saved as a draft until you publish. Fill in:
 | Location | Search the address or drop a pin. The pin is what "near you" and directions use — be precise. |
 | Contact | Phone, WhatsApp number, website. Shown as buttons on your page. |
 | Opening hours | Per day, including closed days and split hours. Your page shows "open now" / "closed" from these. |
-| Services | Things people can book or ask about (e.g. table reservation, private room), each with an optional price note. |
+| Services | Things people can book or ask about (e.g. table reservation, private room), each with an optional price note. A service priced 0 shows as **Free**. |
 | Cover and gallery photos | Uploaded straight to our image host. |
 
 Check Abonten first for an existing listing of your business — if one exists, [claim it](/help/place-owners/claiming-and-verifying-a-place) rather than creating a duplicate.
@@ -37,6 +37,7 @@ Open it under Manage › Places (web) or Organizer › Places (app):
 - **Edit** details, contact and location.
 - **Photos:** add, remove, reorder, and set the cover.
 - **Opening hours** and **services**.
+- **Special dates:** a holiday or another day with different hours. Mark it **closed all day**, or set its own opening and closing times (past midnight if it runs late), with an optional name such as "Christmas Day". It replaces that day's usual hours, including for "open now", and your page lists the special dates of the next 30 days. Add them up to a year ahead under **Hours & Status** › **Special dates** (web) or on **Edit place** (app).
 - **Status:** mark the place **temporarily closed** or **permanently closed**; the badge shows on your page and it is excluded from "open now".
 - **Bookings** and **Reviews** — see [Bookings, reviews and messaging](/help/place-owners/bookings-reviews-and-messaging).
 - **Promote** — see [Promoting your place](/help/place-owners/promoting-your-place).

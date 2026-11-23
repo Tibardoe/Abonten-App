@@ -9717,6 +9717,47 @@ export type Database = {
           },
         ]
       }
+      place_special_hours: {
+        Row: {
+          close_time: string | null
+          created_at: string
+          id: string
+          is_closed: boolean
+          label: string | null
+          open_time: string | null
+          place_id: string
+          special_date: string
+        }
+        Insert: {
+          close_time?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          label?: string | null
+          open_time?: string | null
+          place_id: string
+          special_date: string
+        }
+        Update: {
+          close_time?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          label?: string | null
+          open_time?: string | null
+          place_id?: string
+          special_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_special_hours_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       place_visit: {
         Row: {
           accuracy_m: number | null
@@ -14548,6 +14589,7 @@ export type Database = {
           available_until: string | null
           created_at: string | null
           currency: string
+          description: string | null
           event_id: string | null
           id: string
           pass_shows: number | null
@@ -14562,6 +14604,7 @@ export type Database = {
           available_until?: string | null
           created_at?: string | null
           currency: string
+          description?: string | null
           event_id?: string | null
           id?: string
           pass_shows?: number | null
@@ -14576,6 +14619,7 @@ export type Database = {
           available_until?: string | null
           created_at?: string | null
           currency?: string
+          description?: string | null
           event_id?: string | null
           id?: string
           pass_shows?: number | null

@@ -11,11 +11,14 @@ import { useLocale, useTranslations } from "next-intl";
 
 export default function EventTicketTypeBreakdown({
   eventId,
+  ticketNotes,
   period,
   startDate,
   endDate,
 }: {
   eventId: string;
+  /** What each ticket type includes, by ticket type id. */
+  ticketNotes?: Record<string, string | null>;
   period: DashboardPeriod;
   startDate: string | null;
   endDate: string | null;
@@ -60,9 +63,16 @@ export default function EventTicketTypeBreakdown({
               className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"
             >
               <div className="flex justify-between items-center gap-2">
-                <h3 className="font-semibold">
-                  {ticketTypeLabel(tc, row.type)}
-                </h3>
+                <div className="min-w-0">
+                  <h3 className="font-semibold">
+                    {ticketTypeLabel(tc, row.type)}
+                  </h3>
+                  {ticketNotes?.[row.ticket_type_id] ? (
+                    <p className="text-xs text-muted-foreground">
+                      {ticketNotes[row.ticket_type_id]}
+                    </p>
+                  ) : null}
+                </div>
                 <span className="text-sm text-muted-foreground shrink-0">
                   {t("sold", { sold: row.sold })}
                   {row.quantity_capacity != null

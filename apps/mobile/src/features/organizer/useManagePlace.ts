@@ -3,6 +3,7 @@ import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { settleEnvelope } from "@/lib/envelope";
 import type {
   AddPlaceServiceBody,
+  AddPlaceSpecialHoursBody,
   PlaceOpeningHoursInput,
   SetPlaceStatusBody,
   UpdatePlaceBody,
@@ -93,6 +94,27 @@ export function useSetPlaceStatus(placeId: string) {
   return useMutation({
     mutationFn: (body: SetPlaceStatusBody) =>
       api.organizer.setPlaceStatus(placeId, body),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+// Special dates (holidays) in the place's hours: add (or replace the one
+// set for that date) and remove — the web addPlaceSpecialHours /
+// removePlaceSpecialHours actions' twins.
+export function useAddPlaceSpecialHours(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddPlaceSpecialHoursBody) =>
+      api.organizer.addPlaceSpecialHours(placeId, body),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+export function useRemovePlaceSpecialHours(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (specialHoursId: string) =>
+      api.organizer.removePlaceSpecialHours(placeId, specialHoursId),
     onSuccess: () => invalidate(qc, placeId),
   });
 }

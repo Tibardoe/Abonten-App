@@ -76,7 +76,7 @@ export const getUserFavoritePlaces = withActionLocale(
     let query = supabase
       .from("favorite_place")
       .select(
-        "*, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed))",
+        "*, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_special_hours(special_date, open_time, close_time, is_closed, label))",
       )
       .eq("user_id", user.user.id)
       .order("created_at", { ascending: false })
@@ -129,6 +129,8 @@ export const getUserFavoritePlaces = withActionLocale(
         place.temporary_status,
         new Date(),
         (place as { timezone?: string | null }).timezone,
+        // A place has a handful of special dates; all of them come along.
+        place.place_special_hours ?? [],
       );
       const rating = ratingsByPlaceId[place.id];
 

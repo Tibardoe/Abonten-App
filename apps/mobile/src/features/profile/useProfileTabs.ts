@@ -6,6 +6,7 @@ import {
   type PlaceOpeningHourRow,
   isPlaceOpenNow,
 } from "@abonten/core/computePlaceOpenStatus";
+import type { PlaceSpecialHourRow } from "@abonten/core/placeSpecialHours";
 import {
   EMPTY_RATING,
   type RatingAggregate,
@@ -18,12 +19,13 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 // The Places / favourite-places tabs render the full PlaceCard, but the list
 // comes from a plain `place` table read (no is_open / rating from a list
 // RPC). This derives the two card fields client-side from the joined
-// opening-hours + approved review rows so the card isn't stuck showing
-// "Closed" / "No reviews" for every place.
+// opening-hours (weekly and special dates) + approved review rows so the
+// card isn't stuck showing "Closed" / "No reviews" for every place.
 function enrichPlaceRow(
   row: PlaceType & {
     place_category?: { name: string; slug: string } | null;
     place_opening_hours?: PlaceOpeningHourRow[] | null;
+    place_special_hours?: PlaceSpecialHourRow[] | null;
   },
   rating: RatingAggregate = EMPTY_RATING,
 ): ProfilePlace {
@@ -32,6 +34,8 @@ function enrichPlaceRow(
     row.temporary_status ?? null,
     new Date(),
     (row as { timezone?: string | null }).timezone,
+    // A special date (a holiday) replaces its weekday's hours.
+    row.place_special_hours ?? [],
   );
   return {
     ...row,
@@ -146,7 +150,7 @@ export function useProfilePlaces(userId: string | undefined) {
       let q = supabase
         .from("place")
         .select(
-          "*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed)",
+          "*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_special_hours(special_date, open_time, close_time, is_closed, label)",
         )
         .eq("owner_id", userId as string)
         .order("created_at", { ascending: false })
@@ -244,7 +248,7 @@ export function useProfileFavoritePlaces(active: boolean) {
       let q = supabase
         .from("favorite_place")
         .select(
-          "created_at, place_id, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed))",
+          "created_at, place_id, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_special_hours(special_date, open_time, close_time, is_closed, label))",
         )
         .order("created_at", { ascending: false })
         .limit(PAGE + 1);

@@ -2,7 +2,7 @@
 title: Vendre des billets, codes promo et commission des promoteurs
 summary: Comment fonctionnent les ventes et les réservations, créer des codes promo, proposer une commission aux promoteurs et lire les statistiques de vos ventes.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,12 @@ Les deux sont facultatives et fonctionnent ensemble :
 - Avec une capacité, le total des quantités fixées ne doit pas la dépasser : un message vous l'indique (par exemple un total de 110 billets pour une capacité de 100) et vous ne pouvez pas enregistrer tant que cela ne tient pas.
 - Les types de billets laissés sans quantité **se partagent ce qui reste de la capacité** après les quantités fixées. Avec une capacité de 100, Standard = 60 et VIP laissé vide, on peut vendre au plus 60 Standard et, pour l'ensemble des types sans quantité, au plus 40 de plus. Laissez toutes les quantités vides et les 100 places sont partagées.
 - Les ventes s'arrêtent pour un type quand sa propre quantité est épuisée, et pour tous les types partagés quand les places partagées sont parties. Les billets réservés comptent jusqu'à l'expiration de leur réservation de 30 minutes.
+
+## Ce que comprend chaque billet
+
+Chaque type de billet nommé peut porter une courte note, affichée sous son nom sur la page de l'événement et au paiement, par exemple « Enfants : de 3 à 12 ans » ou « Entrée + 50 crédits de manèges ». Ajoutez-la dans **Ce qui est inclus** en créant le type de billet. C'est du texte simple : jusqu'à 140 caractères, une ligne, sans lien.
+
+Les prix, les quantités et les types de billets eux-mêmes sont verrouillés après la confirmation du premier billet, mais pas les notes : modifiez-les à tout moment depuis l'onglet **Détails** de votre événement (site web) ou **Modifier l'événement** (application), sous **Ce que comprend chaque billet**. Une copie de l'événement ou une nouvelle séance de sa série garde les notes.
 
 ## Politique de remboursement
 

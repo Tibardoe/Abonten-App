@@ -40,6 +40,8 @@ export type EventForEditData = {
         currency: string | null;
         available_from: string | null;
         available_until: string | null;
+        /** What the ticket includes (@abonten/core/ticketTypeNote). */
+        description: string | null;
       }[]
     | null;
   /** Automatic group prices, smallest group first. */
@@ -81,7 +83,7 @@ export async function getEventForEditCore(
       flyer_public_id,
       flyer_version,
       event_occurrence(id, starts_at, ends_at),
-      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until),
+      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until, description),
       event_group_discount(min_tickets, percent_off)
     `,
     )

@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.10
-lastReviewed: 2026-11-22
+version: 1.11
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -65,7 +65,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 
 | Feature | App | Entry | Workflow | Tables / RPCs | Service / action / API | Notifications | Admin | Docs |
 |---|---|---|---|---|---|---|---|---|
-| Create / edit / draft event | W A | Create; Organizer | drafts autosave; `create_event`; flyer signed upload; public event code = up to two title initials + six random characters (`@abonten/core/eventCodeGenerator`, unique; a taken code is drawn again, at most 3 tries) | `event*`, `ticket_type`, `event_drafts`, `drafts` | `events/postEventCore`, `updateEventCore`, `eventDraftCore`, `updateEventTicketTypesCore`; actions `postEvent`, `updateEvent`, `saveEventDraft`…; API `organizer/events*`, `event-drafts*` | — | Events (read), Content | help organizers |
+| Create / edit / draft event | W A | Create; Organizer | drafts autosave; `create_event`; flyer signed upload; public event code = up to two title initials + six random characters (`@abonten/core/eventCodeGenerator`, unique; a taken code is drawn again, at most 3 tries) | `event*`, `ticket_type`, `event_drafts`, `drafts` | `events/postEventCore`, `updateEventCore`, `eventDraftCore`, `updateEventTicketTypesCore`, `updateTicketTypeNotesCore` (what each ticket includes, editable after the first sale, since 2026-11-23); actions `postEvent`, `updateEvent`, `saveEventDraft`, `updateTicketTypeNotes`…; API `organizer/events*`, `event-drafts*` | — | Events (read), Content | help organizers |
 | Cancel event | W A | event menu | `cancel_event_and_release_tickets` → refunds → emails | `event`, `ticket`, `attendance`, `ticket_checkout`, `transaction`, ledger | `events/cancelEventCore`; action `cancelEvent`; API `organizer/events/cancel` | per attendee + email | — | finance refunds |
 | Promo codes | W A | event › Promo codes | CRUD; buyers validate at checkout | `promo_code`, `promo_code_usage` | `promo-codes/*`; API `organizer/promo-codes/*` | — | — | help selling |
 | Promoter commission | W A | event › Promoter commission | 1–30 % per event | `event_promoter_commission` | `rewards/promoterCommissionCore`; action `setEventPromoterCommission` | — | Rewards › Promoters | finance credit-tender |
@@ -80,6 +80,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Feature | App | Role | Workflow | Tables / RPCs | Service / action / API | Admin | Docs |
 |---|---|---|---|---|---|---|---|
 | Create / edit place, photos, hours, services, status | W A | Ow | drafts; `create_place`; signed uploads; `guard_staff_managed_columns` | `place*`, `place_drafts` | `places/*`; actions `postPlace`, `updatePlace`, `addPlacePhoto`…; API `organizer/places/**` | Places (read), Content | help managing-your-place |
+| Special dates in opening hours (holidays; since 2026-11-23) | W A | Ow (edit), all (read) | owner adds/removes a date: closed, or its own hours; replaces that day's weekly hours on the place page and for "open now" | `place_special_hours` | `places/placeSpecialHoursCore`; actions `addPlaceSpecialHours`, `removePlaceSpecialHours`; API `organizer/places/[id]/special-hours` | — | help managing-your-place · architecture/ticket-notes-and-special-hours |
 | Claim place | W A | Cu→Ow | request + documents → staff review → `approve_place_claim` | `place_claim_request`, `place_claim_document` | action `submitPlaceClaimRequest`; `admin/claims/claimsAdminCore` | Claims (`claims.review`, audit `claim.*`) | help claiming; admin/claims |
 | Booking requests | W A | Cu / Ow | request → accept/decline/cancel | `place_booking` | `places/requestPlaceBookingCore`, `placeBookingsReviewsCore`; API `places/[id]/bookings*`, `organizer/places/[id]/bookings*` | — | help bookings |
 | Place reviews + replies | W A | Cu / Ow | one per person; owner response; preview + `/places/<slug>/reviews` (breakdown, star filter, sort, Helpful, share, report, block) | `place_review`, `place_review_photo`, `place_review_helpful`; `review_list`, `review_summary`, `review_set_helpful` | actions `postPlaceReview`…, `respondToPlaceReview`, `getReviewPage`, `setReviewHelpful`; `reviews/reviewListQuery` | Content | help; architecture/reviews-and-account-setup |

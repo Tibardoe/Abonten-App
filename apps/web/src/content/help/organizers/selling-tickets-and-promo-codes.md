@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,12 @@ Both are optional and work together:
 - With a capacity, the quantities you set must not add up to more than it — you will see "Ticket quantities total 110, which exceeds the event capacity of 100" and cannot save until it fits.
 - Ticket types you leave without a quantity **share whatever the capacity has left** after the quantities you set. Capacity 100 with Standard = 60 and VIP left blank means at most 60 Standard and, between every type without a quantity, at most 40 more. Leave every quantity blank and all 100 seats are shared.
 - Sales stop for a type when its own quantity is used up, and for every shared type when the shared seats are gone. Held tickets count until their 30-minute hold expires.
+
+## What each ticket includes
+
+Each named ticket type can carry a short note shown under its name on the event page and at checkout, for example "Kids: ages 3–12" or "Entry + 50 ride credits". Add it in **What's included** when you add the ticket type. It is plain text: up to 140 characters, one line, no links.
+
+Prices, quantities and the ticket types themselves are locked after the first ticket is confirmed, but the notes are not: change them any time from your event's **Details** tab (web) or **Edit event** (app), under **What each ticket includes**. A copy of the event or a new show in its run keeps the notes.
 
 ## Refund policy
 

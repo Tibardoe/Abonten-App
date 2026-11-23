@@ -6,6 +6,10 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import {
+  normalizeTicketTypeNote,
+  ticketTypeNotesProblemMessage,
+} from "@abonten/core/ticketTypeNote";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -24,7 +28,8 @@ import { groupPricingProblem } from "./groupPricingAccess";
 // confirmed ticket (paid or free registration — see
 // getEventHasConfirmedParticipationCore), and become entirely read-only
 // after that (Part 6 of the Unified Event Management spec — "full lock after
-// first sale"). Before that point an in-flight (pending, unpaid) checkout
+// first sale"). What each type includes (its note) is the exception: it
+// changes no money and stays editable through updateTicketTypeNotesCore. Before that point an in-flight (pending, unpaid) checkout
 // can still FK-reference a ticket_type row this is about to delete
 // (ticket_checkout_ticket_type_id_fkey is ON DELETE RESTRICT), so that case
 // is checked first and returned as a clear message instead of a raw DB error.
@@ -75,6 +80,8 @@ export type UpdateEventTicketTypesCoreInput = {
     admits?: number | null;
     availableFrom?: DateInput | null;
     availableUntil?: DateInput | null;
+    /** What the ticket includes (@abonten/core/ticketTypeNote). */
+    description?: string | null;
   }[];
 };
 
@@ -104,6 +111,15 @@ export async function updateEventTicketTypesCore(
         };
       }
     }
+  }
+
+  // What each ticket type includes: plain text, one line, no links.
+  if (!freeEvent) {
+    const noteProblem = ticketTypeNotesProblemMessage(
+      coreT(),
+      multipleTickets.map((tier) => tier.description),
+    );
+    if (noteProblem) return { status: 400, message: noteProblem };
   }
 
   // Group tickets: valid, and switched on for this organizer when used.
@@ -229,6 +245,7 @@ export async function updateEventTicketTypesCore(
           available_from: toIso(ticket.availableFrom),
           available_until: toIso(ticket.availableUntil),
           currency,
+          description: normalizeTicketTypeNote(ticket.description),
         })),
       ];
 

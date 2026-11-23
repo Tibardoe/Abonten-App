@@ -205,14 +205,23 @@ function SessionCard({
             key={line.ticketCheckoutId}
             className="flex-row items-center justify-between"
           >
-            <AppText variant="muted">
-              {/* Purchases: a Couple ticket (two people) counts once. */}
-              {ticketTypeLabel(tc, line.type)} ×{" "}
-              {line.purchases ?? line.quantity / Math.max(1, line.admits ?? 1)}
-              {line.discount > 0
-                ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
-                : ""}
-            </AppText>
+            <View className="flex-1">
+              <AppText variant="muted">
+                {/* Purchases: a Couple ticket (two people) counts once. */}
+                {ticketTypeLabel(tc, line.type)} ×{" "}
+                {line.purchases ??
+                  line.quantity / Math.max(1, line.admits ?? 1)}
+                {line.discount > 0
+                  ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
+                  : ""}
+              </AppText>
+              {/* What the ticket includes; older servers leave it out. */}
+              {line.description ? (
+                <AppText variant="caption" tone="muted">
+                  {line.description}
+                </AppText>
+              ) : null}
+            </View>
             <AppText variant="small">
               {formatMoney(line.currency, line.amount, { locale })}
             </AppText>

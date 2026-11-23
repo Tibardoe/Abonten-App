@@ -26,6 +26,9 @@ const ticketSchema = z.object({
   admits: z.number().int().min(1).max(20).nullable().optional(),
   availableFrom: z.coerce.date().optional(),
   availableUntil: z.coerce.date().optional(),
+  // What the ticket includes (@abonten/core/ticketTypeNote); a draft may
+  // hold an unfinished one, so only its length is checked here.
+  description: z.string().max(400).nullable().optional(),
 });
 
 const promoCodeSchema = z.object({

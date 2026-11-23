@@ -29,6 +29,14 @@ export type FavoritePlaceJoinRow = Tables["favorite_place"]["Row"] & {
           close_time: string | null;
           is_closed: boolean;
         }[];
+        /** Special dates (holidays); each replaces its date's hours. */
+        place_special_hours?: {
+          special_date: string;
+          open_time: string | null;
+          close_time: string | null;
+          is_closed: boolean;
+          label: string | null;
+        }[];
       })
     | null;
 };
