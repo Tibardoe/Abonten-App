@@ -456,6 +456,16 @@
     "untilCutoff": "Du kannst ein bezahltes Ticket bis {days, plural, one {# Tag} other {# Tage}} vor dem Event stornieren und bekommst den Ticketpreis erstattet.",
     "none": "Keine Erstattungen: Bezahlte Tickets können nicht storniert werden."
   },
+  "salesClose": {
+    "label": "Ende des Online-Verkaufs",
+    "atStart": "Wenn es beginnt",
+    "untilEnd": "Wenn es endet",
+    "minutesBeforeEnd": "{minutes, plural, one {# Minute} other {# Minuten}} vor Ende",
+    "hoursBeforeEnd": "{hours, plural, one {# Stunde} other {# Stunden}} vor Ende",
+    "help": "Verkaufe weiter, während es läuft – praktisch für Orte, die man spontan am selben Tag besucht. Jeder Termin zählt für sich.",
+    "onNow": "Läuft gerade – Tickets im Verkauf bis {time}",
+    "onNowDay": "Läuft gerade – Tickets im Verkauf bis {day}, {time}"
+  },
   "refundClosed": {
     "noRefunds": "Für dieses Event gibt es keine Erstattungen.",
     "cutoffPassed": "Erstattungen für dieses Event waren bis {when} möglich."

@@ -108,5 +108,6 @@ export const postEvent = withActionLocale(async function postEvent(
     placeId: formData.placeId ?? null,
     draftId: formData.draftId ?? null,
     ...refundPolicyRequestFields(formData.refundPolicy),
+    salesCloseBeforeEndMinutes: formData.salesCloseBeforeEndMinutes ?? null,
   });
 });

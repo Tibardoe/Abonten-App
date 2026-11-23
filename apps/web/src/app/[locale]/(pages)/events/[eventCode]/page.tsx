@@ -436,6 +436,7 @@ export default async function page({
         eventDates={event_dates}
         eventStatus={event.status}
         postponed={!!event.postponed_at}
+        salesCloseBeforeEndMinutes={event.sales_close_before_end_minutes}
       />
 
       {/* Main Content. One grid: on phones everything stacks with the ticket
@@ -561,6 +562,9 @@ export default async function page({
                 isAbsolutelyFreeEvent={isAbsolutelyFreeEvent}
                 eventStatus={event.status}
                 postponed={!!event.postponed_at}
+                salesCloseBeforeEndMinutes={
+                  event.sales_close_before_end_minutes
+                }
               />
 
               {isAbsolutelyFreeEvent && !event.require_registration && (

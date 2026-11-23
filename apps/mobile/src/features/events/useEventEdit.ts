@@ -21,6 +21,12 @@ import {
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
 import {
+  DEFAULT_SALES_CLOSE,
+  salesCloseChoice,
+  salesCloseOf,
+  salesCloseRequestValue,
+} from "@abonten/core/eventPurchaseEligibility";
+import {
   groupDiscountTiersProblem,
   groupPricingProblemMessage,
   sortGroupDiscountTiers,
@@ -144,6 +150,11 @@ export function useEventEdit(eventId: string) {
     DEFAULT_REFUND_POLICY,
   );
   const [hasPaidTickets, setHasPaidTickets] = useState(false);
+  // When online sales close, as a choice. Editable after the first sale:
+  // it only changes sales still to come.
+  const [salesClose, setSalesClose] = useState(
+    salesCloseChoice(DEFAULT_SALES_CLOSE),
+  );
 
   // flyer — the existing Cloudinary flyer, plus an optional replacement URI
   const [existingFlyer, setExistingFlyer] = useState<{
@@ -211,6 +222,7 @@ export function useEventEdit(eventId: string) {
     const savedPolicy = refundPolicyOf(event);
     setSavedRefundPolicy(savedPolicy);
     setRefundPolicy(refundPolicyChoice(savedPolicy));
+    setSalesClose(salesCloseChoice(salesCloseOf(event)));
     setHasPaidTickets(
       (event.ticket_type ?? []).some((type) => Number(type.price) > 0),
     );
@@ -562,6 +574,7 @@ export function useEventEdit(eventId: string) {
       specificDates: schedule.specificDates ?? null,
       flyerUri: newFlyerUri,
       ...refundPolicyRequestFields(refundPolicy),
+      salesCloseBeforeEndMinutes: salesCloseRequestValue(salesClose),
     });
   }
 
@@ -780,6 +793,8 @@ export function useEventEdit(eventId: string) {
     refundPolicy,
     setRefundPolicy,
     savedRefundPolicy,
+    salesClose,
+    setSalesClose,
     hasPaidTickets,
     textErrors,
     // flyer

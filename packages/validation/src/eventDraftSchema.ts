@@ -83,6 +83,9 @@ export const eventDraftPayloadSchema = z.object({
   /** The refund-policy choice ("until_start", "until_cutoff:48", "none";
    *  @abonten/core/refundPolicy refundPolicyChoice). */
   refundPolicy: z.string().max(32).optional(),
+  /** When online sales close, as a form choice ("at_start",
+   *  "before_end:60"; @abonten/core/eventPurchaseEligibility). */
+  salesClose: z.string().max(32).optional(),
 });
 
 export type EventDraftPayload = z.infer<typeof eventDraftPayloadSchema>;

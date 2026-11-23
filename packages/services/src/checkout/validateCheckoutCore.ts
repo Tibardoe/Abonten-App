@@ -161,7 +161,7 @@ export async function validateCheckoutCore(
   const { data: event, error: eventError } = await supabase
     .from("event")
     .select(
-      "id, status, event_code, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+      "id, status, event_code, starts_at, ends_at, sales_close_before_end_minutes, event_occurrence(id, starts_at, ends_at)",
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -194,16 +194,23 @@ export async function validateCheckoutCore(
 
   // Authoritative sales-window check, computed from the event's full
   // schedule against the server's clock (never the caller's stale copy).
-  // A ticket may only be sold against a *strictly future* occurrence, so:
+  // A session is on sale until it starts, or -- when the organizer keeps
+  // selling while it's on (sales_close_before_end_minutes, 2026-11-23) --
+  // until that many minutes before it ends. So:
   //  - "ended"             -> every session is over
-  //  - "ongoing_no_future" -> a session is in progress but nothing upcoming
-  //    (covers a single-date event that has already started — walk-up sales
-  //    are intentionally closed, product decision 2026-09-06)
-  // registerForFreeEventCore runs the same helper for the free path.
+  //  - "ongoing_no_future" -> a session is in progress, its sales are
+  //    closed and nothing later is on sale
+  // registerForFreeEventCore runs the same helper for the free path, and
+  // create_ticket_checkout the same rule in SQL
+  // (public.event_session_sales_close_at).
+  const salesWindow = {
+    salesCloseBeforeEndMinutes: event.sales_close_before_end_minutes,
+  };
   const occurrenceState = resolveOccurrenceState(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
+    salesWindow,
   );
 
   if (occurrenceState.blockReason === "no_dates") {
@@ -231,11 +238,12 @@ export async function validateCheckoutCore(
   // occurrenceId is client-supplied and affects a DB write, so verify it
   // belongs to this event (a tampered client could otherwise stamp a
   // purchase with another event's occurrence id) AND that the chosen date
-  // has not already started while later dates of the same event remain.
+  // is still on sale while later dates of the same event remain.
   if (occurrenceId) {
     const occurrenceCheck = validatePurchaseOccurrence(
       occurrenceId,
       event.event_occurrence,
+      salesWindow,
     );
 
     if (!occurrenceCheck.ok) {

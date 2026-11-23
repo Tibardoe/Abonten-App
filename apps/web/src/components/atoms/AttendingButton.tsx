@@ -25,6 +25,8 @@ type AttendingButtonProps = {
   eventStatusRaw: string;
   eventDates: Occurrence[];
   soldOut?: boolean;
+  /** When online sales close (event.sales_close_before_end_minutes). */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 type AttendanceCountResult = Awaited<
@@ -43,6 +45,7 @@ export default function AttendingButton({
   eventStatusRaw,
   eventDates,
   soldOut,
+  salesCloseBeforeEndMinutes = null,
 }: AttendingButtonProps) {
   const t = useTranslations("common");
 
@@ -162,11 +165,14 @@ export default function AttendingButton({
     mutate(isAttending ? "cancel" : "register");
   };
 
-  // A free RSVP, like a paid ticket, can only be taken while a strictly
-  // future occurrence remains — so an event that has ended OR is currently
-  // in progress with nothing upcoming is ineligible (registerForFreeEvent
+  // A free RSVP, like a paid ticket, can only be taken while a date is on
+  // sale (still to come, or on now until its cut-off when the organizer
+  // keeps selling while it's on) — so an event that has ended, or is in
+  // progress with nothing left on sale, is ineligible (registerForFreeEvent
   // enforces the same rule server-side).
-  const rsvpState = resolveOccurrenceState(null, null, eventDates);
+  const rsvpState = resolveOccurrenceState(null, null, eventDates, {
+    salesCloseBeforeEndMinutes,
+  });
 
   const ineligibleLabel =
     eventStatusRaw === "canceled"

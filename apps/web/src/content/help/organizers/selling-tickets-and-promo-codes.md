@@ -35,6 +35,18 @@ Each named ticket type can carry a short note shown under its name on the event 
 
 Prices, quantities and the ticket types themselves are locked after the first ticket is confirmed, but the notes are not: change them any time from your event's **Details** tab (web) or **Edit event** (app), under **What each ticket includes**. A copy of the event or a new show in its run keeps the notes.
 
+## When online sales close
+
+Choose when buyers stop being able to get tickets online for each date of your event, under **Online ticket sales close** (when you create the event, and at any time under **Edit**):
+
+- **When it starts** (the default): no ticket is sold once a date has started.
+- **When it ends**, or **30 minutes, 1 hour or 2 hours before it ends**: keep selling while it's on. Useful for venues people decide to visit on the day, like an amusement park open 11:00 to 19:00, a fair or an exhibition. The event page then says "On now — tickets on sale until 18:00", on the event's own clock.
+
+- Each date of an event with several dates, and each show of a run, counts on its own.
+- A free registration follows the same rule.
+- Changing it only affects sales still to come, so you can change it after the first sale.
+- A ticket bought after the start can't be cancelled by the buyer: buyers can never cancel once the show has started. Pay small small is never offered for a date that has started.
+
 ## Refund policy
 
 Choose until when buyers can cancel a paid ticket and get the ticket price back: **until the event starts** (the default), **1, 2, 3 or 7 days before it**, or **no refunds**. The event page shows the policy before anyone pays, and the service fee is never refunded.

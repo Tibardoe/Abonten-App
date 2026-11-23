@@ -84,6 +84,9 @@ export type PostsType = {
   // The refund-policy choice ("until_start", "until_cutoff:48", "none";
   // @abonten/core/refundPolicy). Omitted = the default.
   refundPolicy?: string | null;
+  // When online sales close for each session: null = at its start, 0/30/
+  // 60/120 = minutes before it ends (@abonten/core/eventPurchaseEligibility).
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 export type EventDates = {

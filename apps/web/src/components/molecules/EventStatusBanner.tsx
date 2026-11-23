@@ -14,11 +14,14 @@ export default function EventStatusBanner({
   eventDates,
   eventStatus,
   postponed = false,
+  salesCloseBeforeEndMinutes = null,
 }: {
   eventDates: Occurrence[];
   eventStatus: string;
   /** Postponed with no new date yet (its old date may have passed). */
   postponed?: boolean;
+  /** When online sales close (event.sales_close_before_end_minutes). */
+  salesCloseBeforeEndMinutes?: number | null;
 }) {
   const t = useTranslations("common");
 
@@ -29,7 +32,10 @@ export default function EventStatusBanner({
   }, []);
 
   const isCanceled = eventStatus === "canceled";
-  const state = resolveOccurrenceState(undefined, undefined, eventDates);
+  // A date on now that still sells is not "in progress, sales closed".
+  const state = resolveOccurrenceState(undefined, undefined, eventDates, {
+    salesCloseBeforeEndMinutes,
+  });
 
   const message = isCanceled
     ? t("thisEventHasBeenCancelled2")

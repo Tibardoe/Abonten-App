@@ -79,7 +79,7 @@ export async function registerForFreeEventCore(
   const { data: event, error: eventFetchError } = await supabase
     .from("event")
     .select(
-      "event_code, status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+      "event_code, status, starts_at, ends_at, sales_close_before_end_minutes, event_occurrence(id, starts_at, ends_at)",
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -99,10 +99,16 @@ export async function registerForFreeEventCore(
     };
   }
 
+  // The same sales window as a paid ticket: until the session starts, or
+  // until its cut-off when the organizer keeps selling while it's on.
+  const salesWindow = {
+    salesCloseBeforeEndMinutes: event.sales_close_before_end_minutes,
+  };
   const occurrenceState = resolveOccurrenceState(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
+    salesWindow,
   );
 
   if (occurrenceState.blockReason === "no_dates") {
@@ -142,6 +148,7 @@ export async function registerForFreeEventCore(
     const occurrenceCheck = validatePurchaseOccurrence(
       occurrenceId,
       event.event_occurrence,
+      salesWindow,
     );
 
     if (!occurrenceCheck.ok) {

@@ -3148,6 +3148,7 @@ export type Database = {
           refund_cutoff_hours: number | null
           refund_policy: string
           require_registration: boolean
+          sales_close_before_end_minutes: number | null
           search_title: string | null
           search_tsv: unknown
           series_id: string | null
@@ -3187,6 +3188,7 @@ export type Database = {
           refund_cutoff_hours?: number | null
           refund_policy?: string
           require_registration?: boolean
+          sales_close_before_end_minutes?: number | null
           search_title?: string | null
           search_tsv?: unknown
           series_id?: string | null
@@ -3226,6 +3228,7 @@ export type Database = {
           refund_cutoff_hours?: number | null
           refund_policy?: string
           require_registration?: boolean
+          sales_close_before_end_minutes?: number | null
           search_title?: string | null
           search_tsv?: unknown
           series_id?: string | null
@@ -17228,6 +17231,14 @@ export type Database = {
           added: number
           skipped: number
         }[]
+      }
+      event_session_sales_close_at: {
+        Args: {
+          p_close_before_end_minutes: number
+          p_ends_at: string
+          p_starts_at: string
+        }
+        Returns: string
       }
       event_shared_capacity_left: {
         Args: { p_event_id: string }

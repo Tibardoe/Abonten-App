@@ -35,6 +35,18 @@ Jeder benannte Tickettyp kann eine kurze Notiz tragen, die auf der Veranstaltung
 
 Preise, Mengen und die Tickettypen selbst sind nach dem ersten bestätigten Ticket gesperrt, die Notizen nicht: Ändere sie jederzeit im Tab **Details** deiner Veranstaltung (Website) oder unter **Event bearbeiten** (App), im Abschnitt **Was jedes Ticket enthält**. Eine Kopie der Veranstaltung oder eine neue Vorstellung ihrer Reihe übernimmt die Notizen.
 
+## Ende des Online-Verkaufs
+
+Lege unter **Ende des Online-Verkaufs** fest, ab wann Käufer für jeden Termin deines Events keine Tickets mehr online bekommen (beim Erstellen des Events und jederzeit unter **Bearbeiten**):
+
+- **Wenn es beginnt** (Standard): Sobald ein Termin begonnen hat, wird kein Ticket mehr verkauft.
+- **Wenn es endet**, oder **30 Minuten, 1 Stunde oder 2 Stunden vor Ende**: Verkaufe weiter, während es läuft. Praktisch für Orte, die man spontan am selben Tag besucht, etwa einen Freizeitpark mit Öffnungszeiten von 11:00 bis 19:00, einen Markt oder eine Ausstellung. Die Eventseite zeigt dann „Läuft gerade – Tickets im Verkauf bis 18:00“, in der Uhrzeit am Ort des Events.
+
+- Jeder Termin eines Events mit mehreren Terminen und jede Vorstellung einer Reihe zählt für sich.
+- Eine kostenlose Anmeldung folgt derselben Regel.
+- Eine Änderung betrifft nur künftige Verkäufe, du kannst sie also auch nach dem ersten Verkauf ändern.
+- Ein nach Beginn gekauftes Ticket kann der Käufer nicht stornieren: Käufer können nie stornieren, sobald die Veranstaltung begonnen hat. Ratenzahlung (Pay small small) wird für einen Termin, der begonnen hat, nie angeboten.
+
 ## Erstattungsregel
 
 Lege fest, bis wann Käufer ein bezahltes Ticket stornieren und den Ticketpreis zurückbekommen können: **bis zum Beginn des Events** (Standard), **1, 2, 3 oder 7 Tage vorher** oder **keine Erstattungen**. Die Event-Seite zeigt die Regel, bevor jemand bezahlt, und die Servicegebühr wird nie erstattet.

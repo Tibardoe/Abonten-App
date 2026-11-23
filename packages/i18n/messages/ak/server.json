@@ -217,6 +217,9 @@
   "refundPolicyInvalid": "Choose a refund policy from the list.",
   "refundPolicyStricterAfterSales": "People already hold tickets for this event, so its refund policy can only become more generous.",
   "refundPolicyNotSaved": "Your event was posted, but its refund policy wasn't saved. Open the event and set it again.",
+  "salesCloseInvalid": "Choose when online ticket sales close from the list.",
+  "salesCloseNotSaved": "Your event was posted, but when its online ticket sales close wasn't saved. Open the event and set it again.",
+  "salesCloseNotCopied": "Your shows were added, but when their online ticket sales close wasn't copied to them. Try again.",
   "shareKit": {
     "ticketsFrom": "Tickets from {price}",
     "ticketsAt": "Tickets {price}",

@@ -35,6 +35,18 @@ Cada tipo de entrada con nombre puede llevar una nota breve, que se muestra bajo
 
 Los precios, las cantidades y los propios tipos de entrada se bloquean cuando se confirma la primera entrada, pero las notas no: cámbialas cuando quieras desde la pestaña **Detalles** de tu evento (web) o **Editar evento** (aplicación), en **Qué incluye cada entrada**. Una copia del evento o una nueva función de su serie conserva las notas.
 
+## Fin de la venta en línea
+
+Elige cuándo los compradores dejan de poder conseguir entradas en línea para cada fecha de tu evento, en **Fin de la venta en línea** (al crear el evento y en cualquier momento en **Editar**):
+
+- **Cuando empieza** (por defecto): no se vende ninguna entrada una vez que una fecha ha empezado.
+- **Cuando termina**, o **30 minutos, 1 hora o 2 horas antes de que termine**: sigue vendiendo mientras está en marcha. Útil para lugares que la gente decide visitar el mismo día, como un parque de atracciones abierto de 11:00 a 19:00, una feria o una exposición. La página del evento dice entonces «En curso: entradas a la venta hasta las 18:00», con la hora del lugar del evento.
+
+- Cada fecha de un evento con varias fechas, y cada función de una serie, cuenta por separado.
+- Una inscripción gratuita sigue la misma regla.
+- El cambio solo afecta a las ventas que aún no se han hecho, así que puedes cambiarlo después de la primera venta.
+- El comprador no puede cancelar una entrada comprada después del inicio: los compradores nunca pueden cancelar una vez que el espectáculo ha empezado. El pago a plazos (Pay small small) nunca se ofrece para una fecha que ya ha empezado.
+
 ## Política de reembolso
 
 Elige hasta cuándo los compradores pueden cancelar una entrada de pago y recuperar el precio de la entrada: **hasta que empiece el evento** (por defecto), **1, 2, 3 o 7 días antes**, o **sin reembolsos**. La página del evento muestra la política antes de que nadie pague, y la tarifa de servicio nunca se reembolsa.

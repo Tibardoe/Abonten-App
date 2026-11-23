@@ -31,6 +31,11 @@ export type UpdateEventInput = {
   selectedFile?: File | null;
   /** The refund-policy choice (@abonten/core/refundPolicy); omit to keep it. */
   refundPolicy?: string | null;
+  /**
+   * When online sales close (@abonten/core/eventPurchaseEligibility): null =
+   * at the start, minutes before the end otherwise; omit to keep it.
+   */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 /**
@@ -100,6 +105,7 @@ export const updateEvent = withActionLocale(async function updateEvent(
     flyerPublicId,
     flyerVersion,
     ...refundPolicyRequestFields(formData.refundPolicy),
+    salesCloseBeforeEndMinutes: formData.salesCloseBeforeEndMinutes,
   });
 
   if (result.status === 200) {

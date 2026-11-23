@@ -1,5 +1,6 @@
 import { GroupPricesEditor } from "@/components/events/GroupPricesEditor";
 import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
+import { SalesClosePicker } from "@/components/events/SalesClosePicker";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { uuidv4 } from "@/lib/uuid";
@@ -177,6 +178,10 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
       ) : w.capacityHint ? (
         <AppText variant="meta">{w.capacityHint}</AppText>
       ) : null}
+
+      {/* When online sales close: free registrations and paid tickets
+          alike. */}
+      <SalesClosePicker value={w.salesClose} onChange={w.setSalesClose} />
 
       {/* Refunds -- only paid tickets have a price to give back. */}
       {w.ticketMode !== "free" ? (

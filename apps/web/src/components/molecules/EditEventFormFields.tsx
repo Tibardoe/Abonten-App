@@ -5,6 +5,7 @@ import PostInput from "@/components/atoms/PostInput";
 import CategoryFilter from "@/components/molecules/CategoryFilter";
 import DateTimePicker from "@/components/molecules/DateTimePicker";
 import RefundPolicySelect from "@/components/molecules/RefundPolicySelect";
+import SalesCloseSelect from "@/components/molecules/SalesCloseSelect";
 import TypeFilter from "@/components/molecules/TypeFilter";
 import {
   Form,
@@ -37,6 +38,8 @@ type EditEventFormFieldsProps = Pick<
   | "handleRefundPolicy"
   | "savedRefundPolicy"
   | "hasPaidTickets"
+  | "salesClose"
+  | "handleSalesClose"
   | "category"
   | "setCategory"
   | "types"
@@ -78,6 +81,8 @@ export default function EditEventFormFields({
   handleRefundPolicy,
   savedRefundPolicy,
   hasPaidTickets,
+  salesClose,
+  handleSalesClose,
   category,
   setCategory,
   types,
@@ -276,6 +281,10 @@ export default function EditEventFormFields({
                 </FormItem>
               )}
             />
+
+            {/* Outside the locked fieldset: it only changes sales still to
+                come. */}
+            <SalesCloseSelect value={salesClose} onChange={handleSalesClose} />
 
             {/* Outside the locked fieldset: after the first sale the policy
                 may still become more generous. */}

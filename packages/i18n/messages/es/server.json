@@ -217,6 +217,9 @@
   "refundPolicyInvalid": "Elige una política de reembolso de la lista.",
   "refundPolicyStricterAfterSales": "Ya hay personas con entradas para este evento, así que su política de reembolso solo puede volverse más generosa.",
   "refundPolicyNotSaved": "Tu evento se publicó, pero su política de reembolso no se guardó. Abre el evento y vuelve a configurarla.",
+  "salesCloseInvalid": "Elige de la lista cuándo termina la venta en línea.",
+  "salesCloseNotSaved": "Tu evento se publicó, pero no se guardó cuándo termina su venta en línea. Abre el evento y vuelve a configurarlo.",
+  "salesCloseNotCopied": "Tus funciones se añadieron, pero no se les copió cuándo termina su venta en línea. Inténtalo de nuevo.",
   "shareKit": {
     "ticketsFrom": "Entradas desde {price}",
     "ticketsAt": "Entradas {price}",

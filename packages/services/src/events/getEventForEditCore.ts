@@ -23,6 +23,8 @@ export type EventForEditData = {
   /** @abonten/core/refundPolicy (absent from an older server). */
   refund_policy?: string | null;
   refund_cutoff_hours?: number | null;
+  /** @abonten/core/eventPurchaseEligibility (absent from an older server). */
+  sales_close_before_end_minutes?: number | null;
   starts_at: string | null;
   ends_at: string | null;
   flyer_public_id: string;
@@ -78,6 +80,7 @@ export async function getEventForEditCore(
       featured,
       refund_policy,
       refund_cutoff_hours,
+      sales_close_before_end_minutes,
       starts_at,
       ends_at,
       flyer_public_id,

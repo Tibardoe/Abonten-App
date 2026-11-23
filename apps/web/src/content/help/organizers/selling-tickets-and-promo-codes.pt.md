@@ -35,6 +35,18 @@ Cada tipo de bilhete com nome pode ter uma nota curta, mostrada por baixo do nom
 
 Os preços, as quantidades e os próprios tipos de bilhete ficam bloqueados depois de o primeiro bilhete ser confirmado, mas as notas não: altere-as quando quiser no separador **Detalhes** do seu evento (website) ou em **Editar evento** (aplicação), em **O que inclui cada bilhete**. Uma cópia do evento ou uma nova sessão da sua série mantém as notas.
 
+## Fim da venda online
+
+Escolha quando os compradores deixam de poder obter bilhetes online para cada data do seu evento, em **Fim da venda online** (ao criar o evento e a qualquer momento em **Editar**):
+
+- **Quando começa** (por defeito): nenhum bilhete é vendido depois de uma data ter começado.
+- **Quando termina**, ou **30 minutos, 1 hora ou 2 horas antes de terminar**: continue a vender enquanto decorre. Útil para locais que as pessoas decidem visitar no próprio dia, como um parque de diversões aberto das 11:00 às 19:00, uma feira ou uma exposição. A página do evento diz então «A decorrer — bilhetes à venda até às 18:00», na hora do local do evento.
+
+- Cada data de um evento com várias datas, e cada sessão de uma série, conta por si.
+- Uma inscrição gratuita segue a mesma regra.
+- A alteração só afeta as vendas que ainda não foram feitas, por isso pode alterá-la depois da primeira venda.
+- Um bilhete comprado depois do início não pode ser cancelado pelo comprador: os compradores nunca podem cancelar depois de o espetáculo ter começado. O pagamento em prestações (Pay small small) nunca é oferecido para uma data que já começou.
+
 ## Política de reembolso
 
 Escolha até quando os compradores podem cancelar um bilhete pago e receber de volta o preço do bilhete: **até o evento começar** (predefinição), **1, 2, 3 ou 7 dias antes**, ou **sem reembolsos**. A página do evento mostra a política antes de alguém pagar, e a taxa de serviço nunca é reembolsada.

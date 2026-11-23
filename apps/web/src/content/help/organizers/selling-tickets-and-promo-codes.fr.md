@@ -35,6 +35,18 @@ Chaque type de billet nommé peut porter une courte note, affichée sous son nom
 
 Les prix, les quantités et les types de billets eux-mêmes sont verrouillés après la confirmation du premier billet, mais pas les notes : modifiez-les à tout moment depuis l'onglet **Détails** de votre événement (site web) ou **Modifier l'événement** (application), sous **Ce que comprend chaque billet**. Une copie de l'événement ou une nouvelle séance de sa série garde les notes.
 
+## Fin de la vente en ligne
+
+Choisissez à quel moment les acheteurs ne peuvent plus obtenir de billets en ligne pour chaque date de votre événement, sous **Fin de la vente en ligne** (à la création de l'événement, et à tout moment sous **Modifier**) :
+
+- **Au début** (par défaut) : aucun billet n'est vendu une fois qu'une date a commencé.
+- **À la fin**, ou **30 minutes, 1 heure ou 2 heures avant la fin** : continuez à vendre pendant qu'il a lieu. Utile pour les lieux où l'on décide de venir le jour même, comme un parc d'attractions ouvert de 11 h à 19 h, une foire ou une exposition. La page de l'événement indique alors « En cours — billets en vente jusqu'à 18:00 », à l'heure du lieu de l'événement.
+
+- Chaque date d'un événement à plusieurs dates, et chaque séance d'une série, compte à part.
+- Une inscription gratuite suit la même règle.
+- Le changement ne concerne que les ventes à venir : vous pouvez donc le modifier après la première vente.
+- Un billet acheté après le début ne peut pas être annulé par l'acheteur : les acheteurs ne peuvent jamais annuler une fois le spectacle commencé. Le paiement en plusieurs fois (Pay small small) n'est jamais proposé pour une date qui a commencé.
+
 ## Politique de remboursement
 
 Choisissez jusqu'à quand les acheteurs peuvent annuler un billet payant et récupérer le prix du billet : **jusqu'au début de l'événement** (par défaut), **1, 2, 3 ou 7 jours avant**, ou **aucun remboursement**. La page de l'événement affiche la politique avant tout paiement, et les frais de service ne sont jamais remboursés.

@@ -2,7 +2,7 @@
 title: Tickets kaufen und sich für kostenlose Events anmelden
 summary: So funktioniert der Bezahlvorgang, die 30-minütige Reservierung, Promo-Codes, die Servicegebühr und was passiert, wenn die Zahlung klappt oder fehlschlägt.
 order: 3
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -43,5 +43,5 @@ Ist das Programm Abonten Rewards für dich verfügbar und hast du Guthaben, das 
 ## Häufige Fragen
 
 - **Das Event ist „ausverkauft“ oder eine Ticketart ist nicht verfügbar** – die Mengen legt der Veranstalter fest; ein reservierter, aber nicht bezahlter Bezahlvorgang gibt seine Tickets frei, wenn er abläuft, es lohnt sich also, später noch einmal nachzusehen.
-- **Das Event läuft schon oder ist vorbei** – Tickets können nur vor Beginn eines Events (oder seines nächsten Termins) gekauft werden.
+- **Das Event läuft schon oder ist vorbei** – Tickets können meist nur vor Beginn eines Events (oder seines nächsten Termins) gekauft werden. Manche Veranstalter verkaufen weiter, während es läuft, bis kurz vor Ende: Die Eventseite zeigt dann „Läuft gerade – Tickets im Verkauf bis …“.
 - **Ich habe für jemand anderen gekauft** – Tickets sind an dein Konto gebunden, gescannt wird aber der QR-Code. Du kannst das Ticket vorzeigen oder weiterleiten; sei vorsichtig, denn wer den Code hat, kann damit eingecheckt werden.
