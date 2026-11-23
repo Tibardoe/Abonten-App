@@ -4698,7 +4698,12 @@
     "weLlTextACodeToThis": "18a5deca",
     "businessVerification": "2747ed62",
     "businessVerificationIntro": "17e82bb0",
-    "teamPlaceNotYours": "646632da"
+    "teamPlaceNotYours": "646632da",
+    "yourEventsNext": "55b556fd",
+    "yourEventsNextMore": "0d1f7130",
+    "yourEventsOnNow": "9a5ed16f",
+    "yourEventsOnNowMore": "51aba69a",
+    "yourEventsOpen": "e25dd666"
   },
   "messaging": {
     "a11y.messageActions": "949184b0",

@@ -4,7 +4,7 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.11
+version: 1.12
 lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -71,6 +71,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Promoter commission | W A | event › Promoter commission | 1–30 % per event | `event_promoter_commission` | `rewards/promoterCommissionCore`; action `setEventPromoterCommission` | — | Rewards › Promoters | finance credit-tender |
 | Promotion (featuring) | W A | Promote | tier → checkout → Paystack → activate | `event_promotion_tier/checkout`, `event_promotion` | `promotions/*`, `utils/activateEventPromotion.ts`; API `checkout/promotion-attempt` | — | Finance | help promoting |
 | Attendees + check-in | W A | Insights / Attendees | list; QR scan (A) | `ticket`, `attendance`; `get_event_attendee_contacts` | `tickets/checkInTicketCore`; action `checkInTicket`; API `organizer/tickets/[id]/check-in` | — | — | help event-day |
+| "Your events" card on Home (since 2026-11-23) | A | Home, above the list | organizers only (`useIsOrganizer`); the next published event still to come or on now, "and N more"; taps to Menu › Manage › Events. Explore is by location, so an organizer browsing elsewhere still finds their own listing | `event`, `event_occurrence` | API `organizer/events` (`useOrganizerEvents`), `components/organizer/YourEventsCard` | — | — | — |
 | Insights / dashboard | W A | Dashboard | RPCs `get_organizer_*`, event analytics | many | actions `getOrganizer*`, `getEvent*Analytics`; API `organizer/dashboard`, `events/[id]/analytics` | — | Analytics | help selling |
 | Finance, payout accounts, payouts | W A | Finances | ledger RPCs; `request_organizer_payout`; a mobile money payout number is confirmed like a wallet's | `organizer_ledger_entry`, `payout`, `payout_account` | `organizer/*`; actions `requestOrganizerPayout`, `addPayoutAccount`, `requestMobileMoneyNumberCode`…; API `organizer/payout*`, `payment-methods/momo-code` | payout completed notice | Finance › Payouts (step-up) | finance settlement |
 | Review replies | W A | event › Reviews | one response | `event_review.organizer_response` | `reviews/reviewResponseCore` | — | Content › clear response | help |

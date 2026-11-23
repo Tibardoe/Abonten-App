@@ -623,5 +623,10 @@
   "weLlTextACodeToThis": "Nous enverrons un code par SMS à ce numéro pour vérifier qu'il est correct. Le numéro vérifié de votre compte n'en a pas besoin.",
   "businessVerification": "Vérification de l'entreprise",
   "businessVerificationIntro": "Montrez aux acheteurs de billets qu'Abonten a examiné l'enregistrement de l'entreprise de cette équipe et que ses propriétaires peuvent agir en son nom. C'est facultatif : l'équipe peut continuer à créer des événements dans les deux cas.",
-  "teamPlaceNotYours": "Votre rôle dans cette équipe couvre d'autres lieux."
+  "teamPlaceNotYours": "Votre rôle dans cette équipe couvre d'autres lieux.",
+  "yourEventsNext": "{title} · {date}",
+  "yourEventsNextMore": "{title} · {date} · et {count, plural, one {# autre} other {# autres}}",
+  "yourEventsOnNow": "{title} · en cours",
+  "yourEventsOnNowMore": "{title} · en cours · et {count, plural, one {# autre} other {# autres}}",
+  "yourEventsOpen": "Ouvrir vos événements"
 }

@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-23 — "Your events" on the app's Home
+
+- Organizers see their next event at the top of Home ("Your events · Zadokeli · Fri 11 Dec · and 1 more"), whatever area they browse, one tap from Menu › Manage › Events; found when an organizer browsing from Amamorley thought her listing had gone. `architecture/feature-inventory.md` (1.12).
+
 ## 2026-11-23 — Ticket notes, holiday hours, free services
 
 - A ticket type can carry a note of what it includes ("Kids: ages 3–12"), shown under its name on the event page, at checkout and in the organizer's lists, and editable after the first sale through its own path (`updateTicketTypeNotesCore`); `event_add_show` copies it. A place can set special dates in its opening hours (closed all day, or other hours, with an optional name) that replace that day's weekly hours on the place page and for "open now" in every list (`place_special_hours`, owner-written, public for published places; the four SQL copies of "open now" and `@abonten/core/computePlaceOpenStatus` read them alike). A place service priced 0 shows as "Free". Migration `20261123091000_ticket_notes_holiday_hours`. Docs: new `architecture/ticket-notes-and-special-hours.md` 1.0; `architecture/explore-lists.md` 1.2 (§4 open now, §9 limits); `architecture/data-model-overview.md` (Places row); `architecture/show-runs.md` (what a show copies); `architecture/README.md`; `architecture/feature-inventory.md` 1.11; `INDEX.md`; help pages `organizers/selling-tickets-and-promo-codes` and `place-owners/managing-your-place` in five languages; `scripts/perf/discovery-explore-perf.sql` seeds special dates.

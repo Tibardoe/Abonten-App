@@ -623,5 +623,10 @@
   "weLlTextACodeToThis": "Wir schicken einen Code per SMS an diese Nummer, um zu prüfen, ob sie stimmt. Für die bestätigte Telefonnummer deines Kontos ist keiner nötig.",
   "businessVerification": "Unternehmensverifizierung",
   "businessVerificationIntro": "Zeige Ticketkäufern, dass Abonten die Eintragung des Unternehmens dieses Teams geprüft hat und dass seine Inhaber für es handeln dürfen. Das ist freiwillig: Das Team kann so oder so weiter Events erstellen.",
-  "teamPlaceNotYours": "Deine Rolle in diesem Team gilt für andere Orte."
+  "teamPlaceNotYours": "Deine Rolle in diesem Team gilt für andere Orte.",
+  "yourEventsNext": "{title} · {date}",
+  "yourEventsNextMore": "{title} · {date} · und {count, plural, one {# weiteres} other {# weitere}}",
+  "yourEventsOnNow": "{title} · läuft gerade",
+  "yourEventsOnNowMore": "{title} · läuft gerade · und {count, plural, one {# weiteres} other {# weitere}}",
+  "yourEventsOpen": "Deine Events öffnen"
 }

@@ -623,5 +623,10 @@
   "weLlTextACodeToThis": "We'll text a code to this number to check it's right. The verified phone number on your account doesn't need one.",
   "businessVerification": "Business verification",
   "businessVerificationIntro": "Show ticket buyers that Abonten has reviewed this team's business registration and that its Owners may act for it. It's optional: the team can keep creating events either way.",
-  "teamPlaceNotYours": "Your role in this team covers other places."
+  "teamPlaceNotYours": "Your role in this team covers other places.",
+  "yourEventsNext": "{title} · {date}",
+  "yourEventsNextMore": "{title} · {date} · and {count, plural, one {# more} other {# more}}",
+  "yourEventsOnNow": "{title} · on now",
+  "yourEventsOnNowMore": "{title} · on now · and {count, plural, one {# more} other {# more}}",
+  "yourEventsOpen": "Open your events"
 }

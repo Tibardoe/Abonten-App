@@ -23,6 +23,7 @@ import {
 } from "@/components/explore/ExploreSliderRow";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { whereText } from "@/components/explore/areaCopy";
+import { YourEventsCard } from "@/components/organizer/YourEventsCard";
 import { ExploreSkeleton } from "@/components/skeletons";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import {
@@ -407,6 +408,9 @@ export default function Explore() {
 
       {/* Tickets held for a checkout left unfinished. */}
       <PendingCheckoutBanner className="mx-4 mt-4" />
+
+      {/* An organizer's next event, wherever they are browsing from. */}
+      <YourEventsCard className="mx-4 mt-4" />
 
       {/* Signed-in, setup unfinished, not put away recently. */}
       <AccountSetupCard className="mx-4 mt-4" />
