@@ -454,7 +454,8 @@
   "refundPolicyLine": {
     "untilStart": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'au début de l'événement.",
     "untilCutoff": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'à {days, plural, one {# jour} other {# jours}} avant l'événement.",
-    "none": "Aucun remboursement : les billets payants ne peuvent pas être annulés."
+    "none": "Aucun remboursement : les billets payants ne peuvent pas être annulés.",
+    "startedDate": "Un billet pour une date déjà commencée ne peut pas être annulé."
   },
   "salesClose": {
     "label": "Fin de la vente en ligne",

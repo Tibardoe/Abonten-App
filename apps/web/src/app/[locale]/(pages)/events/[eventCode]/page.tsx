@@ -33,6 +33,7 @@ import {
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
 import { readEventAddress } from "@abonten/core/eventAddress";
+import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { hostDisplayName } from "@abonten/core/hostDisplayName";
@@ -339,6 +340,18 @@ export default async function page({
           })
         : t("refundPolicyLine.untilStart");
 
+  // A date already on that still sells (same-day sales): nobody can cancel
+  // a ticket once its show has started (buyerCancelGate), so say so before
+  // anyone pays. The page renders for every request, so `now` is fresh.
+  const sellingWhileOn =
+    refundPolicy.kind !== "none" &&
+    resolveOccurrenceState(
+      event.starts_at,
+      event.ends_at,
+      event.event_occurrence,
+      { salesCloseBeforeEndMinutes: event.sales_close_before_end_minutes },
+    ).onNow;
+
   // "From" only when there is more than one price to choose from.
   const prices = (event.ticket_type ?? []).map((t: { price: number | null }) =>
     Number(t.price ?? 0),
@@ -576,6 +589,9 @@ export default async function page({
               {sellsPaidTickets && (
                 <p className="text-sm text-muted-foreground">
                   {refundPolicyLine}
+                  {sellingWhileOn
+                    ? ` ${t("refundPolicyLine.startedDate")}`
+                    : null}
                 </p>
               )}
 

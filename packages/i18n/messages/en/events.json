@@ -454,7 +454,8 @@
   "refundPolicyLine": {
     "untilStart": "You can cancel a paid ticket for a refund of the ticket price until the event starts.",
     "untilCutoff": "You can cancel a paid ticket for a refund of the ticket price until {days, plural, one {# day} other {# days}} before the event.",
-    "none": "No refunds: paid tickets can't be cancelled."
+    "none": "No refunds: paid tickets can't be cancelled.",
+    "startedDate": "A ticket for a date that has already started can't be cancelled."
   },
   "salesClose": {
     "label": "Online ticket sales close",

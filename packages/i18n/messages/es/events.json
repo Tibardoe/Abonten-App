@@ -454,7 +454,8 @@
   "refundPolicyLine": {
     "untilStart": "Puedes cancelar una entrada de pago y recibir el reembolso del precio de la entrada hasta que empiece el evento.",
     "untilCutoff": "Puedes cancelar una entrada de pago y recibir el reembolso del precio de la entrada hasta {days, plural, one {# día} other {# días}} antes del evento.",
-    "none": "Sin reembolsos: las entradas de pago no se pueden cancelar."
+    "none": "Sin reembolsos: las entradas de pago no se pueden cancelar.",
+    "startedDate": "Una entrada para una fecha que ya ha empezado no se puede cancelar."
   },
   "salesClose": {
     "label": "Fin de la venta en línea",

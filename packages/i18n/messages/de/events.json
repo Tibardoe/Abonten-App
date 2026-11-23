@@ -454,7 +454,8 @@
   "refundPolicyLine": {
     "untilStart": "Du kannst ein bezahltes Ticket bis zum Beginn des Events stornieren und bekommst den Ticketpreis erstattet.",
     "untilCutoff": "Du kannst ein bezahltes Ticket bis {days, plural, one {# Tag} other {# Tage}} vor dem Event stornieren und bekommst den Ticketpreis erstattet.",
-    "none": "Keine Erstattungen: Bezahlte Tickets können nicht storniert werden."
+    "none": "Keine Erstattungen: Bezahlte Tickets können nicht storniert werden.",
+    "startedDate": "Ein Ticket für einen Termin, der schon begonnen hat, kann nicht storniert werden."
   },
   "salesClose": {
     "label": "Ende des Online-Verkaufs",

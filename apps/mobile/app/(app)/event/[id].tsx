@@ -793,7 +793,13 @@ export default function EventDetailScreen() {
                       length: event.ticket_type.length,
                     })}
                   </AppText>
-                  <AppText variant="meta">{refundPolicyLine}</AppText>
+                  <AppText variant="meta">
+                    {refundPolicyLine}
+                    {/* Same-day sales: no buyer cancels once a date has started. */}
+                    {occurrenceState.onNow && refundPolicy.kind !== "none"
+                      ? ` ${t("refundPolicyLine.startedDate")}`
+                      : null}
+                  </AppText>
                 </View>
               </View>
             )}
