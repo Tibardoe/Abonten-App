@@ -35,6 +35,17 @@ Chaque type de billet nommé peut porter une courte note, affichée sous son nom
 
 Les prix, les quantités et les types de billets eux-mêmes sont verrouillés après la confirmation du premier billet, mais pas les notes : modifiez-les à tout moment depuis l'onglet **Détails** de votre événement (site web) ou **Modifier l'événement** (application), sous **Ce que comprend chaque billet**. Une copie de l'événement ou une nouvelle séance de sa série garde les notes.
 
+## Laisser l'acheteur choisir le montant
+
+Un type de billet peut laisser l'acheteur choisir combien il paie : par exemple des crédits de manèges chargés sur une carte à l'entrée, une entrée « payez ce que vous voulez » à partir d'un minimum, ou un acompte pour une table. Abonten active cette option pour votre compte : demandez-la au support si vous en avez besoin.
+
+- En ajoutant le type de billet, choisissez de laisser l'acheteur fixer le montant au lieu d'un prix fixe, puis indiquez le **montant le plus bas**, le **montant le plus élevé** et le **pas**. Par exemple de 50 GH₵ à 1 000 GH₵ par paliers de 10 GH₵ : les acheteurs peuvent choisir 50 GH₵, 60 GH₵, 70 GH₵ et ainsi de suite jusqu'à 1 000 GH₵.
+- Le montant le plus élevé doit être le montant le plus bas plus un nombre entier de pas. Le montant le plus bas s'affiche comme prix du billet (« À partir de 50 GH₵ »).
+- Chaque montant choisi est **un billet**, avec un code QR, pour une personne.
+- Utilisez la note du billet pour dire ce que le montant permet d'obtenir, par exemple « Chargé sur votre carte à l'entrée ».
+- Les codes promo, les prix de groupe et le paiement petit à petit ne s'appliquent jamais à un montant choisi par l'acheteur, et ce billet ne peut être ni un pass, ni une place numérotée, ni un billet offert. Les frais de service s'ajoutent, comme pour tout billet.
+- À l'entrée, scanner le billet affiche le montant payé (« Payé 150 GH₵ ») avec la note, pour que votre équipe sache combien charger.
+
 ## Fin de la vente en ligne
 
 Choisissez à quel moment les acheteurs ne peuvent plus obtenir de billets en ligne pour chaque date de votre événement, sous **Fin de la vente en ligne** (à la création de l'événement, et à tout moment sous **Modifier**) :

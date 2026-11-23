@@ -17,6 +17,8 @@ import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { formatMoney } from "@abonten/core/formatMoney";
+import { openAmountPaidOf } from "@abonten/core/openAmountTickets";
 import { ticketCancelDecision } from "@abonten/core/refundPolicy";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
@@ -140,6 +142,7 @@ export default function TicketDetailScreen() {
   // A paid ticket someone sent here is refunded to them: say "send it back"
   // instead of offering a cancel the server refuses.
   const sentToHolder = isTicketPaidBySomeoneElse(ticket);
+  const paidAmount = openAmountPaidOf(ticket);
   // The event's refund policy, and no cancelling once the show started
   // (@abonten/core/refundPolicy; the server checks it again).
   const cancelDecision = ticketCancelDecision(ticket);
@@ -246,6 +249,18 @@ export default function TicketDetailScreen() {
             icon="pricetag-outline"
             label={ticketTypeLabel(tc, ticket.ticket_type.type)}
           />
+          {/* An amount the buyer chose (open-amount tickets): what to load
+              at the gate. Only the buyer can see the line it was bought on. */}
+          {paidAmount ? (
+            <Row
+              icon="wallet-outline"
+              label={t("amountPaid", {
+                amount: formatMoney(paidAmount.currency, paidAmount.amount, {
+                  locale,
+                }),
+              })}
+            />
+          ) : null}
           {ticket.seat_number ? (
             <Row
               icon="grid-outline"

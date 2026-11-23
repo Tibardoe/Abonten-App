@@ -642,7 +642,11 @@
     "youHaveStartedALotOfConversations": "Has iniciado muchas conversaciones últimamente. Inténtalo de nuevo más tarde.",
     "yourAccountHasBeenRestricted": "Tu cuenta ha sido restringida.",
     "yourCreditBalanceIsNegative": "Tu saldo de crédito es negativo",
-    "yourCreditIsOnHold": "Tu crédito está retenido"
+    "yourCreditIsOnHold": "Tu crédito está retenido",
+    "aAmountCanTHaveMoreThan": "Un importe en {0} no puede tener más de {1} decimales",
+    "chooseAnAmountFromToInSteps": "Elige un importe de {0} a {1}, en intervalos de {2}.",
+    "howThisTicketTypeSPriceIs": "La forma en que se fija el precio de este tipo de entrada no puede cambiar una vez vendida.",
+    "theHighestAmountMustBeTheLowest": "El importe más alto debe ser el importe más bajo más un número entero de intervalos."
   },
   "defaultPaymentMethodUpdated": "Método de pago predeterminado actualizado",
   "defaultPayoutAccountUpdated": "Cuenta de cobro predeterminada actualizada",
@@ -1567,5 +1571,8 @@
   "rescheduleSmsDateVenue": "Abonten: {title} cambia al {when} en {venue}. Conserva tu entrada o pide el reembolso completo: {link}",
   "rescheduleSmsVenue": "Abonten: {title} cambia de lugar: {venue}. Conserva tu entrada o pide el reembolso completo: {link}",
   "rescheduleSmsOneDate": "Abonten: tu fecha de {title} cambia al {when}. Conserva tu entrada o pide el reembolso completo: {link}",
-  "rescheduleSmsPostponed": "Abonten: {title} se aplaza, fecha por confirmar. Conserva tu entrada o pide el reembolso completo: {link}"
+  "rescheduleSmsPostponed": "Abonten: {title} se aplaza, fecha por confirmar. Conserva tu entrada o pide el reembolso completo: {link}",
+  "openAmountTicketsArePaidAtOnce": "Una entrada cuyo importe eliges se paga de una vez, no poco a poco.",
+  "openAmountTicketsCantBeGiven": "Una entrada cuyo importe elige el comprador no se puede regalar. Elige otro tipo de entrada.",
+  "openAmountLineCantChange": "El importe de esta entrada no se puede cambiar aquí. Quítala y vuelve a elegir."
 }

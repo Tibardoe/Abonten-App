@@ -71,6 +71,9 @@ import {
   type TicketMode,
   type TicketTier,
   admitsOf,
+  tierAmountDraft,
+  tierAmountFields,
+  tierAmountProblem,
 } from "./useEventWizard";
 
 // Mobile echo of the web useEventEditForm hook. Edits the core, non-ticketing
@@ -301,6 +304,7 @@ export function useEventEdit(eventId: string) {
           quantity: t.quantity != null ? String(t.quantity) : "",
           admits: String(t.admits ?? 1),
           description: t.description ?? "",
+          ...tierAmountDraft(t),
         })),
       );
     }
@@ -647,13 +651,27 @@ export function useEventEdit(eventId: string) {
       });
     }
 
-    const parsed = tiers.map((t) => ({
-      type: t.name.trim(),
-      price: Number(t.price),
-      quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
-      admits: admitsOf(t),
-      description: normalizeTicketTypeNote(t.description),
-    }));
+    // An amount the buyer chooses: a valid range; its price is the
+    // lowest amount and it admits one person.
+    const amountProblem = tiers
+      .map((tier) => tierAmountProblem(tc, tier, ticketCurrency))
+      .find(Boolean);
+    if (amountProblem) {
+      toast.error(t("checkTheTicketTypes"), { description: amountProblem });
+      return null;
+    }
+    const parsed = tiers.map((t) => {
+      const amounts = tierAmountFields(t);
+      const open = amounts.amountMode === "open";
+      return {
+        type: t.name.trim(),
+        price: open ? (amounts.minAmount ?? 0) : Number(t.price),
+        quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+        admits: open ? 1 : admitsOf(t),
+        description: normalizeTicketTypeNote(t.description),
+        ...amounts,
+      };
+    });
     if (parsed.length === 0) {
       toast.error(t("addATicketType"), {
         description: t("addAtLeastOneTicketType"),
@@ -857,6 +875,8 @@ export function useEventEdit(eventId: string) {
     isSavingTicketNotes: updateNotes.isPending,
     // group prices
     groupPricingEnabled: !!eventData?.group_pricing_enabled,
+    /** Ticket types whose amount the buyer chooses are switched on. */
+    openAmountEnabled: !!eventData?.open_amount_enabled,
     groupPrices,
     setGroupPrices,
     groupPriceProblem,

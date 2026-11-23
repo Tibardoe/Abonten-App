@@ -1,10 +1,12 @@
 import { GroupPricesEditor } from "@/components/events/GroupPricesEditor";
 import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
 import { SalesClosePicker } from "@/components/events/SalesClosePicker";
+import { TicketTierAmountFields } from "@/components/events/TicketTierAmountFields";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { uuidv4 } from "@/lib/uuid";
 import { GROUP_PRICING_FLAG } from "@abonten/core/groupPricing";
+import { OPEN_AMOUNT_FLAG } from "@abonten/core/openAmountTickets";
 import { TICKET_TYPE_NOTE_MAX } from "@abonten/core/ticketTypeNote";
 import { AppText, Button, Chip, Field, Input } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -17,6 +19,8 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
   const tCommon = useTranslations("common");
   // Group tickets and group prices: switched on per organizer by staff.
   const groupPricing = useMarket().flag(GROUP_PRICING_FLAG);
+  // Ticket types whose amount the buyer chooses: the same kind of switch.
+  const openAmount = useMarket().flag(OPEN_AMOUNT_FLAG);
 
   function addTier() {
     w.setTiers((prev) => [
@@ -114,15 +118,23 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                 onChangeText={(v) => patchTier(i, { name: v })}
                 placeholder={t("eGVip")}
               />
+              <TicketTierAmountFields
+                tier={tier}
+                enabled={openAmount}
+                currency={w.currency}
+                onPatch={(patch) => patchTier(i, patch)}
+              />
               <View className="flex-row gap-3">
-                <View className="flex-1">
-                  <Input
-                    value={tier.price}
-                    onChangeText={(v) => patchTier(i, { price: v })}
-                    keyboardType="decimal-pad"
-                    placeholder={t("price", { currency: w.currency ?? "" })}
-                  />
-                </View>
+                {tier.amountMode === "open" ? null : (
+                  <View className="flex-1">
+                    <Input
+                      value={tier.price}
+                      onChangeText={(v) => patchTier(i, { price: v })}
+                      keyboardType="decimal-pad"
+                      placeholder={t("price", { currency: w.currency ?? "" })}
+                    />
+                  </View>
+                )}
                 <View className="flex-1">
                   <Input
                     value={tier.quantity}
@@ -132,7 +144,8 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                   />
                 </View>
               </View>
-              {groupPricing || Number(tier.admits) > 1 ? (
+              {tier.amountMode !== "open" &&
+              (groupPricing || Number(tier.admits) > 1) ? (
                 <Field
                   label={tCommon("peoplePerTicket")}
                   hint={tCommon("peoplePerTicketHint")}

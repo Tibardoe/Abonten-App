@@ -174,19 +174,32 @@ export default function TicketCheckoutSessionCard({
                 </button>
               </div>
 
-              <QuantityStepper
-                label={t("tickets3", { type: ticketTypeLabel(tc, line.type) })}
-                quantity={purchases}
-                minQuantity={1}
-                maxQuantity={maxQuantity}
-                disabled={isLinePending || locked}
-                onIncrement={() =>
-                  onQuantityChange(line.ticketCheckoutId, purchases + 1)
-                }
-                onDecrement={() =>
-                  onQuantityChange(line.ticketCheckoutId, purchases - 1)
-                }
-              />
+              {line.openAmount ? (
+                // An amount the buyer chose: one ticket at that amount. To
+                // change it, the line is removed and chosen again.
+                <div className="flex justify-between text-sm text-foreground">
+                  <p>{t("yourAmount")}</p>
+                  <p className="font-semibold">
+                    {formatMoney(line.currency, line.amount, { locale })}
+                  </p>
+                </div>
+              ) : (
+                <QuantityStepper
+                  label={t("tickets3", {
+                    type: ticketTypeLabel(tc, line.type),
+                  })}
+                  quantity={purchases}
+                  minQuantity={1}
+                  maxQuantity={maxQuantity}
+                  disabled={isLinePending || locked}
+                  onIncrement={() =>
+                    onQuantityChange(line.ticketCheckoutId, purchases + 1)
+                  }
+                  onDecrement={() =>
+                    onQuantityChange(line.ticketCheckoutId, purchases - 1)
+                  }
+                />
+              )}
 
               {admits > 1 && (
                 <p className="text-xs text-muted-foreground">
@@ -194,10 +207,14 @@ export default function TicketCheckoutSessionCard({
                 </p>
               )}
 
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <p>{t("unitPrice")}</p>
-                <p>{formatMoney(line.currency, line.unitPrice, { locale })}</p>
-              </div>
+              {line.openAmount ? null : (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <p>{t("unitPrice")}</p>
+                  <p>
+                    {formatMoney(line.currency, line.unitPrice, { locale })}
+                  </p>
+                </div>
+              )}
 
               {line.discount > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">

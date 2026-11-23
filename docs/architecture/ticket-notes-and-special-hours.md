@@ -32,6 +32,8 @@ complianceReviewRequired: no
 
 **Copied.** `event_add_show` copies the note to a run's new show and to a copy of the listing (both changed at a named anchor in the migration, so another branch's change to those functions is kept). Moving an event to a team and joining runs move events, not ticket types, so the note stays with them. Drafts keep it on both platforms.
 
+**Wording an open amount.** For a ticket whose amount the buyer chooses ([open-amount-tickets.md](open-amount-tickets.md)), the note says what the amount buys ("Loaded on your card at the gate", "Deposit, taken off your bill"); the door shows it beside the amount paid.
+
 **Shown.** Under the ticket's name in the event page's ticket picker and checkout (website `CheckoutTicketRow`, `TicketCheckoutSessionCard`; app buy screen and pending checkouts) and in the organizer's lists (website ticket editor and Insights › Ticket types; app event overview and the passes on Shows).
 
 ## 2. Special dates in a place's opening hours

@@ -959,5 +959,15 @@
   "groupPricesSaved": "Gruppenpreise gespeichert",
   "passForShows": "Ein Pass für {shows, plural, one {# Vorstellung} other {# Vorstellungen}}: diese, die übrigen wählst du dann im Ticket",
   "thisEventIsPostponed": "Dieses Event ist verschoben. Ein neuer Termin folgt: Dann gibt es wieder Tickets.",
-  "eventPostponed": "Verschoben: neuer Termin folgt"
+  "eventPostponed": "Verschoben: neuer Termin folgt",
+  "priceModeLabel": "Preis",
+  "priceModeFixed": "Fester Preis",
+  "priceModeOpen": "Käufer wählt den Betrag",
+  "openAmountMinLabel": "Niedrigster Betrag",
+  "openAmountMaxLabel": "Höchster Betrag",
+  "openAmountStepLabel": "Schrittweite",
+  "openAmountEditorHint": "Käufer wählen einen Betrag in diesem Bereich und erhalten ein Ticket dafür. Sag in der Ticketnotiz, wofür der Betrag gilt.",
+  "chooseYourAmount": "Wähle deinen Betrag",
+  "openAmountNoDiscounts": "Aktionscodes und Gruppenpreise gelten nicht für Beträge, die du wählst.",
+  "yourAmount": "Dein Betrag"
 }

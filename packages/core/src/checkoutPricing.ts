@@ -115,6 +115,13 @@ export type OrderLineInput = {
   /** The price of one purchase, in major units. */
   unitPrice: number;
   currency: string;
+  /**
+   * An open-amount type (@abonten/core/openAmountTickets): the buyer chose
+   * `chosenAmount`. The line is one ticket at that amount, never discounted
+   * and not counted for a group price. The caller has checked the amount.
+   */
+  amountMode?: "fixed" | "open" | null;
+  chosenAmount?: number | null;
 };
 
 export type PricedOrderLine = {
@@ -130,12 +137,19 @@ export type PricedOrderLine = {
   /** The group price applied to this line, or null. */
   groupDiscountPercent: number | null;
   amount: number;
+  /** The buyer chose the amount: one ticket, `unitPrice` = `amount`. */
+  openAmount: boolean;
 };
 
 export type PricedOrder = {
   lines: PricedOrderLine[];
   /** Tickets in the whole order. */
   tickets: number;
+  /**
+   * Tickets a group price counts and a promo code may discount: every
+   * ticket but the ones whose amount the buyer chose.
+   */
+  discountableTickets: number;
   /** The group price the order reached (0 = none). */
   groupDiscountPercent: number;
   /** The promo code discounts at least one ticket. */
@@ -158,23 +172,61 @@ export function priceOrder(
   } = {},
 ): PricedOrder {
   const sized = lines.map((line) => {
+    // An amount the buyer chose: one ticket at that amount.
+    if (line.amountMode === "open") {
+      const purchases = line.purchases > 0 ? 1 : 0;
+      return {
+        ...line,
+        purchases,
+        admits: 1,
+        quantity: purchases,
+        unitPrice: line.chosenAmount ?? line.unitPrice,
+        open: true,
+      };
+    }
     const admits = Math.max(1, Math.floor(line.admits ?? 1));
-    return { ...line, admits, quantity: line.purchases * admits };
+    return { ...line, admits, quantity: line.purchases * admits, open: false };
   });
   const tickets = sized.reduce((sum, line) => sum + line.quantity, 0);
-  const groupPercent = groupDiscountPercentFor(options.groupTiers, tickets);
+  // Promo codes and group prices never touch an amount the buyer chose,
+  // and those tickets do not count towards a group price.
+  const discountableTickets = sized.reduce(
+    (sum, line) => sum + (line.open ? 0 : line.quantity),
+    0,
+  );
+  const groupPercent = groupDiscountPercentFor(
+    options.groupTiers,
+    discountableTickets,
+  );
   const promo = options.promo ?? null;
   const promoPercent =
     promo && promo.percent > groupPercent ? promo.percent : 0;
   const eligibleByLine =
     promoPercent > 0
       ? allocatePromoEligibility(
-          sized.map((line) => ({ id: line.id, quantity: line.quantity })),
+          sized
+            .filter((line) => !line.open)
+            .map((line) => ({ id: line.id, quantity: line.quantity })),
           promo?.remainingUses ?? null,
         )
       : {};
 
   const priced = sized.map((line): PricedOrderLine => {
+    if (line.open) {
+      const amount = toMajor(fromMajor(line.unitPrice, line.currency));
+      return {
+        id: line.id,
+        purchases: line.purchases,
+        admits: 1,
+        quantity: line.quantity,
+        unitPrice: amount,
+        discount: 0,
+        discountedUnits: 0,
+        groupDiscountPercent: null,
+        amount: line.purchases > 0 ? amount : 0,
+        openAmount: true,
+      };
+    }
     const unitMinor = fromMajor(line.unitPrice, line.currency).amountMinor;
     const eligible = promoPercent > 0 ? (eligibleByLine[line.id] ?? 0) : 0;
     const groupTickets = groupPercent > 0 ? line.quantity - eligible : 0;
@@ -197,12 +249,14 @@ export function priceOrder(
       discountedUnits: eligible,
       groupDiscountPercent: groupTickets > 0 ? groupPercent : null,
       amount: toMajor(money(amountMinor, line.currency)),
+      openAmount: false,
     };
   });
 
   return {
     lines: priced,
     tickets,
+    discountableTickets,
     groupDiscountPercent: groupPercent,
     promoApplied: priced.some((line) => line.discountedUnits > 0),
   };

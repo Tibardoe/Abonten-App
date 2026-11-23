@@ -642,7 +642,11 @@
     "youHaveStartedALotOfConversations": "Iniciou muitas conversas recentemente. Tente novamente mais tarde.",
     "yourAccountHasBeenRestricted": "A sua conta foi restringida.",
     "yourCreditBalanceIsNegative": "O seu saldo de crédito é negativo",
-    "yourCreditIsOnHold": "O seu crédito está retido"
+    "yourCreditIsOnHold": "O seu crédito está retido",
+    "aAmountCanTHaveMoreThan": "Um valor em {0} não pode ter mais de {1} casas decimais",
+    "chooseAnAmountFromToInSteps": "Escolha um valor de {0} a {1}, em intervalos de {2}.",
+    "howThisTicketTypeSPriceIs": "A forma como o preço deste tipo de bilhete é definido não pode mudar depois de ter sido vendido.",
+    "theHighestAmountMustBeTheLowest": "O valor mais alto tem de ser o valor mais baixo mais um número inteiro de intervalos."
   },
   "defaultPaymentMethodUpdated": "Método de pagamento predefinido atualizado",
   "defaultPayoutAccountUpdated": "Conta de recebimento predefinida atualizada",
@@ -1567,5 +1571,8 @@
   "rescheduleSmsDateVenue": "Abonten: {title} mudou para {when} em {venue}. Mantenha o bilhete ou peça o reembolso total: {link}",
   "rescheduleSmsVenue": "Abonten: {title} mudou de local: {venue}. Mantenha o bilhete ou peça o reembolso total: {link}",
   "rescheduleSmsOneDate": "Abonten: a sua data de {title} mudou para {when}. Mantenha o bilhete ou peça o reembolso total: {link}",
-  "rescheduleSmsPostponed": "Abonten: {title} foi adiado, data a anunciar. Mantenha o bilhete ou peça o reembolso total: {link}"
+  "rescheduleSmsPostponed": "Abonten: {title} foi adiado, data a anunciar. Mantenha o bilhete ou peça o reembolso total: {link}",
+  "openAmountTicketsArePaidAtOnce": "Um bilhete cujo valor escolhe paga-se de uma vez, não aos poucos.",
+  "openAmountTicketsCantBeGiven": "Um bilhete cujo valor o comprador escolhe não pode ser oferecido. Escolha outro tipo de bilhete.",
+  "openAmountLineCantChange": "O valor deste bilhete não pode ser alterado aqui. Retire-o e escolha de novo."
 }

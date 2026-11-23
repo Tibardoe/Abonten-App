@@ -35,6 +35,17 @@ Jeder benannte Tickettyp kann eine kurze Notiz tragen, die auf der Veranstaltung
 
 Preise, Mengen und die Tickettypen selbst sind nach dem ersten bestätigten Ticket gesperrt, die Notizen nicht: Ändere sie jederzeit im Tab **Details** deiner Veranstaltung (Website) oder unter **Event bearbeiten** (App), im Abschnitt **Was jedes Ticket enthält**. Eine Kopie der Veranstaltung oder eine neue Vorstellung ihrer Reihe übernimmt die Notizen.
 
+## Käufer den Betrag wählen lassen
+
+Eine Ticketart kann den Käufer wählen lassen, wie viel er zahlt: zum Beispiel Fahrguthaben, das am Eingang auf eine Karte geladen wird, Eintritt nach dem Prinzip „Zahl, was du willst“ ab einem Mindestbetrag oder eine Anzahlung für einen Tisch. Abonten schaltet das für dein Konto ein: frag den Support, wenn du es brauchst.
+
+- Wähle beim Hinzufügen der Ticketart statt eines festen Preises, dass der Käufer den Betrag festlegt, und gib dann den **niedrigsten Betrag**, den **höchsten Betrag** und die **Schrittweite** an. Zum Beispiel von 50 GH₵ bis 1.000 GH₵ in Schritten von 10 GH₵: Käufer können 50 GH₵, 60 GH₵, 70 GH₵ und so weiter bis 1.000 GH₵ wählen.
+- Der höchste Betrag muss der niedrigste Betrag plus ganze Schritte sein. Der niedrigste Betrag wird als Preis des Tickets angezeigt („Ab 50 GH₵“).
+- Jeder gewählte Betrag ist **ein Ticket** mit einem QR-Code für eine Person.
+- Sag in der Notiz des Tickets, wofür der Betrag ist, zum Beispiel „Wird am Eingang auf deine Karte geladen“.
+- Promo-Codes, Gruppenpreise und Ratenzahlung gelten nie für einen Betrag, den der Käufer wählt, und ein solches Ticket kann kein Pass, kein Sitzplatz und kein verschenktes Ticket sein. Die Servicegebühr kommt wie bei jedem Ticket dazu.
+- Am Eingang zeigt der Scan des Tickets den bezahlten Betrag („Bezahlt 150 GH₵“) mit der Notiz, damit dein Team weiß, wie viel es laden soll.
+
 ## Ende des Online-Verkaufs
 
 Lege unter **Ende des Online-Verkaufs** fest, ab wann Käufer für jeden Termin deines Events keine Tickets mehr online bekommen (beim Erstellen des Events und jederzeit unter **Bearbeiten**):

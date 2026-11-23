@@ -642,7 +642,11 @@
     "youHaveStartedALotOfConversations": "Vous avez démarré beaucoup de conversations récemment. Veuillez réessayer plus tard.",
     "yourAccountHasBeenRestricted": "Votre compte a été restreint.",
     "yourCreditBalanceIsNegative": "Votre solde de crédit est négatif",
-    "yourCreditIsOnHold": "Votre crédit est suspendu"
+    "yourCreditIsOnHold": "Votre crédit est suspendu",
+    "aAmountCanTHaveMoreThan": "Un montant en {0} ne peut pas avoir plus de {1} décimales",
+    "chooseAnAmountFromToInSteps": "Choisissez un montant de {0} à {1}, par paliers de {2}.",
+    "howThisTicketTypeSPriceIs": "La façon dont le prix de ce type de billet est fixé ne peut plus changer une fois qu'il a été vendu.",
+    "theHighestAmountMustBeTheLowest": "Le montant le plus élevé doit être le montant le plus bas plus un nombre entier de pas."
   },
   "defaultPaymentMethodUpdated": "Moyen de paiement par défaut mis à jour",
   "defaultPayoutAccountUpdated": "Compte de versement par défaut mis à jour",
@@ -1567,5 +1571,8 @@
   "rescheduleSmsDateVenue": "Abonten : {title} est déplacé au {when} à {venue}. Gardez votre billet ou soyez remboursé intégralement : {link}",
   "rescheduleSmsVenue": "Abonten : {title} change de lieu : {venue}. Gardez votre billet ou soyez remboursé intégralement : {link}",
   "rescheduleSmsOneDate": "Abonten : votre date de {title} est déplacée au {when}. Gardez votre billet ou soyez remboursé intégralement : {link}",
-  "rescheduleSmsPostponed": "Abonten : {title} est reporté, nouvelle date à venir. Gardez votre billet ou soyez remboursé intégralement : {link}"
+  "rescheduleSmsPostponed": "Abonten : {title} est reporté, nouvelle date à venir. Gardez votre billet ou soyez remboursé intégralement : {link}",
+  "openAmountTicketsArePaidAtOnce": "Un billet dont vous choisissez le montant se paie en une fois, pas petit à petit.",
+  "openAmountTicketsCantBeGiven": "Un billet dont l'acheteur choisit le montant ne peut pas être offert. Choisissez un autre type de billet.",
+  "openAmountLineCantChange": "Le montant de ce billet ne peut pas être modifié ici. Retirez-le et choisissez à nouveau."
 }

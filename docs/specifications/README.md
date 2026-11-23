@@ -2,10 +2,10 @@
 title: Specifications gated on open decisions
 purpose: Technical specifications for work that is understood well enough to design but must not be built until a legal or business decision in the registers is recorded.
 audience: Founder, engineering, legal counsel
-scope: Cookie consent, age gate, data export, retention jobs, appeals workflow, support and security contacts, and the future-improvements roadmap
+scope: Cookie consent, age gate, data export, retention jobs, appeals workflow, support and security contacts, venue credit vouchers, and the future-improvements roadmap
 status: Draft
 version: 1.0
-lastReviewed: 2026-09-12
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -29,6 +29,7 @@ Every specification ends with an **Approval required before implementation** sec
 | [data-export.md](data-export.md) | No self-service data export; access requests are manual | Legal B5 · decision O3 · decision O2 |
 | [retention-jobs.md](retention-jobs.md) | Nine data sets with no retention period or purge job | Legal B3, B9 · decisions R1–R9 |
 | [appeals-workflow.md](appeals-workflow.md) | No formal appeal path for moderation and account actions | Decision O4 · decision M3 · legal E4 (wording) |
+| [venue-credit-vouchers.md](venue-credit-vouchers.md) | Credits or vouchers a venue sells from its place page, not tied to a date, valid for N days, giftable, redeemed by scan at the venue (the follow-up to open-amount tickets) | Legal M6 (and M5 for a balance) · decisions V1–V9 in the specification |
 | [tickets-entry-and-teams.md](tickets-entry-and-teams.md) | Sending tickets, team accounts, stations, wristbands, outside tickets, resale controls, promoters | None: approved 2026-11-15 (X1–X45); legal N1–N9 open. Part 1 built; Part 2 stage 1 built |
 | [support-and-security-contacts.md](support-and-security-contacts.md) | ~~No official address~~ — channels published 2026-09-12 (A3 Decided); responsible-disclosure section and `security.txt` published; remaining: support operating policy and safe-harbour wording | Decision O1 (`../operations/support-operating-policy.md`) · legal D3 (`../security/responsible-disclosure.md`) |
 | [future-improvements.md](future-improvements.md) | P2 roadmap: security hardening, localization, iOS, operational improvements | Various (each entry names its item) |

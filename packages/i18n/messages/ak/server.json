@@ -642,7 +642,11 @@
     "youHaveStartedALotOfConversations": "You have started a lot of conversations recently. Please try again later.",
     "yourAccountHasBeenRestricted": "Your account has been restricted.",
     "yourCreditBalanceIsNegative": "Your credit balance is negative",
-    "yourCreditIsOnHold": "Your credit is on hold"
+    "yourCreditIsOnHold": "Your credit is on hold",
+    "aAmountCanTHaveMoreThan": "A {0} amount can't have more than {1} decimal places",
+    "chooseAnAmountFromToInSteps": "Choose an amount from {0} to {1}, in steps of {2}.",
+    "howThisTicketTypeSPriceIs": "How this ticket type's price is chosen can't change once it has been sold.",
+    "theHighestAmountMustBeTheLowest": "The highest amount must be the lowest amount plus whole steps."
   },
   "defaultPaymentMethodUpdated": "Default payment method updated",
   "defaultPayoutAccountUpdated": "Default payout account updated",
@@ -1567,5 +1571,8 @@
   "rescheduleSmsDateVenue": "Abonten: {title} has moved to {when} at {venue}. Keep your ticket or get a full refund: {link}",
   "rescheduleSmsVenue": "Abonten: {title} has a new venue: {venue}. Keep your ticket or get a full refund: {link}",
   "rescheduleSmsOneDate": "Abonten: your date of {title} has moved to {when}. Keep your ticket or get a full refund: {link}",
-  "rescheduleSmsPostponed": "Abonten: {title} is postponed, new date to come. Keep your ticket or get a full refund: {link}"
+  "rescheduleSmsPostponed": "Abonten: {title} is postponed, new date to come. Keep your ticket or get a full refund: {link}",
+  "openAmountTicketsArePaidAtOnce": "A ticket whose amount you choose is paid at once, not small small.",
+  "openAmountTicketsCantBeGiven": "A ticket whose amount the buyer chooses can't be given away. Choose another ticket type.",
+  "openAmountLineCantChange": "The amount of this ticket can't change here. Remove it and choose again."
 }

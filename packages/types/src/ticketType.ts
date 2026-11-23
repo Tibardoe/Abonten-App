@@ -15,6 +15,15 @@ export type Ticket = {
   available_until?: Date;
   /** What the ticket includes (@abonten/core/ticketTypeNote). */
   description?: string | null;
+  /**
+   * "open": the buyer chooses the amount, from minAmount to maxAmount in
+   * steps of amountStep (major units); `price` is then the minimum
+   * (@abonten/core/openAmountTickets). Absent or "fixed": the price.
+   */
+  amountMode?: "fixed" | "open" | null;
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  amountStep?: number | null;
 };
 
 export type TicketType = {
@@ -32,6 +41,11 @@ export type TicketType = {
   available_until?: Date;
   /** What the ticket includes, shown under its name. */
   description?: string | null;
+  /** "open": the buyer chooses the amount (@abonten/core/openAmountTickets). */
+  amount_mode?: string | null;
+  min_amount?: number | null;
+  max_amount?: number | null;
+  amount_step?: number | null;
 };
 
 export type UserTicketType = {
@@ -73,6 +87,12 @@ export type UserTicketType = {
   ticket_code: string;
   /** The date of a multi-date event this ticket is for. */
   occurrence_id?: string | null;
+  /**
+   * The checkout line the ticket was bought on, as far as the reader may
+   * see it (the buyer; null for a ticket someone sent them). `open_amount`:
+   * the buyer chose the amount, `unit_price` (open-amount tickets).
+   */
+  checkout?: { open_amount: boolean | null; unit_price: number | null } | null;
   ticket_type: {
     id: string;
     type: string;

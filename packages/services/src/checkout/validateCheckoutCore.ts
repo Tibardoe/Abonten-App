@@ -9,13 +9,19 @@ import {
   validatePurchaseOccurrence,
 } from "@abonten/core/eventPurchaseEligibility";
 import { logger } from "@abonten/core/logger";
+import {
+  chosenAmountProblem,
+  chosenAmountProblemMessage,
+  openAmountRangeOf,
+  parseChosenAmount,
+} from "@abonten/core/openAmountTickets";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
 import { stampCheckoutReferralCore } from "@abonten/services/rewards/referralCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { ReferralHint } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { coreT, tr } from "../i18n/requestLocale";
+import { coreT, requestLocale, tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // A checkout retried right as its reservation expires re-runs this whole
@@ -40,6 +46,12 @@ export type CheckoutDetailsProp = {
    * rows store tickets (docs/architecture/group-tickets-and-prices.md).
    */
   quantities: { [ticketTypeId: string]: number };
+  /**
+   * The amount the buyer chose for each open-amount type they picked
+   * (@abonten/core/openAmountTickets), in major units. An open type is one
+   * ticket at that amount whatever its quantity says.
+   */
+  amounts?: { [ticketTypeId: string]: number | string } | null;
   promoCode?: string | null;
   occurrenceId?: string | null;
   /**
@@ -80,12 +92,14 @@ export async function validateCheckoutCore(
   userId: string,
   {
     eventId,
-    quantities,
+    quantities: requestedQuantities,
+    amounts,
     promoCode,
     occurrenceId,
     referralHints,
   }: CheckoutDetailsProp,
 ): Promise<ValidateCheckoutResult> {
+  let quantities = requestedQuantities;
   // Upper-bound the requested quantities before touching inventory. Both
   // transports (web action + /api/mobile/checkout/validate) reach this
   // shared core, so this one guard covers them both — see
@@ -270,7 +284,9 @@ export async function validateCheckoutCore(
 
   const { data: ticketTypeRows, error: ticketTypeError } = await supabase
     .from("ticket_type")
-    .select("id, event_id, price, currency, admits")
+    .select(
+      "id, event_id, price, currency, admits, amount_mode, min_amount, max_amount, amount_step",
+    )
     .in("id", ticketTypeIds);
 
   if (ticketTypeError) {
@@ -292,6 +308,40 @@ export async function validateCheckoutCore(
         }),
       };
     }
+  }
+
+  // An amount the buyer chose (an open-amount type): one ticket at an
+  // amount within the organizer's range and on its steps. Checked here with
+  // a message in the buyer's language; create_ticket_checkout re-checks it.
+  const chosenById = new Map<string, number>();
+  for (const [ticketTypeId] of requestedEntries) {
+    // biome-ignore lint/style/noNonNullAssertion: every id was checked above
+    const type = typeById.get(ticketTypeId)!;
+    const range = openAmountRangeOf(type);
+    if (!range) continue;
+    const currency = type.currency as string;
+    const raw = amounts?.[ticketTypeId];
+    const problem = chosenAmountProblem(raw, range, currency);
+    if (problem) {
+      return {
+        status: 400,
+        message: chosenAmountProblemMessage(
+          coreT(),
+          problem,
+          range,
+          currency,
+          requestLocale(),
+        ),
+      };
+    }
+    // biome-ignore lint/style/noNonNullAssertion: no problem means a number
+    chosenById.set(ticketTypeId, parseChosenAmount(raw, currency)!);
+  }
+  if (chosenById.size > 0) {
+    quantities = {
+      ...quantities,
+      ...Object.fromEntries([...chosenById.keys()].map((id) => [id, 1])),
+    };
   }
 
   // The limits count tickets: a Couple purchase is two.
@@ -353,12 +403,15 @@ export async function validateCheckoutCore(
     requestedEntries.map(([ticketTypeId, purchases]) => {
       // biome-ignore lint/style/noNonNullAssertion: every id was checked above
       const type = typeById.get(ticketTypeId)!;
+      const chosen = chosenById.get(ticketTypeId);
       return {
         id: ticketTypeId,
-        purchases,
+        purchases: chosen === undefined ? purchases : 1,
         admits: type.admits,
         unitPrice: Number(type.price),
         currency: type.currency as string,
+        amountMode: chosen === undefined ? "fixed" : "open",
+        chosenAmount: chosen ?? null,
       };
     }),
     { promo, groupTiers },

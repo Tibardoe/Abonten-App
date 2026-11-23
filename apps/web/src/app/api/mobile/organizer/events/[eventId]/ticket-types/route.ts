@@ -14,8 +14,12 @@ import {
 // PUT /api/mobile/organizer/events/:eventId/ticket-types
 //   { currency?, freeEvent?, singleTicket?: { price, quantity } | null,
 //     multipleTickets?: { type, price, quantity, admits?, availableFrom?,
-//                         availableUntil?, description? }[] | null }
+//                         availableUntil?, description?, amountMode?,
+//                         minAmount?, maxAmount?, amountStep? }[] | null }
 // quantity counts purchases; admits is how many people one purchase lets in.
+// amountMode "open": the buyer chooses the amount from minAmount to
+// maxAmount in steps of amountStep (docs/architecture/open-amount-tickets.md);
+// its price is the minimum.
 //
 // Replaces the caller's event's ticket types. Fully editable until the
 // event's first confirmed ticket, read-only after (409). Runs the same
@@ -67,11 +71,18 @@ export async function PUT(
           }
         : null;
 
+    const num = (value: unknown): number | null =>
+      typeof value === "number" && Number.isFinite(value) ? value : null;
     const multipleTickets = Array.isArray(body.multipleTickets)
       ? (body.multipleTickets as Record<string, unknown>[])
           .map((t) => ({
             type: str(t.type) ?? "",
-            price: typeof t.price === "number" ? t.price : Number.NaN,
+            price:
+              typeof t.price === "number"
+                ? t.price
+                : t.amountMode === "open"
+                  ? (num(t.minAmount) ?? Number.NaN)
+                  : Number.NaN,
             quantity: typeof t.quantity === "number" ? t.quantity : null,
             admits: typeof t.admits === "number" ? t.admits : 1,
             availableFrom: str(t.availableFrom),
@@ -79,6 +90,11 @@ export async function PUT(
             // What the ticket includes; checked by the service.
             description:
               typeof t.description === "string" ? t.description : null,
+            // The buyer chooses the amount; checked by the service.
+            amountMode: t.amountMode === "open" ? ("open" as const) : null,
+            minAmount: num(t.minAmount),
+            maxAmount: num(t.maxAmount),
+            amountStep: num(t.amountStep),
           }))
           .filter((t) => t.type && Number.isFinite(t.price))
       : [];

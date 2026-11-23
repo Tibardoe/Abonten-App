@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import type { CheckedInTicket } from "@abonten/services/tickets/checkInTicketCore";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import CheckedInTicketPanel from "./CheckedInTicketPanel";
 
 /**
  * Door staff check people in by the code under their QR (a hardware
@@ -17,9 +19,12 @@ export default function CheckInByCodeCard({ eventId }: { eventId: string }) {
   const t = useTranslations("teams");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{
+    ok: boolean;
+    text: string;
+    /** The ticket just admitted: its type, note and any amount paid. */
+    ticket?: CheckedInTicket;
+  } | null>(null);
 
   const submit = async () => {
     const value = code.trim().toUpperCase().replace(/\s+/g, "");
@@ -33,6 +38,7 @@ export default function CheckInByCodeCard({ eventId }: { eventId: string }) {
       ok: res.status === 200,
       text:
         res.message ?? (res.status === 200 ? t("checkedIn") : t("couldNotDo")),
+      ticket: res.status === 200 && "ticket" in res ? res.ticket : undefined,
     });
     if (res.status === 200) setCode("");
   };
@@ -74,6 +80,11 @@ export default function CheckInByCodeCard({ eventId }: { eventId: string }) {
           }
         >
           {result.text}
+          {result.ticket ? (
+            <div className="mt-3">
+              <CheckedInTicketPanel ticket={result.ticket} />
+            </div>
+          ) : null}
         </output>
       ) : null}
     </section>

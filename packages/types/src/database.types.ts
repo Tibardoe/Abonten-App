@@ -13943,6 +13943,7 @@ export type Database = {
           group_discount_percent: number | null
           id: string
           occurrence_id: string | null
+          open_amount: boolean
           pass_ticket_id: string | null
           promo_code: string | null
           quantity: number
@@ -13971,6 +13972,7 @@ export type Database = {
           group_discount_percent?: number | null
           id?: string
           occurrence_id?: string | null
+          open_amount?: boolean
           pass_ticket_id?: string | null
           promo_code?: string | null
           quantity: number
@@ -13999,6 +14001,7 @@ export type Database = {
           group_discount_percent?: number | null
           id?: string
           occurrence_id?: string | null
+          open_amount?: boolean
           pass_ticket_id?: string | null
           promo_code?: string | null
           quantity?: number
@@ -14588,6 +14591,8 @@ export type Database = {
       ticket_type: {
         Row: {
           admits: number
+          amount_mode: string
+          amount_step: number | null
           available_from: string | null
           available_until: string | null
           created_at: string | null
@@ -14595,6 +14600,8 @@ export type Database = {
           description: string | null
           event_id: string | null
           id: string
+          max_amount: number | null
+          min_amount: number | null
           pass_shows: number | null
           price: number | null
           quantity: number | null
@@ -14603,6 +14610,8 @@ export type Database = {
         }
         Insert: {
           admits?: number
+          amount_mode?: string
+          amount_step?: number | null
           available_from?: string | null
           available_until?: string | null
           created_at?: string | null
@@ -14610,6 +14619,8 @@ export type Database = {
           description?: string | null
           event_id?: string | null
           id?: string
+          max_amount?: number | null
+          min_amount?: number | null
           pass_shows?: number | null
           price?: number | null
           quantity?: number | null
@@ -14618,6 +14629,8 @@ export type Database = {
         }
         Update: {
           admits?: number
+          amount_mode?: string
+          amount_step?: number | null
           available_from?: string | null
           available_until?: string | null
           created_at?: string | null
@@ -14625,6 +14638,8 @@ export type Database = {
           description?: string | null
           event_id?: string | null
           id?: string
+          max_amount?: number | null
+          min_amount?: number | null
           pass_shows?: number | null
           price?: number | null
           quantity?: number | null

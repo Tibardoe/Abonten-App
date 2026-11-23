@@ -35,6 +35,17 @@ Cada tipo de bilhete com nome pode ter uma nota curta, mostrada por baixo do nom
 
 Os preços, as quantidades e os próprios tipos de bilhete ficam bloqueados depois de o primeiro bilhete ser confirmado, mas as notas não: altere-as quando quiser no separador **Detalhes** do seu evento (website) ou em **Editar evento** (aplicação), em **O que inclui cada bilhete**. Uma cópia do evento ou uma nova sessão da sua série mantém as notas.
 
+## Deixar o comprador escolher o valor
+
+Um tipo de bilhete pode deixar o comprador escolher quanto paga: por exemplo créditos para diversões carregados num cartão à entrada, uma entrada «pague o que quiser» a partir de um mínimo, ou um sinal para uma mesa. A Abonten ativa esta opção na sua conta: peça-a ao apoio se precisar dela.
+
+- Ao adicionar o tipo de bilhete, escolha que o comprador define o valor em vez de um preço fixo e depois indique o **valor mais baixo**, o **valor mais alto** e o **intervalo**. Por exemplo de 50 GH₵ a 1000 GH₵ em intervalos de 10 GH₵: os compradores podem escolher 50 GH₵, 60 GH₵, 70 GH₵ e assim por diante até 1000 GH₵.
+- O valor mais alto tem de ser o valor mais baixo mais um número inteiro de intervalos. O valor mais baixo aparece como preço do bilhete («A partir de 50 GH₵»).
+- Cada valor escolhido é **um bilhete**, com um código QR, para uma pessoa.
+- Use a nota do bilhete para dizer o que o valor compra, por exemplo «Carregado no seu cartão à entrada».
+- Os códigos promocionais, os preços de grupo e o pagamento aos poucos nunca se aplicam a um valor escolhido pelo comprador, e esse bilhete não pode ser um passe, um lugar marcado nem um bilhete oferecido. A taxa de serviço é acrescentada, como em qualquer bilhete.
+- À entrada, ler o bilhete mostra o valor pago («Pago 150 GH₵») com a nota, para que a sua equipa saiba quanto carregar.
+
 ## Fim da venda online
 
 Escolha quando os compradores deixam de poder obter bilhetes online para cada data do seu evento, em **Fim da venda online** (ao criar o evento e a qualquer momento em **Editar**):

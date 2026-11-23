@@ -959,5 +959,15 @@
   "groupPricesSaved": "Group prices saved",
   "passForShows": "A pass for {shows, plural, one {# show} other {# shows}}: this one, then choose the rest from your ticket",
   "thisEventIsPostponed": "This event is postponed. A new date is to come: tickets go on sale again then.",
-  "eventPostponed": "Postponed: new date to come"
+  "eventPostponed": "Postponed: new date to come",
+  "priceModeLabel": "Price",
+  "priceModeFixed": "Fixed price",
+  "priceModeOpen": "Buyer chooses the amount",
+  "openAmountMinLabel": "Lowest amount",
+  "openAmountMaxLabel": "Highest amount",
+  "openAmountStepLabel": "Step",
+  "openAmountEditorHint": "Buyers choose an amount in this range and get one ticket for it. Use the ticket note to say what the amount buys.",
+  "chooseYourAmount": "Choose your amount",
+  "openAmountNoDiscounts": "Promo codes and group prices don't apply to amounts you choose.",
+  "yourAmount": "Your amount"
 }

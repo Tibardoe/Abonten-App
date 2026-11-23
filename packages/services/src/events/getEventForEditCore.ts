@@ -3,6 +3,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
 import { groupPricingEnabledFor } from "./groupPricingAccess";
+import { openAmountEnabledFor } from "./openAmountAccess";
 
 // Post-auth body of getEventForEdit, lifted so the mobile
 // GET /api/mobile/organizer/events/:id/edit route prefills its edit form
@@ -44,12 +45,20 @@ export type EventForEditData = {
         available_until: string | null;
         /** What the ticket includes (@abonten/core/ticketTypeNote). */
         description: string | null;
+        /** "fixed", or "open": the buyer chooses the amount. */
+        amount_mode: "fixed" | "open";
+        /** An open type's range, in major units (null for a fixed type). */
+        min_amount: number | null;
+        max_amount: number | null;
+        amount_step: number | null;
       }[]
     | null;
   /** Automatic group prices, smallest group first. */
   event_group_discount: { min_tickets: number; percent_off: number }[] | null;
   /** Group tickets and group prices are switched on for this organizer. */
   group_pricing_enabled: boolean;
+  /** Ticket types whose amount the buyer chooses are switched on. */
+  open_amount_enabled: boolean;
 };
 
 export type EventForEditResult =
@@ -86,7 +95,7 @@ export async function getEventForEditCore(
       flyer_public_id,
       flyer_version,
       event_occurrence(id, starts_at, ends_at),
-      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until, description),
+      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until, description, amount_mode, min_amount, max_amount, amount_step),
       event_group_discount(min_tickets, percent_off)
     `,
     )
@@ -107,6 +116,10 @@ export async function getEventForEditCore(
     ...tier,
     admits: tier.admits ?? 1,
     quantity: purchasesLeft(tier.quantity, tier.admits),
+    amount_mode: tier.amount_mode ?? "fixed",
+    min_amount: tier.min_amount == null ? null : Number(tier.min_amount),
+    max_amount: tier.max_amount == null ? null : Number(tier.max_amount),
+    amount_step: tier.amount_step == null ? null : Number(tier.amount_step),
   }));
   const groupDiscounts = [...(row.event_group_discount ?? [])].sort(
     (a, b) => a.min_tickets - b.min_tickets,
@@ -119,6 +132,7 @@ export async function getEventForEditCore(
       ticket_type: ticketTypes,
       event_group_discount: groupDiscounts,
       group_pricing_enabled: await groupPricingEnabledFor(userId),
+      open_amount_enabled: await openAmountEnabledFor(userId),
     },
   };
 }

@@ -1527,5 +1527,24 @@
     "labelTooLong": "O nome não pode ter mais de {max} caracteres.",
     "timesRequired": "Defina as horas de abertura e de fecho, ou marque o dia como fechado.",
     "tooMany": "Um local pode ter até {max} datas especiais futuras."
+  },
+  "openAmount": {
+    "rangeMissing": "Defina o valor mais baixo, o valor mais alto e o intervalo.",
+    "minNotPositive": "O valor mais baixo tem de ser superior a 0.",
+    "maxBelowMin": "O valor mais alto não pode ser inferior ao valor mais baixo.",
+    "stepNotPositive": "O intervalo tem de ser superior a 0.",
+    "tooPrecise": "Um valor tem mais casas decimais do que a moeda permite.",
+    "stepMisaligned": "O valor mais alto tem de ser o valor mais baixo mais um número inteiro de intervalos.",
+    "freeEvent": "Um evento gratuito não pode deixar os compradores escolher o valor.",
+    "admits": "Um bilhete cujo valor o comprador escolhe é válido para uma pessoa.",
+    "pass": "Um passe não pode deixar o comprador escolher o valor.",
+    "seating": "Um bilhete cujo valor o comprador escolhe não pode vender lugares.",
+    "notEnabled": "Deixar os compradores escolher o valor ainda não está ativado na sua conta. Peça à Abonten para o ativar.",
+    "chooseAmount": "Escolha um valor de {min} a {max}.",
+    "belowMin": "O valor mais baixo é {min}.",
+    "aboveMax": "O valor mais alto é {max}.",
+    "offStep": "Escolha {min} ou mais, em intervalos de {step}.",
+    "hint": "De {min} a {max}, em intervalos de {step}",
+    "hintSingle": "O valor é {min}."
   }
 }

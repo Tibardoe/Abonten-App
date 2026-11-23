@@ -16,7 +16,9 @@ import {
 //     requireRegistration, currency, flyerPublicId, flyerVersion,
 //     clientRequestId, capacity?, websiteUrl?, startsAt?, endsAt?,
 //     specificDates?, freeEvent?, singleTicket?, multipleTickets? (each
-//     with admits? and description?), groupDiscounts?,
+//     with admits?, description? and, for a type whose amount the buyer
+//     chooses, amountMode: "open", minAmount, maxAmount, amountStep),
+//     groupDiscounts?,
 //     promoCodes?, placeId?, refundPolicy?, refundCutoffHours?,
 //     salesCloseBeforeEndMinutes? }
 //

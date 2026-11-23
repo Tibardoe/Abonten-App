@@ -1289,7 +1289,17 @@
     "groupPricesSaved": "429379dc",
     "passForShows": "a41d86d6",
     "thisEventIsPostponed": "8e9c7b3c",
-    "eventPostponed": "a5c48f7d"
+    "eventPostponed": "a5c48f7d",
+    "priceModeLabel": "3e8248e3",
+    "priceModeFixed": "68544b8d",
+    "priceModeOpen": "6e369845",
+    "openAmountMinLabel": "02c6fb52",
+    "openAmountMaxLabel": "e6a61909",
+    "openAmountStepLabel": "dc416e10",
+    "openAmountEditorHint": "e8832204",
+    "chooseYourAmount": "27b64e62",
+    "openAmountNoDiscounts": "6dbb1011",
+    "yourAmount": "88a2458f"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -2332,7 +2342,24 @@
     "specialHours.labelLink": "2c9000d0",
     "specialHours.labelTooLong": "1bd0b5fc",
     "specialHours.timesRequired": "de832dcd",
-    "specialHours.tooMany": "e0b65fe6"
+    "specialHours.tooMany": "e0b65fe6",
+    "openAmount.rangeMissing": "200c6a77",
+    "openAmount.minNotPositive": "89823992",
+    "openAmount.maxBelowMin": "b1b91bbc",
+    "openAmount.stepNotPositive": "f356bde4",
+    "openAmount.tooPrecise": "90b04966",
+    "openAmount.stepMisaligned": "ef65f67f",
+    "openAmount.freeEvent": "d3708871",
+    "openAmount.admits": "60c59369",
+    "openAmount.pass": "e3179448",
+    "openAmount.seating": "ba1862e2",
+    "openAmount.notEnabled": "4a88e78e",
+    "openAmount.chooseAmount": "35a98fe2",
+    "openAmount.belowMin": "71916184",
+    "openAmount.aboveMax": "6c94460a",
+    "openAmount.offStep": "2d53ec30",
+    "openAmount.hint": "d614b302",
+    "openAmount.hintSingle": "cf2f83ac"
   },
   "discovery": {
     "aboutNewPostsFrom": "c0cd83e2",
@@ -6567,6 +6594,7 @@
     "youCanPaySmallSmallForUp": "568c7a66",
     "youReAlreadyPayingSmallSmall": "3dd5631c",
     "db.isAppendOnly": "5946bbd5",
+    "db.aAmountCanTHaveMoreThan": "0a31e1a1",
     "db.aCampaignCannotMoveTo": "0c394998",
     "db.aPriceCanTHaveMoreThan": "b424722e",
     "db.aBatchThatHasLeftDraftCannot": "63ff2d75",
@@ -6642,6 +6670,7 @@
     "db.checkoutNotFound": "fd35e1bb",
     "db.chooseADifferentDateOrTime": "31905598",
     "db.chooseADifferentDateTimeOrVenue": "e4dd988d",
+    "db.chooseAnAmountFromToInSteps": "5b0cd975",
     "db.chooseAnotherShowOfThisRun": "ae39b615",
     "db.claimRequestAlreadyReviewed": "94b53429",
     "db.claimRequestNotFound": "82ec13c2",
@@ -6686,6 +6715,7 @@
     "db.giveThePassANameOfUp": "337d841b",
     "db.giveThePostponedEventItsNewDate": "d06e76b4",
     "db.goodwillLimitReachedForThisUserThis": "5029ead6",
+    "db.howThisTicketTypeSPriceIs": "f6bf7fdd",
     "db.identityAccountIneligible": "04216f40",
     "db.identityInvalidTransition": "5935afb9",
     "db.identityNotFound": "de6a34a3",
@@ -6827,6 +6857,7 @@
     "db.theCreditForThisOrderIsNo": "6870e8f1",
     "db.theDefaultMarketCannotBePausedOr": "e60b9809",
     "db.theEditWindowForThisMessageHas": "97278c20",
+    "db.theHighestAmountMustBeTheLowest": "ef65f67f",
     "db.theMessageBeingRepliedToWasNot": "3655a5fc",
     "db.theNewDateMustBeAtLeast": "a35b3051",
     "db.theOwnerHasNotVerifiedTheirPhone": "6bc6199b",
@@ -7871,7 +7902,10 @@
     "rescheduleSmsDateVenue": "9b2d28a6",
     "rescheduleSmsVenue": "3d4dfeb4",
     "rescheduleSmsOneDate": "2e61091f",
-    "rescheduleSmsPostponed": "9512faaa"
+    "rescheduleSmsPostponed": "9512faaa",
+    "openAmountTicketsArePaidAtOnce": "960708cb",
+    "openAmountTicketsCantBeGiven": "a2eb6ce6",
+    "openAmountLineCantChange": "0e4a3cce"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -8980,7 +9014,9 @@
     "rescheduleBannerVenues": "b8f98d13",
     "rescheduleBannerChoicePostponed": "edc4a371",
     "rescheduleBannerChoiceVenue": "5fad3f0d",
-    "rescheduleKeptNoteVenue": "0ba15529"
+    "rescheduleKeptNoteVenue": "0ba15529",
+    "amountPaid": "d3d3844d",
+    "paidAtDoor": "cbda9bf5"
   },
   "transactions": {
     "amount": "43dc8532",

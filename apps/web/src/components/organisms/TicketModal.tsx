@@ -9,7 +9,9 @@ import {
   formatDateWithSuffix,
   getFormattedEventDate,
 } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
+import { openAmountPaidOf } from "@abonten/core/openAmountTickets";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
@@ -41,6 +43,7 @@ export default function TicketModal({
   const tc = useTranslations("core");
   const tt = useTranslations("tickets");
   const toast = useToast();
+  const paidAmount = openAmountPaidOf(event);
 
   const handleDOwnloadPdf = async () => {
     try {
@@ -147,6 +150,22 @@ export default function TicketModal({
                   {ticketTypeLabel(tc, event.ticket_type.type)}
                 </span>
               </p>
+
+              {/* An amount the buyer chose (open-amount tickets): what to
+                  load at the gate. */}
+              {paidAmount ? (
+                <p className="text-sm font-semibold mb-2">
+                  {tt("amountPaid", {
+                    amount: formatMoney(
+                      paidAmount.currency,
+                      paidAmount.amount,
+                      {
+                        locale,
+                      },
+                    ),
+                  })}
+                </p>
+              ) : null}
 
               {/* An assigned seat (docs/architecture/assigned-seats.md). */}
               {event.seat_number ? (

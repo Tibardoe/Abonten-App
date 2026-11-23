@@ -95,7 +95,7 @@ export async function giveComplimentaryTicketsCore(
   const { data: event, error } = await supabase
     .from("event")
     .select(
-      "id, title, status, starts_at, ends_at, country_code, event_occurrence(id, starts_at, ends_at), ticket_type(id, price, admits, type)",
+      "id, title, status, starts_at, ends_at, country_code, event_occurrence(id, starts_at, ends_at), ticket_type(id, price, admits, type, amount_mode)",
     )
     .eq("id", input.eventId)
     .eq("organizer_id", accountId)
@@ -116,6 +116,11 @@ export async function giveComplimentaryTicketsCore(
       status: 404,
       message: tr("ticketOfTypeNotFound", { ticketTypeId: input.ticketTypeId }),
     };
+  }
+  // A ticket whose amount the buyer chooses (open-amount tickets) is worth
+  // what was paid for it: a gift of one would have no amount to load.
+  if (type.amount_mode === "open") {
+    return { status: 400, message: tr("openAmountTicketsCantBeGiven") };
   }
   const admits = Math.max(1, type.admits ?? 1);
   const tickets = input.quantity * admits;

@@ -19,6 +19,11 @@ export type ManagedEventTicketType = {
   available_until?: string | null;
   /** What the ticket includes (@abonten/core/ticketTypeNote). */
   description?: string | null;
+  /** "open": the buyer chooses the amount (@abonten/core/openAmountTickets). */
+  amount_mode?: string | null;
+  min_amount?: number | null;
+  max_amount?: number | null;
+  amount_step?: number | null;
 };
 
 export type ManagedEvent = Database["public"]["Tables"]["event"]["Row"] & {
@@ -28,4 +33,6 @@ export type ManagedEvent = Database["public"]["Tables"]["event"]["Row"] & {
   event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
   /** Group tickets and group prices are switched on for this organizer. */
   group_pricing_enabled?: boolean;
+  /** Ticket types whose amount the buyer chooses are switched on. */
+  open_amount_enabled?: boolean;
 };

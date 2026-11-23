@@ -4,7 +4,7 @@ purpose: Index of the technical architecture documents for developers and techni
 audience: Engineering
 scope: Monorepo, database, APIs, jobs, integrations
 status: Approved
-version: 1.7
+version: 1.8
 lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -31,6 +31,7 @@ complianceReviewRequired: no
 | [show-runs.md](show-runs.md) | Runs of shows, tours and copying a listing: each show a whole event in a run, shows at other venues, what is copied, lists and search showing a run once (nearest venue first), the show picker |
 | [social-distribution.md](social-distribution.md) | Abonten posting every new event and place on its own channels: the Admin › Social queue, `?src=` tagged links recorded with listing views, the Monday "your listings had N views" note, and install-then-open links to the app |
 | [ticket-notes-and-special-hours.md](ticket-notes-and-special-hours.md) | What a ticket type includes (a one-line note, editable after the first sale) and special dates in a place's opening hours (holidays): storage, who writes, how "open now" reads them |
+| [open-amount-tickets.md](open-amount-tickets.md) | Ticket types whose amount the buyer chooses (a lowest amount, a highest amount and a step; one ticket for the amount): ride credits, pay what you want, deposits; pricing, what they are never combined with, the door showing the amount paid, the feature flag |
 | [group-tickets-and-prices.md](group-tickets-and-prices.md) | Group tickets (a type admitting several people, one ticket each) and automatic group prices: counting in people, the one pricing rule, never stacked with a promo code, database guarantees, the feature flag |
 | [ticket-plans.md](ticket-plans.md) | Pay small small: paying for tickets in parts before the event, held seats (`on_plan`), parts on the payment path, the settlement purchase, ending and refunding plans per part, the Balance page, why there is no top-up balance, rollout |
 | [safety.md](safety.md) | Abonten Safety: trusted contacts, SOS, check-ins, live location, the contact's page, the outbox and dispatcher, offline behaviour, privacy, rollout |

@@ -6,6 +6,7 @@
 // checks of who may read or change what are here.
 
 import { logger } from "@abonten/core/logger";
+import { openAmountTypeProblemMessage } from "@abonten/core/openAmountTickets";
 import {
   type SeatingPlanInput,
   type SeatingRow,
@@ -292,9 +293,20 @@ export async function setEventSeatingCore(
   // Unseat every type first, so a section changing hands never counts twice.
   const { data: types, error: typesError } = await service
     .from("ticket_type")
-    .select("id, quantity")
+    .select("id, quantity, amount_mode")
     .eq("event_id", input.eventId);
   if (typesError) return { status: 500, message: tr("somethingWentWrong") };
+  // A ticket whose amount the buyer chooses is entry, never a seat.
+  if (
+    (types ?? []).some(
+      (t) => t.amount_mode === "open" && !!input.sections[t.id],
+    )
+  ) {
+    return {
+      status: 400,
+      message: openAmountTypeProblemMessage(coreT(), "seating"),
+    };
+  }
   const { error: clearError } = await service
     .from("ticket_type")
     .update({ seating_section_id: null })

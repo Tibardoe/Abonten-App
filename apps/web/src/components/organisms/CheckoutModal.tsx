@@ -4,6 +4,7 @@ import { getTicketPlanOffer } from "@/actions/ticketPlans/getTicketPlanOffer";
 import { startTicketPlan } from "@/actions/ticketPlans/startTicketPlan";
 import validateCheckout from "@/actions/validateCheckout";
 import ModalShell from "@/components/atoms/ModalShell";
+import CheckoutAmountTicketRow from "@/components/molecules/CheckoutAmountTicketRow";
 import CheckoutOrderTotals from "@/components/molecules/CheckoutOrderTotals";
 import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
@@ -20,6 +21,11 @@ import {
 } from "@abonten/core/checkoutPricing";
 import { formatPercent } from "@abonten/core/i18n/format";
 import { tryFromMajor } from "@abonten/core/money/money";
+import {
+  chosenAmountProblem,
+  openAmountRangeOf,
+  parseChosenAmount,
+} from "@abonten/core/openAmountTickets";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -70,8 +76,6 @@ export default function CheckoutModal({
     offerResponse?.status === 200 && "data" in offerResponse
       ? offerResponse.data
       : undefined;
-  const planOffer = offer?.available ? offer : null;
-  const paySmallSmall = payMode === "plan" && !!planOffer;
 
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
 
@@ -79,6 +83,13 @@ export default function CheckoutModal({
 
   const [quantities, setQuantities] = useState<{
     [ticketTypeId: string]: number;
+  }>({});
+
+  // What the buyer typed for each type whose amount they choose
+  // (docs/architecture/open-amount-tickets.md). A valid amount picks one
+  // ticket at that amount; an empty field picks nothing.
+  const [amountTexts, setAmountTexts] = useState<{
+    [ticketTypeId: string]: string;
   }>({});
 
   const toast = useToast();
@@ -124,6 +135,47 @@ export default function CheckoutModal({
   // Stock is places (people); a Couple ticket takes two.
   const purchasesLeftOf = (ticket: (typeof ticketList)[number]) =>
     purchasesLeft(ticket.quantity, ticket.admits);
+
+  // The amounts chosen that can be bought, and the purchases they make:
+  // one per open type with a valid amount.
+  const chosenAmounts = useMemo(() => {
+    const chosen: Record<string, number> = {};
+    for (const ticket of ticketList) {
+      const range = openAmountRangeOf(ticket);
+      const text = amountTexts[ticket.id] ?? "";
+      if (!range || text.trim() === "") continue;
+      if (chosenAmountProblem(text, range, ticket.currency)) continue;
+      const amount = parseChosenAmount(text, ticket.currency);
+      if (amount !== null) chosen[ticket.id] = amount;
+    }
+    return chosen;
+  }, [ticketList, amountTexts]);
+  const hasInvalidAmount = ticketList.some((ticket) => {
+    const text = amountTexts[ticket.id] ?? "";
+    return (
+      !!openAmountRangeOf(ticket) &&
+      text.trim() !== "" &&
+      chosenAmounts[ticket.id] === undefined
+    );
+  });
+  const purchases = useMemo(() => {
+    const all: Record<string, number> = {};
+    for (const ticket of ticketList) {
+      const count = openAmountRangeOf(ticket)
+        ? chosenAmounts[ticket.id] !== undefined
+          ? 1
+          : 0
+        : (quantities[ticket.id] ?? 0);
+      if (count > 0) all[ticket.id] = count;
+    }
+    return all;
+  }, [ticketList, quantities, chosenAmounts]);
+  const hasOpenLine = Object.keys(chosenAmounts).length > 0;
+
+  // An amount the buyer chooses is paid at once: Pay small small is not
+  // offered beside one.
+  const planOffer = offer?.available && !hasOpenLine ? offer : null;
+  const paySmallSmall = payMode === "plan" && !!planOffer;
 
   // If a live refetch drops a ticket type's availability below what the user
   // already selected, clamp the selection down instead of letting them try to
@@ -183,13 +235,18 @@ export default function CheckoutModal({
     () =>
       priceOrder(
         ticketList
-          .filter((ticket) => (quantities[ticket.id] || 0) > 0)
+          .filter((ticket) => (purchases[ticket.id] || 0) > 0)
           .map((ticket) => ({
             id: ticket.id,
-            purchases: quantities[ticket.id] || 0,
+            purchases: purchases[ticket.id] || 0,
             admits: ticket.admits,
             unitPrice: ticket.price ?? 0,
             currency: ticket.currency,
+            amountMode:
+              chosenAmounts[ticket.id] !== undefined
+                ? ("open" as const)
+                : ("fixed" as const),
+            chosenAmount: chosenAmounts[ticket.id] ?? null,
           })),
         {
           promo: appliedPromo
@@ -201,7 +258,7 @@ export default function CheckoutModal({
           groupTiers,
         },
       ),
-    [ticketList, quantities, appliedPromo, groupTiers],
+    [ticketList, purchases, chosenAmounts, appliedPromo, groupTiers],
   );
 
   const promoEligibility = useMemo(() => {
@@ -210,31 +267,32 @@ export default function CheckoutModal({
       (sum, line) => sum + line.discountedUnits,
       0,
     );
+    // An amount the buyer chose is never discounted, so it is not counted.
     return {
-      totalQuantity: order.tickets,
+      totalQuantity: order.discountableTickets,
       eligibleTotal,
       eligibleUnitsByTicket: Object.fromEntries(
         order.lines.map((line) => [line.id, line.discountedUnits]),
       ),
-      isPartial: eligibleTotal < order.tickets,
+      isPartial: eligibleTotal < order.discountableTickets,
     };
   }, [appliedPromo, order]);
 
   const subTotal = order.lines.reduce((acc, line) => acc + line.amount, 0);
   // The code is not used when the group price is at least as good.
   const groupBeatsPromo =
-    !!appliedPromo && order.tickets > 0 && !order.promoApplied;
+    !!appliedPromo && order.discountableTickets > 0 && !order.promoApplied;
   // "3 more tickets for 10% off": the next group price the order can reach.
   const nextGroupTier =
     [...groupTiers]
-      .filter((tier) => tier.minTickets > order.tickets)
+      .filter((tier) => tier.minTickets > order.discountableTickets)
       .sort((a, b) => a.minTickets - b.minTickets)[0] ?? null;
 
-  const hasSelectedTickets = Object.values(quantities).some((qty) => qty > 0);
+  const hasSelectedTickets = Object.values(purchases).some((qty) => qty > 0);
 
   const hasUnavailableSelection = ticketList.some((ticket) => {
     const left = purchasesLeftOf(ticket);
-    return left !== null && (quantities[ticket.id] || 0) > left;
+    return left !== null && (purchases[ticket.id] || 0) > left;
   });
 
   const serviceFeeRate = useServiceFeeRate(
@@ -285,7 +343,8 @@ export default function CheckoutModal({
 
     const response = await validateCheckout({
       eventId,
-      quantities,
+      quantities: purchases,
+      amounts: chosenAmounts,
       promoCode: appliedPromo?.code ?? null,
       occurrenceId,
     }).catch(actionUnreachable);
@@ -369,6 +428,24 @@ export default function CheckoutModal({
           ) : (
             <>
               {ticketList.map((ticket) => {
+                const range = openAmountRangeOf(ticket);
+                if (range) {
+                  return (
+                    <CheckoutAmountTicketRow
+                      key={ticket.id}
+                      ticket={ticket}
+                      range={range}
+                      amountText={amountTexts[ticket.id] ?? ""}
+                      onAmountTextChange={(text) =>
+                        setAmountTexts((prev) => ({
+                          ...prev,
+                          [ticket.id]: text,
+                        }))
+                      }
+                      purchasesLeft={purchasesLeftOf(ticket)}
+                    />
+                  );
+                }
                 const qty = quantities[ticket.id] ?? 0;
                 const eligibleUnits =
                   promoEligibility?.eligibleUnitsByTicket[ticket.id] ?? 0;
@@ -437,7 +514,7 @@ export default function CheckoutModal({
           {nextGroupTier && !paySmallSmall ? (
             <p className="text-sm text-muted-foreground">
               {t("groupPriceNextTier", {
-                count: nextGroupTier.minTickets - order.tickets,
+                count: nextGroupTier.minTickets - order.discountableTickets,
                 percent: formatPercent(nextGroupTier.percentOff, locale, {
                   maximumFractionDigits: 0,
                 }),
@@ -494,6 +571,7 @@ export default function CheckoutModal({
               isTicketsLoading ||
               isTicketsError ||
               !hasSelectedTickets ||
+              hasInvalidAmount ||
               hasUnavailableSelection ||
               (paySmallSmall && ticketCount > (planOffer?.maxTickets ?? 0))
             }

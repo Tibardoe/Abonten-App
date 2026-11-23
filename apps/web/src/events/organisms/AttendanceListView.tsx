@@ -6,10 +6,12 @@ import { isComplimentary } from "@abonten/core/complimentary";
 import { personName } from "@abonten/core/personName";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { AttendanceRow as Attendee } from "@abonten/services/organizer/organizerReadQuery";
+import type { CheckedInTicket } from "@abonten/services/tickets/checkInTicketCore";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { FiCheck } from "react-icons/fi";
+import CheckedInTicketPanel from "../molecules/CheckedInTicketPanel";
 
 export default function AttendanceListView({
   queryKey,
@@ -53,7 +55,11 @@ function AttendanceRow({
 
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useMutation({
+  const {
+    mutate,
+    isPending,
+    data: checkInResult,
+  } = useMutation({
     mutationFn: (checkedIn: boolean) => {
       // A registration without an issued ticket has nothing to check in.
       if (!attendee.ticket_id) {
@@ -69,6 +75,11 @@ function AttendanceRow({
 
   const isCancelled = attendee.status === "cancelled";
   const isCheckedIn = attendee.ticket?.status === "used";
+  // Just checked in here: an amount the buyer chose is shown to load.
+  const admitted: CheckedInTicket | undefined =
+    checkInResult && "ticket" in checkInResult
+      ? (checkInResult.ticket as CheckedInTicket | undefined)
+      : undefined;
 
   return (
     <li className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2">
@@ -109,6 +120,10 @@ function AttendanceRow({
       {attendee.auth?.phone && (
         <p className="text-sm text-muted-foreground">{attendee.auth.phone}</p>
       )}
+
+      {admitted?.paidAmount && isCheckedIn ? (
+        <CheckedInTicketPanel ticket={admitted} />
+      ) : null}
 
       {!isCancelled && attendee.ticket_id && (
         <div className="pt-1">

@@ -54,6 +54,13 @@ import {
 } from "../market/coverageCopy";
 import { PAYMENT_METHOD_CODES, paymentMethodLabel } from "../market/types";
 import {
+  type ChosenAmountProblem,
+  type OpenAmountTypeProblem,
+  chosenAmountProblemMessage,
+  openAmountRangeHint,
+  openAmountTypeProblemMessage,
+} from "../openAmountTickets";
+import {
   DASHBOARD_PERIODS,
   dashboardPeriodComparisonLabel,
   dashboardPeriodLabel,
@@ -405,6 +412,40 @@ describe("core copy keys", () => {
     );
     expect(Object.keys(coreMessages.eventTypes).sort()).toEqual(
       [...EVENT_TYPE_KEYS].sort(),
+    );
+  });
+
+  it("open-amount tickets", () => {
+    const range = { minAmount: 50, maxAmount: 1000, amountStep: 10 };
+    for (const problem of [
+      "range_missing",
+      "min_not_positive",
+      "max_below_min",
+      "step_not_positive",
+      "too_precise",
+      "step_misaligned",
+      "free_event",
+      "admits",
+      "pass",
+      "seating",
+      "not_enabled",
+    ] satisfies OpenAmountTypeProblem[]) {
+      openAmountTypeProblemMessage(strict, problem);
+    }
+    for (const problem of [
+      "missing",
+      "below_min",
+      "above_max",
+      "off_step",
+    ] satisfies ChosenAmountProblem[]) {
+      chosenAmountProblemMessage(strict, problem, range, "GHS", "en");
+    }
+    openAmountRangeHint(strict, range, "GHS", "en");
+    openAmountRangeHint(
+      strict,
+      { minAmount: 200, maxAmount: 200, amountStep: 1 },
+      "GHS",
+      "en",
     );
   });
 

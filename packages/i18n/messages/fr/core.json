@@ -1527,5 +1527,24 @@
     "labelTooLong": "Le nom ne doit pas dépasser {max} caractères.",
     "timesRequired": "Indiquez les heures d'ouverture et de fermeture, ou marquez le jour comme fermé.",
     "tooMany": "Un lieu peut avoir jusqu'à {max} dates spéciales à venir."
+  },
+  "openAmount": {
+    "rangeMissing": "Indiquez le montant le plus bas, le montant le plus élevé et le pas.",
+    "minNotPositive": "Le montant le plus bas doit être supérieur à 0.",
+    "maxBelowMin": "Le montant le plus élevé ne peut pas être inférieur au montant le plus bas.",
+    "stepNotPositive": "Le pas doit être supérieur à 0.",
+    "tooPrecise": "Un montant a plus de décimales que la devise ne le permet.",
+    "stepMisaligned": "Le montant le plus élevé doit être le montant le plus bas plus un nombre entier de pas.",
+    "freeEvent": "Un événement gratuit ne peut pas laisser les acheteurs choisir le montant.",
+    "admits": "Un billet dont l'acheteur choisit le montant est valable pour une personne.",
+    "pass": "Un pass ne peut pas laisser l'acheteur choisir le montant.",
+    "seating": "Un billet dont l'acheteur choisit le montant ne peut pas vendre de places assises.",
+    "notEnabled": "Le choix du montant par les acheteurs n'est pas encore activé pour votre compte. Demandez à Abonten de l'activer.",
+    "chooseAmount": "Choisissez un montant de {min} à {max}.",
+    "belowMin": "Le montant le plus bas est {min}.",
+    "aboveMax": "Le montant le plus élevé est {max}.",
+    "offStep": "Choisissez {min} ou plus, par paliers de {step}.",
+    "hint": "De {min} à {max}, par paliers de {step}",
+    "hintSingle": "Le montant est de {min}."
   }
 }

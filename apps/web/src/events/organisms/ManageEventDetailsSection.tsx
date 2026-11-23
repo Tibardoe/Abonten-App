@@ -84,6 +84,11 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
         ? new Date(t.available_until)
         : undefined,
       description: t.description ?? null,
+      // An amount the buyer chooses (@abonten/core/openAmountTickets).
+      amountMode: t.amount_mode === "open" ? "open" : "fixed",
+      minAmount: t.min_amount == null ? null : Number(t.min_amount),
+      maxAmount: t.max_amount == null ? null : Number(t.max_amount),
+      amountStep: t.amount_step == null ? null : Number(t.amount_step),
     })),
     currency,
   };
@@ -309,6 +314,7 @@ export default function ManageEventDetailsSection({
               multipleTickets={multipleTickets}
               handleMultipleTickets={setMultipleTickets}
               groupTicketsEnabled={groupPricingEnabled}
+              openAmountEnabled={!!event.open_amount_enabled}
             />
           )}
 

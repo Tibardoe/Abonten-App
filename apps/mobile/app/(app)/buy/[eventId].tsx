@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { OpenAmountTicketCard } from "@/components/checkout/OpenAmountTicketCard";
 import {
   useCancelCheckout,
   usePromoPreview,
@@ -36,6 +37,11 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { formatPercent } from "@abonten/core/i18n/format";
 import { tryFromMajor } from "@abonten/core/money/money";
+import {
+  chosenAmountProblem,
+  openAmountRangeOf,
+  parseChosenAmount,
+} from "@abonten/core/openAmountTickets";
 import {
   hasFreeRegistration,
   ticketTypeLabel,
@@ -116,6 +122,10 @@ export default function BuyTicketsScreen() {
   const [payMode, setPayMode] = useState<PayMode>("full");
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  // What the buyer typed for each type whose amount they choose
+  // (docs/architecture/open-amount-tickets.md): a valid amount is one
+  // ticket at that amount, an empty field picks nothing.
+  const [amountTexts, setAmountTexts] = useState<Record<string, string>>({});
   const [occurrenceId, setOccurrenceId] = useState<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -157,7 +167,43 @@ export default function BuyTicketsScreen() {
   const offerQuery = useTicketPlanOffer(eventId, activeOccurrenceId);
   const offerData =
     offerQuery.data?.status === 200 ? offerQuery.data.data : undefined;
-  const planOffer = offerData?.available ? offerData : null;
+
+  // The amounts chosen that can be bought, and the purchases the order
+  // makes: one per open type with a valid amount.
+  const chosenAmounts = useMemo(() => {
+    const chosen: Record<string, number> = {};
+    for (const tier of event?.ticket_type ?? []) {
+      const range = openAmountRangeOf(tier);
+      const text = amountTexts[tier.id] ?? "";
+      const tierCurrency = tier.currency || currency;
+      if (!range || text.trim() === "") continue;
+      if (chosenAmountProblem(text, range, tierCurrency)) continue;
+      const amount = parseChosenAmount(text, tierCurrency);
+      if (amount !== null) chosen[tier.id] = amount;
+    }
+    return chosen;
+  }, [event, amountTexts, currency]);
+  const hasInvalidAmount = (event?.ticket_type ?? []).some(
+    (tier) =>
+      !!openAmountRangeOf(tier) &&
+      (amountTexts[tier.id] ?? "").trim() !== "" &&
+      chosenAmounts[tier.id] === undefined,
+  );
+  const purchases = useMemo(() => {
+    const all: Record<string, number> = {};
+    for (const tier of event?.ticket_type ?? []) {
+      const count = openAmountRangeOf(tier)
+        ? chosenAmounts[tier.id] !== undefined
+          ? 1
+          : 0
+        : (quantities[tier.id] ?? 0);
+      if (count > 0) all[tier.id] = count;
+    }
+    return all;
+  }, [event, quantities, chosenAmounts]);
+  const hasOpenLine = Object.keys(chosenAmounts).length > 0;
+  // An amount the buyer chooses is paid at once: no Pay small small beside it.
+  const planOffer = offerData?.available && !hasOpenLine ? offerData : null;
   const paySmallSmall = payMode === "plan" && !!planOffer;
 
   // The whole order, priced by the server's own rule (@abonten/core/
@@ -177,13 +223,18 @@ export default function BuyTicketsScreen() {
     () =>
       priceOrder(
         (event?.ticket_type ?? [])
-          .filter((tier) => (quantities[tier.id] ?? 0) > 0)
+          .filter((tier) => (purchases[tier.id] ?? 0) > 0)
           .map((tier) => ({
             id: tier.id,
-            purchases: quantities[tier.id] ?? 0,
+            purchases: purchases[tier.id] ?? 0,
             admits: tier.admits,
             unitPrice: tier.price,
             currency: tier.currency || currency,
+            amountMode:
+              chosenAmounts[tier.id] !== undefined
+                ? ("open" as const)
+                : ("fixed" as const),
+            chosenAmount: chosenAmounts[tier.id] ?? null,
           })),
         {
           promo:
@@ -196,7 +247,7 @@ export default function BuyTicketsScreen() {
           groupTiers,
         },
       ),
-    [event, quantities, applied, groupTiers, currency],
+    [event, purchases, chosenAmounts, applied, groupTiers, currency],
   );
 
   // Tickets (people): a Couple purchase is two.
@@ -213,11 +264,14 @@ export default function BuyTicketsScreen() {
     () => order.lines.reduce((sum, l) => sum + l.discountedUnits, 0),
     [order],
   );
+  // An amount the buyer chose is never discounted nor counted for a group.
+  const discountableCount = order.discountableTickets;
   // The code is not used when the group price is at least as good.
-  const groupBeatsPromo = !!applied && totalCount > 0 && !order.promoApplied;
+  const groupBeatsPromo =
+    !!applied && discountableCount > 0 && !order.promoApplied;
   const nextGroupTier =
     [...groupTiers]
-      .filter((tier) => tier.minTickets > totalCount)
+      .filter((tier) => tier.minTickets > discountableCount)
       .sort((a, b) => a.minTickets - b.minTickets)[0] ?? null;
 
   const discountedSubtotal = Math.max(0, subtotal - discount);
@@ -236,7 +290,7 @@ export default function BuyTicketsScreen() {
   );
   const totalPreview = discountedSubtotal + feePreview;
   const partialPromo =
-    applied != null && eligibleUnits > 0 && eligibleUnits < totalCount;
+    applied != null && eligibleUnits > 0 && eligibleUnits < discountableCount;
 
   const header = (
     <AppHeader variant="title" title={t("buyTickets")} backFallback="/(app)" />
@@ -387,7 +441,8 @@ export default function BuyTicketsScreen() {
 
     const input = {
       eventId,
-      quantities,
+      quantities: purchases,
+      amounts: chosenAmounts,
       occurrenceId: activeOccurrenceId,
       promoCode: applied?.code ?? null,
     };
@@ -553,6 +608,32 @@ export default function BuyTicketsScreen() {
             const admits = Math.max(1, tier.admits ?? 1);
             const left = purchasesLeft(tier.quantity, admits);
             const stockOut = left != null && left <= 0;
+            const range = openAmountRangeOf(tier);
+            if (range) {
+              return (
+                <OpenAmountTicketCard
+                  key={tier.id}
+                  name={ticketTypeLabel(tc, tier.type)}
+                  note={tier.description}
+                  range={range}
+                  currency={tier.currency || currency}
+                  amountText={amountTexts[tier.id] ?? ""}
+                  onAmountTextChange={(text) =>
+                    setAmountTexts((prev) => ({ ...prev, [tier.id]: text }))
+                  }
+                  availability={
+                    stockOut
+                      ? t("soldOut")
+                      : !onSale
+                        ? t("notOnSale")
+                        : left != null
+                          ? t("left", { quantity: left })
+                          : null
+                  }
+                  disabled={!onSale || stockOut}
+                />
+              );
+            }
             // The server allows 50 tickets of a type per order.
             const cap = Math.min(
               MAX_PER_TYPE,
@@ -629,7 +710,7 @@ export default function BuyTicketsScreen() {
         {nextGroupTier && !paySmallSmall ? (
           <AppText variant="meta">
             {tCommon("groupPriceNextTier", {
-              count: nextGroupTier.minTickets - totalCount,
+              count: nextGroupTier.minTickets - discountableCount,
               percent: formatPercent(nextGroupTier.percentOff, locale, {
                 maximumFractionDigits: 0,
               }),
@@ -697,7 +778,7 @@ export default function BuyTicketsScreen() {
                 <AppText variant="caption">
                   {t("appliesToOfTickets", {
                     eligibleUnits: eligibleUnits,
-                    totalCount: totalCount,
+                    totalCount: discountableCount,
                   })}
                 </AppText>
               ) : null}
@@ -786,6 +867,7 @@ export default function BuyTicketsScreen() {
             cancel.isPending ||
             startPlan.isPending ||
             totalCount === 0 ||
+            hasInvalidAmount ||
             (occurrences.length > 1 && activeOccurrenceId == null) ||
             (paySmallSmall && totalCount > (planOffer?.maxTickets ?? 0))
           }
