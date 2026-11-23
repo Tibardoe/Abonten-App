@@ -1527,5 +1527,24 @@
     "labelTooLong": "El nombre no puede superar los {max} caracteres.",
     "timesRequired": "Indica las horas de apertura y cierre, o marca el día como cerrado.",
     "tooMany": "Un lugar puede tener hasta {max} fechas especiales próximas."
+  },
+  "openAmount": {
+    "rangeMissing": "Indica el importe más bajo, el importe más alto y el intervalo.",
+    "minNotPositive": "El importe más bajo debe ser mayor que 0.",
+    "maxBelowMin": "El importe más alto no puede ser menor que el importe más bajo.",
+    "stepNotPositive": "El intervalo debe ser mayor que 0.",
+    "tooPrecise": "Un importe tiene más decimales de los que permite la moneda.",
+    "stepMisaligned": "El importe más alto debe ser el importe más bajo más un número entero de intervalos.",
+    "freeEvent": "Un evento gratuito no puede dejar que los compradores elijan el importe.",
+    "admits": "Una entrada cuyo importe elige el comprador es válida para una persona.",
+    "pass": "Un pase no puede dejar que el comprador elija el importe.",
+    "seating": "Una entrada cuyo importe elige el comprador no puede vender asientos.",
+    "notEnabled": "Que los compradores elijan el importe aún no está activado para tu cuenta. Pide a Abonten que lo active.",
+    "chooseAmount": "Elige un importe de {min} a {max}.",
+    "belowMin": "El importe más bajo es {min}.",
+    "aboveMax": "El importe más alto es {max}.",
+    "offStep": "Elige {min} o más, en intervalos de {step}.",
+    "hint": "De {min} a {max}, en intervalos de {step}",
+    "hintSingle": "El importe es de {min}."
   }
 }

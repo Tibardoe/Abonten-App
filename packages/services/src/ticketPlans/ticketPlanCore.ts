@@ -77,11 +77,13 @@ type EventRow = {
     type: string | null;
     currency: string;
     admits: number;
+    /** "open": the buyer chooses the amount, paid at once, never in parts. */
+    amount_mode: string | null;
   }[];
 };
 
 const EVENT_SELECT =
-  "id, status, title, event_code, organizer_id, currency, country_code, timezone, starts_at, ends_at, event_occurrence(id, starts_at, ends_at), ticket_type(id, price, type, currency, admits)";
+  "id, status, title, event_code, organizer_id, currency, country_code, timezone, starts_at, ends_at, event_occurrence(id, starts_at, ends_at), ticket_type(id, price, type, currency, admits, amount_mode)";
 
 const isPaidType = (t: EventRow["ticket_type"][number]) =>
   (t.type ?? "") !== "FREE" && Number(t.price ?? 0) > 0;
@@ -354,6 +356,10 @@ export async function startTicketPlanCore(
     const type = typesById.get(ticketTypeId);
     if (!type || !isPaidType(type) || type.currency !== currency) {
       return { status: 400, message: tr("onlyPaidTicketsCanBePaid") };
+    }
+    // An amount the buyer chooses (open-amount tickets) is paid at once.
+    if (type.amount_mode === "open") {
+      return { status: 400, message: tr("openAmountTicketsArePaidAtOnce") };
     }
   }
   const order = priceOrder(

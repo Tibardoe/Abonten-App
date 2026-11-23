@@ -354,6 +354,11 @@ export type ProfileUpdateResult = {
 export type ValidateCheckoutBody = {
   eventId: string;
   quantities: Record<string, number>;
+  /**
+   * The amount chosen (major units) for each open-amount type picked: one
+   * ticket at that amount (docs/architecture/open-amount-tickets.md).
+   */
+  amounts?: Record<string, number> | null;
   occurrenceId?: string | null;
   // Optional promo code — validated + claimed server-side inside
   // validateCheckoutCore. A bad code fails the whole validate call with its
@@ -547,6 +552,15 @@ export type EventCreateBody = {
         availableUntil?: string | null;
         /** What the ticket includes: one line, at most 140 characters. */
         description?: string | null;
+        /**
+         * "open": the buyer chooses the amount from minAmount to maxAmount
+         * in steps of amountStep (major units); the price is the minimum.
+         * Needs the organizer's open-amount switch.
+         */
+        amountMode?: "fixed" | "open" | null;
+        minAmount?: number | null;
+        maxAmount?: number | null;
+        amountStep?: number | null;
       }[]
     | null;
   /** Automatic group prices (needs the organizer's group pricing switch). */
@@ -664,6 +678,11 @@ export type PendingCheckoutSessionLine = {
   amount: number;
   currency: string;
   availableStock: number | null;
+  /**
+   * The buyer chose this line's amount (open-amount tickets): one ticket at
+   * `amount`, not changed in the basket. Absent from older servers.
+   */
+  openAmount?: boolean;
 };
 
 export type PendingCheckoutSession = {
@@ -945,6 +964,11 @@ export type EventDraftTicket = {
   availableUntil?: string;
   /** What the ticket includes (@abonten/core/ticketTypeNote). */
   description?: string | null;
+  /** The buyer chooses the amount (@abonten/core/openAmountTickets). */
+  amountMode?: "fixed" | "open" | null;
+  minAmount?: number | null;
+  maxAmount?: number | null;
+  amountStep?: number | null;
 };
 export type EventDraftPromoCode = {
   promoCode: string;
@@ -1244,12 +1268,23 @@ export type EventForEditData = {
         available_until: string | null;
         /** What the ticket includes; absent from servers before 2026-11-23. */
         description?: string | null;
+        /**
+         * "open": the buyer chooses the amount from min_amount to max_amount
+         * in steps of amount_step (major units); absent before the
+         * open-amount release (= "fixed").
+         */
+        amount_mode?: "fixed" | "open";
+        min_amount?: number | null;
+        max_amount?: number | null;
+        amount_step?: number | null;
       }[]
     | null;
   /** Automatic group prices, smallest group first. */
   event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
   /** Group tickets and group prices are switched on for this organizer. */
   group_pricing_enabled?: boolean;
+  /** Ticket types whose amount the buyer chooses are switched on. */
+  open_amount_enabled?: boolean;
 };
 
 export type EventEditContextResult =
@@ -1311,6 +1346,15 @@ export type UpdateEventTicketTypesBody = {
         availableUntil?: string | null;
         /** What the ticket includes: one line, at most 140 characters. */
         description?: string | null;
+        /**
+         * "open": the buyer chooses the amount from minAmount to maxAmount
+         * in steps of amountStep (major units); the price is the minimum.
+         * Needs the organizer's open-amount switch.
+         */
+        amountMode?: "fixed" | "open" | null;
+        minAmount?: number | null;
+        maxAmount?: number | null;
+        amountStep?: number | null;
       }[]
     | null;
 };
@@ -1666,8 +1710,26 @@ export type AttendanceRow = {
   auth: { email: string | null; phone: string | null } | null;
 };
 
+/**
+ * What the door shows after a scan (absent from servers before the
+ * open-amount release): the type and its note, and for a ticket whose
+ * amount the buyer chose the amount paid, so staff load that many credits.
+ */
+export type CheckedInTicket = {
+  /** The type's name as stored (FREE / SINGLE TICKET are codes). */
+  type: string | null;
+  note: string | null;
+  /** Major units; null for a fixed-price ticket. */
+  paidAmount: { amount: number; currency: string } | null;
+};
+
 export type CheckInTicketResult =
-  | { status: 200; message: string; eventId?: string | null }
+  | {
+      status: 200;
+      message: string;
+      eventId?: string | null;
+      ticket?: CheckedInTicket;
+    }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
 
 // ---- per-event promo-code management ------------------------------------

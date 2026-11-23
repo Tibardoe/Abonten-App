@@ -25,6 +25,7 @@ type PendingCheckoutRow = {
   total_price: number;
   promo_code: string | null;
   expires_at: string;
+  open_amount: boolean | null;
   // Null when the person may no longer read the event (staff hid it).
   event: {
     title: string;
@@ -62,6 +63,11 @@ export type PendingCheckoutSessionLine = {
   amount: number;
   currency: string;
   availableStock: number | null;
+  /**
+   * The buyer chose this line's amount (open-amount tickets): one ticket at
+   * `amount`, never re-counted in the basket. Absent from older servers.
+   */
+  openAmount?: boolean;
 };
 
 /**
@@ -111,7 +117,7 @@ export async function getUserPendingTicketCheckoutsCore(
     .select(
       `id, checkout_session_id, event_id, ticket_type_id, quantity, admits,
        group_discount_percent, unit_price,
-       discount, discounted_units, total_price, promo_code, expires_at,
+       discount, discounted_units, total_price, promo_code, expires_at, open_amount,
        event:event_id(title, event_code, starts_at, ends_at, timezone, event_occurrence(id, starts_at, ends_at)),
        ticket_type:ticket_type_id(type, currency, quantity, description)`,
     )
@@ -168,6 +174,7 @@ export async function getUserPendingTicketCheckoutsCore(
       amount: row.total_price,
       currency: row.ticket_type.currency,
       availableStock: row.ticket_type.quantity,
+      openAmount: row.open_amount === true,
     });
     session.sessionSubtotal += row.total_price;
   }

@@ -35,6 +35,17 @@ Cada tipo de entrada con nombre puede llevar una nota breve, que se muestra bajo
 
 Los precios, las cantidades y los propios tipos de entrada se bloquean cuando se confirma la primera entrada, pero las notas no: cámbialas cuando quieras desde la pestaña **Detalles** de tu evento (web) o **Editar evento** (aplicación), en **Qué incluye cada entrada**. Una copia del evento o una nueva función de su serie conserva las notas.
 
+## Dejar que el comprador elija el importe
+
+Un tipo de entrada puede dejar que el comprador elija cuánto paga: por ejemplo créditos para atracciones cargados en una tarjeta en la entrada, una entrada de «paga lo que quieras» desde un mínimo, o un depósito para una mesa. Abonten activa esta opción para tu cuenta: pídela a soporte si la necesitas.
+
+- Al añadir el tipo de entrada, elige que el comprador fije el importe en lugar de un precio fijo y después indica el **importe más bajo**, el **importe más alto** y el **intervalo**. Por ejemplo de 50 GH₵ a 1.000 GH₵ en intervalos de 10 GH₵: los compradores pueden elegir 50 GH₵, 60 GH₵, 70 GH₵ y así hasta 1.000 GH₵.
+- El importe más alto debe ser el importe más bajo más un número entero de intervalos. El importe más bajo se muestra como precio de la entrada («Desde 50 GH₵»).
+- Cada importe elegido es **una entrada**, con un código QR, para una persona.
+- Usa la nota de la entrada para decir qué compra el importe, por ejemplo «Se carga en tu tarjeta en la entrada».
+- Los códigos promocionales, los precios de grupo y el pago poco a poco nunca se aplican a un importe que elige el comprador, y esa entrada no puede ser un pase, un asiento numerado ni una entrada regalada. La tarifa de servicio se suma, como en cualquier entrada.
+- En la puerta, escanear la entrada muestra el importe pagado («Pagado 150 GH₵») con la nota, para que tu equipo sepa cuánto cargar.
+
 ## Fin de la venta en línea
 
 Elige cuándo los compradores dejan de poder conseguir entradas en línea para cada fecha de tu evento, en **Fin de la venta en línea** (al crear el evento y en cualquier momento en **Editar**):

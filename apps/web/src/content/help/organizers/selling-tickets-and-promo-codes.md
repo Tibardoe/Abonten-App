@@ -35,6 +35,17 @@ Each named ticket type can carry a short note shown under its name on the event 
 
 Prices, quantities and the ticket types themselves are locked after the first ticket is confirmed, but the notes are not: change them any time from your event's **Details** tab (web) or **Edit event** (app), under **What each ticket includes**. A copy of the event or a new show in its run keeps the notes.
 
+## Let buyers choose the amount
+
+A ticket type can let the buyer choose how much to pay, for example ride credits loaded onto a card at the gate, "pay what you want" entry from a minimum, or a table deposit. Abonten switches this on for your account: ask support if you need it.
+
+- When you add the ticket type, choose **Buyer chooses the amount** instead of a fixed price, then set the **lowest amount**, the **highest amount** and the **step**. For example from GH₵50 to GH₵1,000 in steps of GH₵10: buyers can choose GH₵50, GH₵60, GH₵70 and so on up to GH₵1,000.
+- The highest amount must be the lowest amount plus whole steps. The lowest amount is shown as the ticket's price ("From GH₵50").
+- Each amount chosen is **one ticket** with one QR code, for one person.
+- Use the ticket's note to say what the amount buys, for example "Loaded on your card at the gate".
+- Promo codes, group prices and Pay small small never apply to an amount the buyer chooses, and it can't be a pass, a seated ticket or a free gift. The service fee is added on top, as for any ticket.
+- At the door, scanning the ticket shows the amount paid ("Paid GH₵150") with the note, so your staff know how much to load.
+
 ## When online sales close
 
 Choose when buyers stop being able to get tickets online for each date of your event, under **Online ticket sales close** (when you create the event, and at any time under **Edit**):

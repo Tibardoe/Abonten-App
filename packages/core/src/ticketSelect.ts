@@ -1,7 +1,9 @@
 /**
  * Shared Supabase select shape for a ticket joined with its ticket type,
  * event, event occurrences, and its own refunds (`refund_parts`, a payment
- * refunded ticket by ticket — read with refundStatus.ticketRefundState). Used by every fetcher that needs to produce
+ * refunded ticket by ticket — read with refundStatus.ticketRefundState),
+ * and its checkout line's chosen amount (`checkout`, open-amount tickets —
+ * openAmountPaidOf; null for a ticket someone sent the reader). Used by every fetcher that needs to produce
  * a `UserTicketType` (My Events list, the ticket PDF/email attachment) so
  * they can never drift into fetching different shapes of the same ticket.
  *
@@ -18,6 +20,7 @@ export const TICKET_WITH_EVENT_SELECT = `
   refund_parts:transaction_refund_ticket (
     refund:refund_id ( status, amount, currency, created_at, tickets:transaction_refund_ticket ( ticket_id ) )
   ),
+  checkout:ticket_checkout_id ( open_amount, unit_price ),
   ticket_type:ticket_type_id!inner (
     *,
     event:event_id!inner (
@@ -40,6 +43,7 @@ export const TICKET_REFUND_SELECT = `
   refund_parts:transaction_refund_ticket (
     refund:refund_id ( status, amount, currency, created_at, tickets:transaction_refund_ticket ( ticket_id ) )
   ),
+  checkout:ticket_checkout_id ( open_amount, unit_price ),
   ticket_type:ticket_type_id!inner (
     *,
     event:event_id!inner (

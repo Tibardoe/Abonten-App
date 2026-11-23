@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-23 — Open-amount tickets: the buyer chooses the amount
+
+- A ticket type can let the buyer choose the amount within the organizer's lowest amount, highest amount and step, and issue one ticket for it; the door shows "Paid GH₵150" so a venue such as an amusement park loads that many ride credits. The same mechanism serves pay-what-you-want entry and table deposits, worded by the type's note. `ticket_type.amount_mode` / `min_amount` / `max_amount` / `amount_step` (price = the minimum) and `ticket_checkout.open_amount`, with CHECKs, a precision trigger counting steps in minor units and a guard after the first checkout (migration `20261123120000_open_amount_tickets`); `create_ticket_checkout` made again whole (fingerprinted), `create_event`, `event_add_show` and `ticket_plan_create` changed at anchors. One ticket at the amount, never discounted by a promo code or a group price, never on Pay small small, a pass, a seat or a gift; the service fee on top; refunds and the organizer's earning at the amount. Switched off behind the feature flag `tickets.open_amount` (per organizer, like `tickets.group_pricing`). Docs: new `architecture/open-amount-tickets.md` 1.0; `architecture/group-tickets-and-prices.md` (§3 note); `architecture/ticket-notes-and-special-hours.md` (§1 note); `architecture/README.md`; `architecture/feature-inventory.md` 1.13; `INDEX.md`; `LEGAL_REVIEW_REQUIRED.md` 1.9 (new M6: prepaid venue credits, e-money); new design-only `specifications/venue-credit-vouchers.md` (not built) and `specifications/README.md`; help `organizers/selling-tickets-and-promo-codes` in five languages; `PROJECT.md` §92.
+
 ## 2026-11-23 — "Your events" on the app's Home
 
 - Organizers see their next event at the top of Home ("Your events · Zadokeli · Fri 11 Dec · and 1 more"), whatever area they browse, one tap from Menu › Manage › Events; found when an organizer browsing from Amamorley thought her listing had gone. `architecture/feature-inventory.md` (1.12).

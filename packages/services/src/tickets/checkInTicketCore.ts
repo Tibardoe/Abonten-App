@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of checkInTicket, lifted so the mobile
 // POST /api/mobile/organizer/tickets/:id/check-in route runs the exact same
@@ -15,8 +16,12 @@ import { tr } from "../i18n/requestLocale";
 type TicketRow = {
   id: string;
   status: string;
+  ticket_checkout_id?: string | null;
   occurrence: { starts_at: string; ends_at: string | null } | null;
   ticket_type: {
+    type?: string | null;
+    description?: string | null;
+    amount_mode?: string | null;
     event: {
       id: string;
       organizer_id: string;
@@ -25,9 +30,28 @@ type TicketRow = {
   } | null;
 };
 
+/**
+ * What the door shows after a scan: the ticket type and its note, and for
+ * a ticket whose amount the buyer chose (open-amount tickets) the amount
+ * paid, so staff load that many credits ("Paid GH₵150").
+ */
+export type CheckedInTicket = {
+  /** The type's name as stored (a code for FREE / SINGLE TICKET). */
+  type: string | null;
+  /** What the ticket includes (ticket_type.description). */
+  note: string | null;
+  /** The amount paid, major units; null for a fixed-price ticket. */
+  paidAmount: { amount: number; currency: string } | null;
+};
+
 export type CheckInTicketCoreResult =
   | { status: 400 | 403 | 404 | 500; message: string }
-  | { status: 200; message: string; eventId: string | null };
+  | {
+      status: 200;
+      message: string;
+      eventId: string | null;
+      ticket?: CheckedInTicket;
+    };
 
 // A `TKT-XXXXXXXX` human code (what the ticket QR encodes) vs. the raw
 // ticket UUID. Passing a non-UUID string into `.eq("id", …)` makes Postgres
@@ -60,7 +84,7 @@ export async function checkInTicketCore(
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "id, status, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(event:event_id(id, organizer_id, postponed_at))",
+      "id, status, ticket_checkout_id, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(type, description, amount_mode, event:event_id(id, organizer_id, postponed_at))",
     )
     .eq(byCode ? "ticket_code" : "id", ref)
     .maybeSingle();
@@ -128,6 +152,33 @@ export async function checkInTicketCore(
     return { status: 400, message: tr("thisTicketIsnTCheckedIn") };
   }
 
+  // An amount the buyer chose: the door shows what was paid. Read before the
+  // ticket moves (service role: the caller was authorised above, and a team
+  // member cannot read the line through their own session), so a scan that
+  // cannot show the amount admits nobody and can simply be repeated.
+  let paidAmount: CheckedInTicket["paidAmount"] = null;
+  if (checkedIn && ticket.ticket_type?.amount_mode === "open") {
+    const { data: line, error: lineError } = ticket.ticket_checkout_id
+      ? await getSupabaseServiceClient()
+          .from("ticket_checkout")
+          .select(
+            "open_amount, unit_price, ticket_type:ticket_type_id(currency)",
+          )
+          .eq("id", ticket.ticket_checkout_id)
+          .maybeSingle()
+      : { data: null, error: null };
+    if (lineError) {
+      logger.error(`Error reading the amount paid: ${lineError.message}`);
+      return { status: 500, message: tr("somethingWentWrong") };
+    }
+    const currency = (
+      line?.ticket_type as { currency?: string | null } | null | undefined
+    )?.currency;
+    if (line?.open_amount && line.unit_price != null && currency) {
+      paidAmount = { amount: Number(line.unit_price), currency };
+    }
+  }
+
   // Conditional on the status just read: two doors scanning the same code
   // at the same moment both read 'active', and only one may admit it.
   const { data: moved, error: updateError } = await supabase
@@ -162,5 +213,10 @@ export async function checkInTicketCore(
     status: 200,
     message: checkedIn ? tr("checkedInSuccessfully") : tr("checkInUndone"),
     eventId: ticket.ticket_type?.event?.id ?? null,
+    ticket: {
+      type: ticket.ticket_type?.type ?? null,
+      note: ticket.ticket_type?.description ?? null,
+      paidAmount,
+    },
   };
 }

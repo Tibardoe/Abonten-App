@@ -24,6 +24,7 @@ import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
 import { GROUP_PRICING_FLAG } from "@abonten/core/groupPricing";
+import { OPEN_AMOUNT_FLAG } from "@abonten/core/openAmountTickets";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef } from "react";
 
@@ -142,6 +143,8 @@ export default function EventUploadFormFields({
   const t = useTranslations("common");
   // Group tickets and group prices: switched on per organizer by staff.
   const groupPricing = useMarketContext().flag(GROUP_PRICING_FLAG);
+  // Ticket types whose amount the buyer chooses: the same kind of switch.
+  const openAmount = useMarketContext().flag(OPEN_AMOUNT_FLAG);
 
   const dateSectionRef = useRef<HTMLDivElement>(null);
   const locationSectionRef = useRef<HTMLDivElement>(null);
@@ -379,6 +382,7 @@ export default function EventUploadFormFields({
                 multipleTickets={multipleTickets}
                 handleMultipleTickets={handleMultipleTickets}
                 groupTicketsEnabled={groupPricing}
+                openAmountEnabled={openAmount}
               />
             )}
 

@@ -248,6 +248,7 @@
   "youReAlreadyPayingSmallSmall": "You're already paying small small for this event.",
   "db": {
     "isAppendOnly": "{0} is append-only",
+    "aAmountCanTHaveMoreThan": "A {0} amount can't have more than {1} decimal places",
     "aCampaignCannotMoveTo": "A {0} campaign cannot move to {1}",
     "aPriceCanTHaveMoreThan": "A {0} price can't have more than {1} decimal places",
     "aBatchThatHasLeftDraftCannot": "A batch that has left draft cannot change its total",
@@ -323,6 +324,7 @@
     "checkoutNotFound": "Checkout not found",
     "chooseADifferentDateOrTime": "Choose a different date or time.",
     "chooseADifferentDateTimeOrVenue": "Choose a different date, time or venue.",
+    "chooseAnAmountFromToInSteps": "Choose an amount from {0} to {1}, in steps of {2}.",
     "chooseAnotherShowOfThisRun": "Choose another show of this run.",
     "claimRequestAlreadyReviewed": "Claim request already reviewed",
     "claimRequestNotFound": "Claim request not found",
@@ -367,6 +369,7 @@
     "giveThePassANameOfUp": "Give the pass a name of up to 60 characters.",
     "giveThePostponedEventItsNewDate": "Give the postponed event its new date.",
     "goodwillLimitReachedForThisUserThis": "Goodwill limit reached for this user this month (used {0}, limit {1})",
+    "howThisTicketTypeSPriceIs": "How this ticket type's price is chosen can't change once it has been sold.",
     "identityAccountIneligible": "identity_account_ineligible",
     "identityInvalidTransition": "identity_invalid_transition",
     "identityNotFound": "identity_not_found",
@@ -508,6 +511,7 @@
     "theCreditForThisOrderIsNo": "The credit for this order is no longer available",
     "theDefaultMarketCannotBePausedOr": "The default market cannot be paused or returned to draft",
     "theEditWindowForThisMessageHas": "The edit window for this message has passed.",
+    "theHighestAmountMustBeTheLowest": "The highest amount must be the lowest amount plus whole steps.",
     "theMessageBeingRepliedToWasNot": "The message being replied to was not found.",
     "theNewDateMustBeAtLeast": "The new date must be at least two hours from now.",
     "theOwnerHasNotVerifiedTheirPhone": "The owner has not verified their phone yet",
@@ -1567,5 +1571,8 @@
   "rescheduleSmsDateVenue": "Abonten: {title} has moved to {when} at {venue}. Keep your ticket or get a full refund: {link}",
   "rescheduleSmsVenue": "Abonten: {title} has a new venue: {venue}. Keep your ticket or get a full refund: {link}",
   "rescheduleSmsOneDate": "Abonten: your date of {title} has moved to {when}. Keep your ticket or get a full refund: {link}",
-  "rescheduleSmsPostponed": "Abonten: {title} is postponed, new date to come. Keep your ticket or get a full refund: {link}"
+  "rescheduleSmsPostponed": "Abonten: {title} is postponed, new date to come. Keep your ticket or get a full refund: {link}",
+  "openAmountTicketsArePaidAtOnce": "A ticket whose amount you choose is paid at once, not small small.",
+  "openAmountTicketsCantBeGiven": "A ticket whose amount the buyer chooses can't be given away. Choose another ticket type.",
+  "openAmountLineCantChange": "The amount of this ticket can't change here. Remove it and choose again."
 }

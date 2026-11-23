@@ -1,5 +1,9 @@
 import { groupPricingProblemMessage } from "@abonten/core/groupPricing";
 import { logger } from "@abonten/core/logger";
+import {
+  type TicketAmountMode,
+  openAmountTypeProblemMessage,
+} from "@abonten/core/openAmountTickets";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
   SINGLE_TICKET_TYPE,
@@ -18,6 +22,10 @@ import { requireVerifiedIdentity } from "../identity/identityCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 import { groupPricingProblem } from "./groupPricingAccess";
+import {
+  openAmountColumns,
+  openAmountTicketsProblem,
+} from "./openAmountAccess";
 
 // Post-auth body of updateEventTicketTypes, lifted so the
 // PUT /api/mobile/organizer/events/:id/ticket-types route runs the exact
@@ -82,6 +90,15 @@ export type UpdateEventTicketTypesCoreInput = {
     availableUntil?: DateInput | null;
     /** What the ticket includes (@abonten/core/ticketTypeNote). */
     description?: string | null;
+    /**
+     * "open": the buyer chooses the amount, from minAmount to maxAmount in
+     * steps of amountStep (major units); the price is the minimum
+     * (@abonten/core/openAmountTickets). Default "fixed".
+     */
+    amountMode?: TicketAmountMode | null;
+    minAmount?: number | null;
+    maxAmount?: number | null;
+    amountStep?: number | null;
   }[];
 };
 
@@ -96,7 +113,13 @@ export async function updateEventTicketTypesCore(
   input: UpdateEventTicketTypesCoreInput,
 ): Promise<UpdateEventTicketTypesCoreResult> {
   const { eventId, freeEvent, singleTicket } = input;
-  const multipleTickets = input.multipleTickets ?? [];
+  // A type whose amount the buyer chooses is priced at its minimum and
+  // admits one person, whatever the client sent.
+  const multipleTickets = (input.multipleTickets ?? []).map((tier) =>
+    tier.amountMode === "open"
+      ? { ...tier, price: tier.minAmount ?? 0, admits: 1 }
+      : tier,
+  );
 
   if (!freeEvent) {
     for (const tier of [
@@ -162,6 +185,20 @@ export async function updateEventTicketTypesCore(
       message: tr("ticketsForThisEventArePriced", {
         currency: currency,
       }),
+    };
+  }
+
+  // Amounts the buyer chooses: a valid range in the event's currency, and
+  // switched on for this organizer when used at all.
+  const amountProblem = await openAmountTicketsProblem(userId, {
+    freeEvent,
+    currency,
+    tiers: freeEvent ? [] : multipleTickets,
+  });
+  if (amountProblem) {
+    return {
+      status: amountProblem === "not_enabled" ? 403 : 400,
+      message: openAmountTypeProblemMessage(coreT(), amountProblem),
     };
   }
 
@@ -246,6 +283,7 @@ export async function updateEventTicketTypesCore(
           available_until: toIso(ticket.availableUntil),
           currency,
           description: normalizeTicketTypeNote(ticket.description),
+          ...openAmountColumns(ticket),
         })),
       ];
 
@@ -321,6 +359,21 @@ export async function updateEventTicketTypesCore(
   if (freeEvent) {
     const retire = await retireEventPromoCodes(supabase, eventId);
     if (retire) return retire;
+  }
+
+  // A type saved again by the name of a pass stays a pass; a type whose
+  // amount the buyer chooses can't be one.
+  const reusedPass = ticketTypesPayload.find(
+    (t) =>
+      "amount_mode" in t &&
+      t.amount_mode === "open" &&
+      passShowsByName.has(t.type.trim().toLowerCase()),
+  );
+  if (reusedPass) {
+    return {
+      status: 400,
+      message: openAmountTypeProblemMessage(coreT(), "pass"),
+    };
   }
 
   const { error: insertError } = await supabase.from("ticket_type").insert(

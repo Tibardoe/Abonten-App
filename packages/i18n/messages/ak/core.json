@@ -1527,5 +1527,24 @@
     "labelTooLong": "Keep the name to {max} characters or fewer.",
     "timesRequired": "Set the opening and closing times, or mark the day as closed.",
     "tooMany": "A place can have up to {max} upcoming special dates."
+  },
+  "openAmount": {
+    "rangeMissing": "Set the lowest amount, the highest amount and the step.",
+    "minNotPositive": "The lowest amount must be more than 0.",
+    "maxBelowMin": "The highest amount can't be less than the lowest amount.",
+    "stepNotPositive": "The step must be more than 0.",
+    "tooPrecise": "An amount has more decimal places than the currency allows.",
+    "stepMisaligned": "The highest amount must be the lowest amount plus whole steps.",
+    "freeEvent": "A free event can't let buyers choose the amount.",
+    "admits": "A ticket whose amount the buyer chooses admits one person.",
+    "pass": "A pass can't let the buyer choose the amount.",
+    "seating": "A ticket whose amount the buyer chooses can't sell seats.",
+    "notEnabled": "Letting buyers choose the amount isn't switched on for your account yet. Ask Abonten to switch it on.",
+    "chooseAmount": "Choose an amount from {min} to {max}.",
+    "belowMin": "The lowest amount is {min}.",
+    "aboveMax": "The highest amount is {max}.",
+    "offStep": "Choose {min} or more, in steps of {step}.",
+    "hint": "From {min} to {max}, in steps of {step}",
+    "hintSingle": "The amount is {min}."
   }
 }

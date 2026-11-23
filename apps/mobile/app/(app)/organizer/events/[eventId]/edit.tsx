@@ -3,6 +3,7 @@ import { TimeField, prettyTime } from "@/components/datetime/TimeField";
 import { GroupPricesEditor } from "@/components/events/GroupPricesEditor";
 import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
 import { SalesClosePicker } from "@/components/events/SalesClosePicker";
+import { TicketTierAmountFields } from "@/components/events/TicketTierAmountFields";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { FormSkeleton } from "@/components/skeletons";
@@ -576,23 +577,37 @@ export default function EditEventScreen() {
                       }
                       placeholder={t("eGVip")}
                     />
+                    <TicketTierAmountFields
+                      tier={tier}
+                      enabled={w.openAmountEnabled}
+                      currency={w.ticketCurrency || null}
+                      onPatch={(patch) =>
+                        w.setTiers((prev) =>
+                          prev.map((x, idx) =>
+                            idx === i ? { ...x, ...patch } : x,
+                          ),
+                        )
+                      }
+                    />
                     <View className="flex-row gap-3">
-                      <View className="flex-1">
-                        <Input
-                          value={tier.price}
-                          onChangeText={(v) =>
-                            w.setTiers((prev) =>
-                              prev.map((x, idx) =>
-                                idx === i ? { ...x, price: v } : x,
-                              ),
-                            )
-                          }
-                          keyboardType="decimal-pad"
-                          placeholder={t("price", {
-                            ticketCurrency: w.ticketCurrency,
-                          })}
-                        />
-                      </View>
+                      {tier.amountMode === "open" ? null : (
+                        <View className="flex-1">
+                          <Input
+                            value={tier.price}
+                            onChangeText={(v) =>
+                              w.setTiers((prev) =>
+                                prev.map((x, idx) =>
+                                  idx === i ? { ...x, price: v } : x,
+                                ),
+                              )
+                            }
+                            keyboardType="decimal-pad"
+                            placeholder={t("price", {
+                              ticketCurrency: w.ticketCurrency,
+                            })}
+                          />
+                        </View>
+                      )}
                       <View className="flex-1">
                         <Input
                           value={tier.quantity}
@@ -608,7 +623,8 @@ export default function EditEventScreen() {
                         />
                       </View>
                     </View>
-                    {w.groupPricingEnabled || Number(tier.admits) > 1 ? (
+                    {tier.amountMode !== "open" &&
+                    (w.groupPricingEnabled || Number(tier.admits) > 1) ? (
                       <Field
                         label={tCommon("peoplePerTicket")}
                         hint={tCommon("peoplePerTicketHint")}

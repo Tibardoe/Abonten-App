@@ -959,5 +959,15 @@
   "groupPricesSaved": "Prix de groupe enregistrés",
   "passForShows": "Un pass pour {shows, plural, one {# représentation} other {# représentations}} : celle-ci, puis choisissez les autres depuis votre billet",
   "thisEventIsPostponed": "Cet événement est reporté. Une nouvelle date est à venir : la vente des billets reprendra alors.",
-  "eventPostponed": "Reporté : nouvelle date à venir"
+  "eventPostponed": "Reporté : nouvelle date à venir",
+  "priceModeLabel": "Prix",
+  "priceModeFixed": "Prix fixe",
+  "priceModeOpen": "L'acheteur choisit le montant",
+  "openAmountMinLabel": "Montant le plus bas",
+  "openAmountMaxLabel": "Montant le plus élevé",
+  "openAmountStepLabel": "Pas",
+  "openAmountEditorHint": "Les acheteurs choisissent un montant dans cette fourchette et reçoivent un billet pour ce montant. Utilisez la note du billet pour dire ce que le montant permet d'obtenir.",
+  "chooseYourAmount": "Choisissez votre montant",
+  "openAmountNoDiscounts": "Les codes promo et les prix de groupe ne s'appliquent pas aux montants que vous choisissez.",
+  "yourAmount": "Votre montant"
 }

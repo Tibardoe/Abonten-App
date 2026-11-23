@@ -1527,5 +1527,24 @@
     "labelTooLong": "Der Name darf höchstens {max} Zeichen lang sein.",
     "timesRequired": "Gib die Öffnungs- und Schließzeit an oder markiere den Tag als geschlossen.",
     "tooMany": "Ein Ort kann bis zu {max} bevorstehende Sondertage haben."
+  },
+  "openAmount": {
+    "rangeMissing": "Lege den niedrigsten Betrag, den höchsten Betrag und die Schrittweite fest.",
+    "minNotPositive": "Der niedrigste Betrag muss größer als 0 sein.",
+    "maxBelowMin": "Der höchste Betrag darf nicht kleiner als der niedrigste Betrag sein.",
+    "stepNotPositive": "Die Schrittweite muss größer als 0 sein.",
+    "tooPrecise": "Ein Betrag hat mehr Nachkommastellen, als die Währung erlaubt.",
+    "stepMisaligned": "Der höchste Betrag muss der niedrigste Betrag plus ganze Schritte sein.",
+    "freeEvent": "Bei einer kostenlosen Veranstaltung können Käufer den Betrag nicht wählen.",
+    "admits": "Ein Ticket, dessen Betrag der Käufer wählt, gilt für eine Person.",
+    "pass": "Bei einem Pass kann der Käufer den Betrag nicht wählen.",
+    "seating": "Ein Ticket, dessen Betrag der Käufer wählt, kann keine Sitzplätze verkaufen.",
+    "notEnabled": "Die freie Betragswahl für Käufer ist für dein Konto noch nicht eingeschaltet. Bitte Abonten, sie einzuschalten.",
+    "chooseAmount": "Wähle einen Betrag von {min} bis {max}.",
+    "belowMin": "Der niedrigste Betrag ist {min}.",
+    "aboveMax": "Der höchste Betrag ist {max}.",
+    "offStep": "Wähle {min} oder mehr, in Schritten von {step}.",
+    "hint": "Von {min} bis {max}, in Schritten von {step}",
+    "hintSingle": "Der Betrag ist {min}."
   }
 }

@@ -12,7 +12,7 @@ import { type QueryClient, useQuery } from "@tanstack/react-query";
 const EVENT_DETAIL_SELECT = `
   *,
   user_info!organizer_id ( avatar_public_id, avatar_version, username, full_name, username_is_generated, organizer_verified, id_checked, account_kind, status_id ),
-  ticket_type ( id, type, price, currency, quantity, admits, pass_shows, available_from, available_until, description ),
+  ticket_type ( id, type, price, currency, quantity, admits, pass_shows, available_from, available_until, description, amount_mode, min_amount, max_amount, amount_step ),
   event_group_discount ( min_tickets, percent_off ),
   event_occurrence ( id, starts_at, ends_at ),
   place:place_id ( id, name, slug )
@@ -71,6 +71,14 @@ export type EventDetail = {
     available_until: string | null;
     /** What the ticket includes; absent in an older cache. */
     description?: string | null;
+    /**
+     * "open": the buyer chooses the amount from min_amount to max_amount in
+     * steps of amount_step (open-amount tickets); price is the minimum.
+     */
+    amount_mode?: string | null;
+    min_amount?: number | null;
+    max_amount?: number | null;
+    amount_step?: number | null;
   }[];
   /** Automatic group prices ("10+ tickets: 10% off"); absent in an older cache. */
   event_group_discount?: { min_tickets: number; percent_off: number }[] | null;

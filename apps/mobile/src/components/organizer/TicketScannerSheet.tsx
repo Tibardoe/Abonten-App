@@ -1,6 +1,9 @@
 import { useCheckInTicket } from "@/features/organizer/useAttendees";
+import type { CheckedInTicket } from "@abonten/api-client";
+import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Icon, Sheet } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import {
   type BarcodeScanningResult,
   CameraView,
@@ -34,7 +37,12 @@ export function parseTicketCode(raw: string): string | null {
   return match ? match[0].toUpperCase() : null;
 }
 
-type Outcome = { ok: boolean; message: string } | null;
+type Outcome = {
+  ok: boolean;
+  message: string;
+  /** The ticket admitted: type, note and any amount paid to load. */
+  ticket?: CheckedInTicket;
+} | null;
 
 export function TicketScannerSheet({
   open,
@@ -46,6 +54,9 @@ export function TicketScannerSheet({
   eventId: string;
 }) {
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
+  const tt = useTranslations("tickets");
+  const { locale } = useLocale();
 
   const [permission, requestPermission] = useCameraPermissions();
   const checkIn = useCheckInTicket(eventId);
@@ -90,6 +101,7 @@ export function TicketScannerSheet({
               message: ok
                 ? t("checkedIn2", { code: code })
                 : (res.message ?? t("couldnTCheckThatTicketIn")),
+              ticket: res.status === 200 ? res.ticket : undefined,
             });
             if (ok) setScannedCount((n) => n + 1);
           },
@@ -200,6 +212,34 @@ export function TicketScannerSheet({
             >
               {checkIn.isPending ? t("checkingIn") : outcome.message}
             </AppText>
+          </View>
+        ) : null}
+
+        {/* What to load at the gate: the amount the buyer chose
+            (open-amount tickets), with what the ticket includes. */}
+        {outcome?.ok && outcome.ticket && !checkIn.isPending ? (
+          <View className="items-center gap-1 rounded-xl border border-border bg-card px-3 py-4">
+            {outcome.ticket.paidAmount ? (
+              <AppText variant="hero" className="text-center">
+                {tt("paidAtDoor", {
+                  amount: formatMoney(
+                    outcome.ticket.paidAmount.currency,
+                    outcome.ticket.paidAmount.amount,
+                    { locale },
+                  ),
+                })}
+              </AppText>
+            ) : null}
+            {outcome.ticket.type ? (
+              <AppText variant="bodyStrong" className="text-center">
+                {ticketTypeLabel(tc, outcome.ticket.type)}
+              </AppText>
+            ) : null}
+            {outcome.ticket.note ? (
+              <AppText variant="muted" className="text-center">
+                {outcome.ticket.note}
+              </AppText>
+            ) : null}
           </View>
         ) : null}
       </View>

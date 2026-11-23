@@ -33,6 +33,12 @@ import {
   groupPricingProblemMessage,
   sortGroupDiscountTiers,
 } from "@abonten/core/groupPricing";
+import type { CoreTranslator } from "@abonten/core/i18n/translator";
+import {
+  type TicketAmountMode,
+  openAmountRangeProblem,
+  openAmountRangeProblemMessage,
+} from "@abonten/core/openAmountTickets";
 import {
   DEFAULT_REFUND_POLICY,
   refundPolicyChoice,
@@ -115,6 +121,15 @@ export type TicketTier = {
   admits: string;
   /** What the ticket includes ("Kids: ages 3–12"); "" = no note. */
   description: string;
+  /**
+   * "open": the buyer chooses the amount from minAmount to maxAmount in
+   * steps of amountStep (@abonten/core/openAmountTickets); the price field
+   * is not used. Absent = "fixed".
+   */
+  amountMode?: TicketAmountMode;
+  minAmount?: string;
+  maxAmount?: string;
+  amountStep?: string;
 };
 /** An automatic group price being edited ("10" tickets, "10" % off). */
 export type GroupPriceDraft = {
@@ -127,6 +142,81 @@ export type GroupPriceDraft = {
 export function admitsOf(tier: Pick<TicketTier, "admits">): number {
   const n = Number(tier.admits);
   return Number.isInteger(n) && n >= 1 && n <= MAX_TICKET_ADMITS ? n : 1;
+}
+
+const amountNumber = (text: string | undefined): number | null => {
+  const trimmed = (text ?? "").trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+};
+
+/**
+ * How a tier is priced, as the server takes it: fixed, or an amount the
+ * buyer chooses (its price is then the lowest amount, one person a ticket).
+ */
+export function tierAmountFields(tier: TicketTier): {
+  amountMode: TicketAmountMode;
+  minAmount: number | null;
+  maxAmount: number | null;
+  amountStep: number | null;
+} {
+  if (tier.amountMode !== "open") {
+    return {
+      amountMode: "fixed",
+      minAmount: null,
+      maxAmount: null,
+      amountStep: null,
+    };
+  }
+  return {
+    amountMode: "open",
+    minAmount: amountNumber(tier.minAmount),
+    maxAmount: amountNumber(tier.maxAmount),
+    amountStep: amountNumber(tier.amountStep),
+  };
+}
+
+/** What is wrong with an open tier's range, worded, or null. */
+export function tierAmountProblem(
+  tc: CoreTranslator,
+  tier: TicketTier,
+  currency: string | null,
+): string | null {
+  if (tier.amountMode !== "open") return null;
+  const fields = tierAmountFields(tier);
+  const problem = openAmountRangeProblem(
+    {
+      minAmount: fields.minAmount ?? undefined,
+      maxAmount: fields.maxAmount ?? undefined,
+      amountStep: fields.amountStep ?? undefined,
+    },
+    currency ?? "",
+  );
+  return problem ? openAmountRangeProblemMessage(tc, problem) : null;
+}
+
+/** A tier's editor fields from a stored ticket type (draft or server). */
+export function tierAmountDraft(type: {
+  amountMode?: string | null;
+  amount_mode?: string | null;
+  minAmount?: number | null;
+  min_amount?: number | null;
+  maxAmount?: number | null;
+  max_amount?: number | null;
+  amountStep?: number | null;
+  amount_step?: number | null;
+}): Pick<TicketTier, "amountMode" | "minAmount" | "maxAmount" | "amountStep"> {
+  const open = (type.amountMode ?? type.amount_mode) === "open";
+  const text = (n: number | null | undefined) => (n == null ? "" : String(n));
+  return open
+    ? {
+        amountMode: "open",
+        minAmount: text(type.minAmount ?? type.min_amount),
+        maxAmount: text(type.maxAmount ?? type.max_amount),
+        amountStep: text(type.amountStep ?? type.amount_step),
+      }
+    : { amountMode: "fixed" };
 }
 export type PromoDraft = {
   id: string;
@@ -546,6 +636,7 @@ export function useEventWizard(
           quantity: t.quantity != null ? String(t.quantity) : "",
           admits: String(t.admits ?? 1),
           description: t.description ?? "",
+          ...tierAmountDraft(t),
         })),
       );
     }
@@ -632,6 +723,7 @@ export function useEventWizard(
               quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
               admits: admitsOf(t),
               description: normalizeTicketTypeNote(t.description),
+              ...tierAmountFields(t),
             }))
           : undefined,
       groupDiscounts:
@@ -809,13 +901,24 @@ export function useEventWizard(
         body: { singleTicket: { price, quantity: qty } },
       };
     }
-    const parsed = tiers.map((t) => ({
-      type: t.name.trim(),
-      price: Number(t.price),
-      quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
-      admits: admitsOf(t),
-      description: normalizeTicketTypeNote(t.description),
-    }));
+    // An amount the buyer chooses: a valid range; its price is the
+    // lowest amount and it admits one person.
+    const amountProblem = tiers
+      .map((tier) => tierAmountProblem(tc, tier, CURRENCY))
+      .find(Boolean);
+    if (amountProblem) return { ok: false, message: amountProblem };
+    const parsed = tiers.map((t) => {
+      const amounts = tierAmountFields(t);
+      const open = amounts.amountMode === "open";
+      return {
+        type: t.name.trim(),
+        price: open ? (amounts.minAmount ?? 0) : Number(t.price),
+        quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+        admits: open ? 1 : admitsOf(t),
+        description: normalizeTicketTypeNote(t.description),
+        ...amounts,
+      };
+    });
     if (parsed.length === 0) {
       return { ok: false, message: t("addAtLeastOneTicketType") };
     }

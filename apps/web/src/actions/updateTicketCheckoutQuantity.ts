@@ -22,6 +22,8 @@ type CheckoutRow = {
   discounted_units: number;
   promo_code: string | null;
   status: string;
+  /** The buyer chose this line's amount: one ticket, never re-counted. */
+  open_amount: boolean | null;
   ticket_type: { currency: string } | null;
 };
 
@@ -74,7 +76,7 @@ export default withActionLocale(async function updateTicketCheckoutQuantity(
   const { data: rawCheckout, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, event_id, ticket_type_id, quantity, admits, unit_price, discounted_units, promo_code, status, ticket_type:ticket_type_id(currency)",
+      "id, event_id, ticket_type_id, quantity, admits, unit_price, discounted_units, promo_code, status, open_amount, ticket_type:ticket_type_id(currency)",
     )
     .eq("id", ticketCheckoutId)
     .eq("user_id", user.id)
@@ -94,6 +96,12 @@ export default withActionLocale(async function updateTicketCheckoutQuantity(
   }
 
   const checkout = rawCheckout as CheckoutRow;
+  // A ticket whose amount the buyer chose is one ticket at that amount
+  // (docs/architecture/open-amount-tickets.md): it is removed and chosen
+  // again, never re-counted here.
+  if (checkout.open_amount) {
+    return { status: 409, message: tr("openAmountLineCantChange") };
+  }
   const admits = Math.max(1, checkout.admits ?? 1);
   // Tickets, as stored: whole purchases of the type.
   const newTickets = newQuantity * admits;

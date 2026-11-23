@@ -8,6 +8,10 @@ import {
 } from "@abonten/core/geo/address";
 import { groupPricingProblemMessage } from "@abonten/core/groupPricing";
 import { logger } from "@abonten/core/logger";
+import {
+  type TicketAmountMode,
+  openAmountTypeProblemMessage,
+} from "@abonten/core/openAmountTickets";
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import {
   DEFAULT_REFUND_POLICY,
@@ -43,6 +47,10 @@ import {
   groupPricingProblem,
   replaceEventGroupDiscounts,
 } from "./groupPricingAccess";
+import {
+  openAmountColumns,
+  openAmountTicketsProblem,
+} from "./openAmountAccess";
 
 // Post-auth, post-flyer-upload body of postEvent, lifted so the
 // `/api/mobile/events` route runs the exact same create flow as the web
@@ -98,6 +106,15 @@ export type PostEventCoreInput = {
         availableUntil?: DateInput | null;
         /** What the ticket includes (@abonten/core/ticketTypeNote). */
         description?: string | null;
+        /**
+         * "open": the buyer chooses the amount, from minAmount to
+         * maxAmount in steps of amountStep (major units); the price is the
+         * minimum (@abonten/core/openAmountTickets). Default "fixed".
+         */
+        amountMode?: TicketAmountMode | null;
+        minAmount?: number | null;
+        maxAmount?: number | null;
+        amountStep?: number | null;
       }[]
     | null;
   /** Automatic group prices (docs/architecture/group-tickets-and-prices.md). */
@@ -181,6 +198,14 @@ export async function postEventCore(
   // enforces the same two rules with triggers, so a caller that skips this
   // service still cannot create a free event with promo codes or ticket
   // quantities that add up to more than the capacity.
+  // A type whose amount the buyer chooses is priced at its minimum and
+  // admits one person, whatever the client sent.
+  const multipleTickets = (input.multipleTickets ?? []).map((tier) =>
+    tier.amountMode === "open"
+      ? { ...tier, price: tier.minAmount ?? 0, admits: 1 }
+      : tier,
+  );
+
   const promoProblem = freeEventPromoCodeProblem(
     !!input.freeEvent,
     input.promoCodes,
@@ -193,7 +218,7 @@ export async function postEventCore(
   if (!input.freeEvent) {
     const noteProblem = ticketTypeNotesProblemMessage(
       coreT(),
-      (input.multipleTickets ?? []).map((tier) => tier.description),
+      multipleTickets.map((tier) => tier.description),
     );
     if (noteProblem) return { status: 400, message: noteProblem };
   }
@@ -202,7 +227,7 @@ export async function postEventCore(
   // organizer when used at all.
   const groupProblem = await groupPricingProblem(userId, {
     freeEvent: !!input.freeEvent,
-    tiers: input.multipleTickets ?? [],
+    tiers: multipleTickets,
     groupDiscounts: input.groupDiscounts,
   });
   if (groupProblem) {
@@ -212,12 +237,26 @@ export async function postEventCore(
     };
   }
 
+  // Amounts the buyer chooses: a valid range, and switched on for this
+  // organizer when used at all.
+  const amountProblem = await openAmountTicketsProblem(userId, {
+    freeEvent: !!input.freeEvent,
+    currency,
+    tiers: input.freeEvent ? [] : multipleTickets,
+  });
+  if (amountProblem) {
+    return {
+      status: amountProblem === "not_enabled" ? 403 : 400,
+      message: openAmountTypeProblemMessage(coreT(), amountProblem),
+    };
+  }
+
   if (!input.freeEvent) {
     // Quantities are stored as places (people): a purchase of a type that
     // admits two takes two.
     const tiers = [
       ...(input.singleTicket ? [input.singleTicket] : []),
-      ...(input.multipleTickets ?? []).map((tier) => ({
+      ...multipleTickets.map((tier) => ({
         ...tier,
         quantity:
           tier.quantity == null
@@ -323,7 +362,7 @@ export async function postEventCore(
               },
             ]
           : []),
-        ...(input.multipleTickets ?? []).map((ticket) => {
+        ...multipleTickets.map((ticket) => {
           const admits = Math.max(1, ticket.admits ?? 1);
           return {
             type: ticket.type,
@@ -335,6 +374,7 @@ export async function postEventCore(
             available_until: ticket.availableUntil ?? null,
             currency,
             description: normalizeTicketTypeNote(ticket.description),
+            ...openAmountColumns(ticket),
           };
         }),
       ];

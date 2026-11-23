@@ -10,8 +10,11 @@ import type { ReferralHint } from "@abonten/types/rewards";
 
 // POST /api/mobile/checkout/validate
 //   { eventId: string, quantities: { [ticketTypeId]: number },
-//     occurrenceId?: string, promoCode?: string,
-//     referral?: { code, touchedAt, source? } }
+//     amounts?: { [ticketTypeId]: number }, occurrenceId?: string,
+//     promoCode?: string, referral?: { code, touchedAt, source? } }
+// `amounts` is the amount the buyer chose for each open-amount type they
+// picked (docs/architecture/open-amount-tickets.md); the service checks it
+// against the type's range and makes the line one ticket at that amount.
 //
 // Reserves inventory and creates a pending checkout session — the same
 // validateCheckoutCore the web action runs. Promo codes are honoured: the
@@ -28,6 +31,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => null)) as {
       eventId?: unknown;
       quantities?: unknown;
+      amounts?: unknown;
       occurrenceId?: unknown;
       promoCode?: unknown;
       referral?: unknown;
@@ -70,6 +74,23 @@ export async function POST(req: Request) {
       quantities[ticketTypeId] = value;
     }
 
+    // The amounts chosen (numbers or their text); anything else is left
+    // out and the service says an amount is missing.
+    const amounts: Record<string, number | string> = {};
+    if (
+      body.amounts != null &&
+      typeof body.amounts === "object" &&
+      !Array.isArray(body.amounts)
+    ) {
+      for (const [ticketTypeId, value] of Object.entries(
+        body.amounts as Record<string, unknown>,
+      )) {
+        if (typeof value === "number" || typeof value === "string") {
+          amounts[ticketTypeId] = value;
+        }
+      }
+    }
+
     const occurrenceId =
       typeof body.occurrenceId === "string" ? body.occurrenceId : null;
 
@@ -101,6 +122,7 @@ export async function POST(req: Request) {
     const result = await validateCheckoutCore(auth.supabase, auth.user.id, {
       eventId: body.eventId,
       quantities,
+      amounts,
       promoCode,
       occurrenceId,
       referralHints,

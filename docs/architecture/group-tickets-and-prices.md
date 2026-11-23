@@ -5,7 +5,7 @@ audience: Engineering, operations and support
 scope: ticket_type.admits, ticket_checkout.admits / group_discount_percent, the event_group_discount table, create_ticket_checkout and create_event (migration 20261119200000), @abonten/core/checkoutPricing priceOrder and @abonten/core/groupPricing, @abonten/services events/groupPricingAccess and events/eventGroupDiscountsCore, the checkout, basket and Pay small small pricing, the organizer forms on the website and the app, and the tickets.group_pricing feature flag.
 status: Review required
 version: 1.0
-lastReviewed: 2026-11-19
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -60,6 +60,7 @@ amount           = purchases × unitMinor − discount
 With `admits = 1` and no group price this is exactly the old `computeLineAmount`. The service fee is computed on the discounted total as before; the organizer receives the discounted ticket price.
 
 - **Pay small small** prices purchases with `admits` but applies no promo code and no group price (version 1 of plans takes no discounts).
+- **An amount the buyer chooses** ([open-amount-tickets.md](open-amount-tickets.md), since 2026-11-23) is one ticket that is never discounted and does not count towards a group price: the tier is chosen from `discountableTickets`.
 - **The basket** (`updateTicketCheckoutQuantity`): a line's purchases can change, re-priced with the line's own sticky promo units. An order on an event with group prices is not edited there (every line's price depends on the whole order): the buyer is asked to remove it and choose again.
 
 ## 4. What the database guarantees (migration 20261119200000)

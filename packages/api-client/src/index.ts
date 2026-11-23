@@ -23,6 +23,7 @@ export type {
   CardVerificationInitData,
   ChangePhoneResult,
   CheckInTicketResult,
+  CheckedInTicket,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,

@@ -642,7 +642,11 @@
     "youHaveStartedALotOfConversations": "Du hast in letzter Zeit sehr viele Unterhaltungen begonnen. Bitte versuche es später erneut.",
     "yourAccountHasBeenRestricted": "Dein Konto wurde eingeschränkt.",
     "yourCreditBalanceIsNegative": "Dein Guthaben ist negativ",
-    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt"
+    "yourCreditIsOnHold": "Dein Guthaben ist gesperrt",
+    "aAmountCanTHaveMoreThan": "Ein Betrag in {0} darf nicht mehr als {1} Nachkommastellen haben",
+    "chooseAnAmountFromToInSteps": "Wähle einen Betrag von {0} bis {1}, in Schritten von {2}.",
+    "howThisTicketTypeSPriceIs": "Wie der Preis dieser Ticketart festgelegt wird, kann sich nach dem ersten Verkauf nicht mehr ändern.",
+    "theHighestAmountMustBeTheLowest": "Der höchste Betrag muss der niedrigste Betrag plus ganze Schritte sein."
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1567,5 +1571,8 @@
   "rescheduleSmsDateVenue": "Abonten: {title} ist verschoben auf {when}, Ort: {venue}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
   "rescheduleSmsVenue": "Abonten: {title} hat einen neuen Ort: {venue}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
   "rescheduleSmsOneDate": "Abonten: Dein Termin von {title} ist verschoben auf {when}. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
-  "rescheduleSmsPostponed": "Abonten: {title} ist verschoben, neuer Termin folgt. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}"
+  "rescheduleSmsPostponed": "Abonten: {title} ist verschoben, neuer Termin folgt. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
+  "openAmountTicketsArePaidAtOnce": "Ein Ticket, dessen Betrag du wählst, wird auf einmal bezahlt, nicht in Raten.",
+  "openAmountTicketsCantBeGiven": "Ein Ticket, dessen Betrag der Käufer wählt, kann nicht verschenkt werden. Wähle eine andere Ticketart.",
+  "openAmountLineCantChange": "Der Betrag dieses Tickets kann hier nicht geändert werden. Entferne es und wähle neu."
 }

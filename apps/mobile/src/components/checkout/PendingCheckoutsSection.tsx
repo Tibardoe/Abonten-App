@@ -88,6 +88,7 @@ function SessionCard({
   const { locale } = useLocale();
   const t = useTranslations("checkout");
   const tc = useTranslations("core");
+  const tCommon = useTranslations("common");
 
   const router = useRouter();
   const release = useCancelCheckout();
@@ -206,15 +207,27 @@ function SessionCard({
             className="flex-row items-center justify-between"
           >
             <View className="flex-1">
-              <AppText variant="muted">
-                {/* Purchases: a Couple ticket (two people) counts once. */}
-                {ticketTypeLabel(tc, line.type)} ×{" "}
-                {line.purchases ??
-                  line.quantity / Math.max(1, line.admits ?? 1)}
-                {line.discount > 0
-                  ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
-                  : ""}
-              </AppText>
+              {line.openAmount ? (
+                // An amount the buyer chose: one ticket at that amount.
+                <AppText variant="muted">
+                  {ticketTypeLabel(tc, line.type)}
+                </AppText>
+              ) : (
+                <AppText variant="muted">
+                  {/* Purchases: a Couple ticket (two people) counts once. */}
+                  {ticketTypeLabel(tc, line.type)} ×{" "}
+                  {line.purchases ??
+                    line.quantity / Math.max(1, line.admits ?? 1)}
+                  {line.discount > 0
+                    ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
+                    : ""}
+                </AppText>
+              )}
+              {line.openAmount ? (
+                <AppText variant="caption" tone="muted">
+                  {tCommon("yourAmount")}
+                </AppText>
+              ) : null}
               {/* What the ticket includes; older servers leave it out. */}
               {line.description ? (
                 <AppText variant="caption" tone="muted">

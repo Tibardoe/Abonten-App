@@ -959,5 +959,15 @@
   "groupPricesSaved": "Preços de grupo guardados",
   "passForShows": "Um passe para {shows, plural, one {# sessão} other {# sessões}}: esta, e depois escolhe as outras a partir do bilhete",
   "thisEventIsPostponed": "Este evento foi adiado. Haverá uma nova data: os bilhetes voltam à venda nessa altura.",
-  "eventPostponed": "Adiado: nova data a anunciar"
+  "eventPostponed": "Adiado: nova data a anunciar",
+  "priceModeLabel": "Preço",
+  "priceModeFixed": "Preço fixo",
+  "priceModeOpen": "O comprador escolhe o valor",
+  "openAmountMinLabel": "Valor mais baixo",
+  "openAmountMaxLabel": "Valor mais alto",
+  "openAmountStepLabel": "Intervalo",
+  "openAmountEditorHint": "Os compradores escolhem um valor neste intervalo e recebem um bilhete por esse valor. Use a nota do bilhete para dizer o que o valor inclui.",
+  "chooseYourAmount": "Escolha o seu valor",
+  "openAmountNoDiscounts": "Os códigos promocionais e os preços de grupo não se aplicam aos valores que escolhe.",
+  "yourAmount": "O seu valor"
 }

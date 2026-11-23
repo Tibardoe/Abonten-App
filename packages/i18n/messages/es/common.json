@@ -959,5 +959,15 @@
   "groupPricesSaved": "Precios de grupo guardados",
   "passForShows": "Un abono para {shows, plural, one {# función} other {# funciones}}: esta, y luego eliges las demás desde tu entrada",
   "thisEventIsPostponed": "Este evento está aplazado. Habrá una nueva fecha: las entradas volverán a la venta entonces.",
-  "eventPostponed": "Aplazado: fecha por confirmar"
+  "eventPostponed": "Aplazado: fecha por confirmar",
+  "priceModeLabel": "Precio",
+  "priceModeFixed": "Precio fijo",
+  "priceModeOpen": "El comprador elige el importe",
+  "openAmountMinLabel": "Importe más bajo",
+  "openAmountMaxLabel": "Importe más alto",
+  "openAmountStepLabel": "Intervalo",
+  "openAmountEditorHint": "Los compradores eligen un importe en este rango y reciben una entrada por ese importe. Usa la nota de la entrada para decir qué incluye el importe.",
+  "chooseYourAmount": "Elige tu importe",
+  "openAmountNoDiscounts": "Los códigos promocionales y los precios de grupo no se aplican a los importes que eliges.",
+  "yourAmount": "Tu importe"
 }

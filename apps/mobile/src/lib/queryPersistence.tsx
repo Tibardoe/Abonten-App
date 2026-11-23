@@ -57,8 +57,11 @@ import { queryClient } from "./queryClient";
  * the whole map, so a restored profile without it would clear saved links.
  * 4 (2026-11-23): a place's detail gained `specialHours` (holiday hours,
  * which decide "open now") and an event's ticket types `description`.
+ * 5 (2026-11-23): an event's ticket types gained `amount_mode` and the
+ * range (open-amount tickets); a restored one without it would show an
+ * amount the buyer chooses as a fixed price.
  */
-const QUERY_CACHE_VERSION = 4;
+const QUERY_CACHE_VERSION = 5;
 /** Older than this, a restored cache is more misleading than useful. */
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** Allowlisted queries stay in memory at least this long, so they reach disk. */

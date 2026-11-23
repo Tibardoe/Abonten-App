@@ -15,6 +15,7 @@ import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import { groupPricingEnabledFor } from "@abonten/services/events/groupPricingAccess";
+import { openAmountEnabledFor } from "@abonten/services/events/openAmountAccess";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -72,7 +73,7 @@ export default async function page({
     supabase
       .from("event")
       .select(
-        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, admits, pass_shows, currency, available_from, available_until, description), event_group_discount(min_tickets, percent_off)",
+        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, admits, pass_shows, currency, available_from, available_until, description, amount_mode, min_amount, max_amount, amount_step), event_group_discount(min_tickets, percent_off)",
       )
       .eq("id", eventId)
       .maybeSingle(),
@@ -142,6 +143,7 @@ export default async function page({
     participationResponse,
     { count: attendeeCount },
     groupPricingEnabled,
+    openAmountEnabled,
   ] = await Promise.all([
     getEventPromotionTiers(),
     // "Is this event currently featured via a paid promotion" is always
@@ -169,6 +171,8 @@ export default async function page({
       .eq("status", "attending"),
     // Group tickets and group prices are switched on per organizer.
     groupPricingEnabledFor(actor.accountId),
+    // So are ticket types whose amount the buyer chooses.
+    openAmountEnabledFor(actor.accountId),
   ]);
 
   const promotionTiers =
@@ -209,7 +213,11 @@ export default async function page({
 
   return (
     <ManageEventView
-      event={{ ...event, group_pricing_enabled: groupPricingEnabled }}
+      event={{
+        ...event,
+        group_pricing_enabled: groupPricingEnabled,
+        open_amount_enabled: openAmountEnabled,
+      }}
       hasConfirmedParticipation={hasConfirmedParticipation}
       promotionTiers={promotionTiers}
       currentPromotion={currentPromotion}

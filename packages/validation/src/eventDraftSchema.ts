@@ -29,6 +29,12 @@ const ticketSchema = z.object({
   // What the ticket includes (@abonten/core/ticketTypeNote); a draft may
   // hold an unfinished one, so only its length is checked here.
   description: z.string().max(400).nullable().optional(),
+  // The buyer chooses the amount (@abonten/core/openAmountTickets); a draft
+  // may hold an unfinished range, checked when the event is published.
+  amountMode: z.enum(["fixed", "open"]).nullable().optional(),
+  minAmount: z.number().nullable().optional(),
+  maxAmount: z.number().nullable().optional(),
+  amountStep: z.number().nullable().optional(),
 });
 
 const promoCodeSchema = z.object({

@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.8
-lastReviewed: 2026-11-19
+version: 1.9
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -160,6 +160,7 @@ Buyers pay for an event's tickets in parts before the event; Abonten collects ea
 | M3 | Holding buyers' money before the event | Plan money sits in Abonten's Paystack balance until the plan is finished (then the organizer's earning, settled 48 hours after the event) or refunded | Whether part payments must be held separately or in trust, what must be disclosed about it, and what happens to them if Abonten stops trading. | Open |
 | M4 | Refunds when a plan ends | `ticket_plan_release`, refunds per part (`requestPlannedPlanRefunds`) | Confirm that refunding through each original payment method, keeping the service-fee share (T2), with no promised timing, meets consumer-protection rules (with E2), including when the event is cancelled. | Open |
 | M5 | A general top-up balance (not built) | Nothing in the product | Recorded so it is not built by accident: a balance people top up and spend with many organizers is electronic money under the Payment Systems and Services Act, 2019 (Act 987), needing a Bank of Ghana licence or a licensed partner, and brings dormant balances and refund-to-another-instrument risks. Counsel to advise only if the business wants to revisit it. | Open — not built (2026-10-25) |
+| M6 | Prepaid venue credits sold as open-amount tickets (built 2026-11-23, switched off) | `ticket_type.amount_mode = 'open'` behind the flag `tickets.open_amount`; [architecture/open-amount-tickets.md](architecture/open-amount-tickets.md). Design-only follow-up: [specifications/venue-credit-vouchers.md](specifications/venue-credit-vouchers.md) | An organizer such as an amusement park may sell credits the buyer chooses the amount of (one ticket for the amount); the venue loads them onto its own card at the gate and they are spent only at that venue. Confirm that this is closed-loop (redeemable only at the organizer's venue, issued by the organizer, Abonten collecting as a merchant for one purchase) and outside the electronic money rules of the Payment Systems and Services Act, 2019 (Act 987), unlike M5, before the flag is switched on for any seller of credits; and say what the organizer must tell buyers about unused credits, expiry and refunds once loaded. | Open |
 
 ## N — Tickets, entry and teams
 
