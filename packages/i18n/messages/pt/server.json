@@ -217,6 +217,9 @@
   "refundPolicyInvalid": "Escolha uma política de reembolso da lista.",
   "refundPolicyStricterAfterSales": "Já há pessoas com bilhetes para este evento, por isso a sua política de reembolso só pode tornar-se mais generosa.",
   "refundPolicyNotSaved": "O seu evento foi publicado, mas a sua política de reembolso não foi guardada. Abra o evento e defina-a novamente.",
+  "salesCloseInvalid": "Escolha da lista quando termina a venda online.",
+  "salesCloseNotSaved": "O seu evento foi publicado, mas o fim da sua venda online não foi guardado. Abra o evento e defina-o novamente.",
+  "salesCloseNotCopied": "As suas sessões foram adicionadas, mas o fim da sua venda online não lhes foi copiado. Tente novamente.",
   "shareKit": {
     "ticketsFrom": "Bilhetes a partir de {price}",
     "ticketsAt": "Bilhetes {price}",

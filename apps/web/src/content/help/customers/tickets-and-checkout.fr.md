@@ -2,7 +2,7 @@
 title: Acheter des billets et s'inscrire aux événements gratuits
 summary: Comment se déroule le paiement, la réservation de 30 minutes, les codes promo, les frais de service, et ce qui se passe quand le paiement réussit ou échoue.
 order: 3
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -43,5 +43,5 @@ Si le programme Abonten Rewards vous est ouvert et que vous avez du crédit util
 ## Questions fréquentes
 
 - **L'événement est « complet » ou un type de billet n'est pas disponible** : les quantités sont fixées par l'organisateur ; un paiement réservé mais non réglé libère ses billets à son expiration, alors il vaut la peine de revenir voir.
-- **L'événement est en cours ou terminé** : on ne peut acheter des billets qu'avant le début d'un événement (ou de sa prochaine date).
+- **L'événement est en cours ou terminé** : en général, on ne peut acheter des billets qu'avant le début d'un événement (ou de sa prochaine date). Certains organisateurs continuent à vendre pendant qu'il a lieu, jusqu'à peu avant la fin : la page de l'événement indique alors « En cours — billets en vente jusqu'à … ».
 - **J'ai acheté pour quelqu'un d'autre** : les billets sont liés à votre compte, mais c'est le QR code qui est scanné. Vous pouvez montrer ou transférer le billet ; soyez prudent, car la personne qui détient le code peut être enregistrée à l'entrée.

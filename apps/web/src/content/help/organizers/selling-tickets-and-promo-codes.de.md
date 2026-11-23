@@ -2,7 +2,7 @@
 title: Tickets verkaufen, Promo-Codes und Promoter-Provision
 summary: Wie Verkäufe und Reservierungen ablaufen, Promo-Codes anlegen, eine Promoter-Provision anbieten und deine Verkaufsstatistiken lesen.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,18 @@ Beides ist optional und wirkt zusammen:
 - Mit Kapazität dürfen die festgelegten Mengen zusammen nicht darüber liegen – du siehst einen Hinweis (zum Beispiel 110 Tickets insgesamt bei einer Kapazität von 100) und kannst erst speichern, wenn es passt.
 - Ticketarten ohne Menge **teilen sich, was von der Kapazität übrig ist**, nachdem die festgelegten Mengen abgezogen sind. Bei Kapazität 100, Standard = 60 und VIP leer werden höchstens 60 Standard verkauft und über alle Arten ohne Menge hinweg höchstens 40 weitere. Lässt du alle Mengen leer, werden alle 100 Plätze geteilt.
 - Der Verkauf einer Art endet, wenn ihre eigene Menge aufgebraucht ist, und für alle geteilten Arten, wenn die geteilten Plätze weg sind. Reservierte Tickets zählen mit, bis ihre 30-minütige Reservierung abläuft.
+
+## Ende des Online-Verkaufs
+
+Lege unter **Ende des Online-Verkaufs** fest, ab wann Käufer für jeden Termin deines Events keine Tickets mehr online bekommen (beim Erstellen des Events und jederzeit unter **Bearbeiten**):
+
+- **Wenn es beginnt** (Standard): Sobald ein Termin begonnen hat, wird kein Ticket mehr verkauft.
+- **Wenn es endet**, oder **30 Minuten, 1 Stunde oder 2 Stunden vor Ende**: Verkaufe weiter, während es läuft. Praktisch für Orte, die man spontan am selben Tag besucht, etwa einen Freizeitpark mit Öffnungszeiten von 11:00 bis 19:00, einen Markt oder eine Ausstellung. Die Eventseite zeigt dann „Läuft gerade – Tickets im Verkauf bis 18:00“, in der Uhrzeit am Ort des Events.
+
+- Jeder Termin eines Events mit mehreren Terminen und jede Vorstellung einer Reihe zählt für sich.
+- Eine kostenlose Anmeldung folgt derselben Regel.
+- Eine Änderung betrifft nur künftige Verkäufe, du kannst sie also auch nach dem ersten Verkauf ändern.
+- Ein nach Beginn gekauftes Ticket kann der Käufer nicht stornieren: Käufer können nie stornieren, sobald die Veranstaltung begonnen hat. Ratenzahlung (Pay small small) wird für einen Termin, der begonnen hat, nie angeboten.
 
 ## Erstattungsregel
 

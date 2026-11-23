@@ -13,6 +13,12 @@ import {
 } from "@/utils/eventDateValidation";
 import type { GroupDiscountTier } from "@abonten/core/checkoutPricing";
 import {
+  DEFAULT_SALES_CLOSE,
+  salesCloseChoice,
+  salesCloseFromChoice,
+  salesCloseRequestValue,
+} from "@abonten/core/eventPurchaseEligibility";
+import {
   DEFAULT_REFUND_POLICY,
   refundPolicyChoice,
   refundPolicyFromChoice,
@@ -268,6 +274,15 @@ export function useEventUploadForm({
       : refundPolicyChoice(DEFAULT_REFUND_POLICY),
   );
 
+  // When online sales close, as the select's choice
+  // (@abonten/core/eventPurchaseEligibility).
+  const [salesClose, setSalesClose] = useState(
+    initialValues?.salesClose &&
+      salesCloseFromChoice(initialValues.salesClose) !== "invalid"
+      ? initialValues.salesClose
+      : salesCloseChoice(DEFAULT_SALES_CLOSE),
+  );
+
   // Tracks whether the organizer has actually entered anything this
   // session, beyond whatever a continued draft was hydrated with — used to
   // decide whether Cancel needs to prompt at all (an untouched fresh form
@@ -330,6 +345,11 @@ export function useEventUploadForm({
   const handleRefundPolicy = (choice: string) => {
     markTouched();
     setRefundPolicy(choice);
+  };
+
+  const handleSalesClose = (choice: string) => {
+    markTouched();
+    setSalesClose(choice);
   };
 
   const handleSelectedAddress = (address: string) => {
@@ -438,6 +458,7 @@ export function useEventUploadForm({
       requireRegistration: checked,
       currency: userCurrency ?? undefined,
       refundPolicy,
+      salesClose,
     };
   };
 
@@ -594,6 +615,7 @@ export function useEventUploadForm({
         placeId: selectedPlaceId,
         // A free event has nothing to refund: it keeps the default.
         refundPolicy: ticket === TICKET_MODE.free ? null : refundPolicy,
+        salesCloseBeforeEndMinutes: salesCloseRequestValue(salesClose),
         ...eventDates,
       };
 
@@ -648,6 +670,8 @@ export function useEventUploadForm({
     handleChecked,
     refundPolicy,
     handleRefundPolicy,
+    salesClose,
+    handleSalesClose,
     promoCodes,
     handlePromoCodesChange,
     groupDiscounts,

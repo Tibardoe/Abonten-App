@@ -2,7 +2,7 @@
 title: Vender bilhetes, códigos promocionais e comissão de promotores
 summary: Como funcionam as vendas e as reservas, criar códigos promocionais, oferecer uma comissão a promotores e ler as estatísticas das suas vendas.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,18 @@ Ambas são opcionais e funcionam em conjunto:
 - Com lotação, as quantidades definidas não podem somar mais do que ela: vê um aviso (por exemplo, 110 bilhetes no total para uma lotação de 100) e só pode guardar quando estiver dentro do limite.
 - Os tipos de bilhete sem quantidade **partilham o que resta da lotação** depois das quantidades definidas. Com lotação 100, Normal = 60 e VIP em branco, vendem-se no máximo 60 normais e, entre todos os tipos sem quantidade, no máximo mais 40. Se deixar todas as quantidades em branco, os 100 lugares são partilhados.
 - As vendas de um tipo param quando a sua própria quantidade se esgota, e as de todos os tipos partilhados quando os lugares partilhados acabam. Os bilhetes reservados contam até a reserva de 30 minutos expirar.
+
+## Fim da venda online
+
+Escolha quando os compradores deixam de poder obter bilhetes online para cada data do seu evento, em **Fim da venda online** (ao criar o evento e a qualquer momento em **Editar**):
+
+- **Quando começa** (por defeito): nenhum bilhete é vendido depois de uma data ter começado.
+- **Quando termina**, ou **30 minutos, 1 hora ou 2 horas antes de terminar**: continue a vender enquanto decorre. Útil para locais que as pessoas decidem visitar no próprio dia, como um parque de diversões aberto das 11:00 às 19:00, uma feira ou uma exposição. A página do evento diz então «A decorrer — bilhetes à venda até às 18:00», na hora do local do evento.
+
+- Cada data de um evento com várias datas, e cada sessão de uma série, conta por si.
+- Uma inscrição gratuita segue a mesma regra.
+- A alteração só afeta as vendas que ainda não foram feitas, por isso pode alterá-la depois da primeira venda.
+- Um bilhete comprado depois do início não pode ser cancelado pelo comprador: os compradores nunca podem cancelar depois de o espetáculo ter começado. O pagamento em prestações (Pay small small) nunca é oferecido para uma data que já começou.
 
 ## Política de reembolso
 

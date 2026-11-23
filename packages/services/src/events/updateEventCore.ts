@@ -1,3 +1,4 @@
+import { parseSalesClose } from "@abonten/core/eventPurchaseEligibility";
 import {
   type StructuredAddress,
   readStructuredAddress,
@@ -71,6 +72,13 @@ export type UpdateEventCoreInput = {
   /** The refund policy (@abonten/core/refundPolicy); omitted = keep it. */
   refundPolicy?: string | null;
   refundCutoffHours?: number | null;
+  /**
+   * When online sales close for each session
+   * (@abonten/core/eventPurchaseEligibility): omitted = keep it, null = at
+   * its start, 0/30/60/120 = that many minutes before it ends. Editable
+   * after the first sale: it only changes sales still to come.
+   */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 export type UpdateEventCoreResult =
@@ -114,6 +122,12 @@ export async function updateEventCore(
     : undefined;
   if (nextRefundPolicy === null) {
     return { status: 400, message: tr("refundPolicyInvalid") };
+  }
+
+  // Older app builds send nothing: the event keeps its setting.
+  const nextSalesClose = parseSalesClose(input.salesCloseBeforeEndMinutes);
+  if (nextSalesClose === "invalid") {
+    return { status: 400, message: tr("salesCloseInvalid") };
   }
 
   const locationCheck = validateLocationInput(coreT(), {
@@ -307,6 +321,9 @@ export async function updateEventCore(
             refund_policy: nextRefundPolicy.kind,
             refund_cutoff_hours: nextRefundPolicy.cutoffHours,
           }
+        : {}),
+      ...(nextSalesClose !== undefined
+        ? { sales_close_before_end_minutes: nextSalesClose }
         : {}),
     })
     .eq("id", eventId)

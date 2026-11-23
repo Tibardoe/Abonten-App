@@ -22,6 +22,12 @@ import {
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
 import {
+  DEFAULT_SALES_CLOSE,
+  salesCloseChoice,
+  salesCloseFromChoice,
+  salesCloseRequestValue,
+} from "@abonten/core/eventPurchaseEligibility";
+import {
   MAX_TICKET_ADMITS,
   groupDiscountTiersProblem,
   groupPricingProblemMessage,
@@ -193,6 +199,11 @@ export function useEventWizard(
   // The refund policy, as a choice (@abonten/core/refundPolicy).
   const [refundPolicy, setRefundPolicy] = useState(
     refundPolicyChoice(DEFAULT_REFUND_POLICY),
+  );
+  // When online sales close, as a choice
+  // (@abonten/core/eventPurchaseEligibility).
+  const [salesClose, setSalesClose] = useState(
+    salesCloseChoice(DEFAULT_SALES_CLOSE),
   );
   const [textErrors, setTextErrors] = useState<EventWizardTextErrors>({});
 
@@ -459,6 +470,8 @@ export function useEventWizard(
       setRequireRegistration(p.requireRegistration);
     if (p.refundPolicy && refundPolicyFromChoice(p.refundPolicy))
       setRefundPolicy(p.refundPolicy);
+    if (p.salesClose && salesCloseFromChoice(p.salesClose) !== "invalid")
+      setSalesClose(p.salesClose);
 
     if (detail.flyerPublicId && detail.flyerVersion) {
       const url = buildCloudinaryUrl(
@@ -631,6 +644,7 @@ export function useEventWizard(
       requireRegistration,
       currency: CURRENCY,
       refundPolicy,
+      salesClose,
     };
   }
 
@@ -956,6 +970,7 @@ export function useEventWizard(
         ...refundPolicyRequestFields(
           ticketMode === "free" ? null : refundPolicy,
         ),
+        salesCloseBeforeEndMinutes: salesCloseRequestValue(salesClose),
       });
     } finally {
       uploadProgress.reset();
@@ -1110,6 +1125,8 @@ export function useEventWizard(
     setTicketMode: selectTicketMode,
     refundPolicy,
     setRefundPolicy,
+    salesClose,
+    setSalesClose,
     capacityProblem,
     capacityHint,
     ticketPrice,

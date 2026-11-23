@@ -452,6 +452,16 @@
     "untilCutoff": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'à {days, plural, one {# jour} other {# jours}} avant l'événement.",
     "none": "Aucun remboursement : les billets payants ne peuvent pas être annulés."
   },
+  "salesClose": {
+    "label": "Fin de la vente en ligne",
+    "atStart": "Au début",
+    "untilEnd": "À la fin",
+    "minutesBeforeEnd": "{minutes, plural, one {# minute} other {# minutes}} avant la fin",
+    "hoursBeforeEnd": "{hours, plural, one {# heure} other {# heures}} avant la fin",
+    "help": "Continuez à vendre pendant qu'il a lieu — utile pour les lieux où l'on décide de venir le jour même. Chaque date compte à part.",
+    "onNow": "En cours — billets en vente jusqu'à {time}",
+    "onNowDay": "En cours — billets en vente jusqu'au {day} à {time}"
+  },
   "refundClosed": {
     "noRefunds": "Cet événement ne propose pas de remboursement.",
     "cutoffPassed": "Les remboursements pour cet événement ont pris fin le {when}."

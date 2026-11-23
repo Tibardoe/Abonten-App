@@ -3,7 +3,10 @@ import { useFreeRsvp } from "@/features/checkout/useFreeRsvp";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { useNowTick } from "@/lib/useNowTick";
-import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
+import {
+  isSessionOnSale,
+  resolveOccurrenceState,
+} from "@abonten/core/eventPurchaseEligibility";
 import { useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
@@ -26,19 +29,24 @@ export function useFreeRsvpFlow(event: EventDetail | undefined) {
 
   const now = useNowTick();
   const occurrences = event?.event_occurrence ?? [];
-  // Only a strictly-future occurrence can be RSVP'd (same rule the server
-  // enforces); default to the earliest one.
+  // Only a date still on sale can be RSVP'd (same rule the server
+  // enforces): one still to come, or one on now until its cut-off when the
+  // organizer keeps selling while it's on. Default to the first of them.
+  const salesCloseBeforeEndMinutes =
+    event?.sales_close_before_end_minutes ?? null;
   const occurrenceState = resolveOccurrenceState(
     event?.starts_at ?? null,
     event?.ends_at ?? null,
     occurrences,
-    now,
+    { now, salesCloseBeforeEndMinutes },
   );
   const [pickedOccurrenceId, setPickedOccurrenceId] = useState<string | null>(
     null,
   );
-  const isOccurrenceSelectable = (o: { starts_at: string | Date }) =>
-    new Date(o.starts_at).getTime() > now;
+  const isOccurrenceSelectable = (o: {
+    starts_at: string | Date;
+    ends_at: string | Date;
+  }) => isSessionOnSale(o, salesCloseBeforeEndMinutes, now);
   const occurrenceId =
     pickedOccurrenceId &&
     occurrences.some(

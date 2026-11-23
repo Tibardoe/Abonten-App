@@ -2,7 +2,7 @@
 title: Comprar bilhetes e inscrever-se em eventos gratuitos
 summary: Como funciona o pagamento, a reserva de 30 minutos, os códigos promocionais, a taxa de serviço e o que acontece quando o pagamento é bem-sucedido ou falha.
 order: 3
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -43,5 +43,5 @@ Se o programa Abonten Rewards estiver disponível para si e tiver crédito que p
 ## Perguntas frequentes
 
 - **O evento aparece como «esgotado» ou um tipo de bilhete não está disponível**: as quantidades são definidas pelo organizador; um pagamento reservado mas não pago liberta os bilhetes quando expira, por isso vale a pena voltar a ver.
-- **O evento está a decorrer ou já terminou**: só é possível comprar bilhetes antes do início de um evento (ou da sua próxima data).
+- **O evento está a decorrer ou já terminou**: normalmente só é possível comprar bilhetes antes do início de um evento (ou da sua próxima data). Alguns organizadores continuam a vender enquanto decorre, até pouco antes do fim: a página do evento diz então «A decorrer — bilhetes à venda até às …».
 - **Comprei para outra pessoa**: os bilhetes estão associados à sua conta, mas o que é lido é o código QR. Pode mostrar ou reencaminhar o bilhete; tenha cuidado, porque quem tiver o código pode entrar com ele.

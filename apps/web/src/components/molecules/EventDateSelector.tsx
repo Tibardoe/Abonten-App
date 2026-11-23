@@ -4,7 +4,12 @@ import {
   formatFullDateTimeRange,
   getDateParts,
 } from "@abonten/core/dateFormatter";
-import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
+import {
+  isSessionOnSale,
+  resolveOccurrenceState,
+  salesCloseClock,
+  sessionSalesCloseAt,
+} from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useLocale, useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
@@ -25,6 +30,12 @@ type EventDateSelectorProps = {
   postponed?: boolean;
   /** The event's zone: every date and time reads on the venue's clock. */
   timeZone?: string | null;
+  /**
+   * When online sales close (event.sales_close_before_end_minutes): null =
+   * at the start, else minutes before the end, so a date that is on can
+   * still be bought.
+   */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 export default function EventDateSelector({
@@ -37,10 +48,12 @@ export default function EventDateSelector({
   eventStatus,
   postponed,
   timeZone,
+  salesCloseBeforeEndMinutes = null,
 }: EventDateSelectorProps) {
   const locale = useLocale();
 
   const t = useTranslations("common");
+  const te = useTranslations("events");
 
   // Re-render on a fixed cadence so a tab left open across an occurrence's
   // start/end time recomputes which date is selectable (and whether the CTA
@@ -60,14 +73,17 @@ export default function EventDateSelector({
   );
 
   // Authoritative per-occurrence breakdown against the current clock. A
-  // ticket can only ever be sold for a strictly-future occurrence, so the
-  // default selection is `nextPurchasable` (the earliest not-yet-started
-  // date), never an ongoing or past one.
+  // date is on sale until it starts, or -- when the organizer keeps selling
+  // while it's on -- until its cut-off before the end; the default
+  // selection is `nextPurchasable` (a date on now that still sells, else
+  // the earliest one still to come), never a past one.
+  const onSale = (occ: Occurrence) =>
+    isSessionOnSale(occ, salesCloseBeforeEndMinutes, now.getTime());
   const occurrenceState = resolveOccurrenceState(
     undefined,
     undefined,
     sortedEventDates,
-    now.getTime(),
+    { now: now.getTime(), salesCloseBeforeEndMinutes },
   );
   const nextPurchasable = occurrenceState.nextPurchasable;
 
@@ -75,16 +91,25 @@ export default function EventDateSelector({
     nextPurchasable ? String(nextPurchasable.starts_at) : null,
   );
 
-  // If the tick advanced past the previously-selected date, fall back to the
-  // next purchasable one so the CTA never points at a started occurrence.
+  // If the tick advanced past the previously-selected date's sales, fall
+  // back to the next purchasable one so the CTA never points at a date that
+  // can no longer be bought.
   const selectedOccurrence =
     sortedEventDates.find(
-      (occ) =>
-        String(occ.starts_at) === selectedStartsAt &&
-        new Date(occ.starts_at).getTime() > now.getTime(),
+      (occ) => String(occ.starts_at) === selectedStartsAt && onSale(occ),
     ) ??
     nextPurchasable ??
     null;
+
+  // The chosen date is on now and still sells: say until when.
+  const selectedClosesAt =
+    selectedOccurrence &&
+    new Date(selectedOccurrence.starts_at).getTime() <= now.getTime()
+      ? sessionSalesCloseAt(selectedOccurrence, salesCloseBeforeEndMinutes)
+      : null;
+  const onNowClock = selectedClosesAt
+    ? salesCloseClock(selectedClosesAt, timeZone, locale, now.getTime())
+    : null;
 
   const isCanceled = eventStatus === "canceled";
   const blockedLabel = isCanceled
@@ -123,11 +148,10 @@ export default function EventDateSelector({
                 locale,
               );
 
-              // Only a strictly-future occurrence is selectable: an ongoing
-              // one can't be bought for (walk-up sales are closed once it
-              // starts) and a finished one obviously can't.
-              const isSelectable =
-                new Date(occurrence.starts_at).getTime() > now.getTime();
+              // Only a date still on sale is selectable: one still to come,
+              // or one on now when the organizer keeps selling while it's
+              // on. A finished one obviously can't be.
+              const isSelectable = onSale(occurrence);
 
               const isActive =
                 isSelectable &&
@@ -160,6 +184,17 @@ export default function EventDateSelector({
         </div>
       )}
 
+      {!blockedLabel && onNowClock ? (
+        <p className="text-sm font-medium text-success">
+          {onNowClock.day
+            ? te("salesClose.onNowDay", {
+                day: onNowClock.day,
+                time: onNowClock.time,
+              })
+            : te("salesClose.onNow", { time: onNowClock.time })}
+        </p>
+      ) : null}
+
       {/* Buy ticket / RSVP btn */}
       {blockedLabel ? (
         <button
@@ -180,6 +215,7 @@ export default function EventDateSelector({
               eventStatusRaw={eventStatus ?? "published"}
               eventDates={eventDates}
               soldOut={soldOut}
+              salesCloseBeforeEndMinutes={salesCloseBeforeEndMinutes}
             />
           )
         ) : (

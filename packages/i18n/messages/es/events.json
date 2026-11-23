@@ -452,6 +452,16 @@
     "untilCutoff": "Puedes cancelar una entrada de pago y recibir el reembolso del precio de la entrada hasta {days, plural, one {# día} other {# días}} antes del evento.",
     "none": "Sin reembolsos: las entradas de pago no se pueden cancelar."
   },
+  "salesClose": {
+    "label": "Fin de la venta en línea",
+    "atStart": "Cuando empieza",
+    "untilEnd": "Cuando termina",
+    "minutesBeforeEnd": "{minutes, plural, one {# minuto} other {# minutos}} antes de que termine",
+    "hoursBeforeEnd": "{hours, plural, one {# hora} other {# horas}} antes de que termine",
+    "help": "Sigue vendiendo mientras está en marcha: útil para lugares que la gente decide visitar el mismo día. Cada fecha cuenta por separado.",
+    "onNow": "En curso: entradas a la venta hasta las {time}",
+    "onNowDay": "En curso: entradas a la venta hasta el {day} a las {time}"
+  },
   "refundClosed": {
     "noRefunds": "Este evento no ofrece reembolsos.",
     "cutoffPassed": "Los reembolsos de este evento cerraron el {when}."

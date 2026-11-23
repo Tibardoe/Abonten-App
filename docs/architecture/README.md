@@ -4,8 +4,8 @@ purpose: Index of the technical architecture documents for developers and techni
 audience: Engineering
 scope: Monorepo, database, APIs, jobs, integrations
 status: Approved
-version: 1.6
-lastReviewed: 2026-10-25
+version: 1.7
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -27,6 +27,7 @@ complianceReviewRequired: no
 | [show-passes.md](show-passes.md) | Passes for several shows of a run: sold on every show, the holder chooses the other shows from the ticket, cancelled together |
 | [complimentary-tickets.md](complimentary-tickets.md) | Complimentary tickets: an organizer gives real tickets of a type to a named person, from the stock and seats, with no money moved |
 | [assigned-seats.md](assigned-seats.md) | Assigned seats: seating plans, ticket types selling sections, the database seating every issued ticket (an order side by side), freeing and guards |
+| [ticket-sales-window.md](ticket-sales-window.md) | When a session of an event can be sold: the one rule (TypeScript and SQL), the organizer's choice to keep selling while it's on (same-day sales), every place that enforces it, what does not change |
 | [show-runs.md](show-runs.md) | Runs of shows, tours and copying a listing: each show a whole event in a run, shows at other venues, what is copied, lists and search showing a run once (nearest venue first), the show picker |
 | [social-distribution.md](social-distribution.md) | Abonten posting every new event and place on its own channels: the Admin › Social queue, `?src=` tagged links recorded with listing views, the Monday "your listings had N views" note, and install-then-open links to the app |
 | [group-tickets-and-prices.md](group-tickets-and-prices.md) | Group tickets (a type admitting several people, one ticket each) and automatic group prices: counting in people, the one pricing rule, never stacked with a promo code, database guarantees, the feature flag |

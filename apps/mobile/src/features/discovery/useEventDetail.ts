@@ -79,6 +79,11 @@ export type EventDetail = {
   /** @abonten/core/refundPolicy (absent from an older server or cache). */
   refund_policy?: string | null;
   refund_cutoff_hours?: number | null;
+  /**
+   * When online sales close (@abonten/core/eventPurchaseEligibility): null
+   * = at the start; absent from an older server or cache.
+   */
+  sales_close_before_end_minutes?: number | null;
 };
 
 export type OrganizerRating = { average: number; count: number };

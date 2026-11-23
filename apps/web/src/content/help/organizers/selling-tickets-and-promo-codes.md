@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,18 @@ Both are optional and work together:
 - With a capacity, the quantities you set must not add up to more than it — you will see "Ticket quantities total 110, which exceeds the event capacity of 100" and cannot save until it fits.
 - Ticket types you leave without a quantity **share whatever the capacity has left** after the quantities you set. Capacity 100 with Standard = 60 and VIP left blank means at most 60 Standard and, between every type without a quantity, at most 40 more. Leave every quantity blank and all 100 seats are shared.
 - Sales stop for a type when its own quantity is used up, and for every shared type when the shared seats are gone. Held tickets count until their 30-minute hold expires.
+
+## When online sales close
+
+Choose when buyers stop being able to get tickets online for each date of your event, under **Online ticket sales close** (when you create the event, and at any time under **Edit**):
+
+- **When it starts** (the default): no ticket is sold once a date has started.
+- **When it ends**, or **30 minutes, 1 hour or 2 hours before it ends**: keep selling while it's on. Useful for venues people decide to visit on the day, like an amusement park open 11:00 to 19:00, a fair or an exhibition. The event page then says "On now — tickets on sale until 18:00", on the event's own clock.
+
+- Each date of an event with several dates, and each show of a run, counts on its own.
+- A free registration follows the same rule.
+- Changing it only affects sales still to come, so you can change it after the first sale.
+- A ticket bought after the start can't be cancelled by the buyer: buyers can never cancel once the show has started. Pay small small is never offered for a date that has started.
 
 ## Refund policy
 

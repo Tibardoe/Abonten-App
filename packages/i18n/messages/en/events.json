@@ -452,6 +452,16 @@
     "untilCutoff": "You can cancel a paid ticket for a refund of the ticket price until {days, plural, one {# day} other {# days}} before the event.",
     "none": "No refunds: paid tickets can't be cancelled."
   },
+  "salesClose": {
+    "label": "Online ticket sales close",
+    "atStart": "When it starts",
+    "untilEnd": "When it ends",
+    "minutesBeforeEnd": "{minutes, plural, one {# minute} other {# minutes}} before it ends",
+    "hoursBeforeEnd": "{hours, plural, one {# hour} other {# hours}} before it ends",
+    "help": "Keep selling while it's on — useful for venues people decide to visit on the day. Each date counts on its own.",
+    "onNow": "On now — tickets on sale until {time}",
+    "onNowDay": "On now — tickets on sale until {day}, {time}"
+  },
   "refundClosed": {
     "noRefunds": "This event doesn't offer refunds.",
     "cutoffPassed": "Refunds for this event closed on {when}."

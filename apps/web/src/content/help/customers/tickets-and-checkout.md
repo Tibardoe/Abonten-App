@@ -2,7 +2,7 @@
 title: Buying tickets and registering for free events
 summary: How checkout works, the 30-minute hold, promo codes, the service fee, and what happens when payment succeeds or fails.
 order: 3
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -43,5 +43,5 @@ If the Abonten Rewards programme is available to you and you have credit that ca
 ## Common questions
 
 - **The event says "sold out" or a ticket type is unavailable** — quantities are fixed by the organizer; a held-but-unpaid checkout releases its tickets when it expires, so it is worth checking back.
-- **The event is in progress or has ended** — tickets can only be bought before an event (or its next date) starts.
+- **The event is in progress or has ended** — tickets can usually only be bought before an event (or its next date) starts. Some organizers keep selling while it's on, until shortly before it ends: the event page then says "On now — tickets on sale until …".
 - **I bought for someone else** — tickets are tied to your account, but the QR code is what gets scanned. You can show or forward the ticket; be careful, because whoever holds the code can be checked in.

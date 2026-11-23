@@ -563,6 +563,12 @@ export type EventCreateBody = {
   /** The refund policy (@abonten/core/refundPolicy); omitted = the default. */
   refundPolicy?: string | null;
   refundCutoffHours?: number | null;
+  /**
+   * When online sales close for each session
+   * (@abonten/core/eventPurchaseEligibility): null or omitted = at its
+   * start; 0, 30, 60 or 120 = that many minutes before it ends.
+   */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 export type EventCreateResult =
@@ -970,6 +976,8 @@ export type EventDraftPayload = {
   currency?: string | null;
   /** The refund-policy choice (@abonten/core/refundPolicy refundPolicyChoice). */
   refundPolicy?: string;
+  /** When sales close, as a choice (@abonten/core/eventPurchaseEligibility salesCloseChoice). */
+  salesClose?: string;
 };
 
 export type EventDraftListItem = {
@@ -1204,6 +1212,8 @@ export type EventForEditData = {
   /** @abonten/core/refundPolicy (absent from an older server). */
   refund_policy?: string | null;
   refund_cutoff_hours?: number | null;
+  /** @abonten/core/eventPurchaseEligibility (absent from an older server). */
+  sales_close_before_end_minutes?: number | null;
   starts_at: string | null;
   ends_at: string | null;
   flyer_public_id: string;
@@ -1257,6 +1267,12 @@ export type UpdateEventBody = {
   /** The refund policy (@abonten/core/refundPolicy); omit to keep it. */
   refundPolicy?: string | null;
   refundCutoffHours?: number | null;
+  /**
+   * When online sales close (@abonten/core/eventPurchaseEligibility):
+   * null = at the start, 0/30/60/120 = minutes before the end; omit to
+   * keep it.
+   */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 export type UpdateEventResult =

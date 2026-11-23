@@ -7,6 +7,7 @@ import DateTimePicker from "@/components/molecules/DateTimePicker";
 import GroupDiscountInputs from "@/components/molecules/GroupDiscountInputs";
 import PromoCodeInputs from "@/components/molecules/PromoCodeInputs";
 import RefundPolicySelect from "@/components/molecules/RefundPolicySelect";
+import SalesCloseSelect from "@/components/molecules/SalesCloseSelect";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import TypeFilter from "@/components/molecules/TypeFilter";
@@ -45,6 +46,8 @@ type EventUploadFormFieldsProps = Pick<
   | "handleChecked"
   | "refundPolicy"
   | "handleRefundPolicy"
+  | "salesClose"
+  | "handleSalesClose"
   | "singleTicket"
   | "handleSingleTicket"
   | "singleTicketQuantity"
@@ -104,6 +107,8 @@ export default function EventUploadFormFields({
   handleChecked,
   refundPolicy,
   handleRefundPolicy,
+  salesClose,
+  handleSalesClose,
   singleTicket,
   handleSingleTicket,
   singleTicketQuantity,
@@ -386,6 +391,15 @@ export default function EventUploadFormFields({
               </p>
             ) : capacityHint ? (
               <p className="text-xs text-muted-foreground">{capacityHint}</p>
+            ) : null}
+
+            {/* When online sales close: free registrations and paid
+                tickets alike. */}
+            {ticket ? (
+              <SalesCloseSelect
+                value={salesClose}
+                onChange={handleSalesClose}
+              />
             ) : null}
 
             {/* Refunds -- only paid tickets have a price to give back. */}

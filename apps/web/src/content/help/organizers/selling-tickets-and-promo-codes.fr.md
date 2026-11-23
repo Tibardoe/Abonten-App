@@ -2,7 +2,7 @@
 title: Vendre des billets, codes promo et commission des promoteurs
 summary: Comment fonctionnent les ventes et les réservations, créer des codes promo, proposer une commission aux promoteurs et lire les statistiques de vos ventes.
 order: 2
-lastUpdated: 2026-11-19
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,6 +28,18 @@ Les deux sont facultatives et fonctionnent ensemble :
 - Avec une capacité, le total des quantités fixées ne doit pas la dépasser : un message vous l'indique (par exemple un total de 110 billets pour une capacité de 100) et vous ne pouvez pas enregistrer tant que cela ne tient pas.
 - Les types de billets laissés sans quantité **se partagent ce qui reste de la capacité** après les quantités fixées. Avec une capacité de 100, Standard = 60 et VIP laissé vide, on peut vendre au plus 60 Standard et, pour l'ensemble des types sans quantité, au plus 40 de plus. Laissez toutes les quantités vides et les 100 places sont partagées.
 - Les ventes s'arrêtent pour un type quand sa propre quantité est épuisée, et pour tous les types partagés quand les places partagées sont parties. Les billets réservés comptent jusqu'à l'expiration de leur réservation de 30 minutes.
+
+## Fin de la vente en ligne
+
+Choisissez à quel moment les acheteurs ne peuvent plus obtenir de billets en ligne pour chaque date de votre événement, sous **Fin de la vente en ligne** (à la création de l'événement, et à tout moment sous **Modifier**) :
+
+- **Au début** (par défaut) : aucun billet n'est vendu une fois qu'une date a commencé.
+- **À la fin**, ou **30 minutes, 1 heure ou 2 heures avant la fin** : continuez à vendre pendant qu'il a lieu. Utile pour les lieux où l'on décide de venir le jour même, comme un parc d'attractions ouvert de 11 h à 19 h, une foire ou une exposition. La page de l'événement indique alors « En cours — billets en vente jusqu'à 18:00 », à l'heure du lieu de l'événement.
+
+- Chaque date d'un événement à plusieurs dates, et chaque séance d'une série, compte à part.
+- Une inscription gratuite suit la même règle.
+- Le changement ne concerne que les ventes à venir : vous pouvez donc le modifier après la première vente.
+- Un billet acheté après le début ne peut pas être annulé par l'acheteur : les acheteurs ne peuvent jamais annuler une fois le spectacle commencé. Le paiement en plusieurs fois (Pay small small) n'est jamais proposé pour une date qui a commencé.
 
 ## Politique de remboursement
 

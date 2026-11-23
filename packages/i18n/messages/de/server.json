@@ -217,6 +217,9 @@
   "refundPolicyInvalid": "Wähle eine Erstattungsregel aus der Liste.",
   "refundPolicyStricterAfterSales": "Für dieses Event haben bereits Personen Tickets, daher kann seine Erstattungsregel nur großzügiger werden.",
   "refundPolicyNotSaved": "Dein Event wurde veröffentlicht, aber seine Erstattungsregel wurde nicht gespeichert. Öffne das Event und lege sie erneut fest.",
+  "salesCloseInvalid": "Wähle aus der Liste, wann der Online-Verkauf endet.",
+  "salesCloseNotSaved": "Dein Event wurde veröffentlicht, aber das Ende seines Online-Verkaufs wurde nicht gespeichert. Öffne das Event und lege es erneut fest.",
+  "salesCloseNotCopied": "Deine Vorstellungen wurden hinzugefügt, aber das Ende ihres Online-Verkaufs wurde nicht übernommen. Versuche es erneut.",
   "shareKit": {
     "ticketsFrom": "Tickets ab {price}",
     "ticketsAt": "Tickets {price}",

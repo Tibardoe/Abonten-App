@@ -2,7 +2,7 @@
 title: Comprar entradas y registrarse en eventos gratuitos
 summary: Cómo funciona el pago, la reserva de 30 minutos, los códigos promocionales, la tarifa de servicio y qué pasa cuando el pago sale bien o falla.
 order: 3
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -43,5 +43,5 @@ Si el programa Abonten Rewards está disponible para ti y tienes crédito que se
 ## Preguntas frecuentes
 
 - **El evento aparece como «agotado» o un tipo de entrada no está disponible**: las cantidades las fija el organizador; un pago reservado pero no pagado libera sus entradas cuando caduca, así que vale la pena volver a mirar.
-- **El evento está en curso o ya ha terminado**: solo se pueden comprar entradas antes de que empiece un evento (o su siguiente fecha).
+- **El evento está en curso o ya ha terminado**: normalmente solo se pueden comprar entradas antes de que empiece un evento (o su siguiente fecha). Algunos organizadores siguen vendiendo mientras está en marcha, hasta poco antes de que termine: la página del evento dice entonces «En curso: entradas a la venta hasta las …».
 - **He comprado para otra persona**: las entradas están vinculadas a tu cuenta, pero lo que se escanea es el código QR. Puedes enseñar o reenviar la entrada; ten cuidado, porque quien tenga el código puede entrar con él.
