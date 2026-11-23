@@ -1514,5 +1514,18 @@
     "duplicateRow": "Two rows of a section have the same label.",
     "rowSeats": "A row has from 1 to {max} seats."
   },
-  "postponedNewDateToCome": "Postponed, new date to come"
+  "postponedNewDateToCome": "Postponed, new date to come",
+  "ticketTypeNote": {
+    "link": "A ticket note can't include a link.",
+    "tooLong": "Keep the ticket note to {max} characters or fewer."
+  },
+  "specialHours": {
+    "dateInvalid": "Choose a date.",
+    "datePast": "Choose today or a later date.",
+    "dateTooFar": "Choose a date within the next year.",
+    "labelLink": "The name can't include a link.",
+    "labelTooLong": "Keep the name to {max} characters or fewer.",
+    "timesRequired": "Set the opening and closing times, or mark the day as closed.",
+    "tooMany": "A place can have up to {max} upcoming special dates."
+  }
 }

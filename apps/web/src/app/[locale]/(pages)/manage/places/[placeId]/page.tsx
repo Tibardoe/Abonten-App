@@ -14,6 +14,7 @@ import {
   readActingTeamId,
 } from "@/utils/teamActor";
 import { promotionDurationLabel } from "@abonten/core/promotionSummary";
+import { fetchUpcomingPlaceSpecialHours } from "@abonten/services/places/placeSpecialHoursCore";
 import { actorReachesPlace } from "@abonten/services/teams/actingAccount";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 import type { Metadata } from "next";
@@ -143,6 +144,7 @@ export default async function page({
     tiersResponse,
     verificationResponse,
     { data: activePromotionRaw },
+    specialHoursResponse,
   ] = await Promise.all([
     supabase
       .from("place_opening_hours")
@@ -182,6 +184,8 @@ export default async function page({
       .order("ends_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Special dates (holidays) from the place's today on.
+    fetchUpcomingPlaceSpecialHours(supabase, placeId, place.timezone),
   ]);
 
   const insightsError = insightsResponse.status !== 200;
@@ -230,6 +234,9 @@ export default async function page({
     <ManagePlaceView
       place={place}
       openingHours={openingHours ?? []}
+      specialHours={
+        "data" in specialHoursResponse ? specialHoursResponse.data : []
+      }
       services={services ?? []}
       photos={photos ?? []}
       reviewsFirstPage={reviewsFirstPage}

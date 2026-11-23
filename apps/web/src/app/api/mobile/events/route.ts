@@ -16,8 +16,9 @@ import {
 //     requireRegistration, currency, flyerPublicId, flyerVersion,
 //     clientRequestId, capacity?, websiteUrl?, startsAt?, endsAt?,
 //     specificDates?, freeEvent?, singleTicket?, multipleTickets? (each
-//     with admits?), groupDiscounts?,
-//     promoCodes?, placeId? }
+//     with admits? and description?), groupDiscounts?,
+//     promoCodes?, placeId?, refundPolicy?, refundCutoffHours?,
+//     salesCloseBeforeEndMinutes? }
 //
 // Publishes an event. The flyer is uploaded from the device first (signed
 // direct upload, kind "event_photo"); its public_id/version come in here.
@@ -144,6 +145,11 @@ export async function POST(req: Request) {
         typeof body.refundCutoffHours === "number"
           ? body.refundCutoffHours
           : null,
+      // null or omitted = sales close at the start; anything that isn't a
+      // choice is refused by the service.
+      salesCloseBeforeEndMinutes: (body.salesCloseBeforeEndMinutes ?? null) as
+        | number
+        | null,
     };
 
     const result = await postEventCore(auth.supabase, actor.accountId, input);

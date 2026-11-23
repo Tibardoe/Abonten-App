@@ -1,5 +1,6 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useEventInsights } from "@/features/organizer/useEventInsights";
+import { useEventTicketNotes } from "@/features/organizer/useEventTicketNotes";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
 import { ShareKitSection } from "@/features/shareKit/ShareKitSection";
 import { TeamNavRow } from "@/features/teams/ManagingAs";
@@ -265,8 +266,11 @@ function FinanceSection({
 
 function TicketTypesSection({
   rows,
+  notes,
 }: {
   rows: EventInsightsTicketTypeRow[];
+  /** What each type includes, by ticket type id. */
+  notes?: Record<string, string>;
 }) {
   const { locale } = useLocale();
   const t = useTranslations("manage");
@@ -293,9 +297,16 @@ function TicketTypesSection({
                 className="gap-2 rounded-xl border border-border bg-card p-4"
               >
                 <View className="flex-row items-center justify-between gap-2">
-                  <AppText className="font-semibold text-foreground">
-                    {ticketTypeLabel(tc, row.type)}
-                  </AppText>
+                  <View className="flex-1">
+                    <AppText className="font-semibold text-foreground">
+                      {ticketTypeLabel(tc, row.type)}
+                    </AppText>
+                    {notes?.[row.ticket_type_id] ? (
+                      <AppText variant="caption" tone="muted">
+                        {notes[row.ticket_type_id]}
+                      </AppText>
+                    ) : null}
+                  </View>
                   <AppText className="shrink-0 text-sm text-muted-foreground">
                     {t("sold", { n: n(row.sold) })}
                     {capped
@@ -507,6 +518,7 @@ function EventInsightsScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("all");
   const q = useEventInsights(eventId ?? "", period);
+  const ticketNotes = useEventTicketNotes(eventId ?? "").data;
 
   const result = q.data;
   const insights = result && result.status === 200 ? result.data : null;
@@ -670,7 +682,7 @@ function EventInsightsScreen() {
           </View>
 
           <FinanceSection finance={insights.finance} period={period} />
-          <TicketTypesSection rows={insights.ticketTypes} />
+          <TicketTypesSection rows={insights.ticketTypes} notes={ticketNotes} />
           <PromoSection
             rows={insights.promos}
             currency={insights.overview?.currency ?? null}

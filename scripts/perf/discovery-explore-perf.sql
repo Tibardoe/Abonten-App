@@ -11,7 +11,8 @@
 --   * 2,000 multi-date events (three dates, no date of their own, as the
 --     app stores them)
 --   * 20,000 event reviews, 10,000 place reviews, 1,800 organizer reviews
---   * opening hours for four places in five
+--   * opening hours for four places in five, and special dates (today
+--     and yesterday) for one place in twenty and one in forty
 --   * 40 featured events
 --   * a second, small city (300 events, 100 places around Kumasi) so an
 --     area with few listings can be timed beside the crowded one
@@ -89,6 +90,33 @@ from (select id, category_id, (row_number() over (order by slug))::int as n
       from public.place where slug like 'perf-place-%') p
 cross join generate_series(0, 6) d
 where p.n % 5 <> 0 and p.category_id <> 14;
+
+-- Special dates (holidays, migration 20261123091000): one place in twenty
+-- has today as a special date (closed for half of them, open all day for
+-- the other half), and one in forty has yesterday as one, open 20:00 to
+-- 04:00 so it runs past midnight. None for kind 14, which stays closed. Only on a
+-- schema that has the table, so an older one can still be timed.
+do $special$
+begin
+  if to_regclass('public.place_special_hours') is null then
+    return;
+  end if;
+  insert into public.place_special_hours (place_id, special_date, open_time, close_time, is_closed, label)
+  select p.id, (now() at time zone 'Africa/Accra')::date,
+         case when p.n % 40 = 23 then time '00:00' end,
+         case when p.n % 40 = 23 then time '00:00' end,
+         p.n % 40 = 3, 'Perf holiday'
+  from (select id, category_id, (row_number() over (order by slug))::int as n
+        from public.place where slug like 'perf-place-%') p
+  where p.n % 20 = 3 and p.category_id <> 14;
+  insert into public.place_special_hours (place_id, special_date, open_time, close_time, is_closed, label)
+  select p.id, (now() at time zone 'Africa/Accra')::date - 1, time '20:00', time '04:00', false, null
+  from (select id, category_id, (row_number() over (order by slug))::int as n
+        from public.place where slug like 'perf-place-%') p
+  where p.n % 40 = 7 and p.category_id <> 14;
+  analyze public.place_special_hours;
+end
+$special$;
 
 -- A second, small city.
 insert into public.event (

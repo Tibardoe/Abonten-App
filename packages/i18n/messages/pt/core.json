@@ -1514,5 +1514,18 @@
     "duplicateRow": "Duas filas de uma secção têm a mesma etiqueta.",
     "rowSeats": "Uma fila tem de 1 a {max} lugares."
   },
-  "postponedNewDateToCome": "Adiado, data a anunciar"
+  "postponedNewDateToCome": "Adiado, data a anunciar",
+  "ticketTypeNote": {
+    "link": "A nota de um bilhete não pode incluir uma ligação.",
+    "tooLong": "A nota do bilhete não pode ter mais de {max} caracteres."
+  },
+  "specialHours": {
+    "dateInvalid": "Escolha uma data.",
+    "datePast": "Escolha hoje ou uma data posterior.",
+    "dateTooFar": "Escolha uma data dentro do próximo ano.",
+    "labelLink": "O nome não pode incluir uma ligação.",
+    "labelTooLong": "O nome não pode ter mais de {max} caracteres.",
+    "timesRequired": "Defina as horas de abertura e de fecho, ou marque o dia como fechado.",
+    "tooMany": "Um local pode ter até {max} datas especiais futuras."
+  }
 }

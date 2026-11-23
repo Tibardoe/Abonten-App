@@ -2,7 +2,7 @@
 title: Ajouter et gérer votre lieu
 summary: Créer la fiche d'un lieu, tenir à jour ses informations, ses horaires, ses services et ses photos, indiquer une fermeture temporaire et lire vos statistiques.
 order: 2
-lastUpdated: 2026-10-18
+lastUpdated: 2026-11-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -21,7 +21,7 @@ Votre progression est enregistrée comme brouillon jusqu'à la publication. Remp
 | Emplacement | Cherchez l'adresse ou placez une épingle. C'est l'épingle qui sert pour « près de chez vous » et les itinéraires : soyez précis. |
 | Contact | Téléphone, numéro WhatsApp, site web. Affichés sous forme de boutons sur votre page. |
 | Horaires d'ouverture | Jour par jour, y compris les jours de fermeture et les horaires coupés. Votre page affiche « ouvert maintenant » ou « fermé » à partir de ces horaires. |
-| Services | Ce que l'on peut réserver ou demander (par exemple une réservation de table, un salon privé), chacun avec une indication de prix facultative. |
+| Services | Ce que l'on peut réserver ou demander (par exemple une réservation de table, un salon privé), chacun avec une indication de prix facultative. Un service à 0 s'affiche **Gratuit**. |
 | Photo de couverture et galerie | Envoyées directement à notre hébergeur d'images. |
 
 Vérifiez d'abord sur Abonten si votre établissement a déjà une fiche ; si c'est le cas, [revendiquez-la](/help/place-owners/claiming-and-verifying-a-place) plutôt que d'en créer une en double.
@@ -37,6 +37,7 @@ Ouvrez-la dans Gérer › Lieux (site web) ou Organisateur › Lieux (applicatio
 - **Modifier** les informations, le contact et l'emplacement.
 - **Photos :** ajouter, retirer, réordonner et choisir la couverture.
 - **Horaires d'ouverture** et **services**.
+- **Dates spéciales :** un jour férié ou un autre jour aux horaires différents. Indiquez-le **fermé toute la journée**, ou donnez-lui ses propres heures d'ouverture et de fermeture (après minuit s'il finit tard), avec un nom facultatif comme « Jour de Noël ». Il remplace les horaires habituels de ce jour, y compris pour « ouvert maintenant », et votre page affiche les dates spéciales des 30 prochains jours. Ajoutez-les jusqu'à un an à l'avance dans **Horaires et statut** › **Dates spéciales** (site web) ou dans **Modifier le lieu** (application).
 - **Statut :** indiquer que le lieu est **temporairement fermé** ou **définitivement fermé** ; le badge s'affiche sur votre page et le lieu est exclu de « ouvert maintenant ».
 - **Réservations** et **Avis** : voir [Réservations, avis et messages](/help/place-owners/bookings-reviews-and-messaging).
 - **Promouvoir** : voir [Promouvoir votre lieu](/help/place-owners/promoting-your-place).

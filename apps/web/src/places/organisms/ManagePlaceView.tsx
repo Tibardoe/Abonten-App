@@ -11,6 +11,7 @@ import ManagePlacePhotosSection from "@/places/organisms/ManagePlacePhotosSectio
 import ManagePlacePromotionSection from "@/places/organisms/ManagePlacePromotionSection";
 import ManagePlaceReviewsSection from "@/places/organisms/ManagePlaceReviewsSection";
 import ManagePlaceServicesSection from "@/places/organisms/ManagePlaceServicesSection";
+import ManagePlaceSpecialHoursSection from "@/places/organisms/ManagePlaceSpecialHoursSection";
 import PlaceVisitQrCard from "@/places/organisms/PlaceVisitQrCard";
 import ShareKitCard from "@/shareKit/organisms/ShareKitCard";
 import { readEventAddress } from "@abonten/core/eventAddress";
@@ -18,6 +19,7 @@ import {
   readPlaceTemporaryStatus,
   readSocialLinks,
 } from "@abonten/core/placeJson";
+import type { PlaceSpecialHourRow } from "@abonten/core/placeSpecialHours";
 import { hasShareImages } from "@abonten/core/shareKit/shareKit";
 import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -49,6 +51,8 @@ type ManagePlaceViewProps = {
     close_time: string | null;
     is_closed: boolean;
   }[];
+  /** Special dates (holidays) from today on, soonest first. */
+  specialHours: PlaceSpecialHourRow[];
   services: {
     id: string;
     name: string;
@@ -142,6 +146,7 @@ function tabsFor(role: TeamRoleCode | null): Tab[] {
 export default function ManagePlaceView({
   place,
   openingHours,
+  specialHours,
   services,
   photos,
   reviewsFirstPage,
@@ -267,13 +272,21 @@ export default function ManagePlaceView({
         )}
 
         {activeTab === "hours" && (
-          <ManagePlaceHoursSection
-            placeId={place.id}
-            openingHours={openingHours}
-            temporaryStatus={readPlaceTemporaryStatus(place.temporary_status)}
-            temporaryStatusNote={place.temporary_status_note}
-            onChanged={refresh}
-          />
+          <div className="space-y-8">
+            <ManagePlaceHoursSection
+              placeId={place.id}
+              openingHours={openingHours}
+              temporaryStatus={readPlaceTemporaryStatus(place.temporary_status)}
+              temporaryStatusNote={place.temporary_status_note}
+              onChanged={refresh}
+            />
+            <ManagePlaceSpecialHoursSection
+              placeId={place.id}
+              timeZone={place.timezone}
+              specialHours={specialHours}
+              onChanged={refresh}
+            />
+          </div>
         )}
 
         {activeTab === "services" && (

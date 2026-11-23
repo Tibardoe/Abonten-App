@@ -213,6 +213,9 @@
   "refundPolicyInvalid": "Choose a refund policy from the list.",
   "refundPolicyStricterAfterSales": "People already hold tickets for this event, so its refund policy can only become more generous.",
   "refundPolicyNotSaved": "Your event was posted, but its refund policy wasn't saved. Open the event and set it again.",
+  "salesCloseInvalid": "Choose when online ticket sales close from the list.",
+  "salesCloseNotSaved": "Your event was posted, but when its online ticket sales close wasn't saved. Open the event and set it again.",
+  "salesCloseNotCopied": "Your shows were added, but when their online ticket sales close wasn't copied to them. Try again.",
   "shareKit": {
     "ticketsFrom": "Tickets from {price}",
     "ticketsAt": "Tickets {price}",
@@ -229,6 +232,9 @@
     "roundupLine": "Our picks for the days ahead. Tickets and details on Abonten.",
     "roundupCta": "See what's on"
   },
+  "specialDateNotFound": "Special date not found.",
+  "specialDateRemoved": "Special date removed.",
+  "specialDateSaved": "Special date saved.",
   "theDeadlineToFinishPayingHas": "The deadline to finish paying has passed.",
   "thisEventIsTooSoonToPay": "This event is too soon to pay small small. Buy your tickets in full instead.",
   "thisEventWasCancelledYourPlan": "This event was cancelled. Your plan has ended and your refund is on its way.",
@@ -237,6 +243,7 @@
   "thisPlanIsFullyPaidYourTickets": "This plan is fully paid. Your tickets are being issued.",
   "thisPlanIsNotTakingPayments": "This plan isn't taking payments any more.",
   "thisPlanWasNotFound": "This plan was not found.",
+  "ticketNotesSaved": "Ticket notes saved.",
   "youCanPaySmallSmallForUp": "{count, plural, one {You can pay small small for # ticket at a time.} other {You can pay small small for up to # tickets at a time.}}",
   "youReAlreadyPayingSmallSmall": "You're already paying small small for this event.",
   "db": {

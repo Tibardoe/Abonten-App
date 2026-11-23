@@ -2,11 +2,16 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { tr } from "../i18n/requestLocale";
+import {
+  type PlaceSpecialHoursRow,
+  fetchUpcomingPlaceSpecialHours,
+} from "./placeSpecialHoursCore";
 
 // Everything the native per-place management screens need to prefill their
 // forms, in one owner-scoped read — the mobile echo of what
 // manage/places/[placeId]/page.tsx assembles server-side and passes down as
-// props (place row + weekly hours + services + gallery photos). Deliberately
+// props (place row + weekly hours + special dates + services + gallery
+// photos). Deliberately
 // NOT a "use server" file.
 
 export type PlaceManageContext = {
@@ -24,6 +29,8 @@ export type PlaceManageContext = {
     cover_version: string | null;
     temporary_status: "temporarily_closed" | "permanently_closed" | null;
     temporary_status_note: string | null;
+    /** The place's zone: its special dates are days of its calendar. */
+    timezone: string;
   };
   openingHours: {
     day_of_week: number;
@@ -31,6 +38,8 @@ export type PlaceManageContext = {
     close_time: string | null;
     is_closed: boolean;
   }[];
+  /** Special dates (holidays) from today on, soonest first. */
+  specialHours: PlaceSpecialHoursRow[];
   services: {
     id: string;
     name: string;
@@ -60,7 +69,7 @@ export async function fetchPlaceManageContext(
   const { data: place, error: placeError } = await supabase
     .from("place")
     .select(
-      "id, owner_id, name, description, category_id, website_url, phone, whatsapp, social_links, address, cover_public_id, cover_version, temporary_status, temporary_status_note",
+      "id, owner_id, name, description, category_id, website_url, phone, whatsapp, social_links, address, cover_public_id, cover_version, temporary_status, temporary_status_note, timezone",
     )
     .eq("id", placeId)
     .maybeSingle();
@@ -80,6 +89,7 @@ export async function fetchPlaceManageContext(
     { data: openingHours, error: hoursError },
     { data: services, error: servicesError },
     { data: photos, error: photosError },
+    specialHours,
   ] = await Promise.all([
     supabase
       .from("place_opening_hours")
@@ -96,12 +106,17 @@ export async function fetchPlaceManageContext(
       .select("id, public_id, version, position")
       .eq("place_id", placeId)
       .order("position", { ascending: true }),
+    fetchUpcomingPlaceSpecialHours(supabase, placeId, place.timezone),
   ]);
 
-  if (hoursError || servicesError || photosError) {
+  const specialHoursError = "error" in specialHours ? specialHours.error : null;
+  if (hoursError || servicesError || photosError || specialHoursError) {
     logger.error(
       `Error fetching place manage context: ${
-        hoursError?.message ?? servicesError?.message ?? photosError?.message
+        hoursError?.message ??
+        servicesError?.message ??
+        photosError?.message ??
+        specialHoursError
       }`,
     );
     return { status: 500, message: tr("somethingWentWrong") };
@@ -134,8 +149,10 @@ export async function fetchPlaceManageContext(
           | "permanently_closed"
           | null,
         temporary_status_note: place.temporary_status_note,
+        timezone: place.timezone,
       },
       openingHours: openingHours ?? [],
+      specialHours: "data" in specialHours ? specialHours.data : [],
       services: services ?? [],
       photos: photos ?? [],
     },

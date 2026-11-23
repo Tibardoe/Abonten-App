@@ -4,8 +4,8 @@ purpose: How an organizer turns one listing into a run of shows (a play on sever
 audience: Engineering, operations and support
 scope: event_series, event.series_id, event_add_show, get_event_shows and the run-once rewrite of _explore_event_candidates, search_events and search_suggest (migration 20261119210000); tours, shows at other venues (migration 20261120190000); @abonten/core/showRuns; @abonten/services events/eventShowsCore; the web Manage › Details "Shows" card (ShowVenueChooser) and event page show picker; the app's Shows and copies screen (ShowVenueField) and event show picker.
 status: Review required
-version: 1.3
-lastReviewed: 2026-11-21
+version: 1.4
+lastReviewed: 2026-11-23
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -37,7 +37,8 @@ One transaction per show, service role only, idempotent on a client request id (
 | Country, currency | As they are (fixed at creation; another venue must be in the same country) |
 | Time zone | The venue's (the listing's, or the other venue's) |
 | Refund policy | `refund_policy`, `refund_cutoff_hours` |
-| Ticket types | Name, price, people per ticket, passes (`pass_shows`, [show-passes.md](show-passes.md), since 2026-11-20); **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
+| When online sales close | `sales_close_before_end_minutes` ([ticket-sales-window.md](ticket-sales-window.md), since 2026-11-23): written by `addEventShowsCore` straight after `event_add_show`, not by the function itself |
+| Ticket types | Name, price, what the ticket includes (`description`, since 2026-11-23), people per ticket, passes (`pass_shows`, [show-passes.md](show-passes.md), since 2026-11-20); **the full stock** (what is left plus what was sold or is being bought); sale windows moved by the same amount as the date |
 | Seating | The seating plan (`event_seating`) and each ticket type's section ([assigned-seats.md](assigned-seats.md)), since 2026-11-20; **not** for a show at another venue (a seating plan belongs to its hall: the organizer gives the new show its own) |
 | Group prices | All tiers |
 | Promo codes | Those still running, with their expiry moved like the date and their uses back to 0 |

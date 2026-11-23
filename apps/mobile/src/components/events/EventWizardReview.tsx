@@ -1,6 +1,8 @@
 import { prettyTime } from "@/components/datetime/TimeField";
+import { useSalesCloseText } from "@/components/events/SalesClosePicker";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
+import { salesCloseRequestValue } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
   DEFAULT_REFUND_POLICY,
@@ -21,6 +23,7 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
   const t = useTranslations("events");
 
   const c = useThemeColors();
+  const salesCloseText = useSalesCloseText();
   const when =
     w.scheduleMode === "single"
       ? w.rangeStart
@@ -91,6 +94,10 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
         <Row
           label={t("registration")}
           value={w.requireRegistration ? t("required") : t("notRequired")}
+        />
+        <Row
+          label={t("salesClose.label")}
+          value={salesCloseText(salesCloseRequestValue(w.salesClose))}
         />
         {w.ticketMode !== "free" ? (
           <Row label={t("refundPolicy.label")} value={refundLabel} />

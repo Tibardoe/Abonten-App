@@ -13,6 +13,7 @@ import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlight
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
+import { PlaceSpecialHoursList } from "@/components/places/PlaceSpecialHoursList";
 import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSection";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
@@ -45,6 +46,11 @@ import { dayName, getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatCount, formatRating } from "@abonten/core/i18n/format";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import {
+  SPECIAL_HOURS_PUBLIC_DAYS,
+  placeLocalDate,
+  upcomingSpecialHours,
+} from "@abonten/core/placeSpecialHours";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
   AppText,
@@ -279,12 +285,21 @@ export default function PlaceDetailScreen() {
           height: 320,
         })
       : null;
+  const placeZone = (place as { timezone?: string | null }).timezone;
+  const now = new Date();
   const openStatus = computePlaceOpenStatus(
     { t: tc, locale },
     place.openingHours,
     place.temporary_status,
-    new Date(),
-    (place as { timezone?: string | null }).timezone,
+    now,
+    placeZone,
+    // A special date (a holiday) replaces its weekday's hours.
+    place.specialHours ?? [],
+  );
+  const upcomingSpecial = upcomingSpecialHours(
+    place.specialHours,
+    now,
+    placeZone,
   );
   const address = place.address?.full_address;
   const reviewSubject: ReviewSubject = {
@@ -616,31 +631,46 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
 
-          {/* Opening hours */}
-          {place.openingHours.length > 0 ? (
+          {/* Opening hours, then the special dates of the next month */}
+          {place.openingHours.length > 0 || upcomingSpecial.length > 0 ? (
             <View className="gap-2">
               <SectionTitle>{t("openingHours")}</SectionTitle>
-              <View className="rounded-xl border border-border bg-card">
-                {[...place.openingHours]
-                  .sort((a, b) => a.day_of_week - b.day_of_week)
-                  .map((h, i, arr) => (
-                    <View
-                      key={h.day_of_week}
-                      className={`flex-row justify-between px-4 py-2.5 ${
-                        i < arr.length - 1 ? "border-b border-border" : ""
-                      }`}
-                    >
-                      <AppText variant="small">
-                        {dayName(h.day_of_week, "short", locale)}
-                      </AppText>
-                      <AppText variant="muted">
-                        {h.is_closed || !h.open_time || !h.close_time
-                          ? t("closed")
-                          : `${formatClockTime(h.open_time, locale)} – ${formatClockTime(h.close_time, locale)}`}
-                      </AppText>
-                    </View>
-                  ))}
-              </View>
+              {place.openingHours.length > 0 ? (
+                <View className="rounded-xl border border-border bg-card">
+                  {[...place.openingHours]
+                    .sort((a, b) => a.day_of_week - b.day_of_week)
+                    .map((h, i, arr) => (
+                      <View
+                        key={h.day_of_week}
+                        className={`flex-row justify-between px-4 py-2.5 ${
+                          i < arr.length - 1 ? "border-b border-border" : ""
+                        }`}
+                      >
+                        <AppText variant="small">
+                          {dayName(h.day_of_week, "short", locale)}
+                        </AppText>
+                        <AppText variant="muted">
+                          {h.is_closed || !h.open_time || !h.close_time
+                            ? t("closed")
+                            : `${formatClockTime(h.open_time, locale)} – ${formatClockTime(h.close_time, locale)}`}
+                        </AppText>
+                      </View>
+                    ))}
+                </View>
+              ) : null}
+              {upcomingSpecial.length > 0 ? (
+                <View className="gap-2 pt-1">
+                  <AppText variant="label">
+                    {t("specialHoursComingUp", {
+                      days: SPECIAL_HOURS_PUBLIC_DAYS,
+                    })}
+                  </AppText>
+                  <PlaceSpecialHoursList
+                    rows={upcomingSpecial}
+                    today={placeLocalDate(now, placeZone)}
+                  />
+                </View>
+              ) : null}
             </View>
           ) : null}
 
@@ -657,7 +687,11 @@ export default function PlaceDetailScreen() {
                     <AppText variant="body" className="flex-1 font-medium">
                       {s.name}
                     </AppText>
-                    {s.show_price && s.price != null ? (
+                    {/* Priced 0 reads "Free", shown whether or not the
+                        price is. */}
+                    {s.price === 0 ? (
+                      <AppText variant="muted">{t("serviceFree")}</AppText>
+                    ) : s.show_price && s.price != null ? (
                       <AppText variant="muted">
                         {formatMoney(placeCurrency, s.price, {
                           trimZeroFraction: true,

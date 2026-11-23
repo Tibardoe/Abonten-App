@@ -14,7 +14,8 @@ import {
 // PATCH /api/mobile/organizer/events/:eventId
 //   { title, description, address, latitude, longitude, category, types[],
 //     checked, capacity?, websiteUrl?, startsAt?, endsAt?, specificDates?,
-//     flyerPublicId?, flyerVersion?, refundPolicy?, refundCutoffHours? }
+//     flyerPublicId?, flyerVersion?, refundPolicy?, refundCutoffHours?,
+//     salesCloseBeforeEndMinutes? }
 //
 // Edits the core, non-ticketing fields of the caller's own event. A
 // replacement flyer is uploaded from the device first (signed direct
@@ -122,6 +123,12 @@ export async function PATCH(
         typeof body.refundCutoffHours === "number"
           ? body.refundCutoffHours
           : null,
+      // Omitted by older app builds: the event keeps when its sales close
+      // (null = at the start). The service refuses anything else.
+      salesCloseBeforeEndMinutes:
+        "salesCloseBeforeEndMinutes" in body
+          ? (body.salesCloseBeforeEndMinutes as number | null)
+          : undefined,
     };
 
     const result = await updateEventCore(auth.supabase, actor.accountId, input);

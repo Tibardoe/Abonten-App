@@ -69,7 +69,7 @@ export default function EventShowsScreen() {
       const { data, error } = await supabase
         .from("event")
         .select(
-          "id, timezone, starts_at, ends_at, series_id, currency, ticket_type(id, type, price, quantity, pass_shows)",
+          "id, timezone, starts_at, ends_at, series_id, currency, ticket_type(id, type, price, quantity, pass_shows, description)",
         )
         .eq("id", id)
         .single();
@@ -477,9 +477,16 @@ export default function EventShowsScreen() {
           <AppText variant="meta">{t("passesIntro")}</AppText>
           {passes.map((p) => (
             <View key={p.id} className="flex-row justify-between gap-2">
-              <AppText variant="small" className="font-medium">
-                {p.type}
-              </AppText>
+              <View className="flex-1">
+                <AppText variant="small" className="font-medium">
+                  {p.type}
+                </AppText>
+                {p.description ? (
+                  <AppText variant="caption" tone="muted">
+                    {p.description}
+                  </AppText>
+                ) : null}
+              </View>
               <AppText variant="caption" tone="muted">
                 {t("passSummary", {
                   shows: p.pass_shows ?? 0,

@@ -150,10 +150,15 @@ async function computeOffer(
   if (userId && event.organizer_id === userId) return no("own_event");
   if (event.status !== "published") return no("not_on_sale");
 
+  // Deliberately the default sales rule (a session is on sale until it
+  // starts), whatever the event's sales_close_before_end_minutes: a plan
+  // needs 48 hours before its date, so a session that is on never takes
+  // one, and the date a plan is for is always one still to come.
   const state = resolveOccurrenceState(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
+    { salesCloseBeforeEndMinutes: null },
   );
   if (!state.purchasable) return no("not_on_sale");
 

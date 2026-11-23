@@ -3148,6 +3148,7 @@ export type Database = {
           refund_cutoff_hours: number | null
           refund_policy: string
           require_registration: boolean
+          sales_close_before_end_minutes: number | null
           search_title: string | null
           search_tsv: unknown
           series_id: string | null
@@ -3187,6 +3188,7 @@ export type Database = {
           refund_cutoff_hours?: number | null
           refund_policy?: string
           require_registration?: boolean
+          sales_close_before_end_minutes?: number | null
           search_title?: string | null
           search_tsv?: unknown
           series_id?: string | null
@@ -3226,6 +3228,7 @@ export type Database = {
           refund_cutoff_hours?: number | null
           refund_policy?: string
           require_registration?: boolean
+          sales_close_before_end_minutes?: number | null
           search_title?: string | null
           search_tsv?: unknown
           series_id?: string | null
@@ -9717,6 +9720,47 @@ export type Database = {
           },
         ]
       }
+      place_special_hours: {
+        Row: {
+          close_time: string | null
+          created_at: string
+          id: string
+          is_closed: boolean
+          label: string | null
+          open_time: string | null
+          place_id: string
+          special_date: string
+        }
+        Insert: {
+          close_time?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          label?: string | null
+          open_time?: string | null
+          place_id: string
+          special_date: string
+        }
+        Update: {
+          close_time?: string | null
+          created_at?: string
+          id?: string
+          is_closed?: boolean
+          label?: string | null
+          open_time?: string | null
+          place_id?: string
+          special_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_special_hours_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       place_visit: {
         Row: {
           accuracy_m: number | null
@@ -14548,6 +14592,7 @@ export type Database = {
           available_until: string | null
           created_at: string | null
           currency: string
+          description: string | null
           event_id: string | null
           id: string
           pass_shows: number | null
@@ -14562,6 +14607,7 @@ export type Database = {
           available_until?: string | null
           created_at?: string | null
           currency: string
+          description?: string | null
           event_id?: string | null
           id?: string
           pass_shows?: number | null
@@ -14576,6 +14622,7 @@ export type Database = {
           available_until?: string | null
           created_at?: string | null
           currency?: string
+          description?: string | null
           event_id?: string | null
           id?: string
           pass_shows?: number | null
@@ -17184,6 +17231,14 @@ export type Database = {
           added: number
           skipped: number
         }[]
+      }
+      event_session_sales_close_at: {
+        Args: {
+          p_close_before_end_minutes: number
+          p_ends_at: string
+          p_starts_at: string
+        }
+        Returns: string
       }
       event_shared_capacity_left: {
         Args: { p_event_id: string }

@@ -12,7 +12,7 @@ import { type QueryClient, useQuery } from "@tanstack/react-query";
 const EVENT_DETAIL_SELECT = `
   *,
   user_info!organizer_id ( avatar_public_id, avatar_version, username, full_name, username_is_generated, organizer_verified, id_checked, account_kind, status_id ),
-  ticket_type ( id, type, price, currency, quantity, admits, pass_shows, available_from, available_until ),
+  ticket_type ( id, type, price, currency, quantity, admits, pass_shows, available_from, available_until, description ),
   event_group_discount ( min_tickets, percent_off ),
   event_occurrence ( id, starts_at, ends_at ),
   place:place_id ( id, name, slug )
@@ -69,6 +69,8 @@ export type EventDetail = {
     pass_shows?: number | null;
     available_from: string | null;
     available_until: string | null;
+    /** What the ticket includes; absent in an older cache. */
+    description?: string | null;
   }[];
   /** Automatic group prices ("10+ tickets: 10% off"); absent in an older cache. */
   event_group_discount?: { min_tickets: number; percent_off: number }[] | null;
@@ -79,6 +81,11 @@ export type EventDetail = {
   /** @abonten/core/refundPolicy (absent from an older server or cache). */
   refund_policy?: string | null;
   refund_cutoff_hours?: number | null;
+  /**
+   * When online sales close (@abonten/core/eventPurchaseEligibility): null
+   * = at the start; absent from an older server or cache.
+   */
+  sales_close_before_end_minutes?: number | null;
 };
 
 export type OrganizerRating = { average: number; count: number };

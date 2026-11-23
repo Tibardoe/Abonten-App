@@ -72,7 +72,7 @@ export default async function page({
     supabase
       .from("event")
       .select(
-        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, admits, pass_shows, currency, available_from, available_until), event_group_discount(min_tickets, percent_off)",
+        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, admits, pass_shows, currency, available_from, available_until, description), event_group_discount(min_tickets, percent_off)",
       )
       .eq("id", eventId)
       .maybeSingle(),

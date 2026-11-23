@@ -53,6 +53,12 @@ export default function CheckoutTicketRow({
       <div className="flex items-center justify-between px-4">
         <div>
           <p>{tierName}</p>
+          {/* What the ticket includes ("Kids: ages 3–12"). */}
+          {ticket.description ? (
+            <p className="text-xs text-muted-foreground">
+              {ticket.description}
+            </p>
+          ) : null}
           {/* A pass (docs/architecture/show-passes.md): this show and
               more chosen from the ticket afterwards. */}
           {ticket.pass_shows ? (

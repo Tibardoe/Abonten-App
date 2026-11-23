@@ -3,6 +3,11 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import {
+  SPECIAL_HOURS_PUBLIC_DAYS,
+  placeLocalDate,
+} from "@abonten/core/placeSpecialHours";
+import { addCalendarDays } from "@abonten/core/time/timeZone";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   fetchPlaceRating,
@@ -13,8 +18,9 @@ import {
  * Public read for a place's detail page — slug + status='published' scoped,
  * same "public, no auth check" reasoning as getQueriedEvents.ts/
  * getNearByEvents.ts (places are meant to be browsable signed-out).
- * Fetches opening hours/services/photos/rating alongside the place row
- * itself so the detail page has everything it needs in one round trip.
+ * Fetches opening hours/special dates/services/photos/rating alongside the
+ * place row itself so the detail page has everything it needs in one round
+ * trip.
  */
 export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
   slug: string,
@@ -37,8 +43,13 @@ export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
     return { status: 404, message: tr("placeNotFound") };
   }
 
+  // Special dates (holidays) from yesterday (its hours may run past
+  // midnight) to the end of what the page lists, on the place's calendar.
+  const placeToday = placeLocalDate(new Date(), place.timezone);
+
   const [
     { data: openingHours, error: openingHoursError },
+    { data: specialHours, error: specialHoursError },
     { data: services, error: servicesError },
     { data: photos, error: photosError },
     rating,
@@ -48,6 +59,16 @@ export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
       .select("*")
       .eq("place_id", place.id)
       .order("day_of_week", { ascending: true }),
+    supabase
+      .from("place_special_hours")
+      .select("id, special_date, open_time, close_time, is_closed, label")
+      .eq("place_id", place.id)
+      .gte("special_date", addCalendarDays(placeToday, -1))
+      .lt(
+        "special_date",
+        addCalendarDays(placeToday, SPECIAL_HOURS_PUBLIC_DAYS),
+      )
+      .order("special_date", { ascending: true }),
     supabase
       .from("place_service")
       .select("*")
@@ -63,7 +84,8 @@ export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
     fetchPlaceRating(supabase, place.id),
   ]);
 
-  const firstError = openingHoursError ?? servicesError ?? photosError;
+  const firstError =
+    openingHoursError ?? specialHoursError ?? servicesError ?? photosError;
 
   if (firstError) {
     logger.error(`Error fetching place details: ${firstError.message}`);
@@ -78,6 +100,7 @@ export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
     data: {
       ...place,
       openingHours: openingHours ?? [],
+      specialHours: specialHours ?? [],
       services: services ?? [],
       photos: photos ?? [],
       avgRating,

@@ -153,7 +153,14 @@ export default function TicketCheckoutSessionCard({
               className="border border-border rounded-md px-4 py-3 bg-muted shadow-sm space-y-2"
             >
               <div className="flex justify-between items-center text-sm font-semibold text-foreground">
-                <p>{ticketTypeLabel(tc, line.type)}</p>
+                <div className="min-w-0">
+                  <p>{ticketTypeLabel(tc, line.type)}</p>
+                  {line.description ? (
+                    <p className="text-xs font-normal text-muted-foreground">
+                      {line.description}
+                    </p>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   disabled={isLinePending || locked}

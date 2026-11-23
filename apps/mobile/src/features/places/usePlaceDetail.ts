@@ -2,6 +2,7 @@ import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
+import type { PlaceSpecialHourRow } from "@abonten/core/placeSpecialHours";
 import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
 import { translatorFor } from "@abonten/ui-native/i18n";
 import { type QueryClient, useQuery } from "@tanstack/react-query";
@@ -33,6 +34,11 @@ export type PlaceDetail = {
   verified: boolean;
   place_category: { name: string; slug: string } | null;
   openingHours: PlaceOpeningHourRow[];
+  /**
+   * Special dates (holidays) from about yesterday to a month ahead; each
+   * replaces its date's weekday hours. Absent in an older cache.
+   */
+  specialHours?: PlaceSpecialHourRow[];
   services: {
     id: string;
     name: string;
@@ -46,6 +52,11 @@ export type PlaceDetail = {
   reviewCount: number;
 };
 
+/** A UTC calendar day ("yyyy-mm-dd") `days` from now. */
+function utcDay(days: number): string {
+  return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
 async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
   if (!isUuid(id)) throw new NotFoundError(translatorFor("places")("place"));
 
@@ -57,6 +68,7 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
     { data: services },
     { data: photos },
     { data: ratingRow },
+    { data: specialHours },
   ] = await Promise.all([
     supabase
       .from("place")
@@ -84,6 +96,17 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
     supabase
       .rpc("get_place_rating", { p_place_id: id })
       .maybeSingle(),
+    // Special dates around today and the next month: yesterday's still
+    // matters for hours past midnight, on the place's own calendar (two
+    // days either side of UTC covers every zone); the screen keeps what
+    // it shows (upcomingSpecialHours).
+    supabase
+      .from("place_special_hours")
+      .select("id, special_date, open_time, close_time, is_closed, label")
+      .eq("place_id", id)
+      .gte("special_date", utcDay(-2))
+      .lte("special_date", utcDay(32))
+      .order("special_date", { ascending: true }),
   ]);
 
   if (error) throw error;
@@ -96,9 +119,15 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
   return {
     ...(place as unknown as Omit<
       PlaceDetail,
-      "openingHours" | "services" | "photos" | "avgRating" | "reviewCount"
+      | "openingHours"
+      | "specialHours"
+      | "services"
+      | "photos"
+      | "avgRating"
+      | "reviewCount"
     >),
     openingHours: (openingHours ?? []) as PlaceOpeningHourRow[],
+    specialHours: (specialHours ?? []) as PlaceSpecialHourRow[],
     services: (services ?? []) as PlaceDetail["services"],
     photos: (photos ?? []) as PlaceDetail["photos"],
     avgRating,

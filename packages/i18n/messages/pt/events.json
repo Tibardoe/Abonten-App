@@ -269,6 +269,7 @@
   "saveChanges": "Guardar alterações",
   "saveChanges2": "Guardar alterações",
   "saveReminders": "Guardar lembretes",
+  "saveTicketNotes": "Guardar notas",
   "saveTicketTypes": "Guardar tipos de bilhete",
   "saving": "A guardar…",
   "saving2": "A guardar…",
@@ -322,6 +323,9 @@
   "thisEventIsNoLongerAvailable": "Este evento já não está disponível.",
   "thisEventIsSoldOutAnd": "Este evento está esgotado e não pode ser promovido.",
   "thisEventWasCancelledAndCan": "Este evento foi cancelado e não pode ser promovido.",
+  "ticketNotes": "O que inclui cada bilhete",
+  "ticketNotesAfterSale": "Os preços e as quantidades ficam bloqueados após a primeira venda, mas ainda pode alterar o que inclui cada bilhete.",
+  "ticketNotesSaved": "Notas dos bilhetes guardadas.",
   "ticketSales": "Venda de bilhetes",
   "ticketType": "Tipo de bilhete",
   "ticketTypes": "Tipos de bilhete",
@@ -450,7 +454,18 @@
   "refundPolicyLine": {
     "untilStart": "Pode cancelar um bilhete pago e receber o reembolso do preço do bilhete até o evento começar.",
     "untilCutoff": "Pode cancelar um bilhete pago e receber o reembolso do preço do bilhete até {days, plural, one {# dia} other {# dias}} antes do evento.",
-    "none": "Sem reembolsos: os bilhetes pagos não podem ser cancelados."
+    "none": "Sem reembolsos: os bilhetes pagos não podem ser cancelados.",
+    "startedDate": "Um bilhete para uma data que já começou não pode ser cancelado."
+  },
+  "salesClose": {
+    "label": "Fim da venda online",
+    "atStart": "Quando começa",
+    "untilEnd": "Quando termina",
+    "minutesBeforeEnd": "{minutes, plural, one {# minuto} other {# minutos}} antes de terminar",
+    "hoursBeforeEnd": "{hours, plural, one {# hora} other {# horas}} antes de terminar",
+    "help": "Continue a vender enquanto decorre — útil para locais que as pessoas decidem visitar no próprio dia. Cada data conta por si.",
+    "onNow": "A decorrer — bilhetes à venda até às {time}",
+    "onNowDay": "A decorrer — bilhetes à venda até {day}, às {time}"
   },
   "refundClosed": {
     "noRefunds": "Este evento não oferece reembolsos.",

@@ -22,6 +22,12 @@ import {
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
 import {
+  DEFAULT_SALES_CLOSE,
+  salesCloseChoice,
+  salesCloseFromChoice,
+  salesCloseRequestValue,
+} from "@abonten/core/eventPurchaseEligibility";
+import {
   MAX_TICKET_ADMITS,
   groupDiscountTiersProblem,
   groupPricingProblemMessage,
@@ -41,6 +47,10 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import {
+  normalizeTicketTypeNote,
+  ticketTypeNotesProblemMessage,
+} from "@abonten/core/ticketTypeNote";
 import { wallClockString } from "@abonten/core/time/timeZone";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
@@ -103,6 +113,8 @@ export type TicketTier = {
   quantity: string;
   /** People one purchase admits (a Couple: "2"). */
   admits: string;
+  /** What the ticket includes ("Kids: ages 3–12"); "" = no note. */
+  description: string;
 };
 /** An automatic group price being edited ("10" tickets, "10" % off). */
 export type GroupPriceDraft = {
@@ -193,6 +205,11 @@ export function useEventWizard(
   // The refund policy, as a choice (@abonten/core/refundPolicy).
   const [refundPolicy, setRefundPolicy] = useState(
     refundPolicyChoice(DEFAULT_REFUND_POLICY),
+  );
+  // When online sales close, as a choice
+  // (@abonten/core/eventPurchaseEligibility).
+  const [salesClose, setSalesClose] = useState(
+    salesCloseChoice(DEFAULT_SALES_CLOSE),
   );
   const [textErrors, setTextErrors] = useState<EventWizardTextErrors>({});
 
@@ -459,6 +476,8 @@ export function useEventWizard(
       setRequireRegistration(p.requireRegistration);
     if (p.refundPolicy && refundPolicyFromChoice(p.refundPolicy))
       setRefundPolicy(p.refundPolicy);
+    if (p.salesClose && salesCloseFromChoice(p.salesClose) !== "invalid")
+      setSalesClose(p.salesClose);
 
     if (detail.flyerPublicId && detail.flyerVersion) {
       const url = buildCloudinaryUrl(
@@ -526,6 +545,7 @@ export function useEventWizard(
           price: String(t.price),
           quantity: t.quantity != null ? String(t.quantity) : "",
           admits: String(t.admits ?? 1),
+          description: t.description ?? "",
         })),
       );
     }
@@ -611,6 +631,7 @@ export function useEventWizard(
               price: Number(t.price) || 0,
               quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
               admits: admitsOf(t),
+              description: normalizeTicketTypeNote(t.description),
             }))
           : undefined,
       groupDiscounts:
@@ -631,6 +652,7 @@ export function useEventWizard(
       requireRegistration,
       currency: CURRENCY,
       refundPolicy,
+      salesClose,
     };
   }
 
@@ -792,10 +814,17 @@ export function useEventWizard(
       price: Number(t.price),
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
       admits: admitsOf(t),
+      description: normalizeTicketTypeNote(t.description),
     }));
     if (parsed.length === 0) {
       return { ok: false, message: t("addAtLeastOneTicketType") };
     }
+    // What each type includes: one line, no links (the server checks too).
+    const noteProblem = ticketTypeNotesProblemMessage(
+      tc,
+      parsed.map((p) => p.description),
+    );
+    if (noteProblem) return { ok: false, message: noteProblem };
     if (
       parsed.some(
         (t) =>
@@ -956,6 +985,7 @@ export function useEventWizard(
         ...refundPolicyRequestFields(
           ticketMode === "free" ? null : refundPolicy,
         ),
+        salesCloseBeforeEndMinutes: salesCloseRequestValue(salesClose),
       });
     } finally {
       uploadProgress.reset();
@@ -1110,6 +1140,8 @@ export function useEventWizard(
     setTicketMode: selectTicketMode,
     refundPolicy,
     setRefundPolicy,
+    salesClose,
+    setSalesClose,
     capacityProblem,
     capacityHint,
     ticketPrice,

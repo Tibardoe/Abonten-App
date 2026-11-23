@@ -23,6 +23,8 @@ export type EventForEditData = {
   /** @abonten/core/refundPolicy (absent from an older server). */
   refund_policy?: string | null;
   refund_cutoff_hours?: number | null;
+  /** @abonten/core/eventPurchaseEligibility (absent from an older server). */
+  sales_close_before_end_minutes?: number | null;
   starts_at: string | null;
   ends_at: string | null;
   flyer_public_id: string;
@@ -40,6 +42,8 @@ export type EventForEditData = {
         currency: string | null;
         available_from: string | null;
         available_until: string | null;
+        /** What the ticket includes (@abonten/core/ticketTypeNote). */
+        description: string | null;
       }[]
     | null;
   /** Automatic group prices, smallest group first. */
@@ -76,12 +80,13 @@ export async function getEventForEditCore(
       featured,
       refund_policy,
       refund_cutoff_hours,
+      sales_close_before_end_minutes,
       starts_at,
       ends_at,
       flyer_public_id,
       flyer_version,
       event_occurrence(id, starts_at, ends_at),
-      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until),
+      ticket_type(id, type, price, quantity, admits, currency, available_from, available_until, description),
       event_group_discount(min_tickets, percent_off)
     `,
     )

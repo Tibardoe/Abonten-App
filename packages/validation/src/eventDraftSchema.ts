@@ -26,6 +26,9 @@ const ticketSchema = z.object({
   admits: z.number().int().min(1).max(20).nullable().optional(),
   availableFrom: z.coerce.date().optional(),
   availableUntil: z.coerce.date().optional(),
+  // What the ticket includes (@abonten/core/ticketTypeNote); a draft may
+  // hold an unfinished one, so only its length is checked here.
+  description: z.string().max(400).nullable().optional(),
 });
 
 const promoCodeSchema = z.object({
@@ -80,6 +83,9 @@ export const eventDraftPayloadSchema = z.object({
   /** The refund-policy choice ("until_start", "until_cutoff:48", "none";
    *  @abonten/core/refundPolicy refundPolicyChoice). */
   refundPolicy: z.string().max(32).optional(),
+  /** When online sales close, as a form choice ("at_start",
+   *  "before_end:60"; @abonten/core/eventPurchaseEligibility). */
+  salesClose: z.string().max(32).optional(),
 });
 
 export type EventDraftPayload = z.infer<typeof eventDraftPayloadSchema>;

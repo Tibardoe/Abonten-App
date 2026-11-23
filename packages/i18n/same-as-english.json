@@ -117,6 +117,7 @@
     "places:metaTitleInCity",
     "places:name",
     "places:optional",
+    "places:specialDateName",
     "places:spotlight",
     "places:status",
     "places:tabs.promotion",

@@ -1,5 +1,6 @@
 import type { GroupDiscountTier } from "@abonten/core/checkoutPricing";
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
+import { parseSalesClose } from "@abonten/core/eventPurchaseEligibility";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import {
   type StructuredAddress,
@@ -20,6 +21,10 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import {
+  normalizeTicketTypeNote,
+  ticketTypeNotesProblemMessage,
+} from "@abonten/core/ticketTypeNote";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
 import { userFacingError } from "@abonten/core/userFacingError";
@@ -91,6 +96,8 @@ export type PostEventCoreInput = {
         admits?: number | null;
         availableFrom?: DateInput | null;
         availableUntil?: DateInput | null;
+        /** What the ticket includes (@abonten/core/ticketTypeNote). */
+        description?: string | null;
       }[]
     | null;
   /** Automatic group prices (docs/architecture/group-tickets-and-prices.md). */
@@ -113,6 +120,12 @@ export type PostEventCoreInput = {
   /** The refund policy (@abonten/core/refundPolicy); omitted = the default. */
   refundPolicy?: string | null;
   refundCutoffHours?: number | null;
+  /**
+   * When online sales close for each session
+   * (@abonten/core/eventPurchaseEligibility): null or omitted = at its
+   * start; 0, 30, 60 or 120 = that many minutes before it ends.
+   */
+  salesCloseBeforeEndMinutes?: number | null;
 };
 
 export type PostEventCoreResult =
@@ -174,6 +187,15 @@ export async function postEventCore(
   );
   if (promoProblem) {
     return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
+  }
+
+  // What each ticket type includes: plain text, one line, no links.
+  if (!input.freeEvent) {
+    const noteProblem = ticketTypeNotesProblemMessage(
+      coreT(),
+      (input.multipleTickets ?? []).map((tier) => tier.description),
+    );
+    if (noteProblem) return { status: 400, message: noteProblem };
   }
 
   // Group tickets and group prices: valid, and switched on for this
@@ -239,6 +261,11 @@ export async function postEventCore(
     : DEFAULT_REFUND_POLICY;
   if (!refundPolicy) {
     return { status: 400, message: tr("refundPolicyInvalid") };
+  }
+
+  const salesClose = parseSalesClose(input.salesCloseBeforeEndMinutes);
+  if (salesClose === "invalid") {
+    return { status: 400, message: tr("salesCloseInvalid") };
   }
 
   const formattedTitle = formatTitle(input.title);
@@ -307,6 +334,7 @@ export async function postEventCore(
             available_from: ticket.availableFrom ?? null,
             available_until: ticket.availableUntil ?? null,
             currency,
+            description: normalizeTicketTypeNote(ticket.description),
           };
         }),
       ];
@@ -453,6 +481,22 @@ export async function postEventCore(
         `postEventCore: saving the refund policy failed (${policyError.message})`,
       );
       return { status: 500, message: tr("refundPolicyNotSaved") };
+    }
+  }
+
+  // The same for when online sales close (create_event doesn't take it
+  // either). Omitted or null = at the start, the column's default.
+  if (salesClose != null) {
+    const { error: salesCloseError } = await getSupabaseServiceClient()
+      .from("event")
+      .update({ sales_close_before_end_minutes: salesClose })
+      .eq("id", eventId as string)
+      .eq("organizer_id", userId);
+    if (salesCloseError) {
+      logger.error(
+        `postEventCore: saving when sales close failed (${salesCloseError.message})`,
+      );
+      return { status: 500, message: tr("salesCloseNotSaved") };
     }
   }
 

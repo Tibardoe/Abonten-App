@@ -11,6 +11,12 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
+import {
+  DEFAULT_SALES_CLOSE,
+  salesCloseChoice,
+  salesCloseOf,
+  salesCloseRequestValue,
+} from "@abonten/core/eventPurchaseEligibility";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import {
@@ -112,6 +118,12 @@ export function useEventEditForm({
   );
   const [hasPaidTickets, setHasPaidTickets] = useState(false);
 
+  // When online sales close, as the select's choice. Editable after the
+  // first sale: it only changes sales still to come.
+  const [salesClose, setSalesClose] = useState(
+    salesCloseChoice(DEFAULT_SALES_CLOSE),
+  );
+
   const [existingFlyer, setExistingFlyer] = useState<{
     publicId: string;
     version: string;
@@ -153,6 +165,7 @@ export function useEventEditForm({
     const savedPolicy = refundPolicyOf(event);
     setSavedRefundPolicy(savedPolicy);
     setRefundPolicy(refundPolicyChoice(savedPolicy));
+    setSalesClose(salesCloseChoice(salesCloseOf(event)));
     setHasPaidTickets(
       (event.ticket_type ?? []).some((type) => Number(type.price) > 0),
     );
@@ -316,6 +329,7 @@ export function useEventEditForm({
         checked,
         selectedFile: newFile,
         refundPolicy,
+        salesCloseBeforeEndMinutes: salesCloseRequestValue(salesClose),
         ...eventDates,
       });
 
@@ -361,6 +375,8 @@ export function useEventEditForm({
     handleRefundPolicy: setRefundPolicy,
     savedRefundPolicy,
     hasPaidTickets,
+    salesClose,
+    handleSalesClose: setSalesClose,
     existingFlyer,
     handleFileChange,
   };

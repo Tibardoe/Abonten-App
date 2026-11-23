@@ -1514,5 +1514,18 @@
     "duplicateRow": "Deux rangées d'une section ont la même étiquette.",
     "rowSeats": "Une rangée compte de 1 à {max} places."
   },
-  "postponedNewDateToCome": "Reporté, nouvelle date à venir"
+  "postponedNewDateToCome": "Reporté, nouvelle date à venir",
+  "ticketTypeNote": {
+    "link": "La note d'un billet ne peut pas contenir de lien.",
+    "tooLong": "La note du billet ne doit pas dépasser {max} caractères."
+  },
+  "specialHours": {
+    "dateInvalid": "Choisissez une date.",
+    "datePast": "Choisissez aujourd'hui ou une date ultérieure.",
+    "dateTooFar": "Choisissez une date dans l'année qui vient.",
+    "labelLink": "Le nom ne peut pas contenir de lien.",
+    "labelTooLong": "Le nom ne doit pas dépasser {max} caractères.",
+    "timesRequired": "Indiquez les heures d'ouverture et de fermeture, ou marquez le jour comme fermé.",
+    "tooMany": "Un lieu peut avoir jusqu'à {max} dates spéciales à venir."
+  }
 }

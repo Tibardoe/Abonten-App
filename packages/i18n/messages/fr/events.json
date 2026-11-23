@@ -269,6 +269,7 @@
   "saveChanges": "Enregistrer les modifications",
   "saveChanges2": "Enregistrer les modifications",
   "saveReminders": "Enregistrer les rappels",
+  "saveTicketNotes": "Enregistrer les notes",
   "saveTicketTypes": "Enregistrer les types de billets",
   "saving": "Enregistrement…",
   "saving2": "Enregistrement…",
@@ -322,6 +323,9 @@
   "thisEventIsNoLongerAvailable": "Cet événement n'est plus disponible.",
   "thisEventIsSoldOutAnd": "Cet événement est complet et ne peut pas être mis en avant.",
   "thisEventWasCancelledAndCan": "Cet événement a été annulé et ne peut pas être mis en avant.",
+  "ticketNotes": "Ce que comprend chaque billet",
+  "ticketNotesAfterSale": "Les prix et les quantités sont verrouillés après la première vente, mais vous pouvez toujours modifier ce que comprend chaque billet.",
+  "ticketNotesSaved": "Notes des billets enregistrées.",
   "ticketSales": "Vente de billets",
   "ticketType": "Type de billet",
   "ticketTypes": "Types de billets",
@@ -450,7 +454,18 @@
   "refundPolicyLine": {
     "untilStart": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'au début de l'événement.",
     "untilCutoff": "Vous pouvez annuler un billet payant et être remboursé du prix du billet jusqu'à {days, plural, one {# jour} other {# jours}} avant l'événement.",
-    "none": "Aucun remboursement : les billets payants ne peuvent pas être annulés."
+    "none": "Aucun remboursement : les billets payants ne peuvent pas être annulés.",
+    "startedDate": "Un billet pour une date déjà commencée ne peut pas être annulé."
+  },
+  "salesClose": {
+    "label": "Fin de la vente en ligne",
+    "atStart": "Au début",
+    "untilEnd": "À la fin",
+    "minutesBeforeEnd": "{minutes, plural, one {# minute} other {# minutes}} avant la fin",
+    "hoursBeforeEnd": "{hours, plural, one {# heure} other {# heures}} avant la fin",
+    "help": "Continuez à vendre pendant qu'il a lieu — utile pour les lieux où l'on décide de venir le jour même. Chaque date compte à part.",
+    "onNow": "En cours — billets en vente jusqu'à {time}",
+    "onNowDay": "En cours — billets en vente jusqu'au {day} à {time}"
   },
   "refundClosed": {
     "noRefunds": "Cet événement ne propose pas de remboursement.",

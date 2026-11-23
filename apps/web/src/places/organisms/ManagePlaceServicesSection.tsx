@@ -167,11 +167,20 @@ export default function ManagePlaceServicesSection({
                     {service.description}
                   </p>
                 )}
-                {service.show_price && service.price != null && (
+                {/* A service priced 0 is free, whether or not prices
+                    are shown. */}
+                {service.price === 0 ? (
                   <p className="text-sm font-medium text-card-foreground mt-1">
-                    {service.price}
-                    {service.price_unit ? ` / ${service.price_unit}` : ""}
+                    {t("serviceFree")}
                   </p>
+                ) : (
+                  service.show_price &&
+                  service.price != null && (
+                    <p className="text-sm font-medium text-card-foreground mt-1">
+                      {service.price}
+                      {service.price_unit ? ` / ${service.price_unit}` : ""}
+                    </p>
+                  )
                 )}
               </div>
 

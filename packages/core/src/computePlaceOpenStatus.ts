@@ -1,6 +1,11 @@
 import { intlLocale } from "./i18n/coreStrings";
 import type { CoreTranslator } from "./i18n/translator";
-import { instantToWallClock, isValidTimeZone } from "./time/timeZone";
+import { type PlaceSpecialHourRow, placeLocalDate } from "./placeSpecialHours";
+import {
+  addCalendarDays,
+  instantToWallClock,
+  isValidTimeZone,
+} from "./time/timeZone";
 
 // Client-safe TypeScript mirror of the SQL `place_is_open_now` function
 // (see supabase/migrations/20260820090000_add_places_feature.sql), extended
@@ -10,6 +15,10 @@ import { instantToWallClock, isValidTimeZone } from "./time/timeZone";
 // caller's local time is used, which is only right for a viewer beside it.
 // Labels come from `openStatus.*` of the core namespace, the clock time
 // from Intl in the reader's language.
+// A special date (place_special_hours: a holiday, an event day) replaces
+// that date's weekday hours, and only that date's: yesterday's hours that
+// run past midnight still count after midnight, whichever kind they are —
+// the rule of place_is_open_now (migration 20261123091000).
 
 export type PlaceOpeningHourRow = {
   day_of_week: number; // 0 (Sunday) .. 6 (Saturday) — matches Date.getDay()
@@ -82,8 +91,18 @@ export function placeLocalNow(
   now: Date,
   timeZone?: string | null,
 ): { dow: number; minutes: number } {
+  const { dow, minutes } = placeLocalDay(now, timeZone);
+  return { dow, minutes };
+}
+
+/** Date ("yyyy-mm-dd"), weekday (0 Sunday) and minutes at the place. */
+export function placeLocalDay(
+  now: Date,
+  timeZone?: string | null,
+): { date: string; dow: number; minutes: number } {
   if (!timeZone || !isValidTimeZone(timeZone)) {
     return {
+      date: placeLocalDate(now, null),
       dow: now.getDay(),
       minutes: now.getHours() * 60 + now.getMinutes(),
     };
@@ -92,9 +111,28 @@ export function placeLocalNow(
   const [y, m, d] = w.date.split("-").map(Number);
   const [hh, mm] = w.time.split(":").map(Number);
   return {
+    date: w.date,
     dow: new Date(Date.UTC(y, m - 1, d)).getUTCDay(),
     minutes: hh * 60 + mm,
   };
+}
+
+type DayHours = Pick<
+  PlaceOpeningHourRow,
+  "open_time" | "close_time" | "is_closed"
+>;
+
+/** A date's hours: its special date's when it has one, else its weekday's. */
+function hoursOn(
+  date: string,
+  dow: number,
+  openingHours: PlaceOpeningHourRow[],
+  specialHours: readonly PlaceSpecialHourRow[],
+): DayHours | undefined {
+  return (
+    specialHours.find((s) => s.special_date === date) ??
+    openingHours.find((h) => h.day_of_week === dow)
+  );
 }
 
 export function computePlaceOpenStatus(
@@ -108,6 +146,11 @@ export function computePlaceOpenStatus(
    * say a London café is closed when it is open.
    */
   timeZone?: string | null,
+  /**
+   * The place's special dates (place_special_hours); only today's and
+   * yesterday's matter here. Each replaces its date's weekday hours.
+   */
+  specialHours: readonly PlaceSpecialHourRow[] = [],
 ): PlaceOpenStatus {
   const { t, locale } = i18n;
   const temporaryLabel = temporaryStatusLabel(t, temporaryStatus);
@@ -115,13 +158,18 @@ export function computePlaceOpenStatus(
     return { isOpen: false, label: temporaryLabel };
   }
 
-  const local = placeLocalNow(now, timeZone);
+  const local = placeLocalDay(now, timeZone);
   const dow = local.dow;
   const yesterdayDow = (dow + 6) % 7;
   const nowMinutes = local.minutes;
 
-  const todayRow = openingHours.find((h) => h.day_of_week === dow);
-  const yesterdayRow = openingHours.find((h) => h.day_of_week === yesterdayDow);
+  const todayRow = hoursOn(local.date, dow, openingHours, specialHours);
+  const yesterdayRow = hoursOn(
+    addCalendarDays(local.date, -1),
+    yesterdayDow,
+    openingHours,
+    specialHours,
+  );
 
   const openUntil = (close: string) => ({
     isOpen: true,
@@ -187,6 +235,7 @@ export function isPlaceOpenNow(
   temporaryStatus: string | null,
   now: Date = new Date(),
   timeZone?: string | null,
+  specialHours: readonly PlaceSpecialHourRow[] = [],
 ): boolean {
   return computePlaceOpenStatus(
     { t: (key) => key },
@@ -194,6 +243,7 @@ export function isPlaceOpenNow(
     temporaryStatus,
     now,
     timeZone,
+    specialHours,
   ).isOpen;
 }
 

@@ -27,7 +27,11 @@ import {
   purchasesLeft,
 } from "@abonten/core/checkoutPricing";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
+import {
+  isSessionOnSale,
+  resolveOccurrenceState,
+  salesCloseClock,
+} from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { formatPercent } from "@abonten/core/i18n/format";
@@ -93,6 +97,7 @@ export default function BuyTicketsScreen() {
   const tc = useTranslations("core");
   const tp = useTranslations("ticketPlans");
   const tCommon = useTranslations("common");
+  const te = useTranslations("events");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -122,17 +127,22 @@ export default function BuyTicketsScreen() {
   // begun (issue §4 / §5).
   const now = useNowTick();
   const occurrences = event?.event_occurrence ?? [];
-  // A ticket may only be bought for a *strictly future* occurrence: a date
-  // that has already started (or finished) is not selectable, and the
-  // default selection is the earliest not-yet-started one.
+  // A ticket may only be bought for a date still on sale: one still to
+  // come, or one on now until its cut-off when the organizer keeps selling
+  // while it's on. A finished date is never selectable, and the default
+  // selection is the first one on sale.
+  const salesCloseBeforeEndMinutes =
+    event?.sales_close_before_end_minutes ?? null;
   const occurrenceState = resolveOccurrenceState(
     event?.starts_at,
     event?.ends_at,
     occurrences,
-    now,
+    { now, salesCloseBeforeEndMinutes },
   );
-  const isOccurrenceSelectable = (o: { starts_at: string | Date }) =>
-    new Date(o.starts_at).getTime() > now;
+  const isOccurrenceSelectable = (o: {
+    starts_at: string | Date;
+    ends_at: string | Date;
+  }) => isSessionOnSale(o, salesCloseBeforeEndMinutes, now);
   const firstFutureOccurrenceId = occurrenceState.nextPurchasable?.id ?? null;
   // If the tick advanced past the date the buyer had picked, drop back to
   // the next selectable one rather than carrying a now-started id.
@@ -298,6 +308,21 @@ export default function BuyTicketsScreen() {
     );
   }
 
+  // The date being bought is on now and still sells: say until when.
+  const buyingOnNow =
+    occurrenceState.onNow &&
+    (occurrences.length === 0 ||
+      activeOccurrenceId === (occurrenceState.nextPurchasable?.id ?? null));
+  const onNowClock =
+    buyingOnNow && occurrenceState.salesCloseAt
+      ? salesCloseClock(
+          occurrenceState.salesCloseAt,
+          event.timezone,
+          locale,
+          now,
+        )
+      : null;
+
   function setQty(id: string, next: number, cap: number) {
     setQuantities((prev) => ({
       ...prev,
@@ -438,6 +463,16 @@ export default function BuyTicketsScreen() {
               )}
             </AppText>
           ) : null}
+          {onNowClock ? (
+            <AppText variant="small" tone="success">
+              {onNowClock.day
+                ? te("salesClose.onNowDay", {
+                    day: onNowClock.day,
+                    time: onNowClock.time,
+                  })
+                : te("salesClose.onNow", { time: onNowClock.time })}
+            </AppText>
+          ) : null}
         </View>
 
         {occurrences.length > 1 ? (
@@ -535,6 +570,12 @@ export default function BuyTicketsScreen() {
                   <AppText variant="body" className="font-medium">
                     {ticketTypeLabel(tc, tier.type)}
                   </AppText>
+                  {/* What the ticket includes ("Kids: ages 3–12"). */}
+                  {tier.description ? (
+                    <AppText variant="caption" tone="muted">
+                      {tier.description}
+                    </AppText>
+                  ) : null}
                   <AppText variant="meta">
                     {tier.price === 0
                       ? t("free")

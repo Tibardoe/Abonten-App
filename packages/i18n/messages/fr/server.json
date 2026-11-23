@@ -217,6 +217,9 @@
   "refundPolicyInvalid": "Choisissez une politique de remboursement dans la liste.",
   "refundPolicyStricterAfterSales": "Des personnes ont déjà des billets pour cet événement, sa politique de remboursement ne peut donc que devenir plus généreuse.",
   "refundPolicyNotSaved": "Votre événement est publié, mais sa politique de remboursement n'a pas été enregistrée. Ouvrez l'événement et définissez-la à nouveau.",
+  "salesCloseInvalid": "Choisissez dans la liste quand la vente en ligne se termine.",
+  "salesCloseNotSaved": "Votre événement est publié, mais la fin de sa vente en ligne n'a pas été enregistrée. Ouvrez l'événement et définissez-la à nouveau.",
+  "salesCloseNotCopied": "Vos séances ont été ajoutées, mais la fin de leur vente en ligne n'y a pas été copiée. Réessayez.",
   "shareKit": {
     "ticketsFrom": "Billets à partir de {price}",
     "ticketsAt": "Billets {price}",
@@ -233,6 +236,9 @@
     "roundupLine": "Notre sélection pour les jours à venir. Billets et infos sur Abonten.",
     "roundupCta": "Voir le programme"
   },
+  "specialDateNotFound": "Date spéciale introuvable.",
+  "specialDateRemoved": "Date spéciale supprimée.",
+  "specialDateSaved": "Date spéciale enregistrée.",
   "theDeadlineToFinishPayingHas": "La date limite pour terminer le paiement est passée.",
   "thisEventIsTooSoonToPay": "Cet événement est trop proche pour payer en plusieurs fois. Achetez plutôt vos billets en une fois.",
   "thisEventWasCancelledYourPlan": "Cet événement a été annulé. Votre plan a pris fin et votre remboursement est en route.",
@@ -241,6 +247,7 @@
   "thisPlanIsFullyPaidYourTickets": "Ce plan est entièrement payé. Vos billets sont en cours d'émission.",
   "thisPlanIsNotTakingPayments": "Ce plan n'accepte plus de paiements.",
   "thisPlanWasNotFound": "Ce plan est introuvable.",
+  "ticketNotesSaved": "Notes des billets enregistrées.",
   "youCanPaySmallSmallForUp": "{count, plural, one {Vous pouvez payer en plusieurs fois # billet à la fois.} other {Vous pouvez payer en plusieurs fois jusqu'à # billets à la fois.}}",
   "youReAlreadyPayingSmallSmall": "Vous payez déjà cet événement en plusieurs fois.",
   "db": {

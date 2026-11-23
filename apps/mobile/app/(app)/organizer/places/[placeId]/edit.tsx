@@ -1,11 +1,15 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TimeField } from "@/components/datetime/TimeField";
+import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { PlacePhotoManager } from "@/components/places/PlacePhotoManager";
+import { PlaceSpecialHoursList } from "@/components/places/PlaceSpecialHoursList";
 import { FormSkeleton } from "@/components/skeletons";
 import {
   useAddPlaceService,
+  useAddPlaceSpecialHours,
   useRemovePlaceService,
+  useRemovePlaceSpecialHours,
   useUpdatePlaceService,
 } from "@/features/organizer/useManagePlace";
 import {
@@ -15,10 +19,16 @@ import {
 } from "@/features/organizer/usePlaceEdit";
 import type {
   PlaceServiceRow,
+  PlaceSpecialHoursRow,
   PlaceTemporaryStatus,
 } from "@abonten/api-client";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import {
+  SPECIAL_HOURS_LABEL_MAX,
+  formatSpecialDate,
+  placeLocalDate,
+} from "@abonten/core/placeSpecialHours";
 import {
   AppText,
   Button,
@@ -151,6 +161,199 @@ function ServiceFields({
   );
 }
 
+// Special dates (holidays, event days) in the place's hours: each replaces
+// that date's weekday hours. Listed from today on; added one at a time (a
+// date already set is replaced); removed after a confirmation.
+function SpecialDatesSection({
+  placeId,
+  rows,
+  timeZone,
+}: {
+  placeId: string;
+  rows: PlaceSpecialHoursRow[];
+  /** The place's zone (null from an older server: the phone's day). */
+  timeZone: string | null;
+}) {
+  const t = useTranslations("places");
+  const tm = useTranslations("manage");
+  const { locale } = useLocale();
+  const toast = useToast();
+  const add = useAddPlaceSpecialHours(placeId);
+  const remove = useRemovePlaceSpecialHours(placeId);
+
+  const [adding, setAdding] = useState(false);
+  const [date, setDate] = useState<string | null>(null);
+  const [closed, setClosed] = useState(true);
+  const [openTime, setOpenTime] = useState("09:00");
+  const [closeTime, setCloseTime] = useState("17:00");
+  const [label, setLabel] = useState("");
+
+  const reset = () => {
+    setAdding(false);
+    setDate(null);
+    setClosed(true);
+    setOpenTime("09:00");
+    setCloseTime("17:00");
+    setLabel("");
+  };
+
+  const timesOk = closed || (TIME_RE.test(openTime) && TIME_RE.test(closeTime));
+
+  const submit = () => {
+    if (!date || !timesOk) return;
+    add.mutate(
+      {
+        date,
+        isClosed: closed,
+        openTime: closed ? null : openTime,
+        closeTime: closed ? null : closeTime,
+        label: label.trim() || null,
+      },
+      {
+        onSuccess: (res) => {
+          if (res.status === 200) {
+            toast.success(res.message || t("specialDateSaved"));
+            reset();
+          } else {
+            toast.error(tm("couldnTSave"), { description: res.message });
+          }
+        },
+        onError: () =>
+          toast.error(tm("couldnTSave"), {
+            description: tm("pleaseTryAgain"),
+          }),
+      },
+    );
+  };
+
+  const confirmRemove = (row: { id?: string; special_date: string }) => {
+    const id = row.id;
+    if (!id) return;
+    const when = formatSpecialDate(row.special_date, locale);
+    Alert.alert(
+      t("removeSpecialDate", { date: when }),
+      tm("thisCanTBeUndone2", { name: when }),
+      [
+        { text: tm("cancel"), style: "cancel" },
+        {
+          text: tm("remove"),
+          style: "destructive",
+          onPress: () =>
+            remove.mutate(id, {
+              onSuccess: (res) => {
+                if (res.status === 200)
+                  toast.success(res.message || t("specialDateRemoved"));
+                else
+                  toast.error(tm("couldnTRemove"), {
+                    description: res.message,
+                  });
+              },
+              onError: () =>
+                toast.error(tm("couldnTRemove"), {
+                  description: tm("pleaseTryAgain"),
+                }),
+            }),
+        },
+      ],
+    );
+  };
+
+  return (
+    <View className="gap-3">
+      <View className="gap-1">
+        <AppText variant="label">{t("specialDates")}</AppText>
+        <AppText variant="meta">{t("specialDatesHint")}</AppText>
+      </View>
+
+      {rows.length > 0 ? (
+        <PlaceSpecialHoursList
+          rows={rows}
+          today={placeLocalDate(new Date(), timeZone)}
+          onRemove={confirmRemove}
+          removingId={remove.isPending ? (remove.variables ?? null) : null}
+        />
+      ) : !adding ? (
+        <AppText variant="muted">{t("noUpcomingSpecialDates")}</AppText>
+      ) : null}
+
+      {adding ? (
+        <View className="gap-3 rounded-xl border border-border bg-card p-3">
+          <DateRangeField
+            mode="single"
+            start={date}
+            end={null}
+            onChange={(r) => setDate(r.start)}
+          />
+          <View className="flex-row items-center justify-between">
+            <AppText variant="bodyStrong">
+              {t("specialDateClosedAllDay")}
+            </AppText>
+            <Switch
+              value={closed}
+              onValueChange={setClosed}
+              accessibilityLabel={t("specialDateClosedAllDay")}
+            />
+          </View>
+          {!closed ? (
+            <View className="flex-row items-center gap-2">
+              <View className="flex-1">
+                <TimeField
+                  label={t("specialDateOpens")}
+                  value={openTime}
+                  onChange={setOpenTime}
+                  invalid={!TIME_RE.test(openTime)}
+                />
+              </View>
+              <AppText variant="muted">{tm("to")}</AppText>
+              <View className="flex-1">
+                <TimeField
+                  label={t("specialDateCloses")}
+                  value={closeTime}
+                  onChange={setCloseTime}
+                  invalid={!TIME_RE.test(closeTime)}
+                />
+              </View>
+            </View>
+          ) : null}
+          <Field label={t("specialDateName")}>
+            <Input
+              value={label}
+              onChangeText={setLabel}
+              placeholder={t("specialDateNamePlaceholder")}
+              maxLength={SPECIAL_HOURS_LABEL_MAX}
+            />
+          </Field>
+          <View className="flex-row gap-2">
+            <View className="flex-1">
+              <Button
+                title={tm("cancel")}
+                variant="outline"
+                onPress={reset}
+                disabled={add.isPending}
+              />
+            </View>
+            <View className="flex-1">
+              <Button
+                title={t("saveSpecialDate")}
+                loading={add.isPending}
+                disabled={add.isPending || !date || !timesOk}
+                onPress={submit}
+              />
+            </View>
+          </View>
+        </View>
+      ) : (
+        <Button
+          title={t("addSpecialDate")}
+          variant="outline"
+          size="sm"
+          onPress={() => setAdding(true)}
+        />
+      )}
+    </View>
+  );
+}
+
 function ServicesSection({
   placeId,
   services,
@@ -159,6 +362,7 @@ function ServicesSection({
   services: PlaceServiceRow[];
 }) {
   const t = useTranslations("manage");
+  const tp = useTranslations("places");
 
   const toast = useToast();
   const add = useAddPlaceService(placeId);
@@ -308,7 +512,12 @@ function ServicesSection({
                   {s.description}
                 </AppText>
               ) : null}
-              {s.show_price && s.price != null ? (
+              {/* Priced 0 reads "Free", as on the public screen. */}
+              {s.price === 0 ? (
+                <AppText className="mt-0.5 text-[13px] font-medium text-foreground">
+                  {tp("serviceFree")}
+                </AppText>
+              ) : s.show_price && s.price != null ? (
                 <AppText className="mt-0.5 text-[13px] font-medium text-foreground">
                   {s.price}
                   {s.price_unit ? ` / ${s.price_unit}` : ""}
@@ -722,6 +931,14 @@ export default function EditPlaceScreen() {
           onPress={onSaveHours}
         />
       </View>
+
+      <View className="h-px bg-border" />
+
+      <SpecialDatesSection
+        placeId={placeId ?? ""}
+        rows={w.specialHours}
+        timeZone={w.placeTimeZone}
+      />
 
       <View className="h-px bg-border" />
 

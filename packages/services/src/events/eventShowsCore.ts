@@ -101,7 +101,7 @@ export async function addEventShowsCore(
   const { data: source, error } = await supabase
     .from("event")
     .select(
-      "id, title, status, timezone, country_code, starts_at, ends_at, ticket_type(price)",
+      "id, title, status, timezone, country_code, starts_at, ends_at, sales_close_before_end_minutes, ticket_type(price)",
     )
     .eq("id", input.eventId)
     .eq("organizer_id", accountId)
@@ -262,6 +262,27 @@ export async function addEventShowsCore(
       eventCode: row?.event_code ?? "",
       startsAt: show.startsAt,
     });
+  }
+
+  // When online sales close goes with the listing, like its refund policy
+  // (event_add_show copies everything else; kept out of it so its
+  // definition is not made again for one column). A retry writes it again.
+  if (source.sales_close_before_end_minutes != null && added.length > 0) {
+    const { error: salesCloseError } = await service
+      .from("event")
+      .update({
+        sales_close_before_end_minutes: source.sales_close_before_end_minutes,
+      })
+      .in(
+        "id",
+        added.map((show) => show.id),
+      );
+    if (salesCloseError) {
+      logger.error(
+        `addEventShows: copying when sales close failed for ${source.id}: ${salesCloseError.message}`,
+      );
+      return { status: 500, message: tr("salesCloseNotCopied") };
+    }
   }
 
   return {

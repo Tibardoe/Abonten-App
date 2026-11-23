@@ -49,7 +49,10 @@ import {
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
 import { resolveEventCta } from "@abonten/core/eventCta";
-import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
+import {
+  resolveOccurrenceState,
+  salesCloseClock,
+} from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { hostDisplayName } from "@abonten/core/hostDisplayName";
@@ -287,16 +290,38 @@ export default function EventDetailScreen() {
       : [];
   // Authoritative "can a ticket still be sold" state, recomputed on every
   // tick. `ended` = every session is over; `inProgressNoFuture` = a session
-  // is happening now but nothing upcoming remains (a single-date event that
-  // has started counts here too — walk-up sales are closed). Either way no
-  // ticket can be bought; when a future occurrence still exists the event
-  // stays purchasable even while an earlier date is mid-run.
+  // is happening now and nothing is on sale (a single-date event that has
+  // started counts here too, unless the organizer keeps selling while it's
+  // on and its cut-off has not come). Either way no ticket can be bought;
+  // when a later occurrence still sells the event stays purchasable even
+  // while an earlier date is mid-run.
   const occurrenceState = resolveOccurrenceState(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
-    nowMs,
+    {
+      now: nowMs,
+      salesCloseBeforeEndMinutes: event.sales_close_before_end_minutes ?? null,
+    },
   );
+  // On now and still selling: "On now — tickets on sale until 18:00".
+  const onNowClock =
+    occurrenceState.onNow && occurrenceState.salesCloseAt
+      ? salesCloseClock(
+          occurrenceState.salesCloseAt,
+          event.timezone,
+          locale,
+          nowMs,
+        )
+      : null;
+  const onNowLine = onNowClock
+    ? onNowClock.day
+      ? t("salesClose.onNowDay", {
+          day: onNowClock.day,
+          time: onNowClock.time,
+        })
+      : t("salesClose.onNow", { time: onNowClock.time })
+    : null;
   // Postponed with no new date yet: nothing is on sale, and its old date
   // passing does not end it.
   const postponed = !canceled && !!event.postponed_at;
@@ -731,9 +756,25 @@ export default function EventDetailScreen() {
             ) : event.ticket_type.length === 0 ? (
               <AppText variant="muted">{t("noTicketsHaveBeenSetUp")}</AppText>
             ) : isFree ? (
-              <FreeRsvpCard event={event} flow={rsvpFlow} showAction={false} />
+              <View className="gap-3">
+                {onNowLine ? (
+                  <AppText variant="small" tone="success">
+                    {onNowLine}
+                  </AppText>
+                ) : null}
+                <FreeRsvpCard
+                  event={event}
+                  flow={rsvpFlow}
+                  showAction={false}
+                />
+              </View>
             ) : (
               <View className="gap-3">
+                {onNowLine ? (
+                  <AppText variant="small" tone="success">
+                    {onNowLine}
+                  </AppText>
+                ) : null}
                 <PendingCheckoutBanner eventId={event.id} />
                 <View className="gap-3 rounded-xl border border-border bg-card p-4">
                   <View className="flex-row items-center justify-between">
@@ -752,7 +793,13 @@ export default function EventDetailScreen() {
                       length: event.ticket_type.length,
                     })}
                   </AppText>
-                  <AppText variant="meta">{refundPolicyLine}</AppText>
+                  <AppText variant="meta">
+                    {refundPolicyLine}
+                    {/* Same-day sales: no buyer cancels once a date has started. */}
+                    {occurrenceState.onNow && refundPolicy.kind !== "none"
+                      ? ` ${t("refundPolicyLine.startedDate")}`
+                      : null}
+                  </AppText>
                 </View>
               </View>
             )}

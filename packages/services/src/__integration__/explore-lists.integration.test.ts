@@ -1,5 +1,3 @@
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 //
 // The Explore lists after migration 20261002180000: one rule for which
@@ -20,6 +18,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 //
 // The fixtures sit by themselves in the middle of Ghana, far from the spot
 // every other suite uses, so nothing else is in range.
+import { isPlaceOpenNow } from "@abonten/core/computePlaceOpenStatus";
+import { placeLocalDate } from "@abonten/core/placeSpecialHours";
+import { addCalendarDays } from "@abonten/core/time/timeZone";
+import type { Database } from "@abonten/types/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   type TestUser,
@@ -994,11 +997,25 @@ describe("place lists", () => {
         close_time: close,
         is_closed: false,
       }));
+    // Special dates (place_special_hours, migration 20261123091000): each
+    // replaces its date's weekday hours, today's and yesterday's alike.
+    type Special = {
+      special_date: string;
+      open_time: string | null;
+      close_time: string | null;
+      is_closed: boolean;
+      label: string | null;
+    };
+    const day = (
+      back: 0 | 1,
+      hours: { open?: string; close?: string; closed?: boolean },
+    ) => ({ back, hours });
     const patterns: {
       name: string;
       hours: Hours[];
       timezone?: string;
       temporaryStatus?: string;
+      special?: ReturnType<typeof day>[];
     }[] = [
       { name: "around the clock", hours: every("00:00", "00:00") },
       { name: "no hours", hours: [] },
@@ -1061,9 +1078,52 @@ describe("place lists", () => {
         ],
         timezone: "Pacific/Kiritimati",
       },
+      {
+        name: "special closed today",
+        hours: every("00:00", "00:00"),
+        special: [day(0, { closed: true })],
+      },
+      {
+        name: "special all day today, weekdays closed",
+        hours: [0, 1, 2, 3, 4, 5, 6].map((d) => ({
+          day_of_week: d,
+          open_time: null,
+          close_time: null,
+          is_closed: true,
+        })),
+        special: [day(0, { open: "00:00", close: "00:00" })],
+      },
+      {
+        name: "special overnight from yesterday",
+        hours: [],
+        special: [day(1, { open: "23:59", close: "23:58" })],
+      },
+      {
+        name: "special closed yesterday stops its late hours",
+        hours: every("23:59", "23:58"),
+        special: [day(1, { closed: true })],
+      },
+      {
+        name: "special day hours today",
+        hours: every("00:00", "00:00"),
+        special: [day(0, { open: "08:00", close: "18:00" })],
+      },
+      {
+        name: "special date in another zone",
+        hours: [],
+        special: [day(0, { open: "00:00", close: "00:00" })],
+        timezone: "Pacific/Kiritimati",
+      },
     ];
 
-    const created: { id: string; name: string }[] = [];
+    const created: {
+      id: string;
+      name: string;
+      hours: Hours[];
+      special: Special[];
+      timezone: string;
+      temporaryStatus: string | null;
+    }[] = [];
     for (const [i, pattern] of patterns.entries()) {
       const { data, error } = await service
         .from("place")
@@ -1086,7 +1146,30 @@ describe("place lists", () => {
         .single();
       if (error) throw new Error(`${pattern.name}: ${error.message}`);
       placeIds.push(data.id);
-      created.push({ id: data.id, name: pattern.name });
+      const timezone = pattern.timezone ?? "Africa/Accra";
+      const today = placeLocalDate(new Date(), timezone);
+      const special: Special[] = (pattern.special ?? []).map((s) => ({
+        special_date: addCalendarDays(today, -s.back),
+        open_time: s.hours.closed ? null : (s.hours.open ?? null),
+        close_time: s.hours.closed ? null : (s.hours.close ?? null),
+        is_closed: s.hours.closed === true,
+        label: null,
+      }));
+      created.push({
+        id: data.id,
+        name: pattern.name,
+        hours: pattern.hours,
+        special,
+        timezone,
+        temporaryStatus: pattern.temporaryStatus ?? null,
+      });
+      if (special.length > 0) {
+        const rows = await service
+          .from("place_special_hours")
+          .insert(special.map((s) => ({ ...s, place_id: data.id })));
+        if (rows.error)
+          throw new Error(`${pattern.name}: ${rows.error.message}`);
+      }
       if (pattern.hours.length > 0) {
         const hours = await service
           .from("place_opening_hours")
@@ -1150,6 +1233,8 @@ describe("place lists", () => {
     const byList: Record<string, boolean> = {};
     const byRow: Record<string, boolean> = {};
     const byFilter: Record<string, boolean> = {};
+    // And the TypeScript mirror the place pages use.
+    const byCore: Record<string, boolean> = {};
     for (const place of created) {
       const { data, error } = await service.rpc("place_is_open_now", {
         p_place_id: place.id,
@@ -1159,14 +1244,26 @@ describe("place lists", () => {
       byList[place.name] = openInList.has(place.id);
       byRow[place.name] = openInRow.has(place.id);
       byFilter[place.name] = openAround.has(place.id);
+      byCore[place.name] = isPlaceOpenNow(
+        place.hours,
+        place.temporaryStatus,
+        new Date(),
+        place.timezone,
+        place.special,
+      );
     }
     expect(byList).toEqual(byFunction);
     expect(byRow).toEqual(byFunction);
     expect(byFilter).toEqual(byFunction);
+    expect(byCore).toEqual(byFunction);
     // The two fixed answers, so the comparison is not of two empty lists.
     expect(byFunction["around the clock"]).toBe(true);
     expect(byFunction["no hours"]).toBe(false);
     expect(byFunction["temporarily closed"]).toBe(false);
+    // A special date beats its weekday, either way.
+    expect(byFunction["special closed today"]).toBe(false);
+    expect(byFunction["special all day today, weekdays closed"]).toBe(true);
+    expect(byFunction["special date in another zone"]).toBe(true);
   });
 });
 

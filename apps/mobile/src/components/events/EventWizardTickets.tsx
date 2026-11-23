@@ -1,9 +1,11 @@
 import { GroupPricesEditor } from "@/components/events/GroupPricesEditor";
 import { RefundPolicyPicker } from "@/components/events/RefundPolicyPicker";
+import { SalesClosePicker } from "@/components/events/SalesClosePicker";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { uuidv4 } from "@/lib/uuid";
 import { GROUP_PRICING_FLAG } from "@abonten/core/groupPricing";
+import { TICKET_TYPE_NOTE_MAX } from "@abonten/core/ticketTypeNote";
 import { AppText, Button, Chip, Field, Input } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
@@ -19,7 +21,14 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
   function addTier() {
     w.setTiers((prev) => [
       ...prev,
-      { id: uuidv4(), name: "", price: "", quantity: "", admits: "1" },
+      {
+        id: uuidv4(),
+        name: "",
+        price: "",
+        quantity: "",
+        admits: "1",
+        description: "",
+      },
     ]);
   }
   function patchTier(i: number, patch: Partial<(typeof w.tiers)[number]>) {
@@ -136,6 +145,18 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                   />
                 </Field>
               ) : null}
+              {/* What the ticket includes, shown under its name. */}
+              <Field
+                label={tCommon("ticketNoteLabel")}
+                hint={tCommon("ticketNoteHint", { max: TICKET_TYPE_NOTE_MAX })}
+              >
+                <Input
+                  value={tier.description}
+                  onChangeText={(v) => patchTier(i, { description: v })}
+                  placeholder={tCommon("ticketNotePlaceholder")}
+                  maxLength={TICKET_TYPE_NOTE_MAX}
+                />
+              </Field>
             </View>
           ))}
           <Button
@@ -157,6 +178,10 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
       ) : w.capacityHint ? (
         <AppText variant="meta">{w.capacityHint}</AppText>
       ) : null}
+
+      {/* When online sales close: free registrations and paid tickets
+          alike. */}
+      <SalesClosePicker value={w.salesClose} onChange={w.setSalesClose} />
 
       {/* Refunds -- only paid tickets have a price to give back. */}
       {w.ticketMode !== "free" ? (

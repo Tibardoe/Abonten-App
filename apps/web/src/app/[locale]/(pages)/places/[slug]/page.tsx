@@ -18,6 +18,7 @@ import PlaceCard from "@/places/molecules/PlaceCard";
 import PlaceCheckIn from "@/places/molecules/PlaceCheckIn";
 import PlaceOpenStatusBadge from "@/places/molecules/PlaceOpenStatusBadge";
 import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
+import PlaceSpecialHoursList from "@/places/molecules/PlaceSpecialHoursList";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
 import PlaceActionButtons from "@/places/organisms/PlaceActionButtons";
 import { loadReviewPreview } from "@/reviews/loadReviews";
@@ -36,6 +37,11 @@ import {
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatRating } from "@abonten/core/i18n/format";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
+import {
+  SPECIAL_HOURS_PUBLIC_DAYS,
+  placeLocalDate,
+  upcomingSpecialHours,
+} from "@abonten/core/placeSpecialHours";
 import { breadcrumbJsonLd, jsonLdGraph } from "@abonten/core/seo/jsonLd";
 import { placeJsonLd } from "@abonten/core/seo/listingJsonLd";
 import { cityPath, placePath } from "@abonten/core/seo/paths";
@@ -212,12 +218,20 @@ export default async function page({
     placeCategoryLabel(tc, place.place_category ?? {}) || t("placeKind");
   const fullAddress =
     (place.address as PlaceAddress)?.full_address ?? t("addressNotSpecified");
+  const placeTimeZone = (place as { timezone?: string | null }).timezone;
   const openStatus = computePlaceOpenStatus(
     { t: tc, locale },
     place.openingHours,
     place.temporary_status,
     new Date(),
-    (place as { timezone?: string | null }).timezone,
+    placeTimeZone,
+    place.specialHours,
+  );
+  // Holidays and other special dates of the next 30 days, on its calendar.
+  const upcomingSpecial = upcomingSpecialHours(
+    place.specialHours,
+    new Date(),
+    placeTimeZone,
   );
   const galleryPhotos = place.photos ?? [];
   const services = place.services ?? [];
@@ -395,13 +409,21 @@ export default async function page({
               </h2>
               <PlaceOpeningHoursTable
                 openingHours={place.openingHours}
-                today={
-                  placeLocalNow(
-                    new Date(),
-                    (place as { timezone?: string | null }).timezone,
-                  ).dow
-                }
+                today={placeLocalNow(new Date(), placeTimeZone).dow}
               />
+              {upcomingSpecial.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h3 className="text-sm font-semibold text-card-foreground">
+                    {t("specialHoursComingUp", {
+                      days: SPECIAL_HOURS_PUBLIC_DAYS,
+                    })}
+                  </h3>
+                  <PlaceSpecialHoursList
+                    rows={upcomingSpecial}
+                    today={placeLocalDate(new Date(), placeTimeZone)}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Services */}
@@ -434,16 +456,25 @@ export default async function page({
                             </p>
                           )}
                         </div>
-                        {service.show_price && service.price != null && (
+                        {/* A service priced 0 is free, whether or not the
+                            owner shows prices. */}
+                        {service.price === 0 ? (
                           <span className="shrink-0 font-medium text-card-foreground">
-                            {formatMoney(placeCurrency, service.price, {
-                              trimZeroFraction: true,
-                              locale,
-                            })}
-                            {service.price_unit
-                              ? ` / ${service.price_unit}`
-                              : ""}
+                            {t("serviceFree")}
                           </span>
+                        ) : (
+                          service.show_price &&
+                          service.price != null && (
+                            <span className="shrink-0 font-medium text-card-foreground">
+                              {formatMoney(placeCurrency, service.price, {
+                                trimZeroFraction: true,
+                                locale,
+                              })}
+                              {service.price_unit
+                                ? ` / ${service.price_unit}`
+                                : ""}
+                            </span>
+                          )
                         )}
                       </div>
                     ),

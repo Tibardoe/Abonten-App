@@ -13,6 +13,8 @@ export type Ticket = {
   type?: string;
   available_from?: Date;
   available_until?: Date;
+  /** What the ticket includes (@abonten/core/ticketTypeNote). */
+  description?: string | null;
 };
 
 export type TicketType = {
@@ -28,6 +30,8 @@ export type TicketType = {
   type: string;
   available_from?: Date;
   available_until?: Date;
+  /** What the ticket includes, shown under its name. */
+  description?: string | null;
 };
 
 export type UserTicketType = {

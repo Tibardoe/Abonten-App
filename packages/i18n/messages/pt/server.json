@@ -217,6 +217,9 @@
   "refundPolicyInvalid": "Escolha uma política de reembolso da lista.",
   "refundPolicyStricterAfterSales": "Já há pessoas com bilhetes para este evento, por isso a sua política de reembolso só pode tornar-se mais generosa.",
   "refundPolicyNotSaved": "O seu evento foi publicado, mas a sua política de reembolso não foi guardada. Abra o evento e defina-a novamente.",
+  "salesCloseInvalid": "Escolha da lista quando termina a venda online.",
+  "salesCloseNotSaved": "O seu evento foi publicado, mas o fim da sua venda online não foi guardado. Abra o evento e defina-o novamente.",
+  "salesCloseNotCopied": "As suas sessões foram adicionadas, mas o fim da sua venda online não lhes foi copiado. Tente novamente.",
   "shareKit": {
     "ticketsFrom": "Bilhetes a partir de {price}",
     "ticketsAt": "Bilhetes {price}",
@@ -233,6 +236,9 @@
     "roundupLine": "As nossas sugestões para os próximos dias. Bilhetes e detalhes no Abonten.",
     "roundupCta": "Veja o que há"
   },
+  "specialDateNotFound": "Data especial não encontrada.",
+  "specialDateRemoved": "Data especial removida.",
+  "specialDateSaved": "Data especial guardada.",
   "theDeadlineToFinishPayingHas": "O prazo para concluir o pagamento já passou.",
   "thisEventIsTooSoonToPay": "Este evento está demasiado próximo para pagar em prestações. Compre antes os bilhetes de uma só vez.",
   "thisEventWasCancelledYourPlan": "Este evento foi cancelado. O seu plano terminou e o seu reembolso está a caminho.",
@@ -241,6 +247,7 @@
   "thisPlanIsFullyPaidYourTickets": "Este plano está totalmente pago. Os seus bilhetes estão a ser emitidos.",
   "thisPlanIsNotTakingPayments": "Este plano já não aceita pagamentos.",
   "thisPlanWasNotFound": "Este plano não foi encontrado.",
+  "ticketNotesSaved": "Notas dos bilhetes guardadas.",
   "youCanPaySmallSmallForUp": "{count, plural, one {Pode pagar em prestações # bilhete de cada vez.} other {Pode pagar em prestações até # bilhetes de cada vez.}}",
   "youReAlreadyPayingSmallSmall": "Já está a pagar este evento em prestações.",
   "db": {
