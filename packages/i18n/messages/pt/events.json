@@ -515,6 +515,8 @@
   "seatingTitle": "Lugares",
   "seatingIntro": "Lugares numerados: descreva a sala uma vez (secções, filas, lugares) e escolha a secção que cada tipo de bilhete vende. A Abonten dá a cada bilhete o melhor lugar livre, uma encomenda lado a lado, e imprime-o no bilhete e na lista de entrada.",
   "seatingLockedNote": "Já foram emitidos bilhetes com lugar, por isso os lugares deste evento já não mudam.",
+  "seatingSoldNote": "{count, plural, one {Já foi vendido # bilhete. Ao guardar, recebe o melhor lugar livre e o comprador é avisado do seu lugar.} other {Já foram vendidos # bilhetes. Ao guardar, recebem os melhores lugares livres, pela ordem de compra, e cada comprador é avisado do seu lugar.}}",
+  "seatingRunNote": "Só esta sessão: cada sessão da série tem os seus próprios lugares. As sessões que adicionar a partir desta copiam os seus lugares.",
   "seatingPlan": "Planta de lugares",
   "noSeatingPlanYet": "Ainda não tem uma planta de lugares.",
   "sectionSummary": "{rows, plural, one {# fila} other {# filas}} · {seats, plural, one {# lugar} other {# lugares}} · {given} atribuídos",

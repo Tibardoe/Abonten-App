@@ -209,6 +209,10 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   // Send a ticket to a friend (services + the expiry job)
   // Complimentary tickets (services)
   complimentary_tickets: n("complimentary_tickets"),
+  // Seats given to tickets sold before the event's seating was set
+  // (event_seating_set(), migration 20261124090000): `seats` lists the
+  // seat labels, `count` how many; `startsAt` is null when postponed.
+  ticket_seat_assigned: n("ticket_seat_assigned"),
   ticket_transfer_received: n("ticket_transfer_received"),
   ticket_transfer_accepted: n("ticket_transfer_accepted"),
   ticket_transfer_declined: n("ticket_transfer_declined"),

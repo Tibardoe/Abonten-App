@@ -44,7 +44,9 @@ function draftRows(section: SectionDraft): SeatingRow[] | null {
  * the venue once (sections, rows, seats), then give each ticket type a
  * section. When a ticket is issued, Abonten gives it the best seat left in
  * its section, an order side by side; the seat is on the ticket and the
- * door list. Locked once the event has its first ticket.
+ * door list. Open until a seat has been given: tickets sold before the
+ * seating was set get their seats when it is saved (the card says how many
+ * before saving).
  */
 export default function ManageEventSeatingCard({
   eventId,
@@ -148,14 +150,26 @@ export default function ManageEventSeatingCard({
 
   if (!setup) return null;
   const locked = setup.locked;
+  // Tickets already sold for the types this save would seat: they get the
+  // best seats left when it is saved (event_seating_set).
+  const soldToSeat = setup.ticketTypes.reduce(
+    (sum, type) =>
+      plan?.sections.some((s) => s.id === mapping[type.id])
+        ? sum + type.sold
+        : sum,
+    0,
+  );
 
   return (
     <div className="space-y-5 rounded-xl border border-border bg-card p-4 text-card-foreground">
-      <div>
+      <div className="space-y-1">
         <h2 className="font-semibold text-lg">{t("seatingTitle")}</h2>
         <p className="text-sm text-muted-foreground">
           {locked ? t("seatingLockedNote") : t("seatingIntro")}
         </p>
+        {setup.inRun && (
+          <p className="text-sm text-muted-foreground">{t("seatingRunNote")}</p>
+        )}
       </div>
 
       {!editing && (
@@ -402,6 +416,12 @@ export default function ManageEventSeatingCard({
               </div>
             );
           })}
+
+          {!locked && soldToSeat > 0 && (
+            <p className="rounded-md bg-muted p-3 text-sm">
+              {t("seatingSoldNote", { count: soldToSeat })}
+            </p>
+          )}
 
           {!locked && (
             <div className="flex flex-wrap gap-2">

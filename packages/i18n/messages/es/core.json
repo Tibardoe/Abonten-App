@@ -1025,6 +1025,10 @@
       "title": "{actor} te regaló {count, plural, one {una entrada} other {# entradas}}",
       "body": "{count, plural, one {Tu entrada} other {Tus entradas}} para {title} {count, plural, one {está} other {están}} en Entradas."
     },
+    "ticket_seat_assigned": {
+      "title": "{count, plural, one {Tu asiento para {title}} other {Tus asientos para {title}}}",
+      "body": "{hasStartsAt, select, yes {{when}: {seats}.} other {{seats}.}} {count, plural, one {Aparece en tu entrada.} other {Aparecen en tus entradas.}}"
+    },
     "event_rescheduled": {
       "title": "{title} cambia de fecha",
       "body": "Ahora el {when}. Abre tu entrada para conservarla o pedir el reembolso completo."
