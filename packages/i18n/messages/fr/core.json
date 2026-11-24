@@ -1025,6 +1025,10 @@
       "title": "{actor} vous a offert {count, plural, one {un billet} other {# billets}}",
       "body": "{count, plural, one {Votre billet} other {Vos billets}} pour {title} {count, plural, one {est} other {sont}} dans Billets."
     },
+    "ticket_seat_assigned": {
+      "title": "{count, plural, one {Votre place pour {title}} other {Vos places pour {title}}}",
+      "body": "{hasStartsAt, select, yes {{when} : {seats}.} other {{seats}.}} {count, plural, one {Elle figure sur votre billet.} other {Elles figurent sur vos billets.}}"
+    },
     "event_rescheduled": {
       "title": "{title} a été déplacé",
       "body": "Désormais le {when}. Ouvrez votre billet pour le garder ou être remboursé intégralement."

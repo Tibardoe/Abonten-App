@@ -515,6 +515,8 @@
   "seatingTitle": "Sitzplätze",
   "seatingIntro": "Nummerierte Plätze: Beschreibe den Saal einmal (Bereiche, Reihen, Plätze) und wähle, welchen Bereich jeder Tickettyp verkauft. Abonten gibt jedem Ticket den besten freien Platz, eine Bestellung nebeneinander, und druckt ihn auf Ticket und Einlassliste.",
   "seatingLockedNote": "Es wurden schon Tickets mit Platz ausgegeben, daher ändert sich die Sitzplatzvergabe dieser Veranstaltung nicht mehr.",
+  "seatingSoldNote": "{count, plural, one {# Ticket ist schon verkauft. Beim Speichern bekommt es den besten freien Platz, und wer es gekauft hat, erfährt seinen Platz.} other {# Tickets sind schon verkauft. Beim Speichern bekommen sie die besten freien Plätze, in der Reihenfolge des Kaufs, und alle, die sie gekauft haben, erfahren ihren Platz.}}",
+  "seatingRunNote": "Nur diese Vorstellung: Jede Vorstellung der Reihe hat ihre eigenen Plätze. Vorstellungen, die du von hier aus hinzufügst, übernehmen ihre Sitzplätze.",
   "seatingPlan": "Saalplan",
   "noSeatingPlanYet": "Du hast noch keinen Saalplan.",
   "sectionSummary": "{rows, plural, one {# Reihe} other {# Reihen}} · {seats, plural, one {# Platz} other {# Plätze}} · {given} vergeben",

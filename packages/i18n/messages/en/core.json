@@ -1096,6 +1096,10 @@
       "title": "{actor} gave you {count, plural, one {a ticket} other {# tickets}}",
       "body": "{count, plural, one {Your ticket} other {Your tickets}} for {title} {count, plural, one {is} other {are}} in Tickets."
     },
+    "ticket_seat_assigned": {
+      "title": "{count, plural, one {Your seat for {title}} other {Your seats for {title}}}",
+      "body": "{hasStartsAt, select, yes {{when}: {seats}.} other {{seats}.}} {count, plural, one {It's on your ticket.} other {They're on your tickets.}}"
+    },
     "event_rescheduled": {
       "title": "{title} has moved",
       "body": "Now {when}. Open your ticket to keep it or get a full refund."

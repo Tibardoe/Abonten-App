@@ -515,6 +515,8 @@
   "seatingTitle": "Asientos",
   "seatingIntro": "Asientos numerados: describe el recinto una vez (secciones, filas, asientos) y elige qué sección vende cada tipo de entrada. Abonten da a cada entrada el mejor asiento libre, un pedido junto, y lo imprime en la entrada y en la lista de acceso.",
   "seatingLockedNote": "Ya se emitieron entradas con asiento, así que los asientos de este evento ya no cambian.",
+  "seatingSoldNote": "{count, plural, one {Ya se vendió # entrada. Al guardar, recibe el mejor asiento libre y se avisa a su comprador de su asiento.} other {Ya se vendieron # entradas. Al guardar, reciben los mejores asientos libres, en el orden en que se compraron, y se avisa a cada comprador de su asiento.}}",
+  "seatingRunNote": "Solo esta función: cada función de la serie tiene sus propios asientos. Las funciones que añadas desde esta copian sus asientos.",
   "seatingPlan": "Plano de asientos",
   "noSeatingPlanYet": "Aún no tienes un plano de asientos.",
   "sectionSummary": "{rows, plural, one {# fila} other {# filas}} · {seats, plural, one {# asiento} other {# asientos}} · {given} asignados",

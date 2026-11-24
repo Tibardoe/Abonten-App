@@ -515,6 +515,8 @@
   "seatingTitle": "Seating",
   "seatingIntro": "Numbered seats: describe the venue once (sections, rows, seats), then choose which section each ticket type sells. Abonten gives each ticket the best seat left, an order side by side, and prints it on the ticket and the door list.",
   "seatingLockedNote": "Tickets have been issued with seats, so this event's seating no longer changes.",
+  "seatingSoldNote": "{count, plural, one {# ticket is already sold. When you save, it gets the best seat left and its buyer is told their seat.} other {# tickets are already sold. When you save, they get the best seats left, in the order they were bought, and each buyer is told their seat.}}",
+  "seatingRunNote": "This show only: each show of the run has its own seats. Shows you add from this one copy its seating.",
   "seatingPlan": "Seating plan",
   "noSeatingPlanYet": "You have no seating plan yet.",
   "sectionSummary": "{rows, plural, one {# row} other {# rows}} · {seats, plural, one {# seat} other {# seats}} · {given} given",

@@ -93,6 +93,40 @@ describe("renderNotice", () => {
     ).toEqual({ title: "Ticket confirmed", body: "Your ticket is confirmed." });
   });
 
+  it("tells a holder the seat a late seating gave them, on the event's clock", () => {
+    const seat = (params: Record<string, string | number | null>) => ({
+      id: "ticket_seat_assigned",
+      params: {
+        title: "Fame In Flames",
+        seats: "Stalls · C12",
+        count: 1,
+        startsAt: "2026-11-27T19:30:00Z",
+        timezone: "Africa/Accra",
+        ...params,
+      },
+    });
+    expect(renderNotice(i18nEn, seat({}))).toEqual({
+      title: "Your seat for Fame In Flames",
+      body: "Fri 27 Nov, 7:30 pm: Stalls · C12. It's on your ticket.",
+    });
+    expect(
+      renderNotice(
+        i18nEn,
+        seat({ seats: "Stalls · C11, Stalls · C12", count: 2 }),
+      ),
+    ).toEqual({
+      title: "Your seats for Fame In Flames",
+      body: "Fri 27 Nov, 7:30 pm: Stalls · C11, Stalls · C12. They're on your tickets.",
+    });
+    // Postponed: no date yet, and the message words that itself.
+    expect(renderNotice(i18nEn, seat({ startsAt: null }))?.body).toBe(
+      "Stalls · C12. It's on your ticket.",
+    );
+    expect(renderNotice(i18nFr, seat({}))?.title).toBe(
+      "Votre place pour Fame In Flames",
+    );
+  });
+
   it("counts the crowd on a like", () => {
     const like = (others: number, actor = "Ama") =>
       renderNotice(i18nEn, {

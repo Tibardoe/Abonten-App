@@ -515,6 +515,8 @@
   "seatingTitle": "Placement",
   "seatingIntro": "Places numérotées : décrivez la salle une fois (sections, rangées, sièges), puis choisissez la section que vend chaque type de billet. Abonten attribue à chaque billet la meilleure place restante, une commande côte à côte, et l'imprime sur le billet et la liste d'entrée.",
   "seatingLockedNote": "Des billets ont déjà été émis avec des places : le placement de cet événement ne change plus.",
+  "seatingSoldNote": "{count, plural, one {# billet est déjà vendu. À l'enregistrement, il reçoit la meilleure place restante et son acheteur est prévenu de sa place.} other {# billets sont déjà vendus. À l'enregistrement, ils reçoivent les meilleures places restantes, dans l'ordre d'achat, et chaque acheteur est prévenu de sa place.}}",
+  "seatingRunNote": "Cette séance seulement : chaque séance de la série a ses propres places. Les séances que vous ajoutez depuis celle-ci reprennent son placement.",
   "seatingPlan": "Plan de salle",
   "noSeatingPlanYet": "Vous n'avez pas encore de plan de salle.",
   "sectionSummary": "{rows, plural, one {# rangée} other {# rangées}} · {seats, plural, one {# place} other {# places}} · {given} attribuées",
