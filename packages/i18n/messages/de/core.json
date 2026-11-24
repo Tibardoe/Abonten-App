@@ -1549,6 +1549,8 @@
     "aboveMax": "Der höchste Betrag ist {max}.",
     "offStep": "Wähle {min} oder mehr, in Schritten von {step}.",
     "hint": "Von {min} bis {max}, in Schritten von {step}",
-    "hintSingle": "Der Betrag ist {min}."
+    "hintSingle": "Der Betrag ist {min}.",
+    "range": "{min} bis {max}",
+    "paidAtDoor": "Bezahlt {amount}"
   }
 }

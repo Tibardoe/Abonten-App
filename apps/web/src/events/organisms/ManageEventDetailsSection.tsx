@@ -315,6 +315,9 @@ export default function ManageEventDetailsSection({
               handleMultipleTickets={setMultipleTickets}
               groupTicketsEnabled={groupPricingEnabled}
               openAmountEnabled={!!event.open_amount_enabled}
+              // Before the first sale each type's note is edited in place
+              // and saved with the types; after it, the notes editor below.
+              notesEditable={!hasConfirmedParticipation}
             />
           )}
 

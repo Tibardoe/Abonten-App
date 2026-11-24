@@ -12,10 +12,12 @@
 // so 0.1 + 0.2 never decides a price. Reasons are codes; the words come from
 // `openAmount.*` of the core namespace, in the reader's language.
 
+import { formatMoney } from "./formatMoney";
 import type { CoreTranslator } from "./i18n/translator";
 import { isKnownCurrency } from "./money/currencies";
 import { formatMajor } from "./money/formatMoney";
 import { fromMajor, money, toMajor, tryFromMajor } from "./money/money";
+import { ticketTypeLabel } from "./ticketTiers";
 
 /** The feature flag that lets an organizer sell one (staff switch it). */
 export const OPEN_AMOUNT_FLAG = "tickets.open_amount";
@@ -304,6 +306,38 @@ export function openAmountRangeHint(
 }
 
 /**
+ * An open type's price where one price would stand on its own (an
+ * organizer's list of ticket types, Insights): "GH₵20 to GH₵1,000", never
+ * the lowest amount alone. One amount when the range holds only one.
+ */
+export function openAmountRangeLabel(
+  t: CoreTranslator,
+  range: OpenAmountRange,
+  currency: string,
+  locale?: string | null,
+): string {
+  const min = formatAmount(range.minAmount, currency, locale);
+  if (range.maxAmount === range.minAmount) return min;
+  const max = formatAmount(range.maxAmount, currency, locale);
+  return t("openAmount.range", { min, max });
+}
+
+/**
+ * Whether a checkout offers the promo code entry. A code never applies to
+ * an amount the buyer chose (priceOrder, create_ticket_checkout), so the
+ * entry is hidden when every line picked is one, or, before anything is
+ * picked, when every type on offer is one. One fixed-price line (or type)
+ * keeps it.
+ */
+export function promoCodeEntryShown(
+  picked: readonly { open: boolean }[],
+  offered: readonly { open: boolean }[] = [],
+): boolean {
+  const lines = picked.length > 0 ? picked : offered;
+  return lines.length === 0 || lines.some((line) => !line.open);
+}
+
+/**
  * A few amounts to tap: the minimum, then about 2×, 5× and 10× it, each
  * moved up onto the steps and kept within the maximum, plus the maximum
  * when room is left. Major units, smallest first, no repeats.
@@ -340,7 +374,8 @@ export function openAmountQuickPicks(
  * The amount paid for a ticket whose amount the buyer chose, from its
  * checkout line (`checkout:ticket_checkout_id ( open_amount, unit_price )`
  * in @abonten/core/ticketSelect), or null for any other ticket or when the
- * reader cannot see the line (a ticket someone sent them).
+ * reader cannot see the line (a ticket someone sent them: the services read
+ * it for the holder, heldTicketPaidAmountsCore).
  */
 export function openAmountPaidOf(ticket: {
   checkout?: {
@@ -354,4 +389,41 @@ export function openAmountPaidOf(ticket: {
   if (!line?.open_amount || line.unit_price == null || !currency) return null;
   const amount = Number(line.unit_price);
   return Number.isFinite(amount) ? { amount, currency } : null;
+}
+
+// ── At the door ───────────────────────────────────────────────────────
+
+/** A scanned ticket as checkInTicketCore returns it (`ticket`). */
+export type CheckedInTicketLike = {
+  type: string | null;
+  note: string | null;
+  paidAmount: { amount: number; currency: string } | null;
+};
+
+/**
+ * What the door shows after a ticket is checked in, as the website's
+ * check-in and the app's scanner both render it: the amount paid for a
+ * ticket whose amount the buyer chose ("Paid GH₵150", in large type, so
+ * staff load that many credits), the type's name and its note. Each line
+ * is null when there is nothing to show.
+ */
+export function checkedInTicketLines(
+  t: CoreTranslator,
+  ticket: CheckedInTicketLike,
+  locale?: string | null,
+): { paid: string | null; type: string | null; note: string | null } {
+  const paid = ticket.paidAmount
+    ? t("openAmount.paidAtDoor", {
+        amount: formatMoney(
+          ticket.paidAmount.currency,
+          ticket.paidAmount.amount,
+          { locale },
+        ),
+      })
+    : null;
+  return {
+    paid,
+    type: ticket.type ? ticketTypeLabel(t, ticket.type) || null : null,
+    note: ticket.note?.trim() ? ticket.note : null,
+  };
 }

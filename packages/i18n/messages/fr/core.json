@@ -1549,6 +1549,8 @@
     "aboveMax": "Le montant le plus élevé est {max}.",
     "offStep": "Choisissez {min} ou plus, par paliers de {step}.",
     "hint": "De {min} à {max}, par paliers de {step}",
-    "hintSingle": "Le montant est de {min}."
+    "hintSingle": "Le montant est de {min}.",
+    "range": "{min} à {max}",
+    "paidAtDoor": "Payé {amount}"
   }
 }

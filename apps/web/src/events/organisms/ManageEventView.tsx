@@ -15,6 +15,10 @@ import ShareKitCard from "@/shareKit/organisms/ShareKitCard";
 import PaySmallSmallCard from "@/ticketPlans/molecules/PaySmallSmallCard";
 import TicketTransferOrganizerCard from "@/ticketTransfers/molecules/TicketTransferOrganizerCard";
 import type { EventStatus } from "@abonten/core/eventStatus";
+import {
+  type OpenAmountRange,
+  openAmountRangeOf,
+} from "@abonten/core/openAmountTickets";
 import { hasShareImages } from "@abonten/core/shareKit/shareKit";
 import { teamRoleCan } from "@abonten/core/teams/roles";
 import type { ManagedEvent } from "@abonten/types/managedEventType";
@@ -223,6 +227,14 @@ export default function ManageEventView({
                 type.id,
                 type.description ?? null,
               ]),
+            )}
+            openAmountRanges={Object.fromEntries(
+              (event.ticket_type ?? []).flatMap(
+                (type): [string, OpenAmountRange][] => {
+                  const range = openAmountRangeOf(type);
+                  return range ? [[type.id, range]] : [];
+                },
+              ),
             )}
           />
         )}

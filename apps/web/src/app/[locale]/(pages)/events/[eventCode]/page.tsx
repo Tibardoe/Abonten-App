@@ -38,6 +38,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { hostDisplayName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
+import { isOpenAmountType } from "@abonten/core/openAmountTickets";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { refundCutoffDays, refundPolicyOf } from "@abonten/core/refundPolicy";
@@ -109,7 +110,8 @@ const loadEvent = cache(async (eventCode: string) =>
       quantity,
       admits,
       available_from,
-      available_until
+      available_until,
+      amount_mode
     ),
     event_group_discount(
       min_tickets,
@@ -352,11 +354,17 @@ export default async function page({
       { salesCloseBeforeEndMinutes: event.sales_close_before_end_minutes },
     ).onNow;
 
-  // "From" only when there is more than one price to choose from.
+  // "From" only when there is more than one price to choose from: several
+  // prices, or a type whose amount the buyer chooses (its price is the
+  // lowest amount, never the only one).
   const prices = (event.ticket_type ?? []).map((t: { price: number | null }) =>
     Number(t.price ?? 0),
   );
-  const hasPriceRange = new Set(prices).size > 1;
+  const hasPriceRange =
+    new Set(prices).size > 1 ||
+    (event.ticket_type ?? []).some((t: { amount_mode?: string | null }) =>
+      isOpenAmountType(t),
+    );
   const lowestPrice =
     minTicket === null
       ? ""

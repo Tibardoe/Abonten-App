@@ -125,6 +125,5 @@
   "rescheduleBannerChoicePostponed": "Tu entrada sigue valiendo para la nueva fecha. Si prefieres no esperar, puedes pedir el reembolso completo, comisión de servicio incluida, hasta que se fije la nueva fecha.",
   "rescheduleBannerChoiceVenue": "Tu entrada vale en el nuevo lugar. Si no puedes ir, puedes pedir el reembolso completo, comisión de servicio incluida, hasta el {refundUntil}.",
   "rescheduleKeptNoteVenue": "Conservas tu entrada para el nuevo lugar.",
-  "amountPaid": "Importe pagado: {amount}",
-  "paidAtDoor": "Pagado {amount}"
+  "amountPaid": "Importe pagado: {amount}"
 }

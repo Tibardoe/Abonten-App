@@ -25,6 +25,7 @@ import {
   chosenAmountProblem,
   openAmountRangeOf,
   parseChosenAmount,
+  promoCodeEntryShown,
 } from "@abonten/core/openAmountTickets";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -176,6 +177,15 @@ export default function CheckoutModal({
   // offered beside one.
   const planOffer = offer?.available && !hasOpenLine ? offer : null;
   const paySmallSmall = payMode === "plan" && !!planOffer;
+
+  // A promo code never applies to an amount the buyer chose: no code entry
+  // while every line picked is one (or, before a pick, every type offered).
+  const promoEntryShown = promoCodeEntryShown(
+    ticketList
+      .filter((ticket) => (purchases[ticket.id] ?? 0) > 0)
+      .map((ticket) => ({ open: !!openAmountRangeOf(ticket) })),
+    ticketList.map((ticket) => ({ open: !!openAmountRangeOf(ticket) })),
+  );
 
   // If a live refetch drops a ticket type's availability below what the user
   // already selected, clamp the selection down instead of letting them try to
@@ -345,7 +355,7 @@ export default function CheckoutModal({
       eventId,
       quantities: purchases,
       amounts: chosenAmounts,
-      promoCode: appliedPromo?.code ?? null,
+      promoCode: promoEntryShown ? (appliedPromo?.code ?? null) : null,
       occurrenceId,
     }).catch(actionUnreachable);
 
@@ -543,7 +553,7 @@ export default function CheckoutModal({
 
           {/* After the tickets, beside the totals it changes: people pick
               what they want first, then apply a code. */}
-          {paySmallSmall ? null : (
+          {paySmallSmall || !promoEntryShown ? null : (
             <CheckoutPromoCodeBox
               promoCodeInput={promoCodeInput}
               onPromoCodeInputChange={setPromoCodeInput}

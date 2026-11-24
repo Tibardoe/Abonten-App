@@ -194,6 +194,7 @@ export type {
   AddShowPassResult,
   ClaimShowPassBody,
   ClaimShowPassResult,
+  HeldTicketPaidAmountResult,
   ShowPassResult,
   ShowPassShow,
   ShowPassState,

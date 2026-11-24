@@ -1,5 +1,4 @@
-import { formatMoney } from "@abonten/core/formatMoney";
-import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { checkedInTicketLines } from "@abonten/core/openAmountTickets";
 import type { CheckedInTicket } from "@abonten/services/tickets/checkInTicketCore";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -7,7 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
  * What the door shows after a ticket is checked in: its type and note, and
  * for a ticket whose amount the buyer chose the amount paid in large type
  * ("Paid GH₵150"), so staff load that many credits
- * (docs/architecture/open-amount-tickets.md).
+ * (docs/architecture/open-amount-tickets.md). The words are
+ * checkedInTicketLines, the same the app's scanner shows (unit-tested in
+ * @abonten/core).
  */
 export default function CheckedInTicketPanel({
   ticket,
@@ -16,28 +17,20 @@ export default function CheckedInTicketPanel({
 }) {
   const locale = useLocale();
   const tc = useTranslations("core");
-  const tt = useTranslations("tickets");
+  const lines = checkedInTicketLines(tc, ticket, locale);
 
   return (
     <div className="space-y-1">
-      {ticket.paidAmount ? (
+      {lines.paid ? (
         <p className="text-3xl font-bold tracking-tight text-foreground">
-          {tt("paidAtDoor", {
-            amount: formatMoney(
-              ticket.paidAmount.currency,
-              ticket.paidAmount.amount,
-              { locale },
-            ),
-          })}
+          {lines.paid}
         </p>
       ) : null}
-      {ticket.type ? (
-        <p className="text-sm font-semibold text-foreground">
-          {ticketTypeLabel(tc, ticket.type)}
-        </p>
+      {lines.type ? (
+        <p className="text-sm font-semibold text-foreground">{lines.type}</p>
       ) : null}
-      {ticket.note ? (
-        <p className="text-sm text-muted-foreground">{ticket.note}</p>
+      {lines.note ? (
+        <p className="text-sm text-muted-foreground">{lines.note}</p>
       ) : null}
     </div>
   );

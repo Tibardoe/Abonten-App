@@ -23,28 +23,45 @@ import { useRevealInput } from "./useKeyboardReveal";
 export type InputProps = TextInputProps & {
   invalid?: boolean;
   className?: string;
+  /**
+   * Text shown inside the field, before what is typed: a money field's
+   * currency ("GH₵"), as the website's amount fields show it. The border
+   * then belongs to the row that holds both.
+   */
+  prefix?: string;
 };
 
-export function Input({ invalid, className, style, ...rest }: InputProps) {
+export function Input({
+  invalid,
+  className,
+  style,
+  prefix,
+  ...rest
+}: InputProps) {
   const c = useThemeColors();
   const [focused, setFocused] = useState(false);
   const ref = useRef<TextInput>(null);
   const reveal = useRevealInput();
-  return (
+  const border = invalid
+    ? "border-destructive"
+    : focused
+      ? "border-ring"
+      : "border-input";
+  const input = (
     <TextInput
       ref={ref}
       placeholderTextColor={c["muted-foreground"]}
-      className={[
-        "rounded-lg border bg-background px-3 py-3 text-[15px] text-foreground",
-        invalid
-          ? "border-destructive"
-          : focused
-            ? "border-ring"
-            : "border-input",
-        className ?? "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={
+        prefix
+          ? "flex-1 py-3 pl-2 text-[15px] text-foreground"
+          : [
+              "rounded-lg border bg-background px-3 py-3 text-[15px] text-foreground",
+              border,
+              className ?? "",
+            ]
+              .filter(Boolean)
+              .join(" ")
+      }
       style={family.body ? [{ fontFamily: family.body }, style] : style}
       {...rest}
       // After the spread so a caller's own handlers are chained, not lost.
@@ -64,6 +81,23 @@ export function Input({ invalid, className, style, ...rest }: InputProps) {
         rest.onContentSizeChange?.(e);
       }}
     />
+  );
+  if (!prefix) return input;
+  return (
+    <View
+      className={[
+        "flex-row items-center rounded-lg border bg-background pl-3 pr-3",
+        border,
+        className ?? "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <AppText variant="body" tone="muted">
+        {prefix}
+      </AppText>
+      {input}
+    </View>
   );
 }
 

@@ -10,6 +10,7 @@ import EventReturningAttendeeStats from "@/components/molecules/EventReturningAt
 import EventTicketTypeBreakdown from "@/components/molecules/EventTicketTypeBreakdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
+import type { OpenAmountRange } from "@abonten/core/openAmountTickets";
 import {
   type DashboardPeriod,
   getDashboardPeriodRange,
@@ -22,10 +23,16 @@ import { useState } from "react";
 export default function EventAnalyticsDashboard({
   eventId,
   ticketNotes,
+  openAmountRanges,
 }: {
   eventId: string;
   /** What each ticket type includes, by ticket type id. */
   ticketNotes?: Record<string, string | null>;
+  /**
+   * The range of each type whose amount the buyer chooses, by ticket type
+   * id: its price shows as "GH₵20 to GH₵1,000", not the lowest amount.
+   */
+  openAmountRanges?: Record<string, OpenAmountRange>;
 }) {
   const locale = useLocale();
 
@@ -109,6 +116,7 @@ export default function EventAnalyticsDashboard({
       <EventTicketTypeBreakdown
         eventId={eventId}
         ticketNotes={ticketNotes}
+        openAmountRanges={openAmountRanges}
         period={period}
         startDate={startDate}
         endDate={endDate}

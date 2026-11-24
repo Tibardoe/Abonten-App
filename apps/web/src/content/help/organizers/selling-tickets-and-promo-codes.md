@@ -31,7 +31,7 @@ Both are optional and work together:
 
 ## What each ticket includes
 
-Each named ticket type can carry a short note shown under its name on the event page and at checkout, for example "Kids: ages 3–12" or "Entry + 50 ride credits". Add it in **What's included** when you add the ticket type. It is plain text: up to 140 characters, one line, no links.
+Each named ticket type can carry a short note shown under its name on the event page and at checkout, for example "Kids: ages 3–12" or "Entry + 50 ride credits". Add it in **What's included** when you add the ticket type. Until the first ticket is sold you can also change it in the ticket type's card in the list (web) or in the ticket editor (app), then press **Save ticket types**. It is plain text: up to 140 characters, one line, no links.
 
 Prices, quantities and the ticket types themselves are locked after the first ticket is confirmed, but the notes are not: change them any time from your event's **Details** tab (web) or **Edit event** (app), under **What each ticket includes**. A copy of the event or a new show in its run keeps the notes.
 
@@ -41,10 +41,12 @@ A ticket type can let the buyer choose how much to pay, for example ride credits
 
 - When you add the ticket type, choose **Buyer chooses the amount** instead of a fixed price, then set the **lowest amount**, the **highest amount** and the **step**. For example from GH₵50 to GH₵1,000 in steps of GH₵10: buyers can choose GH₵50, GH₵60, GH₵70 and so on up to GH₵1,000.
 - The highest amount must be the lowest amount plus whole steps. The lowest amount is shown as the ticket's price ("From GH₵50").
+- In your ticket list and in **Insights**, the ticket type's price shows as its range, for example "GH₵50 to GH₵1,000".
 - Each amount chosen is **one ticket** with one QR code, for one person.
 - Use the ticket's note to say what the amount buys, for example "Loaded on your card at the gate".
-- Promo codes, group prices and Pay small small never apply to an amount the buyer chooses, and it can't be a pass, a seated ticket or a free gift. The service fee is added on top, as for any ticket.
+- Promo codes, group prices and Pay small small never apply to an amount the buyer chooses (the promo code box is not shown when an order has only such amounts), and it can't be a pass, a seated ticket or a free gift. The service fee is added on top, as for any ticket.
 - At the door, scanning the ticket shows the amount paid ("Paid GH₵150") with the note, so your staff know how much to load.
+- The ticket shows the amount paid to whoever holds it, also after the buyer sends it to a friend.
 
 ## When online sales close
 

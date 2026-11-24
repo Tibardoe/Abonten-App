@@ -17,6 +17,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { PreparedCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { promoCodeEntryShown } from "@abonten/core/openAmountTickets";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText, Icon, useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
@@ -119,8 +120,16 @@ export default function CheckoutReviewScreen() {
 
   // The first line item's expires_at speaks for the session (all rows share
   // one deadline). getSession self-heals stale rows server-side.
-  const rows = (sessionQuery.data?.data ?? []) as { expires_at?: string }[];
+  const rows = (sessionQuery.data?.data ?? []) as {
+    expires_at?: string;
+    open_amount?: boolean | null;
+  }[];
   const expiresAt = rows[0]?.expires_at ?? null;
+  // A promo code never applies to an amount the buyer chose: no "Have a
+  // promo code?" when every line of the order is one.
+  const promoEntryShown = promoCodeEntryShown(
+    rows.map((row) => ({ open: !!row.open_amount })),
+  );
 
   // A definite answer from the server (a transient failure throws in the
   // hook, so any non-200 envelope here is one) keeps its own message.
@@ -208,6 +217,7 @@ export default function CheckoutReviewScreen() {
       currency={currency}
       credit={credit}
       expiresAt={expiresAt}
+      promoEntryShown={promoEntryShown}
       onExpired={() => {
         refetch();
         sessionQuery.refetch();
@@ -231,6 +241,7 @@ function CheckoutReady({
   currency,
   credit,
   expiresAt,
+  promoEntryShown,
   onExpired,
   onCreditRefused,
   onCancel,
@@ -242,6 +253,8 @@ function CheckoutReady({
   currency: string;
   credit: CreditQuote | null;
   expiresAt: string | null;
+  /** False when every line is an amount the buyer chose (no code applies). */
+  promoEntryShown: boolean;
   onExpired: () => void;
   onCreditRefused: () => void;
   onCancel: () => void;
@@ -303,7 +316,7 @@ function CheckoutReady({
             screen: pilot testers looked for the field on this one. Back
             from here keeps their selection; from the Home banner the
             ticket screen opens afresh. */}
-        {session.discount === 0 && session.subtotal > 0 ? (
+        {session.discount === 0 && session.subtotal > 0 && promoEntryShown ? (
           <Pressable
             accessibilityRole="button"
             disabled={payment.pending}

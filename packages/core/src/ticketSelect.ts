@@ -3,7 +3,9 @@
  * event, event occurrences, and its own refunds (`refund_parts`, a payment
  * refunded ticket by ticket — read with refundStatus.ticketRefundState),
  * and its checkout line's chosen amount (`checkout`, open-amount tickets —
- * openAmountPaidOf; null for a ticket someone sent the reader). Used by every fetcher that needs to produce
+ * openAmountPaidOf; null for a ticket someone sent the reader, which
+ * @abonten/services/tickets/heldTicketPaidAmountsCore fills in for the
+ * holder). Used by every fetcher that needs to produce
  * a `UserTicketType` (My Events list, the ticket PDF/email attachment) so
  * they can never drift into fetching different shapes of the same ticket.
  *

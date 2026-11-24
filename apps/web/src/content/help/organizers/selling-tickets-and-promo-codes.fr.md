@@ -31,7 +31,7 @@ Les deux sont facultatives et fonctionnent ensemble :
 
 ## Ce que comprend chaque billet
 
-Chaque type de billet nommé peut porter une courte note, affichée sous son nom sur la page de l'événement et au paiement, par exemple « Enfants : de 3 à 12 ans » ou « Entrée + 50 crédits de manèges ». Ajoutez-la dans **Ce qui est inclus** en créant le type de billet. C'est du texte simple : jusqu'à 140 caractères, une ligne, sans lien.
+Chaque type de billet nommé peut porter une courte note, affichée sous son nom sur la page de l'événement et au paiement, par exemple « Enfants : de 3 à 12 ans » ou « Entrée + 50 crédits de manèges ». Ajoutez-la dans **Ce qui est inclus** en créant le type de billet. Tant qu'aucun billet n'est vendu, vous pouvez aussi la modifier dans la fiche du type de billet, dans la liste (site web) ou dans l'éditeur de billets (application), puis appuyer sur **Enregistrer les types de billets**. C'est du texte simple : jusqu'à 140 caractères, une ligne, sans lien.
 
 Les prix, les quantités et les types de billets eux-mêmes sont verrouillés après la confirmation du premier billet, mais pas les notes : modifiez-les à tout moment depuis l'onglet **Détails** de votre événement (site web) ou **Modifier l'événement** (application), sous **Ce que comprend chaque billet**. Une copie de l'événement ou une nouvelle séance de sa série garde les notes.
 
@@ -41,10 +41,12 @@ Un type de billet peut laisser l'acheteur choisir combien il paie : par exemple 
 
 - En ajoutant le type de billet, choisissez de laisser l'acheteur fixer le montant au lieu d'un prix fixe, puis indiquez le **montant le plus bas**, le **montant le plus élevé** et le **pas**. Par exemple de 50 GH₵ à 1 000 GH₵ par paliers de 10 GH₵ : les acheteurs peuvent choisir 50 GH₵, 60 GH₵, 70 GH₵ et ainsi de suite jusqu'à 1 000 GH₵.
 - Le montant le plus élevé doit être le montant le plus bas plus un nombre entier de pas. Le montant le plus bas s'affiche comme prix du billet (« À partir de 50 GH₵ »).
+- Dans votre liste de billets et dans les **Statistiques**, le prix de ce type de billet s'affiche sous forme de fourchette, par exemple « 50 GH₵ à 1 000 GH₵ ».
 - Chaque montant choisi est **un billet**, avec un code QR, pour une personne.
 - Utilisez la note du billet pour dire ce que le montant permet d'obtenir, par exemple « Chargé sur votre carte à l'entrée ».
-- Les codes promo, les prix de groupe et le paiement petit à petit ne s'appliquent jamais à un montant choisi par l'acheteur, et ce billet ne peut être ni un pass, ni une place numérotée, ni un billet offert. Les frais de service s'ajoutent, comme pour tout billet.
+- Les codes promo, les prix de groupe et le paiement petit à petit ne s'appliquent jamais à un montant choisi par l'acheteur (la zone de code promo n'apparaît pas quand une commande ne contient que de tels montants), et ce billet ne peut être ni un pass, ni une place numérotée, ni un billet offert. Les frais de service s'ajoutent, comme pour tout billet.
 - À l'entrée, scanner le billet affiche le montant payé (« Payé 150 GH₵ ») avec la note, pour que votre équipe sache combien charger.
+- Le billet affiche le montant payé à la personne qui le détient, même après que l'acheteur l'a envoyé à un ami.
 
 ## Fin de la vente en ligne
 

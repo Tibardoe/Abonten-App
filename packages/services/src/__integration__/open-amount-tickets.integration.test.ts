@@ -1,5 +1,3 @@
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 //
 // Open-amount tickets (migration 20261123120000,
@@ -9,7 +7,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // range), validateCheckoutCore and create_ticket_checkout (the amount, one
 // ticket, no discounts), the payment attempt and finalizePayment (Paystack's
 // HTTP calls replaced; the fee on top), issuance, the per-ticket refund
-// quote, the door (checkInTicketCore) and a run's new show (event_add_show).
+// quote, the door (checkInTicketCore), the amount on a ticket someone was
+// sent (heldTicketPaidAmountsCore) and a run's new show (event_add_show).
+import { openAmountPaidOf } from "@abonten/core/openAmountTickets";
+import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
+import type { Database } from "@abonten/types/database.types";
+import type { UserTicketType } from "@abonten/types/ticketType";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   afterAll,
   beforeAll,
@@ -32,6 +36,10 @@ import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCh
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import { checkInTicketCore } from "../tickets/checkInTicketCore";
+import {
+  fillHeldTicketPaidAmounts,
+  heldTicketPaidAmountsCore,
+} from "../tickets/heldTicketPaidAmountsCore";
 import {
   type TestUser,
   createTestUser,
@@ -478,6 +486,71 @@ describe("open-amount tickets", () => {
     expect(
       (earning ?? []).reduce((sum, row) => sum + Number(row.amount), 0),
     ).toBe(150);
+
+    // The buyer reads the amount from their own checkout line.
+    const ticketId = ticket?.id as string;
+    const own = await buyer.client
+      .from("ticket")
+      .select(TICKET_WITH_EVENT_SELECT)
+      .eq("id", ticketId)
+      .single();
+    expect(own.error).toBeNull();
+    expect(openAmountPaidOf(own.data as unknown as UserTicketType)).toEqual({
+      amount: 150,
+      currency: "GHS",
+    });
+
+    // Sent to a friend (ticket transfers): the holder's session cannot read
+    // the buyer's line, so the service reads the amount for the person who
+    // holds the ticket now, and only for them.
+    const { data: sent, error: sendError } = await service.rpc(
+      "ticket_transfer_send",
+      {
+        p_ticket_id: ticketId,
+        p_from_user_id: buyer.id,
+        p_to_user_id: second.id,
+        p_to_phone: null,
+      } as unknown as Args<"ticket_transfer_send">,
+    );
+    expect(sendError).toBeNull();
+    const transferId = (sent as unknown as { transfer_id: string }[])[0]
+      ?.transfer_id;
+    const { error: acceptError } = await service.rpc("ticket_transfer_accept", {
+      p_transfer_id: transferId,
+      p_user_id: second.id,
+      p_new_code: `TKT-${crypto.randomUUID().slice(0, 12).toUpperCase()}`,
+      p_qr_public_id: "test/qr-sent",
+      p_qr_version: "1",
+    } as unknown as Args<"ticket_transfer_accept">);
+    expect(acceptError).toBeNull();
+
+    const held = await second.client
+      .from("ticket")
+      .select(TICKET_WITH_EVENT_SELECT)
+      .eq("id", ticketId)
+      .single();
+    expect(held.error).toBeNull();
+    const heldTicket = held.data as unknown as UserTicketType;
+    expect(heldTicket.checkout ?? null).toBeNull();
+    expect(openAmountPaidOf(heldTicket)).toBeNull();
+
+    expect(await heldTicketPaidAmountsCore(second.id, [ticketId])).toEqual({
+      status: 200,
+      data: { [ticketId]: { amount: 150, currency: "GHS" } },
+    });
+    const [filled] = await fillHeldTicketPaidAmounts(second.id, [heldTicket]);
+    expect(openAmountPaidOf(filled)).toEqual({ amount: 150, currency: "GHS" });
+    // The sender no longer holds it; the organizer never did.
+    for (const other of [buyer.id, organizer.id]) {
+      expect(await heldTicketPaidAmountsCore(other, [ticketId])).toEqual({
+        status: 200,
+        data: {},
+      });
+    }
+    // A malformed id is refused.
+    expect(
+      (await heldTicketPaidAmountsCore(second.id, ["not-an-id"])).status,
+    ).toBe(400);
 
     // At the door: the amount paid, the type and its note.
     const scanned = await checkInTicketCore(

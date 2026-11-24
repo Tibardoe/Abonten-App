@@ -125,6 +125,5 @@
   "rescheduleBannerChoicePostponed": "Dein Ticket bleibt für den neuen Termin gültig. Wenn du nicht warten möchtest, bekommst du den vollen Betrag samt Servicegebühr zurück, bis der neue Termin feststeht.",
   "rescheduleBannerChoiceVenue": "Dein Ticket gilt am neuen Ort. Wenn du nicht hinkommst, bekommst du bis {refundUntil} den vollen Betrag samt Servicegebühr zurück.",
   "rescheduleKeptNoteVenue": "Du behältst dein Ticket für den neuen Ort.",
-  "amountPaid": "Bezahlter Betrag: {amount}",
-  "paidAtDoor": "Bezahlt {amount}"
+  "amountPaid": "Bezahlter Betrag: {amount}"
 }
