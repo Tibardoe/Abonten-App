@@ -2,7 +2,7 @@
 title: Team accounts
 summary: Run an organizer or a place with other people, each with their own sign-in and a role that says what they can do.
 order: 90
-lastUpdated: 2026-11-21
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -52,6 +52,18 @@ People in your team do not earn rewards or promoter commission on your own event
 ## Badges
 
 A team that passes Abonten's business check shows **Verified business**. A team shows **ID checked** when at least one of its Owners has passed an ID check; it never says which one. Neither badge means Abonten vouches for the team, its events or its places.
+
+## The team's profile
+
+Owners change the team's @username, photo, bio, website and social accounts on the team's page under **Settings › Teams** (**Edit team profile** and **Change photo**); the name has its own **Rename**. While you type a new @username you see whether it's free, with a few free ones to choose from if it isn't. Links to the old @username keep working for 30 days, and nobody else can take it in that time.
+
+## Deleting a team
+
+An Owner can ask to delete the team on its page. Every Owner has to agree: the others are told and approve on the team page, each after signing in again, and any Owner can stop the request. A request ends after 7 days, or as soon as the team's Owners change. A team with one Owner is deleted as soon as that Owner confirms. To confirm, you type the team's name.
+
+A team can't be deleted while it still has upcoming events with people holding tickets or paying in parts, while a payout is on its way or earnings are waiting to be paid out, while a payment or a Spotlight promotion is running, or for 7 days after an Owner was removed or given another role by someone else. The team's page says what to do first.
+
+When a team is deleted, everyone leaves it and open invitations are withdrawn; members' own accounts are not affected. Its page, photo, followers, alerts and Spotlight posts go, and its conversations close. Upcoming events nobody holds tickets for are cancelled and the rest are archived; its places stay on Abonten without an owner. Sales and payout records are kept, and any Abonten credit the team has is lost. It can't be undone.
 
 ## Leaving and removing
 

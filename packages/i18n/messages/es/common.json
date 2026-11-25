@@ -969,5 +969,11 @@
   "openAmountEditorHint": "Los compradores eligen un importe en este rango y reciben una entrada por ese importe. Usa la nota de la entrada para decir qué incluye el importe.",
   "chooseYourAmount": "Elige tu importe",
   "openAmountNoDiscounts": "Los códigos promocionales y los precios de grupo no se aplican a los importes que eliges.",
-  "yourAmount": "Tu importe"
+  "yourAmount": "Tu importe",
+  "usernameChecking": "Comprobando…",
+  "usernameAvailable": "@{username} está disponible",
+  "usernameTaken": "@{username} ya está en uso",
+  "usernameSuggestions": "Prueba uno de estos:",
+  "usernameCheckFailed": "No pudimos comprobar este nombre de usuario ahora mismo. Igual puedes guardarlo.",
+  "accountNoLongerOnAbonten": "Esta cuenta ya no está en Abonten."
 }

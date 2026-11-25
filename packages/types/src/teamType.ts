@@ -117,6 +117,56 @@ export type TeamDetail = {
     | null;
   /** The team's places, for limiting Front desk and Door staff (Owners). */
   places?: { id: string; name: string }[] | null;
+  /** What Owners edit on the team's public profile (Owners only). */
+  profile?: TeamProfile | null;
+  /** A request to delete the team, while it waits (Owners only). */
+  deletion?: TeamDeletionRequest | null;
+};
+
+/**
+ * The team's public profile beyond its name and username (which
+ * TeamSummary carries). `socialLinks` is the canonical map of
+ * @abonten/core/social/listerSocialLinks (network → profile address).
+ */
+export type TeamProfile = {
+  bio: string | null;
+  website: string | null;
+  socialLinks: Partial<Record<string, string>> | null;
+};
+
+/** What an Owner sends to change the team's profile (only what changes). */
+export type TeamProfilePatch = {
+  username?: string;
+  bio?: string;
+  website?: string;
+  /** network → what was typed ("" for none); replaces the stored map. */
+  socialLinks?: Record<string, string>;
+};
+
+/**
+ * A request to delete the team: every active Owner approves, each after a
+ * fresh sign-in; it ends after 7 days, when the Owners change, or when
+ * something now stops the deletion.
+ */
+export type TeamDeletionRequest = {
+  id: string;
+  requestedBy: TeamPerson | null;
+  createdAt: string;
+  expiresAt: string;
+  /** How many Owners must approve, and how many have. */
+  owners: number;
+  approvals: number;
+  approvedByMe: boolean;
+  /** The Owners who have not approved yet. */
+  waitingFor: TeamPerson[];
+};
+
+/** What asking, approving or stopping a deletion led to. */
+export type TeamDeletionOutcome = {
+  /** requested: waiting for the other Owners; deleted: the team is gone. */
+  state: "requested" | "approved" | "deleted" | "cancelled";
+  owners: number;
+  approvals: number;
 };
 
 /** An invitation waiting for the caller. */

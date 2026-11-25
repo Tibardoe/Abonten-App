@@ -969,5 +969,11 @@
   "openAmountEditorHint": "Buyers choose an amount in this range and get one ticket for it. Use the ticket note to say what the amount buys.",
   "chooseYourAmount": "Choose your amount",
   "openAmountNoDiscounts": "Promo codes and group prices don't apply to amounts you choose.",
-  "yourAmount": "Your amount"
+  "yourAmount": "Your amount",
+  "usernameChecking": "Checking…",
+  "usernameAvailable": "@{username} is available",
+  "usernameTaken": "@{username} is taken",
+  "usernameSuggestions": "Try one of these:",
+  "usernameCheckFailed": "We couldn't check this username just now. You can still save it.",
+  "accountNoLongerOnAbonten": "This account is no longer on Abonten."
 }

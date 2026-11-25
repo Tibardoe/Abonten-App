@@ -1,4 +1,6 @@
+import { UsernameHint } from "@/components/profile/UsernameHint";
 import { useProfile } from "@/features/profile/useProfile";
+import { useUsernameCheck } from "@/features/profile/useUsernameCheck";
 import { openExternalLink } from "@/lib/legalLinks";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { personName } from "@abonten/core/personName";
@@ -240,6 +242,12 @@ export function CreateTeamSheet({
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ready = adult && (!terms || accepted);
+  // Free or taken as they type, with free handles built from the name.
+  const check = useUsernameCheck(username, {
+    forNewTeam: true,
+    name,
+    enabled: open,
+  });
 
   const close = () => {
     setName("");
@@ -324,6 +332,13 @@ export function CreateTeamSheet({
             }}
           />
           <AppText variant="meta">{t("usernameHint")}</AppText>
+          <UsernameHint
+            check={check}
+            onPick={(handle) => {
+              setUsername(handle);
+              setError(null);
+            }}
+          />
         </View>
         <AdultConfirm checked={adult} onChange={setAdult} />
         {terms ? (

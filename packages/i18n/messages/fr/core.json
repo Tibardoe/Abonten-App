@@ -1052,6 +1052,30 @@
     "listing_views_weekly": {
       "title": "{views, plural, one {Vos annonces ont eu # vue cette semaine} other {Vos annonces ont eu # vues cette semaine}}",
       "body": "{social, plural, =0 {La plus vue : {top}.} one {La plus vue : {top}. # est venue des publications d'Abonten.} other {La plus vue : {top}. # sont venues des publications d'Abonten.}}"
+    },
+    "team_owner_removed": {
+      "title": "{actor} vous a retiré de {team}",
+      "body": "Vous n'êtes plus propriétaire de cette équipe. Votre propre compte n'est pas touché. Si cela n'avait pas été convenu, contactez le support Abonten."
+    },
+    "team_owner_demoted": {
+      "title": "{actor} a changé votre rôle dans {team}",
+      "body": "Vous n'êtes plus propriétaire de cette équipe. Si cela n'avait pas été convenu, contactez le support Abonten."
+    },
+    "team_delete_requested": {
+      "title": "{actor} a demandé la suppression de {team}",
+      "body": "Tous les propriétaires doivent être d'accord. Ouvrez l'équipe dans Équipes pour approuver ou arrêter la demande."
+    },
+    "team_delete_cancelled": {
+      "title": "{actor} a arrêté la demande de suppression de {team}",
+      "body": "L'équipe reste telle qu'elle est."
+    },
+    "team_deleted": {
+      "title": "{team} a été supprimée",
+      "body": "Ses propriétaires ont accepté de la supprimer, vous ne faites donc plus partie de l'équipe. Votre propre compte n'est pas touché."
+    },
+    "team_deleted_by_staff": {
+      "title": "Abonten a fermé {team}",
+      "body": "L'équipe a été fermée après un examen, vous n'en faites donc plus partie. Votre propre compte n'est pas touché. Pour toute question, contactez le support Abonten."
     }
   },
   "openStatus": {

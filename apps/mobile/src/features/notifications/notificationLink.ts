@@ -52,6 +52,14 @@ export function notificationHref(
 }
 
 // --- structured `data` → native route ------------------------------------
+
+/** Team notices that open the team's own page (the reader is in it). */
+const TEAM_PAGE_NOTICES = new Set([
+  "team_delete_requested",
+  "team_delete_cancelled",
+  "team_owner_demoted",
+]);
+
 function targetFromData(
   data: NotificationData | null | undefined,
 ): string | null {
@@ -139,8 +147,20 @@ function targetFromData(
       // "Managing as" to the team first; see manageAsNoticeTeam).
       return "/(app)/organizer/finance";
     case "team":
-      // An invitation, a new member, a removal or a new role: the Teams
-      // screen shows invitations at the top and every team the reader runs.
+      // A request to delete the team, or a request stopped, or an Owner
+      // given another role: the team's own page, where Owners approve or
+      // stop it (the reader is still a member).
+      if (
+        data.teamId &&
+        TEAM_PAGE_NOTICES.has(
+          (data as { notice?: { id?: unknown } }).notice?.id as string,
+        )
+      ) {
+        return `/(app)/settings/team/${data.teamId}`;
+      }
+      // An invitation, a new member, a removal, a new role, a team deleted:
+      // the Teams screen shows invitations at the top and every team the
+      // reader runs.
       return "/(app)/settings/teams";
     case "safety":
       // A trusted contact opens the alert they were told about (their own

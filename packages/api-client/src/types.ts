@@ -77,8 +77,10 @@ import type {
   MoveEventToTeamResult as MoveEventToTeamData,
   MoveEventToTeamOptions,
   TeamConversion,
+  TeamDeletionOutcome,
   TeamDetail,
   TeamInviteSent,
+  TeamProfilePatch,
   TeamRoleCode,
   TeamSummary,
   TeamsOverview,
@@ -95,6 +97,7 @@ import type {
   EventCancelQuote,
   TicketCancelQuote,
 } from "@abonten/types/ticketType";
+import type { UsernameAvailability } from "@abonten/types/usernameType";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
@@ -2816,6 +2819,36 @@ export type TeamMemberRoleResult = ApiEnvelope<{ role: TeamRoleCode }>;
 export type TeamMemberPlacesResult = ApiEnvelope<{ placeIds: string[] | null }>;
 export type TeamDoneResult = ApiEnvelope<Record<string, true>>;
 export type AcceptTeamTermsResult = ApiEnvelope<{ version: string }>;
+/** An Owner changes the team's profile (only the fields sent). */
+export type UpdateTeamProfileBody = TeamProfilePatch;
+export type UpdateTeamProfileResult = ApiEnvelope<{
+  username: string;
+  /** What changed: username, bio, website, social_links, photo. */
+  changed: string[];
+  invalidSocialLinks?: string[];
+}>;
+export type SaveTeamPhotoBody = {
+  publicId: string;
+  version: number | string;
+  transformation?: string | null;
+};
+export type SaveTeamPhotoResult = ApiEnvelope<{
+  avatarPublicId: string;
+  avatarVersion: string;
+}>;
+/** Asking, approving or stopping the deletion of a team. */
+export type TeamDeletionResult = ApiEnvelope<TeamDeletionOutcome>;
+/** "Is this username free?" as the person types (people and teams). */
+export type UsernameCheckBody = {
+  username: string;
+  /** A team the caller is an Owner of. */
+  teamId?: string | null;
+  /** The Make-a-team form: for a team not made yet. */
+  forNewTeam?: boolean;
+  /** The team name typed beside it, for suggestions. */
+  name?: string | null;
+};
+export type UsernameCheckResult = ApiEnvelope<UsernameAvailability>;
 
 export type StartTicketPlanBody = {
   eventId: string;

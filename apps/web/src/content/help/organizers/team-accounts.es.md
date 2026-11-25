@@ -2,7 +2,7 @@
 title: Cuentas de equipo
 summary: Gestiona un organizador o un lugar con otras personas, cada una con su propio inicio de sesión y un rol que dice lo que puede hacer.
 order: 90
-lastUpdated: 2026-11-21
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -52,6 +52,18 @@ Las personas de tu equipo no ganan recompensas ni comisión de promotor en tus p
 ## Insignias
 
 Un equipo que supera la verificación de empresa de Abonten muestra **Empresa verificada**. Un equipo muestra **Identidad verificada** cuando al menos uno de sus Propietarios ha superado una verificación de identidad; nunca dice cuál. Ninguna de las dos insignias significa que Abonten responda por el equipo, sus eventos o sus lugares.
+
+## El perfil del equipo
+
+Los propietarios cambian el @nombre de usuario, la foto, la biografía, el sitio web y las redes sociales del equipo en su página, en **Ajustes › Equipos** (**Editar el perfil del equipo** y **Cambiar la foto**); el nombre tiene su propio **Cambiar nombre**. Mientras escribes un @nombre de usuario nuevo ves si está libre, con algunos libres para elegir si no lo está. Los enlaces al @nombre de usuario anterior siguen funcionando durante 30 días, y nadie más puede tomarlo en ese tiempo.
+
+## Eliminar un equipo
+
+Un propietario puede pedir eliminar el equipo en su página. Todos los propietarios tienen que estar de acuerdo: se avisa a los demás y lo aprueban en la página del equipo, cada uno tras volver a iniciar sesión, y cualquier propietario puede detener la solicitud. Una solicitud termina a los 7 días, o en cuanto cambian los propietarios del equipo. Un equipo con un solo propietario se elimina en cuanto ese propietario lo confirma. Para confirmarlo, escribes el nombre del equipo.
+
+Un equipo no se puede eliminar mientras tenga próximos eventos con personas que tienen entradas o que pagan a plazos, mientras haya un cobro en camino o ganancias pendientes de cobro, mientras haya un pago o una promoción de Spotlight en curso, ni durante 7 días después de que otra persona quitara a un propietario o le cambiara el rol. La página del equipo dice qué hacer primero.
+
+Cuando se elimina un equipo, todos salen de él y se retiran las invitaciones abiertas; las cuentas de los miembros no se ven afectadas. Se van su página, su foto, sus seguidores, sus alertas y sus publicaciones de Spotlight, y sus conversaciones se cierran. Los próximos eventos sin entradas vendidas se cancelan y el resto se archiva; sus lugares siguen en Abonten sin propietario. Las ventas y los cobros quedan registrados, y el crédito de Abonten del equipo se pierde. No se puede deshacer.
 
 ## Salir y quitar
 

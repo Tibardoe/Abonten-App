@@ -225,6 +225,16 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   team_invite_accepted: n("team_invite_accepted"),
   team_member_removed: n("team_member_removed"),
   team_role_changed: n("team_role_changed"),
+  // An Owner removed or demoted by another Owner: who did it (the guard
+  // against one Owner clearing the others out before deleting the team).
+  team_owner_removed: n("team_owner_removed"),
+  team_owner_demoted: n("team_owner_demoted"),
+  // Deleting a team (every Owner agrees): to the other Owners, then to
+  // every member once it is done; staff deleting one tell every member.
+  team_delete_requested: n("team_delete_requested"),
+  team_delete_cancelled: n("team_delete_cancelled"),
+  team_deleted: n("team_deleted"),
+  team_deleted_by_staff: n("team_deleted_by_staff"),
   // Team money (services, stage 3): to every Owner, through the team
   team_payout_account_added: n("team_payout_account_added"),
   team_payout_account_removed: n("team_payout_account_removed"),

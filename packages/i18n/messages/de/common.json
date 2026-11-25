@@ -969,5 +969,11 @@
   "openAmountEditorHint": "Käufer wählen einen Betrag in diesem Bereich und erhalten ein Ticket dafür. Sag in der Ticketnotiz, wofür der Betrag gilt.",
   "chooseYourAmount": "Wähle deinen Betrag",
   "openAmountNoDiscounts": "Aktionscodes und Gruppenpreise gelten nicht für Beträge, die du wählst.",
-  "yourAmount": "Dein Betrag"
+  "yourAmount": "Dein Betrag",
+  "usernameChecking": "Wird geprüft…",
+  "usernameAvailable": "@{username} ist frei",
+  "usernameTaken": "@{username} ist vergeben",
+  "usernameSuggestions": "Probier einen davon:",
+  "usernameCheckFailed": "Wir konnten diesen Benutzernamen gerade nicht prüfen. Du kannst ihn trotzdem speichern.",
+  "accountNoLongerOnAbonten": "Dieses Konto ist nicht mehr auf Abonten."
 }

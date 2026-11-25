@@ -1,3 +1,4 @@
+import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
 import { z } from "zod";
 import { sendTicketTargetSchema } from "./ticketTransferSchemas";
 
@@ -94,6 +95,53 @@ export const acceptTeamTermsSchema = z.object({
 
 export const renameTeamSchema = z.object({ teamId: uuid, name: teamName });
 
+/**
+ * An Owner changes the team's profile (only the fields sent). Social
+ * accounts are checked and made canonical by the service
+ * (@abonten/core/social/listerSocialLinks), as for a person.
+ */
+export const updateTeamProfileSchema = z.object({
+  teamId: uuid,
+  username: teamUsername.optional(),
+  bio: z
+    .string()
+    .trim()
+    .max(160, { message: "Bio must be 160 characters or fewer." })
+    .optional(),
+  website: z
+    .string()
+    .trim()
+    .refine((val) => val === "" || WEBSITE_URL_REGEX.test(val), {
+      message: "Enter a valid website URL.",
+    })
+    .optional(),
+  socialLinks: z.record(z.string().max(300)).optional(),
+});
+export type UpdateTeamProfileInput = z.infer<typeof updateTeamProfileSchema>;
+
+/** The photo an Owner uploaded to the team's folder (user_profiles/<team>/). */
+export const teamPhotoSchema = z.object({
+  teamId: uuid,
+  publicId: z.string().trim().min(1).max(300),
+  version: z.union([
+    z.number().int().nonnegative(),
+    z.string().regex(/^\d{1,20}$/),
+  ]),
+  transformation: z.string().max(100).nullish(),
+});
+
+/** An Owner asks to delete the team, typing its name to confirm. */
+export const requestTeamDeletionSchema = z.object({
+  teamId: uuid,
+  confirmName: z.string().trim().min(1).max(120),
+});
+
+/** Approving or stopping a request to delete the team. */
+export const teamDeletionRequestSchema = z.object({
+  teamId: uuid,
+  requestId: uuid,
+});
+
 export const inviteTeamMemberSchema = z.object({
   teamId: uuid,
   role: teamRoleSchema,
@@ -188,6 +236,13 @@ export const teamStatusAdminSchema = z.discriminatedUnion("to", [
   z.object({ teamId: uuid, to: z.literal("active"), reason: staffReason }),
 ]);
 export type TeamStatusAdminInput = z.infer<typeof teamStatusAdminSchema>;
+
+/** Admin › Teams: delete a team without its Owners (abuse, a legal order). */
+export const deleteTeamAdminSchema = z.object({
+  teamId: uuid,
+  reason: staffReason,
+});
+export type DeleteTeamAdminInput = z.infer<typeof deleteTeamAdminSchema>;
 
 /** Admin › Teams: make a current or former member an Owner. */
 export const appointTeamOwnerAdminSchema = z.object({

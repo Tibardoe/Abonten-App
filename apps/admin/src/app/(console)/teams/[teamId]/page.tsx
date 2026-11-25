@@ -34,7 +34,7 @@ export default async function TeamPage({
   if (team.status !== 200 || !team.data) {
     return <EmptyState>{team.message ?? "Couldn't load the team."}</EmptyState>;
   }
-  const { team: row, members, formerMembers, activity } = team.data;
+  const { team: row, members, formerMembers, activity, deleted } = team.data;
   const canManage = ctx.permissions.includes("teams.manage");
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
@@ -57,8 +57,20 @@ export default async function TeamPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title={row.name ?? row.username ?? "Team"}
-        description={row.username ? `@${row.username}` : undefined}
+        title={
+          deleted
+            ? `${deleted.name ?? deleted.username ?? "Team"} (deleted)`
+            : (row.name ?? row.username ?? "Team")
+        }
+        description={
+          deleted
+            ? deleted.username
+              ? `was @${deleted.username}`
+              : undefined
+            : row.username
+              ? `@${row.username}`
+              : undefined
+        }
       />
       <Card className="space-y-2 p-4 text-sm">
         <p>
@@ -75,15 +87,22 @@ export default async function TeamPage({
               ? "Active"
               : row.status === "frozen"
                 ? "Paused"
-                : "Closed"}
+                : "Deleted"}
           </Badge>
-          {row.statusReason === "no_owner"
-            ? " · no Owner left"
-            : row.statusReason === "dispute"
-              ? " · paused for a dispute"
-              : row.statusReason === "staff"
-                ? " · paused by staff"
-                : null}
+          {deleted
+            ? deleted.by === "staff"
+              ? ` · deleted by Abonten staff${deleted.at ? ` ${timeAgo(deleted.at)}` : ""} (see the audit log)`
+              : ` · deleted by its Owners${deleted.at ? ` ${timeAgo(deleted.at)}` : ""}`
+            : null}
+          {row.status === "closed"
+            ? null
+            : row.statusReason === "no_owner"
+              ? " · no Owner left"
+              : row.statusReason === "dispute"
+                ? " · paused for a dispute"
+                : row.statusReason === "staff"
+                  ? " · paused by staff"
+                  : null}
         </p>
         <p>
           Made {timeAgo(row.createdAt)}
@@ -102,7 +121,7 @@ export default async function TeamPage({
         </p>
       </Card>
 
-      {canManage ? (
+      {canManage && row.status !== "closed" ? (
         <TeamStaffActions
           teamId={row.id}
           teamName={row.name ?? row.username ?? "this team"}

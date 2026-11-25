@@ -52,6 +52,9 @@ describe("team roles", () => {
       );
       // The business check speaks for the business (stage 5).
       expect(teamRoleCan(role, "verification.request")).toBe(role === "owner");
+      // The profile and deleting the team are the Owners' (2026-11-25).
+      expect(teamRoleCan(role, "team.profile")).toBe(role === "owner");
+      expect(teamRoleCan(role, "team.delete")).toBe(role === "owner");
     }
     // Door staff see scan results, never the attendee list.
     expect(teamRoleCan("door", "attendees.view")).toBe(false);

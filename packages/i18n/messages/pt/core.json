@@ -1052,6 +1052,30 @@
     "listing_views_weekly": {
       "title": "{views, plural, one {Os seus anúncios tiveram # visualização esta semana} other {Os seus anúncios tiveram # visualizações esta semana}}",
       "body": "{social, plural, =0 {O mais visto: {top}.} one {O mais visto: {top}. # veio das publicações do Abonten.} other {O mais visto: {top}. # vieram das publicações do Abonten.}}"
+    },
+    "team_owner_removed": {
+      "title": "{actor} removeu-o de {team}",
+      "body": "Já não é proprietário desta equipa. A sua própria conta não é afetada. Se isto não foi combinado, contacte o apoio da Abonten."
+    },
+    "team_owner_demoted": {
+      "title": "{actor} mudou a sua função em {team}",
+      "body": "Já não é proprietário desta equipa. Se isto não foi combinado, contacte o apoio da Abonten."
+    },
+    "team_delete_requested": {
+      "title": "{actor} pediu para eliminar {team}",
+      "body": "Todos os proprietários têm de concordar. Abra a equipa em Equipas para aprovar ou parar o pedido."
+    },
+    "team_delete_cancelled": {
+      "title": "{actor} parou o pedido para eliminar {team}",
+      "body": "A equipa fica como está."
+    },
+    "team_deleted": {
+      "title": "{team} foi eliminada",
+      "body": "Os seus proprietários concordaram em eliminá-la, por isso já não faz parte da equipa. A sua própria conta não é afetada."
+    },
+    "team_deleted_by_staff": {
+      "title": "A Abonten fechou {team}",
+      "body": "A equipa foi fechada após uma análise, por isso já não faz parte dela. A sua própria conta não é afetada. Se tiver dúvidas, contacte o apoio da Abonten."
     }
   },
   "openStatus": {

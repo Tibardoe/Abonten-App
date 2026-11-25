@@ -7,11 +7,13 @@ import {
 } from "@/lib/adminGuard";
 import {
   appointTeamOwnerAdminCore,
+  deleteTeamAdminCore,
   setTeamStatusAdminCore,
   updateTeamSettingsCore,
 } from "@abonten/services/admin/teams/teamsAdminCore";
 import {
   appointTeamOwnerAdminSchema,
+  deleteTeamAdminSchema,
   teamSettingsSchema,
   teamStatusAdminSchema,
 } from "@abonten/validation/teamSchemas";
@@ -80,5 +82,32 @@ export async function appointTeamOwner(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "appointTeamOwner");
+  }
+}
+
+/**
+ * Delete a team without its Owners (abuse, a legal order): the same
+ * blockers and effects as the Owners' path; every member is told.
+ * teams.manage + step-up + a reason, audited as teams.delete.
+ */
+export async function deleteTeam(input: unknown) {
+  const parsed = deleteTeamAdminSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await deleteTeamAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/teams/${parsed.data.teamId}`);
+      revalidatePath("/teams");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "deleteTeam");
   }
 }

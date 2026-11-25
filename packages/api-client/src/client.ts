@@ -65,6 +65,8 @@ import type {
   SafetyProgramResult,
   SafetySessionResult,
   SafetyViewResult,
+  SaveTeamPhotoBody,
+  SaveTeamPhotoResult,
   SendTicketBody,
   SendTicketResult,
   StartIdentityVerificationBody,
@@ -73,6 +75,7 @@ import type {
   StartSafetySessionResponse,
   StartTicketPlanBody,
   StartTicketPlanResult,
+  TeamDeletionResult,
   TeamDetailResult,
   TeamDoneResult,
   TeamInviteeResult,
@@ -88,6 +91,10 @@ import type {
   TicketTransfersResult,
   UpdateSafetyContactBody,
   UpdateSafetySessionBody,
+  UpdateTeamProfileBody,
+  UpdateTeamProfileResult,
+  UsernameCheckBody,
+  UsernameCheckResult,
 } from "./types";
 import type {
   AddEventShowsBody,
@@ -3285,6 +3292,68 @@ export function createApiClient(options: ApiClientOptions) {
           `/api/mobile/teams/${encodeURIComponent(teamId)}/terms`,
           { method: "POST", body: { termsVersion }, auth: true },
         );
+      },
+      /**
+       * An Owner changes the team's username, bio, website or social links
+       * (only the fields sent). A taken username is a 409.
+       */
+      updateProfile(teamId: string, body: UpdateTeamProfileBody) {
+        return request<UpdateTeamProfileResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/profile`,
+          { method: "PATCH", body, auth: true },
+        );
+      },
+      /** A signature to upload the team's photo to its own folder (Owners). */
+      photoSignature(teamId: string) {
+        return request<ApiEnvelope<CloudinarySignatureData>>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/photo/signature`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** Saves the photo uploaded with photoSignature(). */
+      savePhoto(teamId: string, body: SaveTeamPhotoBody) {
+        return request<SaveTeamPhotoResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/photo`,
+          { method: "PUT", body, auth: true },
+        );
+      },
+      /**
+       * An Owner asks to delete the team, typing its name (a sign-in in the
+       * last 15 minutes). With one Owner it is deleted now; otherwise every
+       * other Owner is asked to approve.
+       */
+      requestDeletion(teamId: string, confirmName: string) {
+        return request<TeamDeletionResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/deletion`,
+          { method: "POST", body: { confirmName }, auth: true },
+        );
+      },
+      /** Another Owner approves; the last approval deletes the team. */
+      approveDeletion(teamId: string, requestId: string) {
+        return request<TeamDeletionResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/deletion/${encodeURIComponent(requestId)}/approve`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** Any Owner stops a request to delete the team. */
+      cancelDeletion(teamId: string, requestId: string) {
+        return request<TeamDeletionResult>(
+          `/api/mobile/teams/${encodeURIComponent(teamId)}/deletion/${encodeURIComponent(requestId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+    },
+    /**
+     * "Is this username free?" as the person types: their own profile, a
+     * team's (Owners) or a team about to be made. Rate-limited per person.
+     */
+    usernames: {
+      check(body: UsernameCheckBody) {
+        return request<UsernameCheckResult>("/api/mobile/usernames/check", {
+          method: "POST",
+          body,
+          auth: true,
+        });
       },
     },
     /**

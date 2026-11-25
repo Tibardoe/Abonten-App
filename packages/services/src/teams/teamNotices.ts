@@ -183,3 +183,104 @@ export async function textTeamInvite(inviteId: string): Promise<boolean> {
   }
   return true;
 }
+
+/** To an Owner another Owner removed: who did it. */
+export async function noticeTeamOwnerRemoved(
+  teamId: string,
+  memberId: string,
+  actorId: string,
+) {
+  const who = await names([teamId, actorId]);
+  await send(
+    memberId,
+    "team_owner_removed",
+    { actor: who.get(actorId)?.name ?? "", team: who.get(teamId)?.name ?? "" },
+    { teamId },
+    who.get(teamId)?.avatar,
+  );
+}
+
+/** To an Owner another Owner gave another role: who did it, and the role. */
+export async function noticeTeamOwnerDemoted(
+  teamId: string,
+  memberId: string,
+  actorId: string,
+  role: string,
+) {
+  const who = await names([teamId, actorId]);
+  await send(
+    memberId,
+    "team_owner_demoted",
+    {
+      actor: who.get(actorId)?.name ?? "",
+      team: who.get(teamId)?.name ?? "",
+      role,
+    },
+    { teamId },
+    who.get(teamId)?.avatar,
+  );
+}
+
+/** To the other Owners: one of them asked to delete the team. */
+export async function noticeTeamDeleteRequested(
+  teamId: string,
+  ownerIds: string[],
+  actorId: string,
+) {
+  const who = await names([teamId, actorId]);
+  for (const ownerId of ownerIds) {
+    if (ownerId === actorId) continue;
+    await send(
+      ownerId,
+      "team_delete_requested",
+      {
+        actor: who.get(actorId)?.name ?? "",
+        team: who.get(teamId)?.name ?? "",
+      },
+      { teamId },
+      who.get(teamId)?.avatar,
+    );
+  }
+}
+
+/** To the other Owners: one of them stopped the request. */
+export async function noticeTeamDeleteCancelled(
+  teamId: string,
+  ownerIds: string[],
+  actorId: string,
+) {
+  const who = await names([teamId, actorId]);
+  for (const ownerId of ownerIds) {
+    if (ownerId === actorId) continue;
+    await send(
+      ownerId,
+      "team_delete_cancelled",
+      {
+        actor: who.get(actorId)?.name ?? "",
+        team: who.get(teamId)?.name ?? "",
+      },
+      { teamId },
+      who.get(teamId)?.avatar,
+    );
+  }
+}
+
+/**
+ * To everyone who was in the team: it is gone. The name was read before the
+ * profile was scrubbed; no photo (it went with the profile).
+ */
+export async function noticeTeamDeleted(
+  memberIds: string[],
+  teamName: string,
+  byStaff: boolean,
+) {
+  for (const memberId of memberIds) {
+    await send(
+      memberId,
+      byStaff ? "team_deleted_by_staff" : "team_deleted",
+      { team: teamName },
+      {},
+      undefined,
+    );
+  }
+}

@@ -5,6 +5,7 @@ import ReportButton from "@/components/atoms/ReportButton";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
 import { formatRating } from "@abonten/core/i18n/format";
+import { isDeletedAccount, personName } from "@abonten/core/personName";
 import Link from "next/link";
 import { MdOutlineSettings } from "react-icons/md";
 import ProfileBlockButton from "../molecules/ProfileBlockButton";
@@ -32,6 +33,8 @@ export default async function ProfileDetails({
   userDetails: prefetchedUserDetails,
 }: LayoutUserProp) {
   const t = await getTranslations("account");
+  const tCommon = await getTranslations("common");
+  const tCore = await getTranslations("core");
   const locale = await getLocale();
 
   const userDetails =
@@ -52,7 +55,13 @@ export default async function ProfileDetails({
   const { data } = userDetails;
   const userId = userDetails.data.user_id;
   const handle = data.username ?? username;
-  const displayName = data.full_name?.trim() || `@${handle}`;
+  // A deleted account (a person or a team) reads as a former member that is
+  // no longer on Abonten, as in the app; nobody follows, watches or reviews
+  // it any more (its page is noindexed by the layout).
+  const deleted = isDeletedAccount(handle);
+  const displayName = deleted
+    ? (personName(tCore, { full_name: null, username: handle }) ?? "")
+    : data.full_name?.trim() || `@${handle}`;
 
   const avatarUrl = buildAvatarUrl(data.avatar_public_id, data.avatar_version, {
     width: 112,
@@ -113,12 +122,16 @@ export default async function ProfileDetails({
                 <IdentityCheckedBadge compact team={isTeam} />
               ) : null}
             </div>
-            {data.full_name?.trim() ? (
+            {deleted ? (
+              <p className="text-muted-foreground">
+                {tCommon("accountNoLongerOnAbonten")}
+              </p>
+            ) : data.full_name?.trim() ? (
               <p className="text-muted-foreground">@{handle}</p>
             ) : null}
           </div>
 
-          {data.bio ? (
+          {data.bio && !deleted ? (
             <p className="max-w-prose whitespace-pre-line text-sm md:text-base">
               {data.bio}
             </p>
@@ -192,7 +205,7 @@ export default async function ProfileDetails({
                   <MdOutlineSettings className="text-xl text-muted-foreground" />
                 </Link>
               </>
-            ) : (
+            ) : deleted ? null : (
               <>
                 <FollowButton
                   kind="organizer"

@@ -2,7 +2,7 @@
 title: Team-Konten
 summary: Führe einen Veranstalter oder einen Ort mit anderen Personen, jede mit eigener Anmeldung und einer Rolle, die festlegt, was sie tun kann.
 order: 90
-lastUpdated: 2026-11-21
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -52,6 +52,18 @@ Mitglieder deines Teams verdienen bei deinen eigenen Events weder Belohnungen no
 ## Abzeichen
 
 Ein Team, das die Unternehmensprüfung von Abonten besteht, zeigt **Verifiziertes Unternehmen**. Ein Team zeigt **Ausweis geprüft**, wenn mindestens einer seiner Inhaber eine Ausweisprüfung bestanden hat; welcher, wird nie gesagt. Keines der beiden Abzeichen bedeutet, dass Abonten für das Team, seine Events oder seine Orte bürgt.
+
+## Das Profil des Teams
+
+Inhaber ändern den @Benutzernamen, das Foto, die Bio, die Website und die Social-Media-Konten des Teams auf seiner Seite unter **Einstellungen › Teams** (**Teamprofil bearbeiten** und **Foto ändern**); für den Namen gibt es **Umbenennen**. Während du einen neuen @Benutzernamen eingibst, siehst du, ob er frei ist, und bekommst ein paar freie zur Auswahl, wenn nicht. Links zum alten @Benutzernamen funktionieren noch 30 Tage, und in dieser Zeit kann ihn niemand anderes nehmen.
+
+## Ein Team löschen
+
+Ein Inhaber kann auf der Seite des Teams beantragen, es zu löschen. Alle Inhaber müssen zustimmen: Die anderen werden informiert und stimmen auf der Seite des Teams zu, jeder nach einer erneuten Anmeldung, und jeder Inhaber kann den Antrag stoppen. Ein Antrag endet nach 7 Tagen oder sobald sich die Inhaber des Teams ändern. Ein Team mit nur einem Inhaber wird gelöscht, sobald dieser bestätigt. Zur Bestätigung gibst du den Namen des Teams ein.
+
+Ein Team kann nicht gelöscht werden, solange es bevorstehende Events hat, für die Leute Tickets haben oder in Raten zahlen, solange eine Auszahlung unterwegs ist oder Einnahmen auf Auszahlung warten, solange eine Zahlung oder eine Spotlight-Promotion läuft, und 7 Tage lang, nachdem jemand anderes einen Inhaber entfernt oder ihm eine andere Rolle gegeben hat. Die Seite des Teams sagt, was zuerst zu tun ist.
+
+Wenn ein Team gelöscht wird, verlassen es alle und offene Einladungen werden zurückgezogen; die eigenen Konten der Mitglieder sind nicht betroffen. Seine Seite, sein Foto, seine Follower, Benachrichtigungen und Spotlight-Beiträge verschwinden, und seine Unterhaltungen werden geschlossen. Bevorstehende Events, für die niemand ein Ticket hat, werden abgesagt, die übrigen archiviert; seine Orte bleiben ohne Inhaber auf Abonten. Verkäufe und Auszahlungen bleiben gespeichert, und Abonten-Guthaben des Teams verfällt. Das lässt sich nicht rückgängig machen.
 
 ## Austreten und entfernen
 

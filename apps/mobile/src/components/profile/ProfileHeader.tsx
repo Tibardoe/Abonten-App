@@ -63,6 +63,10 @@ export function ProfileHeader({
 }) {
   const t = useTranslations("profile");
   const tc = useTranslations("core");
+  const tcommon = useTranslations("common");
+  // A deleted account (a person, or a team its Owners or Abonten deleted)
+  // reads as gone: no following it or setting an alert on it.
+  const gone = profile.status_id === 4 || isDeletedAccount(profile.username);
 
   const router = useRouter();
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -93,7 +97,7 @@ export function ProfileHeader({
         <View className="flex-1 gap-2">
           <View className="flex-row items-center gap-1.5">
             <AppText variant="bodyStrong" numberOfLines={1} className="shrink">
-              {isDeletedAccount(profile.username)
+              {gone
                 ? tc("member.former")
                 : (profile.full_name ?? `@${profile.username}`)}
             </AppText>
@@ -137,9 +141,17 @@ export function ProfileHeader({
         </View>
       </View>
 
-      {profile.bio ? <AppText variant="body">{profile.bio}</AppText> : null}
+      {gone ? (
+        <AppText variant="small" tone="muted">
+          {tcommon("accountNoLongerOnAbonten")}
+        </AppText>
+      ) : null}
 
-      {isOwn ? (
+      {profile.bio && !gone ? (
+        <AppText variant="body">{profile.bio}</AppText>
+      ) : null}
+
+      {gone ? null : isOwn ? (
         <Button
           title={t("editProfile")}
           variant="outline"

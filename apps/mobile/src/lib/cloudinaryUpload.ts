@@ -124,9 +124,20 @@ function describeFile(
 export async function uploadToCloudinary(
   uri: string,
   kind: UploadSignatureKind,
-  opts?: { video?: boolean; onProgress?: (fraction: number) => void },
+  opts?: {
+    video?: boolean;
+    onProgress?: (fraction: number) => void;
+    /**
+     * Where the signature comes from when it is not the person's own folder
+     * for `kind`: a team's photo is signed for the team's folder by
+     * api.teams.photoSignature, after the Owner check.
+     */
+    signature?: () => ReturnType<typeof api.uploads.signature>;
+  },
 ): Promise<CloudinaryUpload> {
-  const sig = await api.uploads.signature(kind);
+  const sig = await (opts?.signature
+    ? opts.signature()
+    : api.uploads.signature(kind));
   if (sig.status !== 200 || !sig.data) {
     throw new Error(sig.message ?? "Could not authorize the upload.");
   }
