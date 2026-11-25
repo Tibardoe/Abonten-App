@@ -3,6 +3,7 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { PLACE_OWNER_EMBED } from "@abonten/core/placeOwner";
 import {
   SPECIAL_HOURS_PUBLIC_DAYS,
   placeLocalDate,
@@ -27,9 +28,11 @@ export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
 ) {
   const supabase = publicSupabase;
 
+  // `owner` is only the owner account's status: whether anyone is behind
+  // the place (placeHasOwner).
   const { data: place, error: placeError } = await supabase
     .from("place")
-    .select("*, place_category(name, slug)")
+    .select(`*, place_category(name, slug), ${PLACE_OWNER_EMBED}`)
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();

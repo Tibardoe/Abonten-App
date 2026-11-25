@@ -13,12 +13,18 @@ import { getSupabaseServiceClient } from "../supabase/serviceClient";
 // 20260913200100_account_deletion_preserves_records):
 //   1. account_deletion_blockers() -- the person cannot leave while they
 //      still owe attendees an upcoming event, while a payout is in flight,
-//      while Abonten still owes them money, or if they are an admin. They
-//      get a 409 that says which step to take first.
+//      while Abonten still owes them money, while a paid Spotlight
+//      promotion is running or its payment is going through (ending it
+//      would leave money only staff refund; migration 20261125140000), or
+//      if they are an admin. They get a 409 that says which step to take
+//      first.
 //   2. credit_close_account() -- pending rewards voided, balance forfeited.
 //   3. anonymize_deleted_account() -- profile scrubbed, personal rows gone,
-//      saved cards / payout accounts scrubbed, places unclaimed, events
-//      cancelled or archived, status 'Deleted'.
+//      saved cards / payout accounts scrubbed, events cancelled or archived,
+//      Spotlight posts and Stories taken down (their media queued for
+//      Cloudinary when nothing else uses it), places unclaimed (nobody can
+//      start a new conversation with them), follows, alerts and
+//      conversations ended, status 'Deleted'.
 //   4. auth.admin.deleteUser(id, shouldSoftDelete = true) -- Supabase Auth
 //      removes sessions, identities and factors and obfuscates the email
 //      and phone, but keeps the auth.users row. A hard delete would cascade
@@ -40,6 +46,10 @@ type Blockers = {
   upcoming_events_with_attendees: number;
   payouts_in_flight: number;
   balance_owed: number;
+  /** A payment for one of their Spotlight promotions is going through. */
+  payments_in_progress?: number;
+  /** A paid Spotlight promotion that is not over (confirmed to paused). */
+  promotions_running?: number;
 };
 
 /** The reason a person must act before deleting, or null when they may. */
@@ -55,6 +65,12 @@ export function describeDeletionBlockers(b: Blockers): string | null {
   }
   if (Number(b.balance_owed) > 0.005) {
     return tr("youStillHaveEarningsWaitingTo");
+  }
+  if (Number(b.payments_in_progress ?? 0) > 0) {
+    return tr("deleteAccountBlockedPromotionPayment");
+  }
+  if (Number(b.promotions_running ?? 0) > 0) {
+    return tr("deleteAccountBlockedPromotion");
   }
   return null;
 }

@@ -37,6 +37,7 @@ import {
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatRating } from "@abonten/core/i18n/format";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
+import { placeHasOwner } from "@abonten/core/placeOwner";
 import {
   SPECIAL_HOURS_PUBLIC_DAYS,
   placeLocalDate,
@@ -383,6 +384,7 @@ export default async function page({
                 placeId={place.id}
                 placeName={place.name}
                 ownerId={place.owner_id}
+                hasOwner={placeHasOwner(place.owner)}
                 location={locationWkb}
                 phone={place.phone}
                 whatsapp={place.whatsapp}

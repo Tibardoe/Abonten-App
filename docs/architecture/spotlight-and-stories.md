@@ -4,8 +4,8 @@ purpose: How Spotlight posts, 24-hour Stories, the follow graph, engagement, tel
 audience: Engineering, operations, finance, security reviewers
 scope: The content_* and follow tables and functions (migrations 20260916120000..20260917120000), @abonten/services content and admin/content modules, /spotlight, /stories and /manage/spotlight on web, /api/mobile/content/**, the mobile Spotlight, Story and creator screens, the Stories row in Messages, Admin › Spotlight & Stories, the seven content cron jobs, and the spotlight-promotion payment path. Not covered - hashtag pages, audio libraries, duets, live streaming and creator payouts, which are not built.
 status: Approved
-version: 1.5
-lastReviewed: 2026-11-16
+version: 1.6
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -58,7 +58,7 @@ The older empty `story` and `story_default` tables from the original schema are 
 
 **As a team** (team accounts, stage 4c; [team-accounts.md §4e](team-accounts.md)): a member whose role covers `content.post` posts as the team they manage as. The post's author is the team (eligibility, places and daily caps are the team's); the audience check and the uploads stay the member's; the team's activity names who published. Paid promotion of a team's Spotlight is for members who post and pay (Owners: `content.post` and `promotions.buy`): the campaign is the team's, the checkout and the card the member's ([team-accounts.md §4i](team-accounts.md)).
 
-Deleting a post is a soft delete; a running promotion on it is cancelled, and an unpaid promotion order for it is cancelled unless a payment is in flight. Registered-but-unused uploads are destroyed after `orphan_media_hours`, media of deleted posts and ended Stories after their retention, through `draft_asset_cleanup_queue`; uploads that never became a `content_media` row are found by a daily sweep of this environment's `content_media/<environment>/` folder on Cloudinary (see §11). The Cloudinary account is shared by production, previews and local development, each with its own database; the environment folder keeps one environment's sweep away from another's uploads.
+Deleting a post is a soft delete; a running promotion on it is cancelled, and an unpaid promotion order for it is cancelled unless a payment is in flight. **When an account is deleted** (a person, or a team by its Owners or by staff; since 2026-11-25, migration `20261125140000`) every post and Story it authored is set to `deleted` and unpaid promotion drafts on them are cancelled; their media is queued for Cloudinary at once unless a listing, draft, gallery photo or avatar uses the same asset, or the post has an open report (then it follows the retention below). A paid promotion is never ended by a deletion: one that is paid and not over, or waiting for its payment, stops the deletion (`account_deletion_blockers` / `team_deletion_blockers`), so the advertiser cancels it first and staff refund what was not spent. Registered-but-unused uploads are destroyed after `orphan_media_hours`, media of deleted posts and ended Stories after their retention, through `draft_asset_cleanup_queue`; uploads that never became a `content_media` row are found by a daily sweep of this environment's `content_media/<environment>/` folder on Cloudinary (see §11). The Cloudinary account is shared by production, previews and local development, each with its own database; the environment folder keeps one environment's sweep away from another's uploads.
 
 ## 4. Reading
 

@@ -3,6 +3,7 @@
 import Rating from "@/components/atoms/Rating";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { reviewAuthorName } from "@abonten/core/reviews/reviewAuthor";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OwnedPlaceReviewListItem } from "@abonten/types/reviewType";
 import { ClockIcon, MapPinIcon, UserIcon } from "lucide-react";
@@ -29,6 +30,7 @@ export default function PlaceReviewsList({
   const locale = useLocale();
 
   const t = useTranslations("account");
+  const tc = useTranslations("core");
 
   return (
     <InfiniteList
@@ -65,7 +67,7 @@ export default function PlaceReviewsList({
             </Link>
             <div className="flex items-center gap-1">
               <UserIcon size={16} />
-              <span>{review.user_info?.username}</span>
+              <span>{reviewAuthorName(tc, review.user_info, "")}</span>
             </div>
             <div className="flex items-center gap-1">
               <ClockIcon size={16} />

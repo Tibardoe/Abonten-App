@@ -36,11 +36,12 @@ import { readEventAddress } from "@abonten/core/eventAddress";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
-import { hostDisplayName } from "@abonten/core/hostDisplayName";
+import { hostName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { isOpenAmountType } from "@abonten/core/openAmountTickets";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
+import { isDeletedAccount } from "@abonten/core/personName";
 import { refundCutoffDays, refundPolicyOf } from "@abonten/core/refundPolicy";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -242,6 +243,9 @@ export default async function page({
         // date". EventDateSelector falls back to the array index for its
         // list key instead of relying on this id.
         [{ starts_at: event.starts_at ?? "", ends_at: event.ends_at ?? "" }];
+
+  const organizerGone = isDeletedAccount(event.user_info.username);
+  const organizerName = hostName(tc, event.user_info) || t("organizer");
 
   const address = readEventAddress(event.address);
   const eventId = event.id;
@@ -466,36 +470,53 @@ export default async function page({
           beside the details. */}
       <div className="max-w-7xl mx-auto px-2 lg:px-8 py-6 md:py-10">
         <div className="grid items-start gap-4 md:gap-6 lg:grid-cols-3 lg:gap-8">
-          {/* Organizer Card */}
+          {/* Organizer Card. An organizer whose account was deleted is a
+              "Former Abonten member": no profile link, no Message. */}
           <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
             <div className="flex items-center gap-3 md:gap-4">
-              <Link
-                href={`/user/${event.user_info.username}/posts`}
-                className="shrink-0 hover:scale-105 transition-transform"
-              >
+              {organizerGone ? (
                 <Image
-                  src={buildAvatarUrl(
-                    event.user_info.avatar_public_id,
-                    event.user_info.avatar_version,
-                    { width: 56, height: 56 },
-                  )}
-                  alt={hostDisplayName(event.user_info) || t("organizer")}
+                  src={buildAvatarUrl(null, null, { width: 56, height: 56 })}
+                  alt={organizerName}
                   width={56}
                   height={56}
-                  className="rounded-full border-2 border-border"
+                  className="shrink-0 rounded-full border-2 border-border"
                 />
-              </Link>
+              ) : (
+                <Link
+                  href={`/user/${event.user_info.username}/posts`}
+                  className="shrink-0 hover:scale-105 transition-transform"
+                >
+                  <Image
+                    src={buildAvatarUrl(
+                      event.user_info.avatar_public_id,
+                      event.user_info.avatar_version,
+                      { width: 56, height: 56 },
+                    )}
+                    alt={organizerName}
+                    width={56}
+                    height={56}
+                    className="rounded-full border-2 border-border"
+                  />
+                </Link>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {t("hostedBy")}
                 </p>
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <Link
-                    href={`/user/${event.user_info.username}/posts`}
-                    className="text-lg font-semibold text-card-foreground truncate hover:underline"
-                  >
-                    {hostDisplayName(event.user_info)}
-                  </Link>
+                  {organizerGone ? (
+                    <span className="text-lg font-semibold text-card-foreground truncate">
+                      {organizerName}
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/user/${event.user_info.username}/posts`}
+                      className="text-lg font-semibold text-card-foreground truncate hover:underline"
+                    >
+                      {organizerName}
+                    </Link>
+                  )}
                   {event.user_info.organizer_verified &&
                   event.user_info.status_id === 1 ? (
                     <VerifiedBadgePopover
@@ -542,12 +563,14 @@ export default async function page({
                 {t("posted", { postedAt: postedAt })}
               </span>
             </div>
-            <MessageSubjectButton
-              input={{ type: "event", eventId: event.id }}
-              ownerId={event.organizer_id}
-              label={t("messageOrganizer")}
-              className="mt-4 w-full sm:w-auto"
-            />
+            {organizerGone ? null : (
+              <MessageSubjectButton
+                input={{ type: "event", eventId: event.id }}
+                ownerId={event.organizer_id}
+                label={t("messageOrganizer")}
+                className="mt-4 w-full sm:w-auto"
+              />
+            )}
           </section>
 
           {/* Ticket panel */}

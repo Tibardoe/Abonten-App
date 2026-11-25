@@ -4,7 +4,7 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.7
+version: 1.8
 lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -47,7 +47,7 @@ Path: web `Settings › Security › Delete account` → `deleteUser.ts`; app �
 
 Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`) deletion is an **anonymising soft delete**. The previous path hard-deleted the Auth user and let `ON DELETE CASCADE` remove the person's transactions, tickets, ledger entries, payouts and fee entries, and every event they organized together with other people's tickets for those events; that was verified against the live foreign keys on 2026-09-13 and closed.
 
-1. `account_deletion_blockers(user)` — deletion is **refused (HTTP 409)** while the person still has an upcoming published event with attendees, a payout in `processing`, earnings not yet paid out, or admin roles. The message tells them which step to take first.
+1. `account_deletion_blockers(user)` — deletion is **refused (HTTP 409)** while the person still has an upcoming published event with attendees, a payout in `processing`, earnings not yet paid out, a paid Spotlight promotion that is not over or whose payment is going through (since 2026-11-25: ending it would leave money only staff refund), or admin roles. The message tells them which step to take first.
 2. `credit_close_account(user, 'user')` — pending rewards voided, balance forfeited; ledger history kept.
 3. `anonymize_deleted_account(user)` — see the table.
 4. `auth.admin.deleteUser(user, shouldSoftDelete = true)` — Supabase Auth revokes every session, removes identities and MFA factors, obfuscates the email and phone, and keeps the `auth.users` row with `deleted_at` set. Nothing cascades. The same email or number can sign up again as a new account.
@@ -58,18 +58,21 @@ Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`)
 | **Deleted** | `device_token`, `web_push_subscription`, `favorite`, `favorite_place`, `event_reminder`, `notification` (+ `notification_delivery`), `notification_preference`, `notification_subscription`, `area_waitlist`, `user_image_history`, `receiving_account`, `highlight`, `drafts` (+ `event_drafts`/`place_drafts`/`review_drafts`), pending `place_claim_request` (+ documents; the bucket objects go to `storage_purge_queue`), draft events |
 | **Scrubbed shells** (rows are referenced by payment attempts / payouts) | `payment_method` → `removed`, details reduced to brand/last4/network/bank (the Paystack authorization code is gone); `payout_account` → `removed`, holder name and number replaced |
 | **Events** | Upcoming published events with no active tickets → `canceled`; everything else `archived_at` set (leaves discovery and search; direct links still open, organizer shown as "Deleted user") |
-| **Places** | Kept published, `claimed = false`, verification cleared — the next owner can claim the listing |
+| **Places** | Kept published and discoverable, `claimed = false`, badge off, an open verification of the place withdrawn and an approved one revoked (as an owner change does) — the next owner can claim the listing. Until then nobody can start a new conversation or send a booking request to it (since 2026-11-25; `open_conversation`, `requestPlaceBookingCore`); `owner_id` keeps the deleted account (the column is required) |
+| **Spotlight posts and Stories** (since 2026-11-25) | Set to `deleted` (as an author's own delete), unpaid promotion drafts on them cancelled. Their media rows are marked deleted and queued for Cloudinary (`draft_asset_cleanup_queue`) at once, unless a listing, draft, gallery photo or avatar uses the same asset (the drain checks again before destroying) or the post has an open report (then `content_housekeeping` queues it after `deleted_post_retention_days`, 30). A post with a paid promotion still open is kept until staff settle it (only possible for an account deleted before 2026-11-25) |
 | **Verification cases** | Open cases withdrawn, an approved one revoked (`verification_transition`, actor `system`, reason `account_deleted`) |
-| **Followers, alerts, conversations** (since 2026-11-25) | Other people's follows of the account deleted (the follower count follows), their alerts on it set to `unsubscribed`, and every open conversation it takes part in closed, so nobody follows, watches or writes to an account that is gone |
+| **Followers, alerts, conversations** (since 2026-11-25) | Other people's follows of the account and the account's own follows deleted (the follower counts follow), their alerts on it set to `unsubscribed`, and every open conversation it takes part in closed, so nobody follows, watches or writes to an account that is gone. A conversation from before still opens for the other person, closed; no new one can be started with its places or events |
 | **Team accounts** (since 2026-11-25) | A team deleted by its Owners (all of them) or by staff runs the same path on the team's account, then withdraws its invitations, removes every member (the rows stay, naming who was in it) and closes the team; the team's auth user is soft-deleted. `team_activity` keeps the name and @username it had. See `architecture/team-accounts.md` §4o |
 | **Abonten Safety** (since 2026-10-22) | Trigger `user_info_safety_forget` (on `status_id` becoming 4) runs `safety_forget_account`: the person's `safety_contact` rows (other people's names and numbers), every `safety_session` with its positions, recipients, timeline and texts, queued `safety_message` rows and their per-person opt-outs are deleted; where the person was someone else's linked contact, `contact_user_id` / `recipient_user_id` are set to null and the other person's contact row stays. Before this the soft delete left all of it behind, because the cascades fire only on a hard delete (migration `20261022140000`) |
 | **Kept with identity nulled** (`ON DELETE SET NULL`) | unchanged — nothing is deleted from `auth.users`, so these columns keep their ids and resolve to the anonymised profile |
 | **Kept, no FK to the user** | Credit ledger (`credit_*`), `reward_event`, field-ops member/owner ids |
 | **Kept as financial record** (verified cascade would have removed them) | `transaction`, `payment_attempt`, `ticket_checkout`, `ticket`, `organizer_ledger_entry`, `payout`, `platform_fee_entry` — all now point at the anonymised profile |
-| **Kept as content** | Reviews authored (`event_review`, `place_review`, `review`) and messages sent, shown as "Deleted user" |
-| **Cloudinary media** | Not destroyed by the deletion path itself (avatar, flyers, photos remain on the CDN until a separate cleanup) — **gap** |
+| **Kept as content** | Reviews authored (`event_review`, `place_review`, `review`) and messages sent, shown as "Former Abonten member" with the default picture, never the `deleted_…` handle (`review_list`, `@abonten/core/reviews/reviewAuthor`, `personName`) |
+| **Cloudinary media** | Spotlight and Story media: queued as above (since 2026-11-25). Avatar, flyers and place photos: not destroyed by the deletion path itself (they remain on the CDN until a separate cleanup) — **gap** |
 
-**Gaps recorded:** no grace period (decision O5); Cloudinary media of a deleted user is not purged (engineering item); reviews and messages are kept anonymised rather than deleted — confirm with counsel (legal B9).
+Migration `20261125140000_deleted_account_gaps` also ran the same clean-up once for every account deleted before it (`_deleted_account_cleanup`, idempotent).
+
+**Gaps recorded:** no grace period (decision O5); a deleted user's avatar, flyers and place photos are not purged from Cloudinary (engineering item); reviews and messages are kept anonymised rather than deleted — confirm with counsel (legal B9).
 
 ## 3. Admin-initiated actions
 

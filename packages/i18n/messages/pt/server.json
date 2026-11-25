@@ -400,6 +400,7 @@
     "noCreditWasCapturedForThisTransaction": "Não foi capturado crédito para esta transação",
     "noEventFound": "Nenhum evento encontrado!",
     "noPendingAdjustmentRequestWithThatId": "Não há nenhum pedido de ajuste pendente com esse identificador",
+    "nobodyManagesThisPlaceOnAbontenAt": "Ninguém gere este local no Abonten de momento, por isso não pode receber mensagens.",
     "notARebateRule": "Não é uma regra de reembolso: {0}",
     "notAllowedForThisAccount": "Não permitido para esta conta",
     "notAuthenticated": "Não autenticado",
@@ -551,6 +552,7 @@
     "thisItemIsAlreadyPaid": "Este item já está pago",
     "thisMessageWasDeleted": "Esta mensagem foi eliminada.",
     "thisOnboardingIsNotFlagged": "Esta integração não está sinalizada",
+    "thisOrganizerIsNoLongerOnAbonten": "Este organizador já não está no Abonten, por isso não pode receber mensagens.",
     "thisPassAlreadyHasATicketFor": "Este passe já tem um bilhete para essa sessão.",
     "thisPassIsNotYoursToUse": "Este passe não é seu.",
     "thisPaymentIsRefundedAsAWhole": "Este pagamento é reembolsado por inteiro",
@@ -1609,5 +1611,7 @@
   "teamDeleteRequested": "Avisámos os outros proprietários. A equipa é eliminada quando todos os proprietários aprovarem.",
   "teamDeleteApproved": "Obrigado. A equipa é eliminada quando todos os proprietários aprovarem.",
   "teamDeleted": "A equipa foi eliminada.",
-  "teamDeleteCancelled": "O pedido para eliminar a equipa foi parado."
+  "teamDeleteCancelled": "O pedido para eliminar a equipa foi parado.",
+  "deleteAccountBlockedPromotion": "Uma das suas promoções Spotlight ainda está ativa ou a aguardar análise. Cancele-a primeiro e depois elimine a sua conta.",
+  "deleteAccountBlockedPromotionPayment": "Um pagamento de uma das suas promoções Spotlight ainda está a ser processado. Tente novamente dentro de alguns minutos."
 }

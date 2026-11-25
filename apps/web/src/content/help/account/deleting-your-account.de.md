@@ -2,7 +2,7 @@
 title: Dein Konto löschen
 summary: Wie du dein Abonten-Konto löschst und was genau entfernt, aufbewahrt oder verfällt.
 order: 3
-lastUpdated: 2026-09-13
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,8 @@ owner: Abonten Hub
 
 - **Tickets:** Gekaufte Tickets bleiben gültige Datensätze, aber du kannst sie in Abonten nicht mehr öffnen. Lade herunter, was du noch brauchst.
 - **Veranstalter:** Du kannst dein Konto nicht löschen, solange eines deiner kommenden Events noch Teilnehmer hat, eine Auszahlung an dich in Bearbeitung ist oder du noch auszuzahlende Einnahmen hast. Sag diese Events zuerst ab (Teilnehmer werden erstattet und informiert) und fordere verfügbare Auszahlungen an; der Löschbildschirm zeigt dir, welcher Schritt noch offen ist.
-- **Inhaber von Orten:** Orte, die dir gehören, bleiben eingetragen, sind aber wieder unbeansprucht, damit der nächste Inhaber sie beanspruchen kann. Soll jemand anderes einen Eintrag übernehmen, lass ihn ihn zuerst beanspruchen.
+- **Spotlight-Promotions:** Du kannst dein Konto nicht löschen, solange eine Spotlight-Promotion, die du bezahlt hast, läuft oder auf Prüfung wartet oder ihre Zahlung noch bearbeitet wird. Brich sie zuerst ab.
+- **Inhaber von Orten:** Orte, die dir gehören, bleiben eingetragen, sind aber wieder unbeansprucht, damit der nächste Inhaber sie beanspruchen kann. Soll jemand anderes einen Eintrag übernehmen, lass ihn ihn zuerst beanspruchen. Bis dahin kann niemand dem Ort schreiben oder ihm eine Buchungsanfrage schicken.
 - **Abonten Credit:** Jedes Guthaben verfällt, und ausstehende Prämien werden gestrichen.
 
 ## So löschst du
@@ -24,7 +25,7 @@ Die Löschung erfolgt sofort und kann nicht rückgängig gemacht werden. Du wirs
 
 ## Was gelöscht wird
 
-Deine Anmeldung, Name, Benutzername, Foto, Bio, Telefonnummer und E-Mail-Adresse, Favoriten, Erinnerungen, Highlights, Benachrichtigungen und Benachrichtigungseinstellungen, Entwürfe und offene Ansprüche auf Orte. Gespeicherte Karten und Mobile-Money-Nummern werden entfernt (die Angaben, mit denen sie belastet werden könnten, werden gelöscht). Angaben zu Auszahlungskonten werden gelöscht. Event-Entwürfe werden gelöscht; kommende Events ohne Teilnehmer werden abgesagt; deine übrigen Events werden archiviert und erscheinen nicht mehr in der Suche.
+Deine Anmeldung, Name, Benutzername, Foto, Bio, Telefonnummer und E-Mail-Adresse, Favoriten, Erinnerungen, Highlights, Benachrichtigungen und Benachrichtigungseinstellungen, Entwürfe und offene Ansprüche auf Orte. Gespeicherte Karten und Mobile-Money-Nummern werden entfernt (die Angaben, mit denen sie belastet werden könnten, werden gelöscht). Angaben zu Auszahlungskonten werden gelöscht. Event-Entwürfe werden gelöscht; kommende Events ohne Teilnehmer werden abgesagt; deine übrigen Events werden archiviert und erscheinen nicht mehr in der Suche. Deine Spotlight-Beiträge und Stories werden entfernt und ihre Fotos und Videos gelöscht (gemeldete werden etwas länger aufbewahrt, damit die Meldung geprüft werden kann), und du folgst den Konten nicht mehr, denen du gefolgt bist.
 
 ## Was aufbewahrt wird
 

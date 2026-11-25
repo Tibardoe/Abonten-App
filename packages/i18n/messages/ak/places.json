@@ -514,5 +514,7 @@
   "stepOf": "Step {step} of {total}",
   "claimReviewNote": "{documents, select, yes {An admin will review your request and your documents. You'll be notified once it's been looked at — ownership only changes after an approval.} other {An admin will review your request. You'll be notified once it's been looked at — ownership only changes after an approval.}}",
   "metaTitle": "{name} · {category}",
-  "metaTitleInCity": "{name} · {category} in {city}"
+  "metaTitleInCity": "{name} · {category} in {city}",
+  "noOwnerBody": "Messages and booking requests are off until its owner claims it. Is it your business?",
+  "noOwnerTitle": "Nobody manages this place on Abonten yet"
 }

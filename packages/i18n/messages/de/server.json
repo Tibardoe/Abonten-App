@@ -400,6 +400,7 @@
     "noCreditWasCapturedForThisTransaction": "Für diese Transaktion wurde kein Guthaben eingezogen",
     "noEventFound": "Kein Event gefunden!",
     "noPendingAdjustmentRequestWithThatId": "Keine ausstehende Anpassungsanfrage mit dieser ID",
+    "nobodyManagesThisPlaceOnAbontenAt": "Niemand verwaltet diesen Ort derzeit auf Abonten, daher kann er keine Nachrichten empfangen.",
     "notARebateRule": "Keine Rückvergütungsregel: {0}",
     "notAllowedForThisAccount": "Für dieses Konto nicht erlaubt",
     "notAuthenticated": "Nicht authentifiziert",
@@ -551,6 +552,7 @@
     "thisItemIsAlreadyPaid": "Dieser Posten ist bereits bezahlt",
     "thisMessageWasDeleted": "Diese Nachricht wurde gelöscht.",
     "thisOnboardingIsNotFlagged": "Diese Aufnahme ist nicht markiert",
+    "thisOrganizerIsNoLongerOnAbonten": "Dieser Veranstalter ist nicht mehr auf Abonten und kann daher keine Nachrichten empfangen.",
     "thisPassAlreadyHasATicketFor": "Dieser Pass hat schon ein Ticket für diese Vorstellung.",
     "thisPassIsNotYoursToUse": "Dieser Pass gehört dir nicht.",
     "thisPaymentIsRefundedAsAWhole": "Diese Zahlung wird nur als Ganzes erstattet",
@@ -1609,5 +1611,7 @@
   "teamDeleteRequested": "Wir haben die anderen Inhaber gefragt. Das Team wird gelöscht, sobald alle Inhaber zugestimmt haben.",
   "teamDeleteApproved": "Danke. Das Team wird gelöscht, sobald alle Inhaber zugestimmt haben.",
   "teamDeleted": "Das Team wurde gelöscht.",
-  "teamDeleteCancelled": "Der Antrag, das Team zu löschen, wurde gestoppt."
+  "teamDeleteCancelled": "Der Antrag, das Team zu löschen, wurde gestoppt.",
+  "deleteAccountBlockedPromotion": "Eine deiner Spotlight-Promotions läuft noch oder wartet auf Prüfung. Brich sie zuerst ab und lösche dann dein Konto.",
+  "deleteAccountBlockedPromotionPayment": "Eine Zahlung für eine deiner Spotlight-Promotions wird noch bearbeitet. Versuch es in ein paar Minuten noch einmal."
 }

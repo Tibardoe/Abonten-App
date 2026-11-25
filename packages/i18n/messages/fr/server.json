@@ -400,6 +400,7 @@
     "noCreditWasCapturedForThisTransaction": "Aucun crédit n'a été capturé pour cette transaction",
     "noEventFound": "Aucun événement trouvé !",
     "noPendingAdjustmentRequestWithThatId": "Aucune demande d'ajustement en attente avec cet identifiant",
+    "nobodyManagesThisPlaceOnAbontenAt": "Personne ne gère ce lieu sur Abonten pour le moment, il ne peut donc pas recevoir de messages.",
     "notARebateRule": "Ce n'est pas une règle de remise : {0}",
     "notAllowedForThisAccount": "Non autorisé pour ce compte",
     "notAuthenticated": "Non authentifié",
@@ -551,6 +552,7 @@
     "thisItemIsAlreadyPaid": "Cette ligne est déjà payée",
     "thisMessageWasDeleted": "Ce message a été supprimé.",
     "thisOnboardingIsNotFlagged": "Cette intégration n'est pas signalée",
+    "thisOrganizerIsNoLongerOnAbonten": "Cet organisateur n'est plus sur Abonten et ne peut donc pas recevoir de messages.",
     "thisPassAlreadyHasATicketFor": "Ce pass a déjà un billet pour cette représentation.",
     "thisPassIsNotYoursToUse": "Ce pass n'est pas à vous.",
     "thisPaymentIsRefundedAsAWhole": "Ce paiement est remboursé en une seule fois",
@@ -1609,5 +1611,7 @@
   "teamDeleteRequested": "Nous avons prévenu les autres propriétaires. L'équipe sera supprimée quand tous les propriétaires auront approuvé.",
   "teamDeleteApproved": "Merci. L'équipe sera supprimée quand tous les propriétaires auront approuvé.",
   "teamDeleted": "L'équipe a été supprimée.",
-  "teamDeleteCancelled": "La demande de suppression de l'équipe a été arrêtée."
+  "teamDeleteCancelled": "La demande de suppression de l'équipe a été arrêtée.",
+  "deleteAccountBlockedPromotion": "L'une de vos promotions Spotlight est encore en cours ou en attente d'examen. Annulez-la d'abord, puis supprimez votre compte.",
+  "deleteAccountBlockedPromotionPayment": "Un paiement pour l'une de vos promotions Spotlight est encore en cours. Réessayez dans quelques minutes."
 }

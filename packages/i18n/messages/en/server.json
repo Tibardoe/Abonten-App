@@ -402,6 +402,7 @@
     "noCreditWasCapturedForThisTransaction": "No credit was captured for this transaction",
     "noEventFound": "No event found!",
     "noPendingAdjustmentRequestWithThatId": "No pending adjustment request with that id",
+    "nobodyManagesThisPlaceOnAbontenAt": "Nobody manages this place on Abonten at the moment, so it cannot receive messages.",
     "notARebateRule": "Not a rebate rule: {0}",
     "notAllowedForThisAccount": "Not allowed for this account",
     "notAuthenticated": "Not authenticated",
@@ -558,6 +559,7 @@
     "thisItemIsAlreadyPaid": "This item is already paid",
     "thisMessageWasDeleted": "This message was deleted.",
     "thisOnboardingIsNotFlagged": "This onboarding is not flagged",
+    "thisOrganizerIsNoLongerOnAbonten": "This organizer is no longer on Abonten, so they cannot receive messages.",
     "thisPassAlreadyHasATicketFor": "This pass already has a ticket for that show.",
     "thisPassIsNotYoursToUse": "This pass is not yours to use.",
     "thisPaymentIsRefundedAsAWhole": "This payment is refunded as a whole",
@@ -1609,5 +1611,7 @@
   "teamDeleteRequested": "We've asked the other Owners. The team is deleted once every Owner approves.",
   "teamDeleteApproved": "Thank you. The team is deleted once every Owner approves.",
   "teamDeleted": "The team has been deleted.",
-  "teamDeleteCancelled": "The request to delete the team has been stopped."
+  "teamDeleteCancelled": "The request to delete the team has been stopped.",
+  "deleteAccountBlockedPromotion": "One of your Spotlight promotions is still running or waiting for review. Cancel it first, then delete your account.",
+  "deleteAccountBlockedPromotionPayment": "A payment for one of your Spotlight promotions is still going through. Try again in a few minutes."
 }

@@ -514,5 +514,7 @@
   "stepOf": "Schritt {step} von {total}",
   "claimReviewNote": "{documents, select, yes {Ein Admin prüft deine Anfrage und deine Dokumente. Du wirst benachrichtigt, sobald sie geprüft wurde — der Inhaber ändert sich erst nach einer Genehmigung.} other {Ein Admin prüft deine Anfrage. Du wirst benachrichtigt, sobald sie geprüft wurde — der Inhaber ändert sich erst nach einer Genehmigung.}}",
   "metaTitle": "{name} · {category}",
-  "metaTitleInCity": "{name} · {category} in {city}"
+  "metaTitleInCity": "{name} · {category} in {city}",
+  "noOwnerBody": "Nachrichten und Buchungsanfragen sind aus, bis der Inhaber den Ort beansprucht. Ist das dein Betrieb?",
+  "noOwnerTitle": "Noch verwaltet niemand diesen Ort auf Abonten"
 }

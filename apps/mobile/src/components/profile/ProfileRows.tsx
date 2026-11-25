@@ -5,6 +5,7 @@ import type {
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { reviewAuthorName } from "@abonten/core/reviews/reviewAuthor";
 import { AppText, Icon, Stars } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
@@ -66,12 +67,13 @@ export function ProfileReviewRow({ review }: { review: ProfileReview }) {
   const { locale } = useLocale();
 
   const t = useTranslations("profile");
+  const tc = useTranslations("core");
 
   return (
     <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
       <View className="flex-row items-center justify-between">
         <AppText variant="bodyStrong" numberOfLines={1}>
-          {review.reviewer?.username ?? t("someone")}
+          {reviewAuthorName(tc, review.reviewer, t("someone"))}
         </AppText>
         <Stars rating={review.rating} />
       </View>

@@ -53,6 +53,17 @@ describe("describeDeletionBlockers", () => {
     );
   });
 
+  it("stops on a paid Spotlight promotion, never ending it silently", () => {
+    expect(
+      describeDeletionBlockers({ ...clear, promotions_running: 1 }),
+    ).toMatch(/Spotlight promotion.*Cancel it first/i);
+    expect(
+      describeDeletionBlockers({ ...clear, payments_in_progress: 1 }),
+    ).toMatch(/Spotlight promotion.*few minutes/i);
+    // An older database without the two counts lets the person through.
+    expect(describeDeletionBlockers(clear)).toBeNull();
+  });
+
   it("ignores rounding dust in the balance", () => {
     expect(describeDeletionBlockers({ ...clear, balance_owed: 0.004 })).toBe(
       null,

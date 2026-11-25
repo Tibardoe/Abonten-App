@@ -10,6 +10,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { withReviewAuthors } from "@abonten/core/reviews/reviewAuthor";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { OrganizerReviewListItem } from "@abonten/types/reviewType";
@@ -67,7 +68,8 @@ export const getUserReviews = withActionLocale(async function getUserReviews(
   }
 
   const { page, hasNextPage } = splitPage<OrganizerReviewListItem>(
-    data ?? [],
+    // A deleted reviewer's handle and picture never leave the read path.
+    withReviewAuthors(data ?? [], "user_info"),
     pageSize,
   );
 

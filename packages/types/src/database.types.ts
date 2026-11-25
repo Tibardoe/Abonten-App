@@ -16339,6 +16339,7 @@ export type Database = {
         Args: { p_code: string; p_user_id: string }
         Returns: string
       }
+      _deleted_account_cleanup: { Args: { p_account: string }; Returns: Json }
       _event_settles_at: { Args: { p_event_id: string }; Returns: string }
       _fieldops_notify: {
         Args: {

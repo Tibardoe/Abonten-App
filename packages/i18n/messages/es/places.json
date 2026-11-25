@@ -514,5 +514,7 @@
   "stepOf": "Paso {step} de {total}",
   "claimReviewNote": "{documents, select, yes {Un administrador revisará tu solicitud y tus documentos. Te avisaremos cuando se haya revisado — la propiedad solo cambia tras una aprobación.} other {Un administrador revisará tu solicitud. Te avisaremos cuando se haya revisado — la propiedad solo cambia tras una aprobación.}}",
   "metaTitle": "{name} · {category}",
-  "metaTitleInCity": "{name} · {category} en {city}"
+  "metaTitleInCity": "{name} · {category} en {city}",
+  "noOwnerBody": "Los mensajes y las solicitudes de reserva están desactivados hasta que su propietario lo reclame. ¿Es tu negocio?",
+  "noOwnerTitle": "Nadie gestiona todavía este lugar en Abonten"
 }
