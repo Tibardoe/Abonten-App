@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.9
-lastReviewed: 2026-11-23
+version: 1.10
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -178,6 +178,21 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | N8 | Imported lists | Part 5 | The organizer answers for the data; Abonten uses it only for entry, never for marketing, and deletes it 30 days after the event. | Open |
 | N9 | Badge wording for teams | Part 2; extends H3 and K3 | "Verified business" and "ID checked" for a team. Drafted 2026-11-16 in `core` `verification.badgeLabel.team` / `badgeExplanation.team` and `identity.badgeExplanationTeam`, shown only while teams are switched on. Wording for counsel: label "Verified business"; explanation "Abonten reviewed documents supporting this business's registration and that the Owner who manages this team may act for it. Verification is not a guarantee of any event, its delivery, safety or quality." "ID checked" on a team: "Abonten checked the government ID and a live selfie of at least one of this team's Owners. It doesn't mean Abonten vouches for the team, its events or its places." Question: is "at least one Owner" honest enough when other members are unchecked, and does a renamed team's badge going back to review (X42) need saying. | Open — wording above |
 
+## Q — Partner programme
+
+Other businesses (travel sites, hotel desks and concierges, tour operators, other apps, ticket agents, media) would sell Abonten organizers' tickets and earn a share: through links, an embeddable checkout, a Partner API, and at a desk, later with tickets allocated for cash sales. Abonten keeps every online payment on its own Paystack account and organizers keep 100% of their ticket price. **Design only, not built** (2026-11-25): [specifications/partner-program.md](specifications/partner-program.md), decisions PA1–PA22. Related items: B4, E1, E3, E7, M5, N2, N3, N5.
+
+| # | Item | Where it appears | What counsel must confirm or decide | Status |
+|---|---|---|---|---|
+| Q1 | Agency and reselling | Partner programme §3, §5; Terms; the organizer terms | Whether Abonten, which sells tickets for organizers, may appoint partners to sell them too and in what capacity (sub-agent, introducer); who the seller is to the buyer on a partner's page, in the embed, through the API and at a desk; whether the organizer terms need a clause allowing it, and whether events may be open to approved partners by default with the organizer able to switch it off (decision PA7); whether a partner selling at face value is "reselling" in the sense of N2. | Open — design only |
+| Q2 | Consumer protection on partner sales | Partner programme §3.2–§3.4, §6.3 | What a buyer must be shown on a partner's page, in the embed, through the API's checkout and at a desk (who sells, the total with the service fee, the event's refund policy (E10), the Terms); whether the rules that partners sell only at Abonten's price and add no fee of their own are enforceable; receipts for cash sales (C2); refunds of cash sales at the desk or by mobile money. | Open — design only |
+| Q3 | Sharing data with partners | Partner programme §3.1, §3.3, §6.4; Privacy Policy; Cookie Policy | Under the Data Protection Act, 2012 (Act 843): whether a partner is a controller or a processor of the buyer details it sends through the API and of the order facts Abonten returns, and the agreement needed; partners outside Ghana (B2); the partner link log (salted hashes, 90 days) and a new key in the existing `abn_ref` cookie remembering a partner link for 30 days (with B4); whether the buyer must be told which partner referred them. | Open — design only |
+| Q4 | Tax on partner commissions | Partner programme §4 | Whether Abonten must withhold tax on shares paid to partners (businesses and individuals trading alone), issue statements or invoices, and collect a TIN; VAT on partner commissions and on Abonten's service fee when part of it is paid to a partner (extends E3). | Open — design only |
+| Q5 | Money held by desks, and electronic money | Partner programme §3.4 (cash allocations), decisions PA15–PA17 | Desks selling allocated tickets for cash and paying Abonten later; caps on what a desk may owe; any deposit, float or prepaid stock; setting a desk's earnings against what it owes. Whether any of it is a payment service, an agency arrangement or electronic money under the Payment Systems and Services Act, 2019 (Act 987), for Abonten or for the desk (with E1 and M5), what must be disclosed, and what happens to unpaid cash if a desk fails. **Nothing of the cash model is built until this is Decided.** | Open — design only |
+| Q6 | The partner agreement | Partner programme §2.5, decision PA21 | Approve the agreement: an independent business with no authority beyond selling at the listed price; price parity; use of organizers' and Abonten's names and images; data protection; fraud checks, audit and suspension; clawback and set-off; liability; ending. Whether an Owner's acceptance in the product binds a business (Act 772, as N4) and when a written signature is needed (Desk partners). | Open — design only |
+| Q7 | Paying partners in cash | Partner programme §4.5 (the cash gate) | E1 extended to commissions paid to partners; the identity and business checks required before paying a partner (extends N5 and K5); paying individuals who trade alone. | Open — design only |
+| Q8 | Partner advertising | Partner programme §6.3 | Whether media and creators earning a commission must disclose it when they recommend an event; inducement rules (E7); that partners answer for their own messages to their customers. | Open — design only |
+
 ## Specifications waiting on this register
 
 | Specification | Blocking legal items |
@@ -188,6 +203,7 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | [specifications/retention-jobs.md](specifications/retention-jobs.md) | B3, B9, E3 |
 | [specifications/appeals-workflow.md](specifications/appeals-workflow.md) | E4 (wording) |
 | [specifications/support-and-security-contacts.md](specifications/support-and-security-contacts.md) | — (A1 and A3 Decided; remaining steps are decisions O1 and S2) |
+| [specifications/partner-program.md](specifications/partner-program.md) | Q1–Q8 (and B4, E1, E3, E7, M5, N2, N3, N5) |
 
 Verified corporate identity: [legal/company-registration.md](legal/company-registration.md).
 

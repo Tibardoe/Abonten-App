@@ -4,8 +4,8 @@ purpose: The authoritative list of every business or policy question the code do
 audience: Founder, operations lead, finance, engineering
 scope: Product, operations, finance, support, security-operations and field-programme policy
 status: Approved
-version: 1.14
-lastReviewed: 2026-10-25
+version: 1.15
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -274,6 +274,35 @@ Built 2026-11-20 at the founder's request ("build reschedule with your suggested
 | RS6 | Can a seated event change venue? | `event_reschedule()`, setup `seated` | No: its seats belong to the hall; cancel and list again | **Decided (2026-11-20, same).** |
 | RS7 | How often an event may be postponed, and does it count as a move? | `event_reschedule()`, `MAX_POSTPONEMENTS` | Once, single-date events only; it does not count as a move, setting the new date does | **Decided (2026-11-20, same).** |
 | RS8 | An event with several dates | `event_reschedule()` (`p_occurrence_id`) | One date at a time, twice per date, only that date's holders told and refunded; a new venue is for every date; it can't be postponed | **Decided (2026-11-20, same).** |
+
+## Partner programme
+
+**Design only, not built** (2026-11-25, the founder's direction of 25 November: other platforms and sellers sell Abonten tickets and earn a share, while organizers keep everything on Abonten): [specifications/partner-program.md](specifications/partner-program.md). Legal items Q1–Q8. Numbered PA because P1–P4 above are the field programme's. Nothing in the product assumes any recommendation below, and no rate, date or review time may be told to a partner before its row is Decided.
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| PA1 | Programme name, and who may be a partner | Spec §2.1–§2.2; public "Sell Abonten tickets" page | Not built. Individuals earn organizer-paid promoter commission through `?ref=` links (Part 7, X30–X37) | "Abonten Partners"; businesses and organisations, including registered media and creators trading as a business; individuals stay promoters | Open |
+| PA2 | What a partner account is | Spec §2.3; team roles (`@abonten/core/teams/roles`, `team_role_can()`) | Not built. Team accounts exist, switched off ([architecture/team-accounts.md](architecture/team-accounts.md)) | A team account with a partner profile; an existing team may apply; no share on events it or its members organize; it may earn on events at its own place; staff can open a team for an approved partner whatever the teams audience | Open |
+| PA3 | Partner tiers | Spec §2.6 | Not built | Link (links), Connected (adds embed and API; needs the business check and a verified domain), Desk (adds desk selling; needs ID checks of Owners and Finance and a written agreement); staff set and change the tier | Open |
+| PA4 | Who pays a partner's share | Spec §4.1; the organizer's ledger | Not built. The promoter commission is organizer-paid; the referral reward is Abonten-paid credit | Both: a base share from Abonten's service fee, plus an optional organizer commission per event | Open |
+| PA5 | Abonten's base share | Spec §4.1–§4.2; Abonten's net revenue (`platform_fee_entry.net_revenue`) | Not built. The referral reward uses 1% capped at 35% of net revenue | 1% of the ticket price (leaving out any part paid with Abonten Credit), capped at 35% of Abonten's net revenue on the sale; the same for every tier; reviewed after three months of live data | Open |
+| PA6 | The organizer's extra commission | Spec §4.1, §5; new `organizer_ledger_entry` types `partner_commission` / `_reversal` | Not built. The promoter commission is 1–30%, charged at once and reversed on refund | 0–30% per event, off by default, per-partner rates allowed, charged and reversed exactly like the promoter commission | Open |
+| PA7 | Are events open to partners by default? | Spec §5; organizer terms (legal Q1) | Not built | Yes for online channels (links, embed, API), at Abonten's cost; organizers can close any event or block any partner; extra commission and desk allocations opt-in only. Alternative: opt-in per event (safer for trust, little to sell at launch) | Open |
+| PA8 | How long a partner link counts | Spec §3.1; the `abn_ref` cookie (kept 30 days); `referral_attribution_window_days` (7) | Not built | 30 days, site-wide, the most recent touch; promoter and referral links stay 7 days | Open |
+| PA9 | Who gets the sale when several sellers touched the buyer | Spec §3.1; `stamp_checkout_referral`; `ticket_checkout.referrer_user_id` | One referrer per checkout, stamped once; a typed promoter code beats a link (X34, not built) | One seller per order: a typed code, then a sale on the partner's own surface (embed, API, desk), then the most recent eligible link; a partner's order earns no Abonten referral reward and no promoter commission | Open |
+| PA10 | Price parity | Spec §6.3; the partner agreement (Q6) | Not built | Partners sell only at Abonten's price (ticket price plus service fee); no partner fee on top; no lower advertised price; partner discounts only as promo codes the organizer creates | Open |
+| PA11 | Do partner buyers need an Abonten account? | Spec §3.2–§3.4 | Buying needs a signed-in account with an email | Yes: buyers sign in on Abonten's checkout with a phone code; desk cash buyers get tickets held for their phone number; no guest checkout in the first version | Open |
+| PA12 | What buyer data partners see | Spec §6.4; legal Q3 | Not built | Order facts only; buyer details only those the partner itself supplied; nothing about link buyers beyond counts; never attendee lists | Open |
+| PA13 | How and when partners are paid | Spec §4.4–§4.5; payouts ([finance/settlement-ledger-and-payouts.md](finance/settlement-ledger-and-payouts.md)) | Not built. Organizer payouts are requested and paid by hand (F1, F2) | Cash, from a balance released when each event settles; a monthly statement; payout on request above the minimum (F3); manual until F2; no Abonten Credit; shadow until the cash gate (identity checks live, business check, live payments, Q4, Q6, Q7) | Open |
+| PA14 | Taking money back after refunds and chargebacks | Spec §4.6 | Promoter commission reversals exist; cash clawback for promoters is X37 (not built) | Void or reverse before payout; after payout recover from the next earnings (as X37); pause a partner whose balance stays negative for more than 60 days | Open |
+| PA15 | Desk selling: which model, in which order | Spec §3.4; legal Q5 | Not built | First, desk sales the buyer pays on their own phone (a buy link or QR, no cash); cash allocations only after Q5 is Decided, for Desk partners; no prepaid stock | Open (cash part depends on legal Q5) |
+| PA16 | Cash desk limits, and who bears a desk that never pays | Spec §3.4; Admin › Partners | Not built | Abonten bears it (organizers are always paid and buyers keep their tickets); what a desk may owe starts small (for example GH₵2,000); statements due within 3 days and before the event; selling stops at the limit or when a statement is late; Desk sellers handling cash named and ID-checked | Open (depends on legal Q5) |
+| PA17 | Refunds of cash sales | Spec §3.4; `buyerCancelGate`; decision F2 | Not built | The desk refunds cash while its statement is open; afterwards Abonten refunds to the buyer's mobile money (manual until F2); the event's refund policy applies as for every buyer | Open (depends on legal Q5) |
+| PA18 | API sandbox and versions | Spec §3.3 | Not built | A sandbox on the Preview project with test payments; versions in the path (`/v1/`); breaking changes only in a new version with a notice period written into the partner agreement | Open |
+| PA19 | Rollout | Spec §8; `partner_program_setting`, `PARTNERS_KILL_SWITCH` (not built) | Not built | Ships off (staff, shadow, kill switch); three to five pilot partners in Accra chosen by the founder; links first; each later phase to the pilot partners before anyone else | Open |
+| PA20 | Markets and currencies | Spec §4.7 | Not built | A partner sells events in its own market only in the first version; balances, statements and payouts per currency | Open |
+| PA21 | How partners accept the agreement | Spec §2.5; legal Q6 | Not built. Team terms are accepted in the product per version (N4) | An Owner accepts each version in the product; Desk partners also sign a written agreement | Open |
+| PA22 | Do partners pay to join or to use the API? | Spec §2.5 | Not built | No | Open |
 
 ## Product
 
