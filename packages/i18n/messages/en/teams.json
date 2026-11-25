@@ -202,7 +202,7 @@
   "deleteEffectMembers": "Everyone is removed from the team and open invitations are withdrawn. Their own accounts aren't affected.",
   "deleteEffectListings": "Upcoming events nobody holds tickets for are cancelled and the rest are archived. The team's places stay on Abonten without an owner, so they can be claimed again.",
   "deleteEffectProfile": "The team's page, photo, followers, alerts and Spotlight posts go. Its conversations close.",
-  "deleteEffectMoney": "Sales and payout records are kept, as the law requires. Any Abonten credit the team has is lost.",
+  "deleteEffectMoney": "Sales and payout records are kept as a financial record. Any Abonten credit the team has is lost.",
   "deleteEffectOwners": "{others, plural, =0 {You're the only Owner, so the team is deleted as soon as you confirm.} one {The other Owner has 7 days to approve, or the request ends.} other {The other # Owners have 7 days to approve, or the request ends.}}",
   "deleteConfirmLabel": "Type {team} to confirm",
   "deleteSignInNote": "For your security, this works only if you signed in within the last 15 minutes.",

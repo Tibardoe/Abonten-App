@@ -203,7 +203,7 @@
   "deleteEffectMembers": "Tout le monde est retiré de l'équipe et les invitations en cours sont retirées. Les comptes de chacun ne sont pas touchés.",
   "deleteEffectListings": "Les événements à venir pour lesquels personne n'a de billet sont annulés et les autres sont archivés. Les lieux de l'équipe restent sur Abonten sans propriétaire, pour pouvoir être revendiqués à nouveau.",
   "deleteEffectProfile": "La page de l'équipe, sa photo, ses abonnés, ses alertes et ses publications Spotlight disparaissent. Ses conversations sont fermées.",
-  "deleteEffectMoney": "Les ventes et les versements restent enregistrés, comme la loi l'exige. Le crédit Abonten que l'équipe possède est perdu.",
+  "deleteEffectMoney": "Les ventes et les versements restent enregistrés comme dossier financier. Le crédit Abonten que l'équipe possède est perdu.",
   "deleteEffectOwners": "{others, plural, =0 {Vous êtes le seul propriétaire : l'équipe est supprimée dès que vous confirmez.} one {L'autre propriétaire a 7 jours pour approuver, sinon la demande prend fin.} other {Les # autres propriétaires ont 7 jours pour approuver, sinon la demande prend fin.}}",
   "deleteConfirmLabel": "Saisissez {team} pour confirmer",
   "deleteSignInNote": "Pour votre sécurité, cela ne fonctionne que si vous vous êtes connecté ces 15 dernières minutes.",

@@ -203,7 +203,7 @@
   "deleteEffectMembers": "Alle werden aus dem Team entfernt und offene Einladungen zurückgezogen. Ihre eigenen Konten sind davon nicht betroffen.",
   "deleteEffectListings": "Bevorstehende Events, für die niemand ein Ticket hat, werden abgesagt, die übrigen archiviert. Die Orte des Teams bleiben ohne Inhaber auf Abonten, damit sie neu beansprucht werden können.",
   "deleteEffectProfile": "Die Seite des Teams, sein Foto, seine Follower, Benachrichtigungen und Spotlight-Beiträge verschwinden. Seine Unterhaltungen werden geschlossen.",
-  "deleteEffectMoney": "Verkäufe und Auszahlungen bleiben gespeichert, wie es das Gesetz verlangt. Abonten-Guthaben des Teams verfällt.",
+  "deleteEffectMoney": "Verkäufe und Auszahlungen bleiben als Finanzunterlagen gespeichert. Abonten-Guthaben des Teams verfällt.",
   "deleteEffectOwners": "{others, plural, =0 {Du bist der einzige Inhaber, deshalb wird das Team gelöscht, sobald du bestätigst.} one {Der andere Inhaber hat 7 Tage Zeit zuzustimmen, sonst endet der Antrag.} other {Die # anderen Inhaber haben 7 Tage Zeit zuzustimmen, sonst endet der Antrag.}}",
   "deleteConfirmLabel": "Gib zur Bestätigung {team} ein",
   "deleteSignInNote": "Zu deiner Sicherheit klappt das nur, wenn du dich in den letzten 15 Minuten angemeldet hast.",
