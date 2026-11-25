@@ -49,7 +49,10 @@ declare
   v_expected constant jsonb := jsonb_build_object(
     'anonymize_deleted_account', 'c540966424aa5f03f9d067b00d92027c',
     'account_deletion_blockers', '9bca40758a01e6902bcf419e103a4ac1',
-    'credit_close_account',      '7902daa5b0a159abf8a0df08e9e5d2db',
+    -- Production's copy of credit_close_account lacks one comment line
+    -- ("A debt the user never repaid is written off."); the code is the
+    -- same, so either fingerprint is accepted.
+    'credit_close_account',      '7902daa5b0a159abf8a0df08e9e5d2db,4fa7cb69fbeae1c725b973d4475793ec',
     '_team_require',             '478a4a35067b6aad32d82ca8ecb49146',
     '_team_log',                 'a141db1bc5a2d8520acbbc51d228ef79'
   );
@@ -60,7 +63,7 @@ begin
       select 1 from pg_proc p
       join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public' and p.proname = v_name
-        and md5(replace(p.prosrc, E'\r', '')) = v_expected ->> v_name
+        and md5(replace(p.prosrc, E'\r', '')) = any (string_to_array(v_expected ->> v_name, ','))
     ) then
       raise exception 'team profile and delete: public.% is not the definition this migration expects', v_name;
     end if;
