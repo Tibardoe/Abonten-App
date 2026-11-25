@@ -12,6 +12,10 @@ import {
   type RatingAggregate,
   parseRatingAggregate,
 } from "@abonten/core/ratings";
+import {
+  type ReviewAuthorView,
+  withReviewAuthors,
+} from "@abonten/core/reviews/reviewAuthor";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -293,7 +297,8 @@ export type ProfileReview = {
   title: string;
   comment: string | null;
   created_at: string;
-  reviewer: { username: string | null } | null;
+  /** A deleted reviewer comes back as `deleted`, no handle or picture. */
+  reviewer: ReviewAuthorView | null;
   // Only set for owned-place reviews (the "Place Reviews" sub-tab).
   place?: { name: string | null } | null;
 };
@@ -320,7 +325,10 @@ export function useProfileReviews(userId: string | undefined) {
       }
       const { data, error } = await q;
       if (error) throw error;
-      const all = (data ?? []) as unknown as ProfileReview[];
+      const all = withReviewAuthors(
+        (data ?? []) as unknown as ProfileReview[],
+        "reviewer",
+      );
       const hasNext = all.length > PAGE;
       const rows = hasNext ? all.slice(0, PAGE) : all;
       const last = rows[rows.length - 1];
@@ -364,7 +372,10 @@ export function useProfilePlaceReviews(userId: string | undefined) {
       }
       const { data, error } = await q;
       if (error) throw error;
-      const all = (data ?? []) as unknown as ProfileReview[];
+      const all = withReviewAuthors(
+        (data ?? []) as unknown as ProfileReview[],
+        "reviewer",
+      );
       const hasNext = all.length > PAGE;
       const rows = hasNext ? all.slice(0, PAGE) : all;
       const last = rows[rows.length - 1];

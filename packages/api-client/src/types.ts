@@ -2053,6 +2053,8 @@ export type OwnerPlaceReviewRow = {
     username: string | null;
     avatar_public_id: string | null;
     avatar_version: string | null;
+    /** A deleted reviewer: no handle or picture ("Former Abonten member"). */
+    deleted?: boolean;
   } | null;
   place_review_photo:
     | { id: string; public_id: string; version: string; position: number }[]

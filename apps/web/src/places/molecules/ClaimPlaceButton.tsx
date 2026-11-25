@@ -13,7 +13,26 @@ type ClaimPlaceButtonProps = {
   placeId: string;
   placeName: string;
   ownerId: string;
+  /**
+   * "overlay" (default) sits on the cover photo; "inline" is the button in
+   * the page's actions where Message was, for a place nobody manages.
+   */
+  variant?: "overlay" | "inline";
 };
+
+const VARIANT_CLASS = {
+  overlay: {
+    pending:
+      "px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm shrink-0",
+    button:
+      "px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm hover:bg-black/30 transition-colors shrink-0",
+  },
+  inline: {
+    pending: "text-sm text-muted-foreground shrink-0",
+    button:
+      "px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0",
+  },
+} as const;
 
 /**
  * Entry point for the "Claim this Place" flow on the public details page --
@@ -33,8 +52,10 @@ export default function ClaimPlaceButton({
   placeId,
   placeName,
   ownerId,
+  variant = "overlay",
 }: ClaimPlaceButtonProps) {
   const t = useTranslations("places");
+  const classes = VARIANT_CLASS[variant];
 
   const { data: user } = useCurrentUser();
   const { data: claimState } = usePlaceClaimState(placeId, user?.id, ownerId);
@@ -44,11 +65,7 @@ export default function ClaimPlaceButton({
   if (!user || user.id === ownerId) return null;
 
   if (claimState?.status === "pending") {
-    return (
-      <span className="px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm shrink-0">
-        {t("claimPendingReview")}
-      </span>
-    );
+    return <span className={classes.pending}>{t("claimPendingReview")}</span>;
   }
 
   if (claimState?.status === "approved") return null;
@@ -58,7 +75,7 @@ export default function ClaimPlaceButton({
       <button
         type="button"
         onClick={() => setShowModal(true)}
-        className="px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm hover:bg-black/30 transition-colors shrink-0"
+        className={classes.button}
       >
         {t("claimThisPlace")}
       </button>

@@ -46,6 +46,7 @@ import { dayName, getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { formatCount, formatRating } from "@abonten/core/i18n/format";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import { placeHasOwner } from "@abonten/core/placeOwner";
 import {
   SPECIAL_HOURS_PUBLIC_DAYS,
   placeLocalDate,
@@ -316,7 +317,10 @@ export default function PlaceDetailScreen() {
   // gating as web's RequestBookingButton; signed out, it signs in first and
   // comes back here. The service picker inside the sheet is optional and
   // only appears when the place lists services.
-  const canBook = !session || place.owner_id !== session.user.id;
+  // A place whose owner's account was deleted takes no bookings or
+  // messages (nobody would answer); the claim card says so instead.
+  const hasOwner = placeHasOwner(place.owner);
+  const canBook = hasOwner && (!session || place.owner_id !== session.user.id);
   const onBook = () => {
     if (!session) {
       if (pathname) setPendingRedirect(pathname);
@@ -448,7 +452,7 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
 
-          {session && place.owner_id !== session.user.id ? (
+          {hasOwner && session && place.owner_id !== session.user.id ? (
             <Button
               title={t("messageThisPlace")}
               variant="outline"
@@ -530,9 +534,11 @@ export default function PlaceDetailScreen() {
                 tone="foreground"
               />
               <View className="flex-1">
-                <AppText variant="bodyStrong">{t("ownThisPlace")}</AppText>
+                <AppText variant="bodyStrong">
+                  {hasOwner ? t("ownThisPlace") : t("noOwnerTitle")}
+                </AppText>
                 <AppText variant="meta">
-                  {t("claimItToManageItsDetails")}
+                  {hasOwner ? t("claimItToManageItsDetails") : t("noOwnerBody")}
                 </AppText>
               </View>
               <Icon name="chevron-forward" size={16} tone="muted" />

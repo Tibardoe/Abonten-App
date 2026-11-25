@@ -9,6 +9,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import type { OwnerPlaceReviewRow } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { reviewAuthorName } from "@abonten/core/reviews/reviewAuthor";
 import {
   AppText,
   Button,
@@ -52,6 +53,7 @@ function ReviewCard({
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const reply = useRespondToPlaceReview(placeId);
@@ -127,7 +129,7 @@ function ReviewCard({
         )}
         <View className="flex-1">
           <AppText variant="bodyStrong" numberOfLines={1}>
-            {review.user_info?.username ?? t("anonymous")}
+            {reviewAuthorName(tc, review.user_info, t("anonymous"))}
           </AppText>
           <AppText variant="caption">
             {getRelativeTime(review.created_at, undefined, locale)}

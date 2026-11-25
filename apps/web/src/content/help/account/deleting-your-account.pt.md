@@ -2,7 +2,7 @@
 title: Eliminar a sua conta
 summary: Como eliminar a sua conta Abonten e o que exatamente é eliminado, mantido ou perdido.
 order: 3
-lastUpdated: 2026-09-13
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,8 @@ owner: Abonten Hub
 
 - **Bilhetes:** os bilhetes que comprou continuam a ser registos válidos, mas deixa de os poder abrir no Abonten. Descarregue os que ainda precisar.
 - **Organizadores:** não pode eliminar a conta enquanto um dos seus próximos eventos ainda tiver participantes, enquanto estiver a ser processado um levantamento a seu favor, ou enquanto tiver ganhos por pagar. Cancele primeiro esses eventos (os participantes são reembolsados e avisados) e peça o levantamento do que estiver disponível; o ecrã de eliminação indica-lhe o passo que falta.
-- **Proprietários de locais:** os locais que lhe pertencem continuam publicados, mas deixam de estar reivindicados, para que o próximo proprietário os possa reivindicar. Se outra pessoa deve ficar com uma página, peça-lhe que a reivindique primeiro.
+- **Promoções Spotlight:** não pode eliminar a conta enquanto uma promoção Spotlight que pagou estiver ativa ou a aguardar análise, ou enquanto o pagamento estiver a ser processado. Cancele-a primeiro.
+- **Proprietários de locais:** os locais que lhe pertencem continuam publicados, mas deixam de estar reivindicados, para que o próximo proprietário os possa reivindicar. Se outra pessoa deve ficar com uma página, peça-lhe que a reivindique primeiro. Até lá, ninguém pode enviar mensagens ao local nem pedidos de reserva.
 - **Abonten Credit:** perde o saldo que tiver e as recompensas pendentes são anuladas.
 
 ## Como eliminar
@@ -24,7 +25,7 @@ A eliminação é imediata e não pode ser anulada. A sessão é terminada em to
 
 ## O que é eliminado
 
-O seu acesso, nome, nome de utilizador, fotografia, biografia, telefone e e-mail, favoritos, lembretes, destaques, notificações e definições de notificações, rascunhos e pedidos de reivindicação de locais pendentes. Os cartões e números de mobile money guardados são removidos (os dados que permitiriam cobrá-los são apagados). Os dados das contas de recebimento são apagados. Os rascunhos de eventos são eliminados; os próximos eventos sem participantes são cancelados; os seus outros eventos são arquivados e deixam de aparecer nos resultados.
+O seu acesso, nome, nome de utilizador, fotografia, biografia, telefone e e-mail, favoritos, lembretes, destaques, notificações e definições de notificações, rascunhos e pedidos de reivindicação de locais pendentes. Os cartões e números de mobile money guardados são removidos (os dados que permitiriam cobrá-los são apagados). Os dados das contas de recebimento são apagados. Os rascunhos de eventos são eliminados; os próximos eventos sem participantes são cancelados; os seus outros eventos são arquivados e deixam de aparecer nos resultados. As suas publicações Spotlight e Stories são retiradas e as fotografias e vídeos apagados (as que alguém denunciou são guardadas um pouco mais para a denúncia ser analisada), e deixa de seguir as contas que seguia.
 
 ## O que é mantido
 

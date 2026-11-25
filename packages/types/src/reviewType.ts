@@ -11,6 +11,12 @@ export type ReviewAuthor = {
   username: string | null;
   avatar_public_id: string | null;
   avatar_version: string | null;
+  /**
+   * The account was deleted (set by @abonten/core/reviews/reviewAuthor on
+   * the read path): username and picture are null, the screen says
+   * "Former Abonten member".
+   */
+  deleted?: boolean;
 };
 
 export type ReviewPhoto = {
@@ -67,5 +73,5 @@ export type UserPlaceReviewListItem = Tables["place_review"]["Row"] & {
 
 /** Reviews left about an organizer (the legacy `review` table). */
 export type OrganizerReviewListItem = Tables["review"]["Row"] & {
-  user_info: { username: string | null } | null;
+  user_info: { username: string | null; deleted?: boolean } | null;
 };

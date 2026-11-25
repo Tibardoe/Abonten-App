@@ -5598,7 +5598,9 @@
     "stepOf": "b0d2ef96",
     "claimReviewNote": "8076aea7",
     "metaTitle": "96c100a6",
-    "metaTitleInCity": "18d2493f"
+    "metaTitleInCity": "18d2493f",
+    "noOwnerBody": "fe680efb",
+    "noOwnerTitle": "015b4f45"
   },
   "plans": {
     "plans": "cf2e5f26"
@@ -6772,6 +6774,7 @@
     "db.noCreditWasCapturedForThisTransaction": "92fc9966",
     "db.noEventFound": "9bbe44c5",
     "db.noPendingAdjustmentRequestWithThatId": "a9bb31cb",
+    "db.nobodyManagesThisPlaceOnAbontenAt": "8dee95f2",
     "db.notARebateRule": "7a7b902b",
     "db.notAllowedForThisAccount": "baa727ab",
     "db.notAuthenticated": "0c91acba",
@@ -6928,6 +6931,7 @@
     "db.thisItemIsAlreadyPaid": "8fc23d65",
     "db.thisMessageWasDeleted": "ce3ffd59",
     "db.thisOnboardingIsNotFlagged": "9d3e8343",
+    "db.thisOrganizerIsNoLongerOnAbonten": "ec2502a5",
     "db.thisPassAlreadyHasATicketFor": "577be78c",
     "db.thisPassIsNotYoursToUse": "c5df95a2",
     "db.thisPaymentIsRefundedAsAWhole": "b38cb6b5",
@@ -7964,7 +7968,9 @@
     "teamDeleteRequested": "8fc48938",
     "teamDeleteApproved": "01ef5bd8",
     "teamDeleted": "a050b7cc",
-    "teamDeleteCancelled": "25bf0a04"
+    "teamDeleteCancelled": "25bf0a04",
+    "deleteAccountBlockedPromotion": "b95db2cb",
+    "deleteAccountBlockedPromotionPayment": "98f03744"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",

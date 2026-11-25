@@ -2,7 +2,7 @@
 title: Eliminar tu cuenta
 summary: Cómo eliminar tu cuenta de Abonten y qué se elimina, se conserva o se pierde exactamente.
 order: 3
-lastUpdated: 2026-09-13
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,8 @@ owner: Abonten Hub
 
 - **Entradas:** las entradas que compraste siguen siendo registros válidos, pero ya no podrás abrirlas en Abonten. Descarga las que todavía necesites.
 - **Organizadores:** no puedes eliminar tu cuenta mientras uno de tus próximos eventos tenga asistentes, mientras se esté procesando un retiro a tu favor o mientras tengas ganancias pendientes de pago. Cancela antes esos eventos (a los asistentes se les reembolsa y se les avisa) y pide el retiro de lo disponible; la pantalla de eliminación te dice qué paso queda pendiente.
-- **Propietarios de lugares:** los lugares que son tuyos siguen publicados pero quedan sin reclamar, para que el siguiente propietario pueda reclamarlos. Si otra persona debe quedarse con una ficha, pídele que la reclame antes.
+- **Promociones de Spotlight:** no puedes eliminar tu cuenta mientras una promoción de Spotlight que pagaste esté activa o pendiente de revisión, o mientras se esté procesando su pago. Cancélala antes.
+- **Propietarios de lugares:** los lugares que son tuyos siguen publicados pero quedan sin reclamar, para que el siguiente propietario pueda reclamarlos. Si otra persona debe quedarse con una ficha, pídele que la reclame antes. Hasta entonces nadie puede escribir al lugar ni enviarle una solicitud de reserva.
 - **Abonten Credit:** pierdes el saldo que tengas y se anulan las recompensas pendientes.
 
 ## Cómo eliminarla
@@ -24,7 +25,7 @@ La eliminación es inmediata y no se puede deshacer. Se cierra tu sesión en tod
 
 ## Qué se elimina
 
-Tu acceso, tu nombre, tu nombre de usuario, tu foto, tu biografía, tu teléfono y tu correo, tus favoritos, recordatorios, destacados, notificaciones y ajustes de notificaciones, borradores y reclamaciones de lugares pendientes. Se quitan las tarjetas y números de dinero móvil guardados (se borran los datos que permitirían cobrar en ellos). Se borran los datos de las cuentas de cobro. Los borradores de eventos se eliminan; los próximos eventos sin ningún asistente se cancelan; el resto de tus eventos se archiva y deja de aparecer en los resultados.
+Tu acceso, tu nombre, tu nombre de usuario, tu foto, tu biografía, tu teléfono y tu correo, tus favoritos, recordatorios, destacados, notificaciones y ajustes de notificaciones, borradores y reclamaciones de lugares pendientes. Se quitan las tarjetas y números de dinero móvil guardados (se borran los datos que permitirían cobrar en ellos). Se borran los datos de las cuentas de cobro. Los borradores de eventos se eliminan; los próximos eventos sin ningún asistente se cancelan; el resto de tus eventos se archiva y deja de aparecer en los resultados. Tus publicaciones de Spotlight y tus Stories se retiran y sus fotos y vídeos se borran (las que alguien denunció se guardan un poco más para revisar la denuncia), y dejas de seguir las cuentas que seguías.
 
 ## Qué se conserva
 

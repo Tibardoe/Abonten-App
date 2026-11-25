@@ -1,5 +1,10 @@
 import { logger } from "@abonten/core/logger";
 import type { Notice } from "@abonten/core/notifications/notices";
+import {
+  PLACE_OWNER_EMBED,
+  type PlaceOwnerRef,
+  placeHasOwner,
+} from "@abonten/core/placeOwner";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -66,7 +71,9 @@ export async function requestPlaceBookingCore(
 
   const { data: place, error: placeError } = await supabase
     .from("place")
-    .select("owner_id, name, status, temporary_status, moderation_state")
+    .select(
+      `owner_id, name, status, temporary_status, moderation_state, ${PLACE_OWNER_EMBED}`,
+    )
     .eq("id", placeId)
     .maybeSingle();
 
@@ -93,8 +100,12 @@ export async function requestPlaceBookingCore(
 
   // Only a live, published place accepts booking requests — a draft,
   // archived or permanently-closed place must not (a stale detail page held
-  // open, or a tampered request, could otherwise still submit).
-  if (place.status !== "published") {
+  // open, or a tampered request, could otherwise still submit). Nor one
+  // whose owner's account was deleted: nobody would answer it.
+  if (
+    place.status !== "published" ||
+    !placeHasOwner(place.owner as PlaceOwnerRef)
+  ) {
     return {
       status: 400,
       message: tr("thisPlaceIsnTAcceptingBookings"),

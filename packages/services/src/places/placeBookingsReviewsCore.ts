@@ -7,6 +7,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import { isBookingLapsed } from "@abonten/core/placeBooking";
+import { withReviewAuthors } from "@abonten/core/reviews/reviewAuthor";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
@@ -326,7 +327,8 @@ export async function fetchPlaceReviewsForOwner(
   }
 
   const { page, hasNextPage } = splitPage<PlaceReviewListItem>(
-    data ?? [],
+    // A deleted reviewer's handle and picture never leave the read path.
+    withReviewAuthors(data ?? [], "user_info"),
     pageSize,
   );
 

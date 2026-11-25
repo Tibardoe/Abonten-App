@@ -8,6 +8,7 @@ import {
 } from "@/features/organizer/useEventReviewsManage";
 import { useQueryView } from "@/lib/useQueryView";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { reviewAuthorName } from "@abonten/core/reviews/reviewAuthor";
 import {
   AppText,
   Avatar,
@@ -36,6 +37,7 @@ function ReviewCard({
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const reply = useRespondToEventReview(eventId);
@@ -90,7 +92,7 @@ function ReviewCard({
         />
         <View className="flex-1">
           <AppText variant="bodyStrong" numberOfLines={1}>
-            {review.reviewer?.username ?? t("attendee")}
+            {reviewAuthorName(tc, review.reviewer, t("attendee"))}
           </AppText>
           <AppText variant="caption">
             {getRelativeTime(review.created_at, undefined, locale)}

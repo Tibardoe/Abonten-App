@@ -55,9 +55,10 @@ import {
 } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
-import { hostDisplayName } from "@abonten/core/hostDisplayName";
+import { hostName } from "@abonten/core/hostDisplayName";
 import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { isDeletedAccount } from "@abonten/core/personName";
 import { refundCutoffDays, refundPolicyOf } from "@abonten/core/refundPolicy";
 import { nextReminderStart } from "@abonten/core/reminderStart";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
@@ -242,6 +243,7 @@ export default function EventDetailScreen() {
   }
 
   const { event, attendanceCount, organizerRating } = data;
+  const organizerGone = isDeletedAccount(event.user_info?.username);
   const flyer =
     event.flyer_public_id && event.flyer_version
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
@@ -477,18 +479,24 @@ export default function EventDetailScreen() {
         ) : null}
 
         <View className="gap-6 p-4">
-          {/* Organizer */}
+          {/* Organizer. One whose account was deleted is a "Former
+              Abonten member": no profile to open, no Message. */}
           {event.user_info ? (
             <Pressable
-              accessibilityRole="button"
+              accessibilityRole={organizerGone ? undefined : "button"}
+              disabled={organizerGone}
               className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
               onPress={() =>
                 router.push(`/(app)/user/${event.user_info?.username}`)
               }
             >
               <Avatar
-                publicId={event.user_info.avatar_public_id}
-                version={event.user_info.avatar_version}
+                publicId={
+                  organizerGone ? undefined : event.user_info.avatar_public_id
+                }
+                version={
+                  organizerGone ? undefined : event.user_info.avatar_version
+                }
                 size={44}
               />
               <View className="flex-1">
@@ -499,7 +507,7 @@ export default function EventDetailScreen() {
                     numberOfLines={1}
                     className="shrink"
                   >
-                    {hostDisplayName(event.user_info)}
+                    {hostName(tc, event.user_info)}
                   </AppText>
                   {showsOrganizerBadge(event.user_info) ? (
                     <VerifiedPill
@@ -529,7 +537,9 @@ export default function EventDetailScreen() {
                 <AppText variant="caption">
                   {getRelativeTime(event.created_at, undefined, locale)}
                 </AppText>
-                <Icon name="chevron-forward" size={16} tone="muted" />
+                {organizerGone ? null : (
+                  <Icon name="chevron-forward" size={16} tone="muted" />
+                )}
               </View>
             </Pressable>
           ) : null}
@@ -548,7 +558,9 @@ export default function EventDetailScreen() {
             />
           ) : null}
 
-          {session && event.organizer_id !== session.user.id ? (
+          {!organizerGone &&
+          session &&
+          event.organizer_id !== session.user.id ? (
             <Button
               title={t("messageOrganizer")}
               variant="outline"

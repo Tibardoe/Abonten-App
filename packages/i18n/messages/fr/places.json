@@ -514,5 +514,7 @@
   "stepOf": "Étape {step} sur {total}",
   "claimReviewNote": "{documents, select, yes {Un administrateur examinera votre demande et vos documents. Vous serez prévenu une fois la demande examinée — le propriétaire ne change qu'après une approbation.} other {Un administrateur examinera votre demande. Vous serez prévenu une fois la demande examinée — le propriétaire ne change qu'après une approbation.}}",
   "metaTitle": "{name} · {category}",
-  "metaTitleInCity": "{name} · {category} à {city}"
+  "metaTitleInCity": "{name} · {category} à {city}",
+  "noOwnerBody": "Les messages et les demandes de réservation sont désactivés jusqu'à ce que son propriétaire le revendique. C'est votre établissement ?",
+  "noOwnerTitle": "Personne ne gère encore ce lieu sur Abonten"
 }

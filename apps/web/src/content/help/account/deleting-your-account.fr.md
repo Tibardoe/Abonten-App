@@ -2,7 +2,7 @@
 title: Supprimer votre compte
 summary: Comment supprimer votre compte Abonten, et ce qui est exactement supprimé, conservé ou perdu.
 order: 3
-lastUpdated: 2026-09-13
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,8 @@ owner: Abonten Hub
 
 - **Billets :** les billets que vous avez achetés restent des enregistrements valables, mais vous ne pourrez plus les ouvrir dans Abonten. Téléchargez ceux dont vous avez encore besoin.
 - **Organisateurs :** vous ne pouvez pas supprimer votre compte tant qu'un de vos événements à venir a encore des participants, qu'un versement en votre faveur est en cours de traitement, ou que vous avez des gains en attente de versement. Annulez d'abord ces événements (les participants sont remboursés et prévenus) et demandez le versement de ce qui est disponible ; l'écran de suppression vous indique l'étape qui reste à faire.
-- **Propriétaires de lieux :** les lieux qui vous appartiennent restent publiés mais redeviennent non revendiqués, pour que le prochain propriétaire puisse les revendiquer. Si quelqu'un d'autre doit reprendre une fiche, demandez-lui de la revendiquer d'abord.
+- **Promotions Spotlight :** vous ne pouvez pas supprimer votre compte tant qu'une promotion Spotlight que vous avez payée est en cours ou en attente d'examen, ou que son paiement est en cours. Annulez-la d'abord.
+- **Propriétaires de lieux :** les lieux qui vous appartiennent restent publiés mais redeviennent non revendiqués, pour que le prochain propriétaire puisse les revendiquer. Si quelqu'un d'autre doit reprendre une fiche, demandez-lui de la revendiquer d'abord. D'ici là, personne ne peut écrire au lieu ni lui envoyer une demande de réservation.
 - **Abonten Credit :** tout solde est perdu et les récompenses en attente sont annulées.
 
 ## Comment supprimer
@@ -24,7 +25,7 @@ La suppression est immédiate et ne peut pas être annulée. Vous êtes déconne
 
 ## Ce qui est supprimé
 
-Votre connexion, votre nom, votre nom d'utilisateur, votre photo, votre bio, votre téléphone et votre adresse e-mail, vos favoris, vos rappels, vos temps forts, vos notifications et leurs réglages, vos brouillons et vos revendications de lieux en attente. Les cartes et numéros mobile money enregistrés sont retirés (les informations qui permettraient de les débiter sont effacées). Les informations des comptes de versement sont effacées. Les brouillons d'événements sont supprimés ; les événements à venir sans aucun participant sont annulés ; vos autres événements sont archivés et n'apparaissent plus dans les résultats.
+Votre connexion, votre nom, votre nom d'utilisateur, votre photo, votre bio, votre téléphone et votre adresse e-mail, vos favoris, vos rappels, vos temps forts, vos notifications et leurs réglages, vos brouillons et vos revendications de lieux en attente. Les cartes et numéros mobile money enregistrés sont retirés (les informations qui permettraient de les débiter sont effacées). Les informations des comptes de versement sont effacées. Les brouillons d'événements sont supprimés ; les événements à venir sans aucun participant sont annulés ; vos autres événements sont archivés et n'apparaissent plus dans les résultats. Vos publications Spotlight et vos Stories sont retirées et leurs photos et vidéos effacées (celles qui ont été signalées sont gardées un peu plus longtemps pour l'examen du signalement), et vous ne suivez plus les comptes que vous suiviez.
 
 ## Ce qui est conservé
 

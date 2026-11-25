@@ -60,8 +60,11 @@ import { queryClient } from "./queryClient";
  * 5 (2026-11-23): an event's ticket types gained `amount_mode` and the
  * range (open-amount tickets); a restored one without it would show an
  * amount the buyer chooses as a fixed price.
+ * 6 (2026-11-25): a place's detail gained `owner` (whether anyone is behind
+ * it) and the profile review tabs a reviewer's `deleted`; a restored list
+ * would still show a deleted reviewer's scrubbed handle.
  */
-const QUERY_CACHE_VERSION = 5;
+const QUERY_CACHE_VERSION = 6;
 /** Older than this, a restored cache is more misleading than useful. */
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** Allowlisted queries stay in memory at least this long, so they reach disk. */

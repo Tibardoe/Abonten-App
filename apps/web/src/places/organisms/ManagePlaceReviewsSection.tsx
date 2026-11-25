@@ -8,6 +8,7 @@ import InfiniteList from "@/components/organisms/InfiniteList";
 import { useToast } from "@/hooks/useToast";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { reviewAuthorName } from "@abonten/core/reviews/reviewAuthor";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import {
   type InfiniteData,
@@ -45,6 +46,7 @@ export default function ManagePlaceReviewsSection({
   const locale = useLocale();
 
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -195,7 +197,7 @@ export default function ManagePlaceReviewsSection({
                       review.user_info.avatar_version,
                       { width: 40, height: 40 },
                     )}
-                    alt={review.user_info?.username ?? t("reviewer")}
+                    alt={reviewAuthorName(tc, review.user_info, t("reviewer"))}
                     width={40}
                     height={40}
                     className="rounded-full border border-border"
@@ -206,7 +208,7 @@ export default function ManagePlaceReviewsSection({
 
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-card-foreground truncate">
-                    {review.user_info?.username ?? t("anonymous")}
+                    {reviewAuthorName(tc, review.user_info, t("anonymous"))}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {getRelativeTime(review.created_at, undefined, locale)}

@@ -2,6 +2,10 @@ import { invalidateReviewSubject } from "@/features/reviews/reviewQueryKeys";
 import { supabase } from "@/lib/supabase";
 import { keysetOlderThan } from "@abonten/core/pagination";
 import {
+  type ReviewAuthorView,
+  withReviewAuthors,
+} from "@abonten/core/reviews/reviewAuthor";
+import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
@@ -25,11 +29,8 @@ export type ManageEventReview = {
   created_at: string;
   is_verified_attendee: boolean;
   organizer_response: string | null;
-  reviewer: {
-    username: string | null;
-    avatar_public_id: string | null;
-    avatar_version: string | null;
-  } | null;
+  /** A deleted reviewer comes back as `deleted`, no handle or picture. */
+  reviewer: ReviewAuthorView | null;
   event_review_photo:
     | { id: string; public_id: string; version: string; position: number }[]
     | null;
@@ -56,7 +57,10 @@ export function useEventReviewsManage(eventId: string | undefined) {
 
       const { data, error } = await q;
       if (error) throw error;
-      const rows = (data ?? []) as unknown as ManageEventReview[];
+      const rows = withReviewAuthors(
+        (data ?? []) as unknown as ManageEventReview[],
+        "reviewer",
+      );
       const hasNext = rows.length > PAGE;
       const page = hasNext ? rows.slice(0, PAGE) : rows;
       const lastRow = page[page.length - 1];

@@ -2,6 +2,7 @@ import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
+import { PLACE_OWNER_EMBED } from "@abonten/core/placeOwner";
 import type { PlaceSpecialHourRow } from "@abonten/core/placeSpecialHours";
 import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
 import { translatorFor } from "@abonten/ui-native/i18n";
@@ -24,6 +25,11 @@ export type PlaceDetail = {
   location: string | null;
   category_id: number | null;
   owner_id: string | null;
+  /**
+   * The owner account's status only: placeHasOwner says whether anyone is
+   * behind the place. Absent in an older cache (counts as owned).
+   */
+  owner?: { status_id: number | null } | null;
   website_url: string | null;
   phone: string | null;
   whatsapp: string | null;
@@ -72,7 +78,7 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
   ] = await Promise.all([
     supabase
       .from("place")
-      .select("*, place_category(name, slug)")
+      .select(`*, place_category(name, slug), ${PLACE_OWNER_EMBED}`)
       .eq("id", id)
       .eq("status", "published")
       .maybeSingle(),

@@ -4,8 +4,8 @@ purpose: How event and place reviews are listed, summarised, filtered, voted on,
 audience: Engineering, operations, security reviewers
 scope: event_review / place_review read path (review_list, review_summary), helpful votes, the edited stamp, account-wide blocks (user_block_set), account setup completion (@abonten/core/profileCompletion) and its reminder (account_setup_prompt_state), the web /events/<code>/reviews and /places/<slug>/reviews pages, the mobile Reviews, Account setup and Blocked accounts screens, and the contextual email prompt at checkout. Not covered - review creation eligibility (unchanged, see PROJECT.md §27.7 / enforce_event_review_eligibility) and organizer replies (reviewResponseCore).
 status: Approved
-version: 1.1
-lastReviewed: 2026-11-06
+version: 1.2
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -29,6 +29,8 @@ Event reviews (`event_review`) and place reviews (`place_review`) stay in their 
 | `helpful_count`, `edited_at` columns | Trigger-maintained. A client can't write either (see §1.3). |
 | `event_review_helpful` / `place_review_helpful` | One row per (review, person); the primary key is the one-vote rule. Clients read only their own rows and cannot write. |
 | `review_set_helpful(kind, review_id, helpful)` | SECURITY DEFINER, `authenticated` only, auth.uid()-scoped. The only way to vote. |
+
+**A deleted reviewer** (since 2026-11-25). A deleted account's reviews stay, under "Former Abonten member" with the default picture and no profile link, never its scrubbed `deleted_…` handle. `review_list` answers `reviewer_deleted` for event and place pages; the lists that embed the author from `user_info` themselves (the profile Reviews tabs: reviews of an organizer and of the places someone owns; a place owner's and an organizer's review lists on the website and in the app) pass every row through `withReviewAuthors` (`@abonten/core/reviews/reviewAuthor`) on the read path and name the author with `reviewAuthorName`. A new list that shows review authors does the same.
 
 Shared TypeScript lives in `@abonten/core/reviews/reviewList` (row parsing, cursor, args, summary shares, empty-state copy, share links) and `@abonten/core/reviews/reviewCache` (optimistic patches over any cached shape). Web reaches the functions through `@abonten/services/reviews/reviewListQuery` and `reviewHelpfulCore` (Server Actions `getReviewPage`, `getReviewSummary`, `getSharedReview`, `setReviewHelpful`); mobile calls them directly (class A in [shared-backend](shared-backend.md): invoker reads and an auth.uid()-scoped definer write).
 
