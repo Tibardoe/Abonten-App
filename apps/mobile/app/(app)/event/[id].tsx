@@ -483,7 +483,7 @@ export default function EventDetailScreen() {
               Abonten member": no profile to open, no Message. */}
           {event.user_info ? (
             <Pressable
-              accessibilityRole="button"
+              accessibilityRole={organizerGone ? undefined : "button"}
               disabled={organizerGone}
               className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
               onPress={() =>
@@ -537,7 +537,9 @@ export default function EventDetailScreen() {
                 <AppText variant="caption">
                   {getRelativeTime(event.created_at, undefined, locale)}
                 </AppText>
-                <Icon name="chevron-forward" size={16} tone="muted" />
+                {organizerGone ? null : (
+                  <Icon name="chevron-forward" size={16} tone="muted" />
+                )}
               </View>
             </Pressable>
           ) : null}
