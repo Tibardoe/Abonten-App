@@ -21,6 +21,7 @@ import {
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { gatePartnerLockRefusal } from "../gatePartners/gatePartnerConfig";
 import { coreT, tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -369,6 +370,8 @@ export async function setEventSeatingCore(
 > {
   const event = await ownEvent(supabase, accountId, input.eventId);
   if ("status" in event && "message" in event) return event;
+  const gateLocked = await gatePartnerLockRefusal(input.eventId, "edit");
+  if (gateLocked) return gateLocked;
 
   if (input.planId) {
     const plans = await plansOf(accountId);

@@ -12,6 +12,9 @@ describe("ticketSendBlockMessageKey", () => {
     expect(ticketSendBlockMessageKey("restricted")).toBe(
       "sendBlockedRestricted",
     );
+    expect(ticketSendBlockMessageKey("partner_gate")).toBe(
+      "sendBlockedPartnerGate",
+    );
   });
 
   it("says nothing where the send control is not shown at all", () => {

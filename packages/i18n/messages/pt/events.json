@@ -618,5 +618,28 @@
   "rescheduleConfirmDateTitle": "Mudar esta data de {title} para {when}?",
   "thisEventIsPostponed": "Este evento foi adiado. Haverá uma nova data: os bilhetes voltam à venda nessa altura.",
   "showPostponed": "Adiada",
-  "atPlaceName": "Em {name}"
+  "atPlaceName": "Em {name}",
+  "gatePartner": {
+    "title": "Controlo de entradas com {partner}",
+    "body": "Os bilhetes vendidos na Abonten para este evento são registados na {partner} e têm códigos da {partner}. A sua entrada valida-os com o leitor da {partner}, não com o da Abonten.",
+    "setByStaff": "A Abonten configurou esta ligação consigo. Para a alterar, contacte a Abonten.",
+    "partnerEvent": "Evento na {partner}",
+    "salesLabel": "Vendas na Abonten",
+    "salesOn": "À venda",
+    "salesPaused": "Em pausa pela Abonten",
+    "ticketsLabel": "Tipos de bilhete",
+    "productLine": "{product} na {partner}, {price}",
+    "countsCodes": "{count, plural, =0 {Nenhum bilhete tem ainda o seu código de entrada.} one {# bilhete tem o seu código de entrada.} other {# bilhetes têm os seus códigos de entrada.}}",
+    "countsWaiting": "{count, plural, =0 {Nenhuma venda aguarda registo.} one {# venda ainda está a ser registada.} other {# vendas ainda estão a ser registadas.}}",
+    "needsStaff": "{count, plural, one {# venda precisa da equipa da Abonten. Estamos a tratar disso.} other {# vendas precisam da equipa da Abonten. Estamos a tratar disso.}}",
+    "toVoidTitle": "{count, plural, one {# código a anular na {partner}} other {# códigos a anular na {partner}}}",
+    "toVoidBody": "Estes bilhetes foram cancelados ou reembolsados na Abonten. Anule os seus códigos na {partner} para que a sua entrada os recuse e depois marque-os aqui.",
+    "markVoided": "Marcar como anulados",
+    "confirmVoidedTitle": "{count, plural, one {Marcar # código como anulado?} other {Marcar # códigos como anulados?}}",
+    "confirmVoided": "Só depois de os ter anulado na {partner}.",
+    "voidedSaved": "Marcados como anulados.",
+    "couldNotSave": "Não foi possível guardar. Tente novamente.",
+    "checkInTitle": "O controlo de entradas faz-se na {partner}",
+    "checkInBody": "Os bilhetes deste evento têm códigos da {partner}. Leia-os com o leitor da {partner}: esta página não os consegue validar."
+  }
 }

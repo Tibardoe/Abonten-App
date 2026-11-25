@@ -85,6 +85,16 @@ export type UserTicketType = {
   updated_at: string | null;
   ticket_type_id: string;
   ticket_code: string;
+  /**
+   * Checked in by the organizer's own gate system (gate partner
+   * connectors): the partner, its code and QR (null while on its way).
+   * Absent on an older server. Read through
+   * @abonten/core/gatePartners/ticketEntryCode, never directly.
+   */
+  partner_gate?: string | null;
+  partner_code?: string | null;
+  partner_qr_public_id?: string | null;
+  partner_qr_version?: string | null;
   /** The date of a multi-date event this ticket is for. */
   occurrence_id?: string | null;
   /**

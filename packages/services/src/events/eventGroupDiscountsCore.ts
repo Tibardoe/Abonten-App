@@ -17,6 +17,7 @@ import { logger } from "@abonten/core/logger";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { gatePartnerLockRefusal } from "../gatePartners/gatePartnerConfig";
 import { coreT, tr } from "../i18n/requestLocale";
 import {
   groupPricingProblem,
@@ -53,6 +54,8 @@ export async function setEventGroupDiscountsCore(
   if (event.status === "canceled") {
     return { status: 409, message: tr("thisEventHasBeenCanceled") };
   }
+  const gateLocked = await gatePartnerLockRefusal(input.eventId, "edit");
+  if (gateLocked) return gateLocked;
 
   const tiers = sortGroupDiscountTiers(input.tiers);
   const problem = await groupPricingProblem(accountId, {

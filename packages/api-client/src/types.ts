@@ -106,6 +106,7 @@ import type {
   VerificationUploadTicket,
 } from "@abonten/types/verificationType";
 
+import type { EventGatePartner } from "@abonten/types/gatePartnerType";
 import type {
   SafetyAcknowledgement,
   SafetyContact,
@@ -2780,6 +2781,10 @@ export type EventTicketTransferSettingResult = ApiEnvelope<{
   enabled: boolean;
   programEnabled?: boolean;
 }>;
+
+// Gate partner connectors (docs/architecture/gate-partner-connectors.md).
+export type EventGatePartnerResult = ApiEnvelope<EventGatePartner>;
+export type ConfirmGatePartnerVoidsResult = ApiEnvelope<{ voided: number }>;
 
 // Team accounts (docs/architecture/team-accounts.md).
 export type TeamsOverviewResult = ApiEnvelope<TeamsOverview>;

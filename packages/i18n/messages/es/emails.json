@@ -60,7 +60,14 @@
     "subject": "Tu entrada de Abonten está lista 🎟️ — {eventTitle}",
     "time": "Hora",
     "venue": "Lugar",
-    "viewMyTickets": "Ver mis entradas"
+    "viewMyTickets": "Ver mis entradas",
+    "gateCodeOnItsWay": "Tu código de acceso está en camino",
+    "gateCodeOnItsWayBody": "El organizador valida las entradas con su propio sistema. Tus códigos de acceso están en camino: te los enviaremos por correo en cuanto lleguen y aparecerán en tus entradas en Abonten.",
+    "gateScannedBy": "Se escanea en el acceso con el sistema de control del organizador.",
+    "gateCodesReadySubject": "Tus códigos de acceso para {eventTitle}",
+    "gateCodesReadyPreview": "Tus códigos de acceso para {eventTitle} están listos.",
+    "gateCodesReadyHeading": "Tus códigos de acceso están listos",
+    "gateCodesReadyIntro": "{greeting} tus entradas para <strong>{eventTitle}</strong> ya llevan los códigos que se escanean en el acceso."
   },
   "safety": {
     "callPerson": "Llama a {person}: {phone}",
@@ -132,5 +139,17 @@
     "when": "Cuándo",
     "venue": "Lugar",
     "previousVenue": "Lugar anterior"
+  },
+  "gateVoid": {
+    "subject": "{count, plural, one {Anula # entrada de {eventTitle}} other {Anula # entradas de {eventTitle}}}",
+    "preview": "{count, plural, one {# entrada de {eventTitle} se canceló en Abonten.} other {# entradas de {eventTitle} se cancelaron en Abonten.}}",
+    "heading": "{count, plural, one {Una entrada por anular} other {Entradas por anular}}",
+    "intro": "{greeting} se cancelaron o reembolsaron entradas de <strong>{eventTitle}</strong> en Abonten. Anula los códigos de abajo en {partner} para que tu acceso las rechace.",
+    "why": "Todavía no se puede avisar a {partner} de los reembolsos automáticamente, así que hay que hacerlo a mano.",
+    "codesLabel": "Códigos por anular en {partner}",
+    "codeNumber": "Entrada {number}",
+    "more": "{count, plural, one {Y # código más en la página del evento.} other {Y # códigos más en la página del evento.}}",
+    "button": "Ver el evento",
+    "afterVoiding": "Cuando estén anuladas, márcalas como anuladas en la página del evento."
   }
 }

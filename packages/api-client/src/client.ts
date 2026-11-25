@@ -41,10 +41,12 @@ import type {
   AddSafetyContactBody,
   AnswerTeamInviteResult,
   BalanceOverviewResult,
+  ConfirmGatePartnerVoidsResult,
   ConvertAccountToTeamBody,
   ConvertAccountToTeamResult,
   CreateTeamBody,
   CreateTeamResult,
+  EventGatePartnerResult,
   EventTicketPlanSettingResult,
   EventTicketTransferSettingResult,
   HeldTicketPaidAmountResult,
@@ -1878,6 +1880,28 @@ export function createApiClient(options: ApiClientOptions) {
             eventId,
           )}/ticket-transfers`,
           { method: "PUT", body: { enabled }, auth: true },
+        );
+      },
+      /**
+       * The event's gate partner link, read-only (staff set it up): whose
+       * check-in system admits its tickets, and the codes to void there
+       * (docs/architecture/gate-partner-connectors.md).
+       */
+      eventGatePartner(eventId: string) {
+        return request<EventGatePartnerResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/gate-partner`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** The organizer voided these partner codes in their gate system. */
+      confirmGatePartnerVoids(eventId: string, ticketIds: string[]) {
+        return request<ConfirmGatePartnerVoidsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/gate-partner`,
+          { method: "POST", body: { ticketIds }, auth: true },
         );
       },
       promoteEvent(eventId: string, tierId: number) {

@@ -19,3 +19,12 @@ export async function generateQRCodeDataURL(ticketCode: string) {
 
   return await QRCode.toDataURL(data); // returns a base64 image string
 }
+
+/**
+ * A gate partner's QR: the plain code, which is what its scanner reads
+ * (Hapniin upper-cases it and looks it up; docs/architecture/
+ * gate-partner-connectors.md). Never Abonten's /verify/ address.
+ */
+export async function generatePartnerQRCodeDataURL(code: string) {
+  return await QRCode.toDataURL(code, { margin: 2, width: 512 });
+}

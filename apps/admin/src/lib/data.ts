@@ -93,6 +93,11 @@ import {
   listPaymentAttemptsCore,
 } from "@abonten/services/admin/finance/paymentAttemptsAdminCore";
 import {
+  getGatePartnerEventAdminCore,
+  listGatePartnerLinksAdminCore,
+  listStuckGatePartnerPushesAdminCore,
+} from "@abonten/services/admin/gatePartners/gatePartnersAdminCore";
+import {
   getIdentitySettingsCore,
   getIdentityVerificationCore,
   identitySummariesCore,
@@ -1102,4 +1107,26 @@ export async function loadTeam(teamId: string) {
   const ctx = await requireAdmin();
   const team = await getTeamAdminCore(getServiceClient(), ctx, teamId);
   return { ctx, team };
+}
+
+/** Admin › Gate partners: every link in force and the sales that need a person. */
+export async function loadGatePartnerLinks() {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [links, stuck] = await Promise.all([
+    listGatePartnerLinksAdminCore(svc, ctx),
+    listStuckGatePartnerPushesAdminCore(svc, ctx),
+  ]);
+  return { ctx, links, stuck };
+}
+
+/** Admin › Gate partners › one event: its link, sales and codes to void. */
+export async function loadGatePartnerEvent(eventId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getGatePartnerEventAdminCore(
+    getServiceClient(),
+    ctx,
+    eventId,
+  );
+  return { ctx, detail };
 }

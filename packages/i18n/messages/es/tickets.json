@@ -125,5 +125,9 @@
   "rescheduleBannerChoicePostponed": "Tu entrada sigue valiendo para la nueva fecha. Si prefieres no esperar, puedes pedir el reembolso completo, comisión de servicio incluida, hasta que se fije la nueva fecha.",
   "rescheduleBannerChoiceVenue": "Tu entrada vale en el nuevo lugar. Si no puedes ir, puedes pedir el reembolso completo, comisión de servicio incluida, hasta el {refundUntil}.",
   "rescheduleKeptNoteVenue": "Conservas tu entrada para el nuevo lugar.",
-  "amountPaid": "Importe pagado: {amount}"
+  "amountPaid": "Importe pagado: {amount}",
+  "gateScannedBy": "Se escanea en el acceso con el sistema de control del organizador",
+  "gateCodeOnItsWay": "Tu código de acceso está en camino",
+  "gateCodeOnItsWayBody": "El organizador valida las entradas con su propio sistema. Tu código aparecerá aquí en unos minutos y te lo enviaremos por correo.",
+  "sendBlockedPartnerGate": "Esta entrada no se puede enviar: en el acceso se valida con un código emitido a tu nombre."
 }

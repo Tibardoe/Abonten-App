@@ -654,7 +654,15 @@
     "thatSeatingPlanWasnTFound": "Essa planta de lugares não foi encontrada.",
     "theSectionsAreNotInTheExpected": "As secções não estão na forma esperada.",
     "thisEventWasnTFound": "Este evento não foi encontrado.",
-    "ticketsAreBeingBoughtForThisEvent": "Estão a ser comprados bilhetes para este evento neste momento. Tente novamente daqui a pouco."
+    "ticketsAreBeingBoughtForThisEvent": "Estão a ser comprados bilhetes para este evento neste momento. Tente novamente daqui a pouco.",
+    "aPartnerPriceDiffersFromTheAbonten": "Um preço do parceiro difere do preço na Abonten.",
+    "mapEveryTicketTypeOfTheEvent": "Associe cada tipo de bilhete do evento a um produto do parceiro.",
+    "thePartnerSellsInAnotherCurrency": "O parceiro vende noutra moeda.",
+    "thisEventCannotBeLinked": "Este evento não pode ser ligado: {0}",
+    "thisEventSTicketsAreLinkedTo": "Os bilhetes deste evento estão ligados ao sistema de entradas do organizador e não podem ser alterados.",
+    "ticketsForThisEventAreIssuedThrough": "Os bilhetes deste evento são emitidos através do sistema de entradas do organizador; só podem ser comprados.",
+    "ticketsForThisEventCannotBeSent": "Os bilhetes deste evento não podem ser enviados a outra pessoa.",
+    "ticketsWereAlreadySoldThroughThisLink": "Já foram vendidos bilhetes através desta ligação; coloque-a em pausa em vez disso."
   },
   "defaultPaymentMethodUpdated": "Método de pagamento predefinido atualizado",
   "defaultPayoutAccountUpdated": "Conta de recebimento predefinida atualizada",
@@ -1586,5 +1594,11 @@
   "rescheduleSmsPostponed": "Abonten: {title} foi adiado, data a anunciar. Mantenha o bilhete ou peça o reembolso total: {link}",
   "openAmountTicketsArePaidAtOnce": "Um bilhete cujo valor escolhe paga-se de uma vez, não aos poucos.",
   "openAmountTicketsCantBeGiven": "Um bilhete cujo valor o comprador escolhe não pode ser oferecido. Escolha outro tipo de bilhete.",
-  "openAmountLineCantChange": "O valor deste bilhete não pode ser alterado aqui. Retire-o e escolha de novo."
+  "openAmountLineCantChange": "O valor deste bilhete não pode ser alterado aqui. Retire-o e escolha de novo.",
+  "gatePartnerSalesPaused": "Neste momento não é possível comprar bilhetes para este evento na Abonten.",
+  "gatePartnerNoPromoCodes": "Não é possível usar códigos promocionais neste evento.",
+  "gatePartnerTicketsLocked": "Os bilhetes deste evento estão ligados ao seu próprio sistema de controlo de entradas, por isso não podem ser alterados aqui. Contacte a Abonten para os alterar.",
+  "gatePartnerNoComplimentary": "Os bilhetes deste evento são validados pelo seu próprio sistema de entradas. Ofereça bilhetes gratuitos nesse sistema.",
+  "gatePartnerCheckInElsewhere": "Os bilhetes deste evento são validados com {partner}. Leia-os com o leitor da {partner}.",
+  "ticketTransferPartnerGate": "Este bilhete não pode ser enviado a outra pessoa: a entrada valida-o com um código emitido em seu nome."
 }

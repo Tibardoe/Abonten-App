@@ -618,5 +618,28 @@
   "rescheduleConfirmDateTitle": "¿Cambiar esta fecha de {title} al {when}?",
   "thisEventIsPostponed": "Este evento está aplazado. Habrá una nueva fecha: las entradas volverán a la venta entonces.",
   "showPostponed": "Aplazada",
-  "atPlaceName": "En {name}"
+  "atPlaceName": "En {name}",
+  "gatePartner": {
+    "title": "Control de acceso con {partner}",
+    "body": "Las entradas vendidas en Abonten para este evento se registran en {partner} y llevan códigos de {partner}. Tu acceso las valida con el escáner de {partner}, no con el de Abonten.",
+    "setByStaff": "Abonten configuró este vínculo contigo. Para cambiarlo, contacta con Abonten.",
+    "partnerEvent": "Evento en {partner}",
+    "salesLabel": "Ventas en Abonten",
+    "salesOn": "A la venta",
+    "salesPaused": "En pausa por Abonten",
+    "ticketsLabel": "Tipos de entrada",
+    "productLine": "{product} en {partner}, {price}",
+    "countsCodes": "{count, plural, =0 {Ninguna entrada tiene aún su código de acceso.} one {# entrada tiene su código de acceso.} other {# entradas tienen su código de acceso.}}",
+    "countsWaiting": "{count, plural, =0 {No hay ventas pendientes de registrar.} one {# venta se está registrando todavía.} other {# ventas se están registrando todavía.}}",
+    "needsStaff": "{count, plural, one {# venta necesita al equipo de Abonten. Ya nos ocupamos.} other {# ventas necesitan al equipo de Abonten. Ya nos ocupamos.}}",
+    "toVoidTitle": "{count, plural, one {# código por anular en {partner}} other {# códigos por anular en {partner}}}",
+    "toVoidBody": "Estas entradas se cancelaron o reembolsaron en Abonten. Anula sus códigos en {partner} para que tu acceso las rechace y márcalas aquí.",
+    "markVoided": "Marcar como anuladas",
+    "confirmVoidedTitle": "{count, plural, one {¿Marcar # código como anulado?} other {¿Marcar # códigos como anulados?}}",
+    "confirmVoided": "Solo cuando ya los hayas anulado en {partner}.",
+    "voidedSaved": "Marcadas como anuladas.",
+    "couldNotSave": "No se pudo guardar. Inténtalo de nuevo.",
+    "checkInTitle": "El control de acceso se hace en {partner}",
+    "checkInBody": "Las entradas de este evento llevan códigos de {partner}. Escanéalas con el escáner de {partner}: esta página no puede validarlas."
+  }
 }

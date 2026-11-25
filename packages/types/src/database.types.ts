@@ -6373,6 +6373,313 @@ export type Database = {
         }
         Relationships: []
       }
+      gate_partner_link: {
+        Row: {
+          api_key_env: string
+          check_problems: Json
+          checked_at: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          ended_at: string | null
+          event_id: string
+          id: string
+          key_mode: string
+          partner_event_id: string
+          partner_event_title: string | null
+          provider: string
+          status: string
+          updated_at: string
+          webhook_secret_env: string | null
+        }
+        Insert: {
+          api_key_env: string
+          check_problems?: Json
+          checked_at?: string
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          ended_at?: string | null
+          event_id: string
+          id?: string
+          key_mode: string
+          partner_event_id: string
+          partner_event_title?: string | null
+          provider: string
+          status?: string
+          updated_at?: string
+          webhook_secret_env?: string | null
+        }
+        Update: {
+          api_key_env?: string
+          check_problems?: Json
+          checked_at?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          ended_at?: string | null
+          event_id?: string
+          id?: string
+          key_mode?: string
+          partner_event_id?: string
+          partner_event_title?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          webhook_secret_env?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_partner_link_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_partner_product: {
+        Row: {
+          created_at: string
+          link_id: string
+          partner_price: number
+          partner_product_id: string
+          partner_product_name: string | null
+          ticket_type_id: string
+        }
+        Insert: {
+          created_at?: string
+          link_id: string
+          partner_price: number
+          partner_product_id: string
+          partner_product_name?: string | null
+          ticket_type_id: string
+        }
+        Update: {
+          created_at?: string
+          link_id?: string
+          partner_price?: number
+          partner_product_id?: string
+          partner_product_name?: string | null
+          ticket_type_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_partner_product_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "gate_partner_link"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_partner_product_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: true
+            referencedRelation: "ticket_type"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_partner_push: {
+        Row: {
+          attempts: number
+          buyer_notified_at: string | null
+          checkout_id: string
+          checkout_session_id: string
+          claimed_at: string | null
+          codes_at: string | null
+          created_at: string
+          event_id: string
+          generation: number
+          id: string
+          idempotency_key: string | null
+          incident_opened_at: string | null
+          last_error_code: string | null
+          last_error_detail: string | null
+          last_http_status: number | null
+          link_id: string
+          next_attempt_at: string
+          partner_confirmed_at: string | null
+          partner_order_id: string | null
+          partner_order_short_id: string | null
+          partner_product_id: string | null
+          request_quantity: number | null
+          request_ticket_ids: string[] | null
+          status: string
+          ticket_type_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          buyer_notified_at?: string | null
+          checkout_id: string
+          checkout_session_id: string
+          claimed_at?: string | null
+          codes_at?: string | null
+          created_at?: string
+          event_id: string
+          generation?: number
+          id?: string
+          idempotency_key?: string | null
+          incident_opened_at?: string | null
+          last_error_code?: string | null
+          last_error_detail?: string | null
+          last_http_status?: number | null
+          link_id: string
+          next_attempt_at?: string
+          partner_confirmed_at?: string | null
+          partner_order_id?: string | null
+          partner_order_short_id?: string | null
+          partner_product_id?: string | null
+          request_quantity?: number | null
+          request_ticket_ids?: string[] | null
+          status?: string
+          ticket_type_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          buyer_notified_at?: string | null
+          checkout_id?: string
+          checkout_session_id?: string
+          claimed_at?: string | null
+          codes_at?: string | null
+          created_at?: string
+          event_id?: string
+          generation?: number
+          id?: string
+          idempotency_key?: string | null
+          incident_opened_at?: string | null
+          last_error_code?: string | null
+          last_error_detail?: string | null
+          last_http_status?: number | null
+          link_id?: string
+          next_attempt_at?: string
+          partner_confirmed_at?: string | null
+          partner_order_id?: string | null
+          partner_order_short_id?: string | null
+          partner_product_id?: string | null
+          request_quantity?: number | null
+          request_ticket_ids?: string[] | null
+          status?: string
+          ticket_type_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_partner_push_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: true
+            referencedRelation: "ticket_checkout"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_partner_push_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_partner_push_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "gate_partner_link"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gate_partner_rate_window: {
+        Row: {
+          bucket: string
+          used: number
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          used?: number
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          used?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      gate_partner_ticket: {
+        Row: {
+          created_at: string
+          event_id: string
+          organizer_notified_at: string | null
+          partner_attendee_id: string | null
+          partner_code: string
+          push_id: string
+          state: string
+          ticket_id: string
+          updated_at: string
+          void_requested_at: string | null
+          voided_at: string | null
+          voided_by: string | null
+          voided_by_kind: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          organizer_notified_at?: string | null
+          partner_attendee_id?: string | null
+          partner_code: string
+          push_id: string
+          state?: string
+          ticket_id: string
+          updated_at?: string
+          void_requested_at?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          voided_by_kind?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          organizer_notified_at?: string | null
+          partner_attendee_id?: string | null
+          partner_code?: string
+          push_id?: string
+          state?: string
+          ticket_id?: string
+          updated_at?: string
+          void_requested_at?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          voided_by_kind?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_partner_ticket_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_partner_ticket_push_id_fkey"
+            columns: ["push_id"]
+            isOneToOne: false
+            referencedRelation: "gate_partner_push"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gate_partner_ticket_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geocode_cache: {
         Row: {
           created_at: string
@@ -13809,6 +14116,10 @@ export type Database = {
           issued_to: string
           metadata: Json | null
           occurrence_id: string | null
+          partner_code: string | null
+          partner_gate: string | null
+          partner_qr_public_id: string | null
+          partner_qr_version: string | null
           qr_public_id: string
           qr_version: string
           refund_includes_fee: boolean
@@ -13833,6 +14144,10 @@ export type Database = {
           issued_to?: string
           metadata?: Json | null
           occurrence_id?: string | null
+          partner_code?: string | null
+          partner_gate?: string | null
+          partner_qr_public_id?: string | null
+          partner_qr_version?: string | null
           qr_public_id: string
           qr_version: string
           refund_includes_fee?: boolean
@@ -13855,6 +14170,10 @@ export type Database = {
           issued_to?: string
           metadata?: Json | null
           occurrence_id?: string | null
+          partner_code?: string | null
+          partner_gate?: string | null
+          partner_qr_public_id?: string | null
+          partner_qr_version?: string | null
           qr_public_id?: string
           qr_version?: string
           refund_includes_fee?: boolean
@@ -17932,6 +18251,82 @@ export type Database = {
           target_id: string
         }[]
       }
+      gate_partner_event_problems: {
+        Args: { p_event_id: string }
+        Returns: string[]
+      }
+      gate_partner_link_end: { Args: { p_event_id: string }; Returns: boolean }
+      gate_partner_link_set: {
+        Args: {
+          p_api_key_env: string
+          p_check_problems: Json
+          p_currency: string
+          p_event_id: string
+          p_key_mode: string
+          p_partner_event_id: string
+          p_partner_event_title: string
+          p_products: Json
+          p_provider: string
+          p_staff_id: string
+          p_webhook_secret_env: string
+        }
+        Returns: string
+      }
+      gate_partner_push_claim: {
+        Args: { p_limit?: number; p_session?: string }
+        Returns: {
+          attempts: number
+          buyer_notified_at: string | null
+          checkout_id: string
+          checkout_session_id: string
+          claimed_at: string | null
+          codes_at: string | null
+          created_at: string
+          event_id: string
+          generation: number
+          id: string
+          idempotency_key: string | null
+          incident_opened_at: string | null
+          last_error_code: string | null
+          last_error_detail: string | null
+          last_http_status: number | null
+          link_id: string
+          next_attempt_at: string
+          partner_confirmed_at: string | null
+          partner_order_id: string | null
+          partner_order_short_id: string | null
+          partner_product_id: string | null
+          request_quantity: number | null
+          request_ticket_ids: string[] | null
+          status: string
+          ticket_type_id: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "gate_partner_push"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      gate_partner_rate_take: {
+        Args: { p_bucket: string; p_cost?: number; p_limit?: number }
+        Returns: number
+      }
+      gate_partner_store_codes: {
+        Args: { p_codes: Json; p_push_id: string }
+        Returns: number
+      }
+      gate_partner_void_claim: {
+        Args: { p_limit?: number }
+        Returns: {
+          event_id: string
+          partner_code: string
+          ticket_id: string
+        }[]
+      }
+      gate_partner_work_due: { Args: never; Returns: boolean }
       get_active_place_promotions: {
         Args: {
           p_limit?: number
@@ -19430,6 +19825,7 @@ export type Database = {
       rewards_settle_due: { Args: { p_limit?: number }; Returns: Json }
       run_exchange_rate_refresh: { Args: never; Returns: undefined }
       run_financial_reconciliation: { Args: never; Returns: Json }
+      run_gate_partner_dispatch: { Args: never; Returns: undefined }
       run_notification_delivery: { Args: never; Returns: undefined }
       run_payment_reconcile_dispatch: { Args: never; Returns: undefined }
       run_reschedule_text_dispatch: { Args: never; Returns: undefined }

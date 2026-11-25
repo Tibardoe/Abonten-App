@@ -35,7 +35,18 @@ describe("the receipt's words", () => {
       location: "Location",
       date: "Date",
       qrCode: "Ticket QR code",
+      gateNote: null,
     });
+  });
+
+  it("say who scans a partner gate's ticket, or that its code is coming", () => {
+    expect(
+      ticketPdfLabels(t, { ...data("active"), gate: "partner" }).gateNote,
+    ).toBe("Scanned at the gate by the organiser's check-in system");
+    expect(
+      ticketPdfLabels(t, { ...data("active"), gate: "partner_pending" })
+        .gateNote,
+    ).toBe("Your gate code is on its way");
   });
 
   it("are the reader's language when they read another", () => {
@@ -98,6 +109,31 @@ describe("the receipt's data", () => {
     expect(french.eventDate).not.toBe(english.eventDate);
     // The event's own clock either way.
     expect(french.eventTime).toContain("19");
+  });
+
+  it("prints a partner gate's code and QR instead of Abonten's", () => {
+    const partner = buildTicketPdfData({
+      ...ticket,
+      partner_gate: "hapniin",
+      partner_code: "TCK-A1B2C3",
+      partner_qr_public_id: "tickets_qr_codes/gate-hapniin-TCK-A1B2C3",
+      partner_qr_version: "5",
+    } as UserTicketType);
+    expect(partner.ticketCode).toBe("TCK-A1B2C3");
+    expect(partner.qrImageUrl).toContain("gate-hapniin-TCK-A1B2C3");
+    expect(partner.gate).toBe("partner");
+
+    const pending = buildTicketPdfData({
+      ...ticket,
+      partner_gate: "hapniin",
+    } as UserTicketType);
+    expect(pending.ticketCode).toBe("");
+    expect(pending.qrImageUrl).toBe("");
+    expect(pending.gate).toBe("partner_pending");
+
+    const own = buildTicketPdfData(ticket);
+    expect(own.ticketCode).toBe("TKT-AB12CD34");
+    expect(own.gate).toBeNull();
   });
 
   it("names the file the same for the download and the email", () => {

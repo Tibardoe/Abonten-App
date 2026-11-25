@@ -60,7 +60,14 @@
     "subject": "Your Abonten Ticket Is Ready 🎟️ — {eventTitle}",
     "time": "Time",
     "venue": "Venue",
-    "viewMyTickets": "View My Tickets"
+    "viewMyTickets": "View My Tickets",
+    "gateCodeOnItsWay": "Your gate code is on its way",
+    "gateCodeOnItsWayBody": "The organizer checks tickets in with their own system. Your gate codes are on their way: we'll email them as soon as they arrive, and they'll appear on your tickets on Abonten.",
+    "gateScannedBy": "Scanned at the gate by the organiser's check-in system.",
+    "gateCodesReadySubject": "Your gate codes for {eventTitle}",
+    "gateCodesReadyPreview": "Your gate codes for {eventTitle} are ready.",
+    "gateCodesReadyHeading": "Your gate codes are ready",
+    "gateCodesReadyIntro": "{greeting} your tickets for <strong>{eventTitle}</strong> now carry the codes the gate scans."
   },
   "safety": {
     "callPerson": "Call {person}: {phone}",
@@ -132,5 +139,17 @@
     "when": "When",
     "venue": "Venue",
     "previousVenue": "Venue before"
+  },
+  "gateVoid": {
+    "subject": "{count, plural, one {Void # ticket for {eventTitle}} other {Void # tickets for {eventTitle}}}",
+    "preview": "{count, plural, one {# ticket for {eventTitle} was cancelled on Abonten.} other {# tickets for {eventTitle} were cancelled on Abonten.}}",
+    "heading": "{count, plural, one {A ticket to void} other {Tickets to void}}",
+    "intro": "{greeting} tickets for <strong>{eventTitle}</strong> were cancelled or refunded on Abonten. Void the codes below in {partner} so your gate turns them away.",
+    "why": "{partner} can't be told about refunds automatically yet, so this has to be done by hand.",
+    "codesLabel": "Codes to void in {partner}",
+    "codeNumber": "Ticket {number}",
+    "more": "{count, plural, one {And # more code on the event's page.} other {And # more codes on the event's page.}}",
+    "button": "See the event",
+    "afterVoiding": "Once they're voided, mark them as voided on the event's page."
   }
 }

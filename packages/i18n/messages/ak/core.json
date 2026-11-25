@@ -1052,6 +1052,14 @@
     "listing_views_weekly": {
       "title": "{views, plural, one {Your listings had # view this week} other {Your listings had # views this week}}",
       "body": "{social, plural, =0 {Most viewed: {top}.} one {Most viewed: {top}. # came from Abonten's own posts.} other {Most viewed: {top}. # came from Abonten's own posts.}}"
+    },
+    "gate_codes_ready": {
+      "title": "{count, plural, one {Your gate code is ready} other {Your gate codes are ready}}",
+      "body": "{hasTitle, select, yes {Open your ticket for {title}: it now shows the code the gate scans.} other {Open your ticket: it now shows the code the gate scans.}}"
+    },
+    "gate_tickets_to_void": {
+      "title": "{count, plural, one {Void # ticket in {partner}} other {Void # tickets in {partner}}}",
+      "body": "{hasTitle, select, yes {Cancelled or refunded on Abonten for {title}: {codes}} other {Cancelled or refunded on Abonten: {codes}}}"
     }
   },
   "openStatus": {
@@ -1280,7 +1288,9 @@
     "statusValue": "{status, select, active {Active} used {Checked in} cancelled {Cancelled} expired {Expired} other {Unknown}}",
     "ticketCode": "Ticket code",
     "ticketType": "Ticket type",
-    "title": "Receipt"
+    "title": "Receipt",
+    "gateScannedBy": "Scanned at the gate by the organiser's check-in system",
+    "gateCodeOnItsWay": "Your gate code is on its way"
   },
   "ticketTiers": {
     "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",

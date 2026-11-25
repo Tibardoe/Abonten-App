@@ -16,6 +16,7 @@ import { parsePhone } from "@abonten/core/phone";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { gatePartnerLockRefusal } from "../gatePartners/gatePartnerConfig";
 import { tr } from "../i18n/requestLocale";
 import { createNotificationCore } from "../notifications/createNotification";
 import {
@@ -107,6 +108,10 @@ export async function giveComplimentaryTicketsCore(
   if (!event) {
     return { status: 404, message: tr("eventNotFoundOrUnauthorized") };
   }
+  // A partner gate admits only the partner's codes, and every code there is
+  // a sale: free tickets are given in the partner's system.
+  const gateLocked = await gatePartnerLockRefusal(event.id, "give");
+  if (gateLocked) return gateLocked;
 
   const type = (event.ticket_type ?? []).find(
     (t) => t.id === input.ticketTypeId,

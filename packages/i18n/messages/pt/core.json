@@ -1052,6 +1052,14 @@
     "listing_views_weekly": {
       "title": "{views, plural, one {Os seus anúncios tiveram # visualização esta semana} other {Os seus anúncios tiveram # visualizações esta semana}}",
       "body": "{social, plural, =0 {O mais visto: {top}.} one {O mais visto: {top}. # veio das publicações do Abonten.} other {O mais visto: {top}. # vieram das publicações do Abonten.}}"
+    },
+    "gate_codes_ready": {
+      "title": "{count, plural, one {O seu código de entrada está pronto} other {Os seus códigos de entrada estão prontos}}",
+      "body": "{hasTitle, select, yes {Abra o seu bilhete para {title}: já mostra o código lido à entrada.} other {Abra o seu bilhete: já mostra o código lido à entrada.}}"
+    },
+    "gate_tickets_to_void": {
+      "title": "{count, plural, one {Anule # bilhete na {partner}} other {Anule # bilhetes na {partner}}}",
+      "body": "{hasTitle, select, yes {Cancelados ou reembolsados na Abonten para {title}: {codes}} other {Cancelados ou reembolsados na Abonten: {codes}}}"
     }
   },
   "openStatus": {
@@ -1280,7 +1288,9 @@
     "statusValue": "{status, select, active {Ativo} used {Entrada registada} cancelled {Cancelado} expired {Expirado} other {Desconhecido}}",
     "ticketCode": "Código do bilhete",
     "ticketType": "Tipo de bilhete",
-    "title": "Recibo"
+    "title": "Recibo",
+    "gateScannedBy": "Lido à entrada pelo sistema de controlo do organizador",
+    "gateCodeOnItsWay": "O seu código de entrada está a caminho"
   },
   "ticketTiers": {
     "freeEventPromoCodes": "Os códigos promocionais não estão disponíveis num evento gratuito. Remova-os ou torne o evento pago.",

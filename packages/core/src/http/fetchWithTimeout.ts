@@ -101,6 +101,11 @@ export const HTTP_TIMEOUTS = {
   googlePlaces: 5_000,
   cloudinary: 8_000,
   ipLookup: 3_000,
+  /** A gate partner's catalog or order lookup (Hapniin). */
+  gatePartnerRead: 10_000,
+  /** Registering a sale with a gate partner: retried with the same
+   *  Idempotency-Key, so a timeout is never a second order. */
+  gatePartnerWrite: 15_000,
 } as const;
 
 export class DeadlineError extends Error {

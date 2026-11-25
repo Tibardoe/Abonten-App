@@ -654,7 +654,15 @@
     "thatSeatingPlanWasnTFound": "Dieser Saalplan wurde nicht gefunden.",
     "theSectionsAreNotInTheExpected": "Die Bereiche haben nicht die erwartete Form.",
     "thisEventWasnTFound": "Diese Veranstaltung wurde nicht gefunden.",
-    "ticketsAreBeingBoughtForThisEvent": "Gerade werden Tickets für diese Veranstaltung gekauft. Versuch es gleich noch einmal."
+    "ticketsAreBeingBoughtForThisEvent": "Gerade werden Tickets für diese Veranstaltung gekauft. Versuch es gleich noch einmal.",
+    "aPartnerPriceDiffersFromTheAbonten": "Ein Preis des Partners weicht vom Preis auf Abonten ab.",
+    "mapEveryTicketTypeOfTheEvent": "Ordne jede Ticketart der Veranstaltung einem Produkt des Partners zu.",
+    "thePartnerSellsInAnotherCurrency": "Der Partner verkauft in einer anderen Währung.",
+    "thisEventCannotBeLinked": "Diese Veranstaltung kann nicht verknüpft werden: {0}",
+    "thisEventSTicketsAreLinkedTo": "Die Tickets dieser Veranstaltung sind mit dem Einlasssystem des Veranstalters verknüpft und können nicht geändert werden.",
+    "ticketsForThisEventAreIssuedThrough": "Die Tickets dieser Veranstaltung werden über das Einlasssystem des Veranstalters ausgestellt; sie können nur gekauft werden.",
+    "ticketsForThisEventCannotBeSent": "Die Tickets dieser Veranstaltung können nicht an jemand anderen gesendet werden.",
+    "ticketsWereAlreadySoldThroughThisLink": "Über diese Verknüpfung wurden bereits Tickets verkauft; pausiere sie stattdessen."
   },
   "defaultPaymentMethodUpdated": "Standard-Zahlungsmethode aktualisiert",
   "defaultPayoutAccountUpdated": "Standard-Auszahlungskonto aktualisiert",
@@ -1586,5 +1594,11 @@
   "rescheduleSmsPostponed": "Abonten: {title} ist verschoben, neuer Termin folgt. Behalte dein Ticket oder hol dir den vollen Betrag zurück: {link}",
   "openAmountTicketsArePaidAtOnce": "Ein Ticket, dessen Betrag du wählst, wird auf einmal bezahlt, nicht in Raten.",
   "openAmountTicketsCantBeGiven": "Ein Ticket, dessen Betrag der Käufer wählt, kann nicht verschenkt werden. Wähle eine andere Ticketart.",
-  "openAmountLineCantChange": "Der Betrag dieses Tickets kann hier nicht geändert werden. Entferne es und wähle neu."
+  "openAmountLineCantChange": "Der Betrag dieses Tickets kann hier nicht geändert werden. Entferne es und wähle neu.",
+  "gatePartnerSalesPaused": "Tickets für diese Veranstaltung können gerade nicht auf Abonten gekauft werden.",
+  "gatePartnerNoPromoCodes": "Für diese Veranstaltung können keine Promo-Codes verwendet werden.",
+  "gatePartnerTicketsLocked": "Die Tickets dieser Veranstaltung sind mit deinem eigenen Einlasssystem verknüpft und können hier nicht geändert werden. Wende dich an Abonten, um sie zu ändern.",
+  "gatePartnerNoComplimentary": "Die Tickets dieser Veranstaltung werden von deinem eigenen Einlasssystem geprüft. Vergib Freitickets dort.",
+  "gatePartnerCheckInElsewhere": "Die Tickets dieser Veranstaltung werden mit {partner} geprüft. Scanne sie mit dem Scanner von {partner}.",
+  "ticketTransferPartnerGate": "Dieses Ticket kann nicht an jemand anderen gesendet werden: Der Einlass prüft es mit einem Code, der auf dich ausgestellt ist."
 }

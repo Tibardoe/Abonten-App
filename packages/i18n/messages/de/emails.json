@@ -60,7 +60,14 @@
     "subject": "Dein Abonten-Ticket ist bereit 🎟️ — {eventTitle}",
     "time": "Uhrzeit",
     "venue": "Location",
-    "viewMyTickets": "Meine Tickets ansehen"
+    "viewMyTickets": "Meine Tickets ansehen",
+    "gateCodeOnItsWay": "Dein Einlasscode ist unterwegs",
+    "gateCodeOnItsWayBody": "Der Veranstalter prüft die Tickets mit seinem eigenen System. Deine Einlasscodes sind unterwegs: Wir schicken sie dir per E-Mail, sobald sie da sind, und sie erscheinen auf deinen Tickets bei Abonten.",
+    "gateScannedBy": "Wird am Einlass mit dem Check-in-System des Veranstalters gescannt.",
+    "gateCodesReadySubject": "Deine Einlasscodes für {eventTitle}",
+    "gateCodesReadyPreview": "Deine Einlasscodes für {eventTitle} sind bereit.",
+    "gateCodesReadyHeading": "Deine Einlasscodes sind bereit",
+    "gateCodesReadyIntro": "{greeting} deine Tickets für <strong>{eventTitle}</strong> tragen jetzt die Codes, die am Einlass gescannt werden."
   },
   "safety": {
     "callPerson": "{person} anrufen: {phone}",
@@ -132,5 +139,17 @@
     "when": "Wann",
     "venue": "Ort",
     "previousVenue": "Vorheriger Ort"
+  },
+  "gateVoid": {
+    "subject": "{count, plural, one {# Ticket für {eventTitle} stornieren} other {# Tickets für {eventTitle} stornieren}}",
+    "preview": "{count, plural, one {# Ticket für {eventTitle} wurde auf Abonten storniert.} other {# Tickets für {eventTitle} wurden auf Abonten storniert.}}",
+    "heading": "{count, plural, one {Ein Ticket zu stornieren} other {Tickets zu stornieren}}",
+    "intro": "{greeting} Tickets für <strong>{eventTitle}</strong> wurden auf Abonten storniert oder erstattet. Storniere die Codes unten in {partner}, damit dein Einlass sie abweist.",
+    "why": "{partner} kann noch nicht automatisch über Erstattungen informiert werden, deshalb muss das von Hand geschehen.",
+    "codesLabel": "In {partner} zu stornierende Codes",
+    "codeNumber": "Ticket {number}",
+    "more": "{count, plural, one {Und # weiterer Code auf der Seite der Veranstaltung.} other {Und # weitere Codes auf der Seite der Veranstaltung.}}",
+    "button": "Zur Veranstaltung",
+    "afterVoiding": "Wenn sie storniert sind, markiere sie auf der Seite der Veranstaltung als storniert."
   }
 }

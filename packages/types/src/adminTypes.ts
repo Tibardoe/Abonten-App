@@ -113,7 +113,9 @@ export type AdminPermissionKey =
   | "teams.configure"
   | "teams.manage"
   | "social.view"
-  | "social.manage";
+  | "social.manage"
+  | "gatepartners.view"
+  | "gatepartners.manage";
 
 export type AdminUserStatus = "active" | "disabled";
 

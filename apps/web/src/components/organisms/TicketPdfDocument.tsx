@@ -99,6 +99,12 @@ const makeStyles = (font: TicketPdfFont) =>
       width: 160,
       height: 160,
     },
+    gateNote: {
+      marginTop: 10,
+      fontSize: 10,
+      color: "#374151",
+      textAlign: "center",
+    },
     footer: {
       marginTop: 16,
       fontSize: 9,
@@ -172,10 +178,12 @@ export default function TicketPdfDocument({
               <Text style={styles.value}>{labels.ticketTypeValue}</Text>
             </View>
 
-            <View style={styles.row}>
-              <Text style={styles.label}>{labels.ticketCode}</Text>
-              <Text style={styles.value}>{ticket.ticketCode}</Text>
-            </View>
+            {ticket.ticketCode ? (
+              <View style={styles.row}>
+                <Text style={styles.label}>{labels.ticketCode}</Text>
+                <Text style={styles.value}>{ticket.ticketCode}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.row}>
               <Text style={styles.label}>{labels.status}</Text>
@@ -206,6 +214,11 @@ export default function TicketPdfDocument({
               <View style={styles.qrWrap}>
                 <Image src={qr} style={styles.qr} />
               </View>
+            ) : null}
+
+            {/* A partner gate: who scans it, or that its code is coming. */}
+            {labels.gateNote ? (
+              <Text style={styles.gateNote}>{labels.gateNote}</Text>
             ) : null}
 
             <Text style={styles.footer}>www.abontenhub.com</Text>

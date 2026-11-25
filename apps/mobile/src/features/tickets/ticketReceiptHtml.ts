@@ -62,6 +62,7 @@ export function buildTicketReceiptHtml(
   .status-other { font-weight: 700; color: #dc2626; }
   .qr-wrap { margin-top: 16px; text-align: center; }
   .qr { width: 180px; height: 180px; }
+  .gate-note { margin-top: 10px; font-size: 11px; color: #374151; text-align: center; }
   .footer { margin-top: 16px; font-size: 10px; color: #6b7280; text-align: right; }
 </style>
 </head>
@@ -80,9 +81,13 @@ export function buildTicketReceiptHtml(
       <div class="row"><span class="label">${escapeHtml(labels.ticketType)}</span><span class="value">${escapeHtml(
         labels.ticketTypeValue,
       )}</span></div>
-      <div class="row"><span class="label">${escapeHtml(labels.ticketCode)}</span><span class="value">${escapeHtml(
-        ticket.ticketCode,
-      )}</span></div>
+      ${
+        ticket.ticketCode
+          ? `<div class="row"><span class="label">${escapeHtml(labels.ticketCode)}</span><span class="value">${escapeHtml(
+              ticket.ticketCode,
+            )}</span></div>`
+          : ""
+      }
       <div class="row"><span class="label">${escapeHtml(labels.status)}</span><span class="${
         activeStatus ? "status-active" : "status-other"
       }">${escapeHtml(labels.statusValue)}</span></div>
@@ -92,9 +97,14 @@ export function buildTicketReceiptHtml(
       <div class="row"><span class="label">${escapeHtml(labels.date)}</span><span class="value">${escapeHtml(
         `${ticket.eventDate} ${ticket.eventTime}`.trim(),
       )}</span></div>
-      <div class="qr-wrap"><img class="qr" src="${escapeHtml(
-        ticket.qrImageUrl,
-      )}" alt="${escapeHtml(labels.qrCode)}" /></div>
+      ${
+        ticket.qrImageUrl
+          ? `<div class="qr-wrap"><img class="qr" src="${escapeHtml(
+              ticket.qrImageUrl,
+            )}" alt="${escapeHtml(labels.qrCode)}" /></div>`
+          : ""
+      }
+      ${labels.gateNote ? `<div class="gate-note">${escapeHtml(labels.gateNote)}</div>` : ""}
       <div class="footer">www.abontenhub.com</div>
     </div>
   </div>

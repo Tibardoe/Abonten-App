@@ -618,5 +618,28 @@
   "rescheduleConfirmDateTitle": "Diesen Termin von {title} auf {when} verschieben?",
   "thisEventIsPostponed": "Dieses Event ist verschoben. Ein neuer Termin folgt: Dann gibt es wieder Tickets.",
   "showPostponed": "Verschoben",
-  "atPlaceName": "Ort: {name}"
+  "atPlaceName": "Ort: {name}",
+  "gatePartner": {
+    "title": "Einlass mit {partner}",
+    "body": "Auf Abonten verkaufte Tickets für diese Veranstaltung werden bei {partner} registriert und tragen Codes von {partner}. Dein Einlass prüft sie mit dem Scanner von {partner}, nicht mit dem von Abonten.",
+    "setByStaff": "Abonten hat diese Verknüpfung mit dir eingerichtet. Wende dich an Abonten, um sie zu ändern.",
+    "partnerEvent": "Veranstaltung bei {partner}",
+    "salesLabel": "Verkauf auf Abonten",
+    "salesOn": "Im Verkauf",
+    "salesPaused": "Von Abonten pausiert",
+    "ticketsLabel": "Ticketarten",
+    "productLine": "{product} bei {partner}, {price}",
+    "countsCodes": "{count, plural, =0 {Noch kein Ticket hat seinen Einlasscode.} one {# Ticket hat seinen Einlasscode.} other {# Tickets haben ihre Einlasscodes.}}",
+    "countsWaiting": "{count, plural, =0 {Kein Verkauf wartet auf die Registrierung.} one {# Verkauf wird noch registriert.} other {# Verkäufe werden noch registriert.}}",
+    "needsStaff": "{count, plural, one {# Verkauf braucht das Abonten-Team. Wir kümmern uns darum.} other {# Verkäufe brauchen das Abonten-Team. Wir kümmern uns darum.}}",
+    "toVoidTitle": "{count, plural, one {# Code in {partner} zu stornieren} other {# Codes in {partner} zu stornieren}}",
+    "toVoidBody": "Diese Tickets wurden auf Abonten storniert oder erstattet. Storniere ihre Codes in {partner}, damit dein Einlass sie abweist, und markiere sie dann hier.",
+    "markVoided": "Als storniert markieren",
+    "confirmVoidedTitle": "{count, plural, one {# Code als storniert markieren?} other {# Codes als storniert markieren?}}",
+    "confirmVoided": "Erst, wenn du sie in {partner} storniert hast.",
+    "voidedSaved": "Als storniert markiert.",
+    "couldNotSave": "Konnte nicht gespeichert werden. Versuch es noch einmal.",
+    "checkInTitle": "Der Einlass läuft über {partner}",
+    "checkInBody": "Die Tickets dieser Veranstaltung tragen Codes von {partner}. Scanne sie mit dem Scanner von {partner}: Diese Seite kann sie nicht einchecken."
+  }
 }

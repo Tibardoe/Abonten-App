@@ -213,6 +213,12 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   // (event_seating_set(), migration 20261124090000): `seats` lists the
   // seat labels, `count` how many; `startsAt` is null when postponed.
   ticket_seat_assigned: n("ticket_seat_assigned"),
+  // Gate partner connectors (services, docs/architecture/
+  // gate-partner-connectors.md): to the buyer when a partner gate's codes
+  // arrive after the receipt; to the organizer, partner codes to void
+  // (`partner` is the partner's name, `codes` the first 20 codes).
+  gate_codes_ready: n("gate_codes_ready"),
+  gate_tickets_to_void: n("gate_tickets_to_void"),
   ticket_transfer_received: n("ticket_transfer_received"),
   ticket_transfer_accepted: n("ticket_transfer_accepted"),
   ticket_transfer_declined: n("ticket_transfer_declined"),

@@ -618,5 +618,28 @@
   "rescheduleConfirmDateTitle": "Déplacer cette date de {title} au {when} ?",
   "thisEventIsPostponed": "Cet événement est reporté. Une nouvelle date est à venir : la vente des billets reprendra alors.",
   "showPostponed": "Reportée",
-  "atPlaceName": "À {name}"
+  "atPlaceName": "À {name}",
+  "gatePartner": {
+    "title": "Contrôle à l'entrée avec {partner}",
+    "body": "Les billets vendus sur Abonten pour cet événement sont enregistrés auprès de {partner} et portent des codes {partner}. Votre entrée les contrôle avec le scanner {partner}, pas celui d'Abonten.",
+    "setByStaff": "Abonten a mis ce lien en place avec vous. Pour le modifier, contactez Abonten.",
+    "partnerEvent": "Événement sur {partner}",
+    "salesLabel": "Ventes sur Abonten",
+    "salesOn": "En vente",
+    "salesPaused": "Mises en pause par Abonten",
+    "ticketsLabel": "Types de billets",
+    "productLine": "{product} sur {partner}, {price}",
+    "countsCodes": "{count, plural, =0 {Aucun billet n'a encore son code d'entrée.} one {# billet a son code d'entrée.} other {# billets ont leur code d'entrée.}}",
+    "countsWaiting": "{count, plural, =0 {Aucune vente n'attend d'être enregistrée.} one {# vente est encore en cours d'enregistrement.} other {# ventes sont encore en cours d'enregistrement.}}",
+    "needsStaff": "{count, plural, one {# vente nécessite l'équipe Abonten. Nous nous en occupons.} other {# ventes nécessitent l'équipe Abonten. Nous nous en occupons.}}",
+    "toVoidTitle": "{count, plural, one {# code à annuler dans {partner}} other {# codes à annuler dans {partner}}}",
+    "toVoidBody": "Ces billets ont été annulés ou remboursés sur Abonten. Annulez leurs codes dans {partner} pour que votre entrée les refuse, puis indiquez-le ici.",
+    "markVoided": "Marquer comme annulés",
+    "confirmVoidedTitle": "{count, plural, one {Marquer # code comme annulé ?} other {Marquer # codes comme annulés ?}}",
+    "confirmVoided": "Seulement une fois que vous les avez annulés dans {partner}.",
+    "voidedSaved": "Marqués comme annulés.",
+    "couldNotSave": "Impossible d'enregistrer. Réessayez.",
+    "checkInTitle": "Le contrôle à l'entrée se fait dans {partner}",
+    "checkInBody": "Les billets de cet événement portent des codes {partner}. Scannez-les avec le scanner {partner} : cette page ne peut pas les contrôler."
+  }
 }

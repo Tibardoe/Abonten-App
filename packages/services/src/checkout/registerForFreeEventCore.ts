@@ -6,6 +6,7 @@ import {
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { gatePartnerLockRefusal } from "../gatePartners/gatePartnerConfig";
 import { tr } from "../i18n/requestLocale";
 import { notifyOrganizerOfSale } from "../notifications/notifyOrganizerOfSale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -51,6 +52,10 @@ export async function registerForFreeEventCore(
   occurrenceId?: string | null,
   onRegistered?: (ticketId: string) => void,
 ): Promise<RegisterForFreeEventCoreResult> {
+  // A partner gate registers sales only: no free registration there.
+  const gateLocked = await gatePartnerLockRefusal(eventId, "register");
+  if (gateLocked) return gateLocked;
+
   const { data: rawTicketData, error: ticketDataError } = await supabase
     .from("ticket")
     .select("user_id, status, ticket_type_id(event_id)")

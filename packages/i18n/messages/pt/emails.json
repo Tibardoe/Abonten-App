@@ -60,7 +60,14 @@
     "subject": "O seu bilhete Abonten está pronto 🎟️ — {eventTitle}",
     "time": "Hora",
     "venue": "Local",
-    "viewMyTickets": "Ver os meus bilhetes"
+    "viewMyTickets": "Ver os meus bilhetes",
+    "gateCodeOnItsWay": "O seu código de entrada está a caminho",
+    "gateCodeOnItsWayBody": "O organizador valida os bilhetes com o seu próprio sistema. Os seus códigos de entrada estão a caminho: enviá-los-emos por e-mail assim que chegarem e aparecerão nos seus bilhetes na Abonten.",
+    "gateScannedBy": "Lido à entrada pelo sistema de controlo do organizador.",
+    "gateCodesReadySubject": "Os seus códigos de entrada para {eventTitle}",
+    "gateCodesReadyPreview": "Os seus códigos de entrada para {eventTitle} estão prontos.",
+    "gateCodesReadyHeading": "Os seus códigos de entrada estão prontos",
+    "gateCodesReadyIntro": "{greeting} os seus bilhetes para <strong>{eventTitle}</strong> já têm os códigos lidos à entrada."
   },
   "safety": {
     "callPerson": "Ligue a {person}: {phone}",
@@ -132,5 +139,17 @@
     "when": "Quando",
     "venue": "Local",
     "previousVenue": "Local anterior"
+  },
+  "gateVoid": {
+    "subject": "{count, plural, one {Anule # bilhete de {eventTitle}} other {Anule # bilhetes de {eventTitle}}}",
+    "preview": "{count, plural, one {# bilhete de {eventTitle} foi cancelado na Abonten.} other {# bilhetes de {eventTitle} foram cancelados na Abonten.}}",
+    "heading": "{count, plural, one {Um bilhete a anular} other {Bilhetes a anular}}",
+    "intro": "{greeting} foram cancelados ou reembolsados bilhetes de <strong>{eventTitle}</strong> na Abonten. Anule os códigos abaixo na {partner} para que a sua entrada os recuse.",
+    "why": "Ainda não é possível avisar a {partner} dos reembolsos automaticamente, por isso tem de ser feito à mão.",
+    "codesLabel": "Códigos a anular na {partner}",
+    "codeNumber": "Bilhete {number}",
+    "more": "{count, plural, one {E mais # código na página do evento.} other {E mais # códigos na página do evento.}}",
+    "button": "Ver o evento",
+    "afterVoiding": "Depois de anulados, marque-os como anulados na página do evento."
   }
 }
