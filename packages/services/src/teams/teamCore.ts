@@ -8,11 +8,13 @@ import type {
   MoveEventToTeamResult,
   TeamActivityEntry,
   TeamConversion,
+  TeamDeletionRequest,
   TeamDetail,
   TeamInviteReceived,
   TeamInviteSent,
   TeamMember,
   TeamPerson,
+  TeamProfile,
   TeamRoleCode,
   TeamStatus,
   TeamSummary,
@@ -31,6 +33,8 @@ import {
   noticeTeamInviteAccepted,
   noticeTeamInviteReceived,
   noticeTeamMemberRemoved,
+  noticeTeamOwnerDemoted,
+  noticeTeamOwnerRemoved,
   noticeTeamRoleChanged,
   textTeamInvite,
 } from "./teamNotices";
@@ -55,6 +59,7 @@ type Fail = {
   status: 400 | 401 | 403 | 404 | 409 | 429 | 500;
   message: string;
 };
+export type TeamFail = Fail;
 type Ok<T> = { status: 200; message?: string; data: T };
 
 const PERSON_SELECT =
@@ -111,6 +116,19 @@ const SQL_ERRORS: Record<string, { status: Fail["status"]; key: string }> = {
   whole_run: { status: 409, key: "teamMoveWholeRun" },
   has_sales: { status: 409, key: "teamMoveHasSales" },
   seating_shared: { status: 409, key: "teamMoveSeatingShared" },
+  // The team's profile (2026-11-25)
+  username_invalid: { status: 400, key: "teamUsernameInvalid" },
+  bad_input: { status: 400, key: "invalidInput" },
+  bad_photo: { status: 403, key: "notAuthorizedForThisImage" },
+  nothing_to_change: { status: 400, key: "nothingToUpdate" },
+  // Deleting the team (2026-11-25)
+  delete_blocked: { status: 409, key: "teamDeleteBlocked" },
+  delete_pending: { status: 409, key: "teamDeletePending" },
+  delete_not_found: { status: 404, key: "teamDeleteRequestEnded" },
+  delete_not_pending: { status: 409, key: "teamDeleteRequestEnded" },
+  delete_expired: { status: 409, key: "teamDeleteExpired" },
+  delete_owners_changed: { status: 409, key: "teamDeleteOwnersChanged" },
+  delete_not_ready: { status: 409, key: "teamDeleteNotReady" },
 };
 
 /** K7: they said they are 18 or older; the database keeps when. */
@@ -170,7 +188,10 @@ async function recordTerms(
 }
 
 /** Turns a `team:<code>` database error into an envelope. */
-function failFromDb(error: { message?: string } | null, where: string): Fail {
+export function failFromDb(
+  error: { message?: string } | null,
+  where: string,
+): Fail {
   const code = /team:([a-z_]+)/.exec(error?.message ?? "")?.[1];
   const known = code ? SQL_ERRORS[code] : undefined;
   if (known) return { status: known.status, message: tr(known.key) };
@@ -219,7 +240,7 @@ type MembershipRow = {
   joined_at: string;
 };
 
-async function activeMembership(
+export async function activeMembership(
   svc: ServiceRoleClient,
   teamId: string,
   userId: string,
@@ -518,6 +539,18 @@ export async function getTeamCore(
     limitsOf.set(l.user_id, [...(limitsOf.get(l.user_id) ?? []), l.place_id]);
   }
 
+  // The profile an Owner edits, and a request to delete the team.
+  const [profileRow, deletion] = isOwner
+    ? await Promise.all([
+        svc
+          .from("user_info")
+          .select("bio, website, social_links")
+          .eq("id", teamId)
+          .maybeSingle(),
+        pendingDeletion(svc, teamId, userId),
+      ])
+    : [null, null];
+
   // N4: the published team terms, and which Owners accepted them.
   const published = teamTermsOf(settings);
   let terms: TeamDetail["terms"] = null;
@@ -593,7 +626,64 @@ export async function getTeamCore(
       places: isOwner
         ? ((teamPlaces?.data ?? []) as { id: string; name: string }[])
         : null,
+      profile: profileRow?.data
+        ? {
+            bio: profileRow.data.bio ?? null,
+            website: profileRow.data.website ?? null,
+            socialLinks:
+              (profileRow.data.social_links as TeamProfile["socialLinks"]) ??
+              null,
+          }
+        : null,
+      deletion,
     },
+  };
+}
+
+/**
+ * The open request to delete the team, as its Owners see it: who asked,
+ * how many Owners have approved, who is still to. A request past its
+ * deadline reads as none (the sweep ends it).
+ */
+async function pendingDeletion(
+  svc: ServiceRoleClient,
+  teamId: string,
+  userId: string,
+): Promise<TeamDeletionRequest | null> {
+  const { data: request, error } = await svc
+    .from("team_deletion_request")
+    .select("id, requested_by, owner_ids, created_at, expires_at")
+    .eq("team_id", teamId)
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (error) logger.error(`teams pendingDeletion: ${error.message}`);
+  if (!request) return null;
+  const { data: approvals } = await svc
+    .from("team_deletion_approval")
+    .select("owner_id")
+    .eq("request_id", request.id);
+  const owners = (request.owner_ids ?? []) as string[];
+  const approved = new Set(
+    (approvals ?? [])
+      .map((a) => a.owner_id as string)
+      .filter((id) => owners.includes(id)),
+  );
+  const persons = await people(svc, [request.requested_by, ...owners]);
+  return {
+    id: request.id,
+    requestedBy: request.requested_by
+      ? (persons.get(request.requested_by) ?? null)
+      : null,
+    createdAt: request.created_at,
+    expiresAt: request.expires_at,
+    owners: owners.length,
+    approvals: approved.size,
+    approvedByMe: approved.has(userId),
+    waitingFor: owners
+      .filter((id) => !approved.has(id))
+      .map((id) => persons.get(id))
+      .filter((p): p is TeamPerson => !!p),
   };
 }
 
@@ -1302,7 +1392,18 @@ export async function setTeamMemberRoleCore(
   });
   if (error) return failFromDb(error, "setTeamMemberRoleCore");
   if (previous !== input.role) {
-    await noticeTeamRoleChanged(input.teamId, input.userId, input.role);
+    // An Owner demoted by someone else is told who did it: it also holds
+    // back a request to delete the team for 7 days (team_deletion_blockers).
+    if (previous === "owner" && input.userId !== userId) {
+      await noticeTeamOwnerDemoted(
+        input.teamId,
+        input.userId,
+        userId,
+        input.role,
+      );
+    } else {
+      await noticeTeamRoleChanged(input.teamId, input.userId, input.role);
+    }
   }
   return { status: 200, data: { role: input.role } };
 }
@@ -1338,13 +1439,18 @@ export async function removeTeamMemberCore(
   userId: string,
   input: { teamId: string; userId: string },
 ): Promise<Ok<{ removed: true }> | Fail> {
-  const { error } = await svc.rpc("team_member_remove", {
+  const { data: role, error } = await svc.rpc("team_member_remove", {
     p_team: input.teamId,
     p_by: userId,
     p_user: input.userId,
   });
   if (error) return failFromDb(error, "removeTeamMemberCore");
-  await noticeTeamMemberRemoved(input.teamId, input.userId);
+  // An Owner removed by another Owner is told who did it.
+  if (role === "owner") {
+    await noticeTeamOwnerRemoved(input.teamId, input.userId, userId);
+  } else {
+    await noticeTeamMemberRemoved(input.teamId, input.userId);
+  }
   return { status: 200, data: { removed: true } };
 }
 

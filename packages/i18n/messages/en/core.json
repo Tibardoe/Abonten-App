@@ -1123,6 +1123,30 @@
     "listing_views_weekly": {
       "title": "{views, plural, one {Your listings had # view this week} other {Your listings had # views this week}}",
       "body": "{social, plural, =0 {Most viewed: {top}.} one {Most viewed: {top}. # came from Abonten's own posts.} other {Most viewed: {top}. # came from Abonten's own posts.}}"
+    },
+    "team_owner_removed": {
+      "title": "{actor} removed you from {team}",
+      "body": "You're no longer an Owner of this team. Your own account isn't affected. If this wasn't agreed, contact Abonten support."
+    },
+    "team_owner_demoted": {
+      "title": "{actor} changed your role in {team}",
+      "body": "You're no longer an Owner of this team. If this wasn't agreed, contact Abonten support."
+    },
+    "team_delete_requested": {
+      "title": "{actor} asked to delete {team}",
+      "body": "Every Owner has to agree. Open the team in Teams to approve or stop it."
+    },
+    "team_delete_cancelled": {
+      "title": "{actor} stopped the request to delete {team}",
+      "body": "The team stays as it is."
+    },
+    "team_deleted": {
+      "title": "{team} was deleted",
+      "body": "Its Owners agreed to delete it, so you're no longer in the team. Your own account isn't affected."
+    },
+    "team_deleted_by_staff": {
+      "title": "Abonten closed {team}",
+      "body": "The team was closed after a review, so you're no longer in it. Your own account isn't affected. If you have questions, contact Abonten support."
     }
   },
   "noticeWords": {

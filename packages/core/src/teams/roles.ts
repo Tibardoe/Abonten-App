@@ -16,8 +16,13 @@ export type TeamRole = (typeof TEAM_ROLES)[number];
 export const TEAM_CAPABILITIES = [
   /** Invite, remove and change the roles of members. */
   "team.members",
-  /** The team's name, photo and bio. */
+  /** The team's name, username, photo, bio, website and social links. */
   "team.profile",
+  /**
+   * Ask to delete the team, approve or stop a request. Owners only, and
+   * the deletion runs only when every Owner has approved.
+   */
+  "team.delete",
   /** Change the payout account (also needs a fresh sign-in). */
   "payout.manage",
   /** See the payout account and payouts. */

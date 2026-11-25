@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import EditTeamProfileDialog from "@/teams/molecules/EditTeamProfileDialog";
 import MemberPlacesDialog from "@/teams/molecules/MemberPlacesDialog";
+import TeamPhotoButton from "@/teams/molecules/TeamPhotoButton";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatDateTime } from "@abonten/core/i18n/format";
 import { personName } from "@abonten/core/personName";
@@ -33,6 +35,7 @@ import TeamPersonAvatar from "../atoms/TeamPersonAvatar";
 import TeamRoleChip from "../atoms/TeamRoleChip";
 import InviteMemberDialog from "../molecules/InviteMemberDialog";
 import { useRefreshTeams, useTeam } from "../useTeams";
+import TeamDeletionSection from "./TeamDeletionSection";
 
 /**
  * One team, as its member sees it: who is in it and in which role. Owners
@@ -85,6 +88,7 @@ function TeamDetailBody({
   const [inviting, setInviting] = useState(false);
   const [placesFor, setPlacesFor] = useState<TeamMember | null>(null);
   const [renaming, setRenaming] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [newName, setNewName] = useState(detail.team.name ?? "");
   const [busy, setBusy] = useState(false);
 
@@ -250,7 +254,7 @@ function TeamDetailBody({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-semibold">{t("membersTitle")}</h3>
           {isOwner && team.status === "active" ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -258,6 +262,14 @@ function TeamDetailBody({
               >
                 {t("rename")}
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingProfile(true)}
+              >
+                {t("editProfile")}
+              </Button>
+              <TeamPhotoButton teamId={team.id} />
               <Button size="sm" onClick={() => setInviting(true)}>
                 {t("invite")}
               </Button>
@@ -434,11 +446,22 @@ function TeamDetailBody({
         </section>
       ) : null}
 
+      {isOwner && team.status === "active" ? (
+        <TeamDeletionSection detail={detail} teamName={teamName} />
+      ) : null}
+
       <InviteMemberDialog
         teamId={team.id}
         open={inviting}
         onOpenChange={setInviting}
       />
+      {isOwner ? (
+        <EditTeamProfileDialog
+          detail={detail}
+          open={editingProfile}
+          onOpenChange={setEditingProfile}
+        />
+      ) : null}
       <MemberPlacesDialog
         teamId={team.id}
         member={
@@ -465,6 +488,29 @@ function TeamDetailBody({
   );
 }
 
+/**
+ * "member.joined" -> "member_joined": a select key in the catalog. A few
+ * entries say more through their details (why someone left, why a request
+ * to delete the team ended).
+ */
+function activityCode(entry: TeamActivityEntry): string {
+  if (
+    entry.action === "member.account_closed" &&
+    entry.details.reason === "under_age"
+  ) {
+    return "member_under_age";
+  }
+  if (entry.action === "team.delete_cancelled") {
+    if (entry.details.reason === "owners_changed") {
+      return "team_delete_cancelled_owners";
+    }
+    if (entry.details.reason === "blocked") {
+      return "team_delete_cancelled_blocked";
+    }
+  }
+  return entry.action.replace(/\./g, "_");
+}
+
 function ActivityLine({ entry }: { entry: TeamActivityEntry }) {
   const t = useTranslations("teams");
   const tc = useTranslations("core");
@@ -478,12 +524,7 @@ function ActivityLine({ entry }: { entry: TeamActivityEntry }) {
     <li className="flex flex-wrap justify-between gap-2 text-sm">
       <span>
         {t("activity", {
-          // "member.joined" -> "member_joined": a select key in the catalog.
-          action:
-            entry.action === "member.account_closed" &&
-            entry.details.reason === "under_age"
-              ? "member_under_age"
-              : entry.action.replace(/\./g, "_"),
+          action: activityCode(entry),
           // A staff step (pause, resume, a new Owner) has no member actor.
           actor:
             entry.details.by === "staff"

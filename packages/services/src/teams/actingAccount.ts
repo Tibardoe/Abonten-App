@@ -106,6 +106,18 @@ export async function resolveActingAccount(
     team: { status: string } | null;
   } | null;
   if (!row || !isTeamRole(row.role)) {
+    // A team its Owners (or staff) deleted: everyone who managed as it is
+    // back on their own account, quietly (the website's Manage menu and the
+    // app's "Managing as" already read a team the person is no longer in as
+    // their own account). Any other team they are not in is refused.
+    const { data: gone } = await svc
+      .from("team")
+      .select("status")
+      .eq("account_id", requestedAccountId)
+      .maybeSingle();
+    if (gone?.status === "closed") {
+      return { ok: true, actor: { personId, accountId: personId, role: null } };
+    }
     return { ok: false, error: { status: 404, message: tr("teamNotFound") } };
   }
   if (row.team?.status !== "active") {

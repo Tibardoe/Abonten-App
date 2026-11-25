@@ -30,7 +30,10 @@ import {
   useProfilePlaces,
   useProfileReviews,
 } from "@/features/profile/useProfileTabs";
-import { usePublicProfile } from "@/features/profile/usePublicProfile";
+import {
+  useMovedUsername,
+  usePublicProfile,
+} from "@/features/profile/usePublicProfile";
 import { useSetUserBlock } from "@/features/reviews/useReviews";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { useQueryView } from "@/lib/useQueryView";
@@ -101,6 +104,15 @@ export default function UserProfileScreen() {
   // never loaded here.
   const profileView = useQueryView(profileQuery);
   const isOwn = !!session && session.user.id === profile?.user_id;
+  // No such handle: it may be one its account changed in the last 30 days,
+  // in which case the profile it moved to opens instead.
+  const notFound =
+    !profile && profileQuery.isError && isNotFoundError(profileQuery.error);
+  const moved = useMovedUsername(username, notFound);
+  const movedTo = moved.data ?? null;
+  useEffect(() => {
+    if (movedTo) router.replace(`/(app)/user/${encodeURIComponent(movedTo)}`);
+  }, [movedTo, router]);
 
   // A link can open a tab directly (Account › Saved Spotlights opens
   // ?tab=spotlights&segment=saved); unknown values fall back below.
@@ -356,8 +368,17 @@ export default function UserProfileScreen() {
 
   if (!profile) {
     // The server's own answer: no such profile. Deterministic, so it is
-    // shown even offline and never as "couldn't load".
-    if (profileQuery.isError && isNotFoundError(profileQuery.error)) {
+    // shown even offline and never as "couldn't load" (unless the handle
+    // moved, which opens the new one: keep the skeleton until it does).
+    if (notFound && (moved.isPending || movedTo)) {
+      return (
+        <View className="flex-1 bg-background">
+          {navHeader}
+          <ProfileSkeleton />
+        </View>
+      );
+    }
+    if (notFound) {
       return (
         <View className="flex-1 bg-background">
           {navHeader}

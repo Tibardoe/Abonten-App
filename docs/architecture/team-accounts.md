@@ -2,10 +2,10 @@
 title: Team accounts — organizers and places run by several people
 purpose: How an organizer or a place becomes a team account run by members with roles, how members are invited, join, change role, leave and are removed, what the database guarantees, and how the programme is switched on. Stages 1 to 5 of Part 2 of the Tickets, entry and teams plan.
 audience: Engineering, operations, support and legal reviewers
-scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for(), acting_accounts() and acting_account_for(), the team_* functions, the access rules on events, places and money, the organizer money functions, the team notice fan-out, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams and the team-invites-expire job.
+scope: user_info.account_kind, the team, team_member, team_invite, team_activity and team_program_setting tables, team_role_can(), acts_for(), acting_accounts() and acting_account_for(), the team_* functions, the access rules on events, places and money, the organizer money functions, the team notice fan-out, @abonten/core/teams/roles, @abonten/services teams and admin/teams, the web actions in src/actions/teams, /api/mobile/teams/**, Settings › Teams on the website and in the app, Admin › Teams, the team's profile and deleting a team (team_update_profile, team_deletion_request / _approval, team_delete_*, admin_team_delete), username_history and the team-invites-expire and team-delete-requests-sweep jobs.
 status: Review required
-version: 1.14
-lastReviewed: 2026-11-21
+version: 1.15
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Team accounts
 
-**State (2026-11-16): stages 1 to 4c (messages, reviews, featuring, the team's credit, Spotlight and Stories) "make this a team", the staff tools for paused teams and the business check with its badges built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
+**State (2026-11-25): stages 1 to 5, the team's profile and deleting a team (§4n–§4p) built, switched off. (2026-11-16): stages 1 to 4c (messages, reviews, featuring, the team's credit, Spotlight and Stories) "make this a team", the staff tools for paused teams and the business check with its badges built, switched off.** Part 2 of the Tickets, entry and teams plan ([specifications/tickets-entry-and-teams.md](../specifications/tickets-entry-and-teams.md)); decisions X5–X8 and X42 were approved by the founder on 2026-11-15 ([OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md)). Legal items N4 (team terms) and N5 (ID checks for Owners and Finance) are open ([LEGAL_REVIEW_REQUIRED.md](../LEGAL_REVIEW_REQUIRED.md)). `team_program_setting.enabled = false`, audience `staff`, and `TEAMS_KILL_SWITCH` is available on the web deployment.
 
 ## 1. The model: a team is its own account
 
@@ -32,7 +32,7 @@ Since stage 2 a team's members run its events and places within their role (§4a
 
 | Role | Can (capabilities) | ID check |
 |---|---|---|
-| Owner | everything: `team.members`, `team.profile`, `payout.manage`, `payout.view`, `payout.request`, `money.view`, `refunds.issue`, `promotions.buy`, `verification.request` (since stage 5) and every capability below | yes |
+| Owner | everything: `team.members`, `team.profile` (name, username, photo, bio, website, social links), `team.delete` (since 2026-11-25), `payout.manage`, `payout.view`, `payout.request`, `money.view`, `refunds.issue`, `promotions.buy`, `verification.request` (since stage 5) and every capability below | yes |
 | Finance | `payout.view`, `payout.request` (since stage 3), `money.view`, `refunds.issue`, `promotions.buy` (since stage 4b) | yes |
 | Manager | `events.manage`, `places.manage`, `promo.manage`, `bookings.manage`, `attendees.view`, `checkin.scan` | no |
 | Content and messages | `messages.reply`, `content.post`, `reviews.reply` | no |
@@ -57,6 +57,8 @@ All in `supabase/migrations/20261115190000_team_accounts_foundation.sql`, under 
 | Nobody an ID check found under 18 is an active member; such a result takes them out of every team (K7, §4k) | triggers `team_member_age_guard`, `identity_under_age_leaves_teams` |
 | Only Front desk and Door staff can be limited to places, and only to the team's own (§4k) | `team_member_set_places`, `team_member_places_follow_role` |
 | Activity is a record: added to, never changed | trigger `team_activity_no_update` |
+| Only Owners change the team's username, photo, bio, website and social links (§4n) | `team_update_profile` (`team.profile`) |
+| A team is deleted only when every active Owner approved and nothing stops it at that moment; a change to the Owners ends a request (§4o) | `team_delete_request` / `_approve` / `_finish`, trigger `team_member_owners_end_deletion` |
 
 Everything is service-role only: the five tables have RLS on with no client grants, and every `team_*` function is executable by `service_role` alone (`acts_for` and `team_role_can` excepted, as above).
 
@@ -216,18 +218,80 @@ Each acceptance is kept in `team_terms_acceptance` (team, person, version, time,
 
 **The help page.** `help/organizers/team-accounts` (en, fr, es, de, pt) is built with `listed: no`; list it in the release that opens teams to everyone.
 
+## 4n. The team's profile and usernames that change (2026-11-25)
+
+**Why.** On 2026-11-25 the founder found that a team's Owner could rename the team but could not change its @username, and nobody could change its photo, bio, website or social links after it was made (a person's Edit profile writes only the person's own row).
+
+**What Owners change.** On the team's page (website: **Edit team profile** and **Change photo** beside **Rename**; app: the same two actions at the top of the team screen), Owners (`team.profile`) change the team's @username, bio (160 characters), website and social accounts (Instagram, X, TikTok, Facebook, checked and stored in their canonical form by `@abonten/core/social/listerSocialLinks`, as for a person), and its photo. Other roles see none of it. The name keeps its own **Rename** (`team_rename`; a Verified team's new name goes back to review, X42).
+
+**How.** `updateTeamProfileCore` / `teamPhotoUploadSignatureCore` / `saveTeamPhotoCore` (`@abonten/services/teams/teamProfileCore`) check the kill switch, the person's own standing and that they are an active Owner of the active team, then call `public.team_update_profile(team, by, patch)` (service role only), which checks the Owner again under the team's row lock (`_team_require(…, 'team.profile')`), writes only those columns of the team's `user_info` row and records the change in the activity: `team.username_changed` (from, to) and `team.profile_updated` (which fields). A username change marks it chosen (`username_is_generated = false`; the database's `user_info_username_chosen` trigger leaves service writes as written). The photo is uploaded straight to Cloudinary with a signature issued only after the Owner check for the team's own folder (`user_profiles/<team>/`, `buildCloudinaryUploadSignature(…, { folderOwnerId })`); saving checks the folder, records the photo in the team's `user_image_history` and sets the avatar (the avatar owner check `enforce_avatar_public_id_owner` already accepts the team's folder, so it was not changed). Website actions `teams/updateTeamProfile`, `teams/getTeamPhotoUploadSignature`, `teams/saveTeamPhoto`; app `PATCH /api/mobile/teams/:teamId/profile`, `POST …/photo/signature`, `PUT …/photo`.
+
+**Usernames are the same rule for people and teams.** 3 to 30 letters, numbers or underscores, compared without case, never starting with `deleted_` (a deleted account's placeholder): `@abonten/core/usernames/usernames` (`usernameProblem`) mirrors the database (`user_info_username_check`, the unique index). A taken username is a 409 ("That username is taken").
+
+**"@name is taken" as you type (people and teams).** The username fields of a person's Edit profile (website and app), a team's profile and the Make-a-team form check the handle 450 ms after the typing stops (`checkUsernameAvailabilityCore`, `@abonten/services/profile/usernameAvailabilityCore`; website action `checkUsernameAvailability`, app `POST /api/mobile/usernames/check`). It answers only for a well-formed handle (otherwise `invalid` with the reason, nothing looked up), says `available`, `yours` or `taken`, and when taken offers two or three free handles built from the typed handle or the name with the city of a place the account runs, the country code, or a short ending (`suggestUsernames`: `_hq`, `_events`, `_live` for a team, two or three digits for a person), checked free in one query (`public.username_states`, service role only). It is limited to 30 checks a minute and 200 an hour per person, so it cannot be used to list accounts quickly (every profile is public at `/user/<handle>` anyway). Saving still relies on the database's unique index and hold, so a race answers 409.
+
+**Old links keep working (people and teams).** Profiles live at `/user/<username>/posts` (`profilePath`) and are shared and indexed. When an account changes its username, the old handle goes into `username_history` (service role only; trigger `user_info_username_history`; a case-only change is no change). For 30 days (`USERNAME_HOLD_DAYS`):
+
+- `/user/<old>/…` on the website answers **308** to `/user/<new>/posts` (the profile layout asks `public.username_redirect(old)`, which anyone may call: it says only what the redirect shows), and the app opens the new profile when it is asked for the old one;
+- the old handle is **held** for the account that gave it up: the check says taken, and a save by anyone else is refused (trigger `user_info_username_hold`, a unique violation, so every save path already answers "taken"); the account itself may take it back.
+
+After 30 days it is free again and redirects nowhere. Canonical addresses and the sitemap use the current handle. A handle passed to another account in the same transaction ("make this a team" gives the person's handle to the new team) is not held against it, a deleted account keeps nothing (its placeholder is not a change), and sign-up's generated handles are not checked (refusing one would stop the sign-up).
+
+## 4o. Deleting a team: every Owner agrees (2026-11-25)
+
+**The rule (the founder, 2026-11-25).** A team is deleted only when every active Owner agrees. An Owner asks on the team's page, typing the team's name to confirm, after a sign-in in the last 15 minutes (the payout-account rule, `isFreshSignIn`); every other active Owner is told (notice `team_delete_requested`, in-app and push, in their language) and approves on the team page, each after a fresh sign-in too; any Owner may stop it (`team_delete_cancelled` to the others). The team page shows "Waiting for N of M Owners" with the names still to approve. A team with one Owner is deleted as soon as that Owner confirms. A request ends by itself after 7 days (`TEAM_DELETE_REQUEST_DAYS`), at once when the Owners change (an Owner added, leaving, removed, demoted or promoted: trigger `team_member_owners_end_deletion`), and when something now stops the deletion (checked at each approval, again at the moment of deleting, and by the `team-delete-requests-sweep` job every 15 minutes). The deletion runs only when every current Owner has approved and nothing stops it at that moment. Requests and approvals are kept in `team_deletion_request` / `team_deletion_approval` (service role only); every step is in the team's activity (`team.delete_requested`, `_approved`, `_cancelled` with the reason, `_expired`, `team.deleted`).
+
+**One Owner cannot clear the others out first.** Any Owner may still remove or demote another Owner (except the last one), but a request to delete is refused for 7 days after an Owner was removed or demoted by someone else (`owners_changed_recently` in `team_deletion_blockers`, read from the activity), and the Owner who was removed or demoted is told who did it (notices `team_owner_removed` / `team_owner_demoted`, in place of the plain removed / role-changed notices).
+
+**What stops it** (`public.team_deletion_blockers(team)`, a 409 with one plain sentence saying what to do first):
+
+| Count | The sentence says |
+|---|---|
+| `upcoming_events_with_attendees` (a person's rule: published, not over, tickets active or used) | cancel those events first so everyone is refunded and told |
+| `seats_held`: Pay small small plans still running on its events | cancel those events first so the payers get their money back |
+| `payouts_in_flight` | wait until the payout has arrived |
+| `balance_owed` (organizer ledger above zero) | ask for a payout in Finances first |
+| `payments_in_progress`: a pending ticket checkout on its events, a pending featuring checkout for the team, a Spotlight promotion waiting for payment | try again in a few minutes |
+| `promotions_running`: a paid Spotlight promotion confirmed, in review, scheduled, live or paused | cancel it first |
+| `owners_changed_recently` (above; Owners only) | try again once 7 days have passed |
+
+Decided and not blocking: an open verification request (withdrawn by the deletion, as for a person), open invitations (withdrawn), a featuring already paid and running (it simply ends with the archived listings), the team's Abonten credit (forfeited, as a person's; the confirmation says so).
+
+**What deleting does** (`public.team_delete_finish(request, by)` → `_team_delete_apply`, one transaction): the team's credit account is closed (`credit_close_account`, failures logged as for a person), then the person-deletion pipeline runs on the team's account (`anonymize_deleted_account`: drafts deleted, upcoming published events nobody holds tickets for cancelled, every event archived, places unclaimed and their badges removed, payout accounts scrubbed, verification withdrawn, follows of the account removed, alerts on it ended, its conversations closed, profile scrubbed to "Deleted user" / `deleted_<id>`, status Deleted), then pending invitations are withdrawn, every member is removed (their rows stay, so the history still names them), the team is closed (`status = 'closed'`, reason `closed_by_owner`) and `team.deleted` is logged with who asked, who approved and the name it had. Afterwards the service soft-deletes the team's auth user (never a hard delete: sales, tickets, payouts, the ledger and fee records stay as the financial record) and tells everyone who was in it (`team_deleted`, in their language). Members' own accounts are untouched. Website actions `teams/requestTeamDeletion`, `teams/approveTeamDeletion`, `teams/cancelTeamDeletion`; app `POST /api/mobile/teams/:teamId/deletion`, `POST …/deletion/:requestId/approve`, `DELETE …/deletion/:requestId`.
+
+**What people see afterwards** (the same as for a deleted person):
+
+| Item | After the team is deleted |
+|---|---|
+| Public profile | Reads "Former Abonten member" and "This account is no longer on Abonten", without Follow or the alert bell (website and app; the website also drops Add review, Report and Block, the app keeps its ⋯ menu); not indexed (status not active). Its old @username is free at once (a deleted account keeps nothing) and `/user/<old>` is "profile not found", not indexed |
+| Spotlight posts and Stories | Kept but hidden on every read (feeds, the Stories rail, search and the profile grid show only active authors); new posts are refused. Their media is not purged (see "What remains") |
+| Followers and alert subscribers | Follows of the team removed (the follower count follows) and alerts on it ended (`unsubscribed`) |
+| Conversations | Closed: customers who wrote to the team see the conversation as before but cannot send to it; members lose the team's inbox with the team |
+| Reviews and replies | Kept, on the team's events and places; replies keep showing under "Organizer's reply" / "Response from owner" |
+| Promoter rows | A team is never a promoter; the promoter rows and commission settings of its events stay with the archived events |
+| Places | Stay listed, unclaimed, so the business can claim them again |
+
+**"Managing as" a deleted team.** Members who were managing as it are back on their own account: `resolveActingAccount` reads a deleted team as the person's own account (the website's Manage menu and the app's choice already did), the website clears the `abn_team` cookie for the Owner who deleted it, and the app forgets its stored choice (`chooseActingTeam(…, null)`) when it learns the team is gone.
+
+**Switches.** The profile edit and asking or approving a deletion are refused while `TEAMS_KILL_SWITCH` is on; stopping a request is always allowed. They are not tied to the programme's audience: like renaming and removing members, an existing team's Owners keep them so nobody is trapped in a team.
+
+## 4p. Staff delete a team (2026-11-25)
+
+For abuse or a legal order, Admin › Teams › the team › **Delete team** deletes a team without its Owners: `teams.manage`, a fresh step-up and a reason, audited as `teams.delete` in the admin audit log (with the name, username, Owners and member count it had). The same blockers apply except the Owners' seven-day rule (it protects Owners from each other); the same effects (`public.admin_team_delete(team, staff)`, reason `staff`); a pending request of the Owners ends (`staff`). Every member is told (`team_deleted_by_staff`: "Abonten closed …"). A deleted team stays in Admin › Teams, read-only, labelled **Deleted** with the name it had and whether its Owners or staff deleted it.
+
 ## 5. Who sees what
 
 - **Members** see the team, every member's public name, photo, role and whether they passed the ID check.
 - **Owners** also see open invitations (an invited number only masked) and the activity (an invited number keeps only its last four digits).
-- **Staff** (Admin › Teams, `teams.view`): every team with its Owners and member count, and one team's members and full activity. Read-only in stage 1.
+- **Staff** (Admin › Teams, `teams.view`): every team with its Owners and member count, and one team's members and full activity. Read-only in stage 1. A deleted team stays listed as **Deleted**, read-only, with the name it had (§4p).
+- **Owners** see the team's bio, website and social links to edit them, and a request to delete the team with who still has to approve (§4n, §4o).
 
 ## 6. Programme switches (X43)
 
 | Switch | Off means |
 |---|---|
 | `team_program_setting.enabled` / `audience` (`staff` → `beta` → `all`) | No new team and no new invitation from people outside the audience. Teams that exist stay visible to their members, who can still answer invitations and leave; Owners can still remove members. Nobody is trapped in a team. |
-| `TEAMS_KILL_SWITCH=true` (web) | The same, and nobody can accept an invitation. |
+| `TEAMS_KILL_SWITCH=true` (web) | The same, and nobody can accept an invitation, change a team's profile or ask or approve deleting a team (stopping a request still works). |
 
 Limits in the settings row: `max_teams_created` (5), `max_members` (50), `invite_hours` (168), `texts_per_team_per_day` (20). Admin › Teams changes them (`teams.configure`, step-up, reason, audited as `teams.settings.update`). Rollout (X43): staff first, then beta, then everyone once the team terms are published and counsel's approval of N4, N5, N9 and K7 is recorded (§4m; the admin service refuses "Everyone" otherwise).
 
@@ -256,8 +320,12 @@ Limits in the settings row: `max_teams_created` (5), `max_members` (50), `invite
 | A member as promoter (X36) | Migration `supabase/migrations/20261116230000_invited_promoters.sql`; `rewards/promoterCommissionCore.ts` (`addEventPromoterCore`, `removeEventPromoterCore`, `getEventPromoterOfferCore`); website `events/molecules/PromoterListSection.tsx`, `actions/{add,remove}EventPromoter.ts`; app routes `POST /api/mobile/organizer/events/:eventId/promoters`, `DELETE …/promoters/:userId`, `GET /api/mobile/rewards/promoter-offer`; app `features/rewards/PromoterListSection.tsx`, `PromoterEarnNote` |
 | Team terms and the gate (N4) | Migration `supabase/migrations/20261116240000_team_terms_and_launch_gate.sql`; `teams/teamCore.ts` (`termsProblem`, `recordTerms`, `acceptTeamTermsCore`, `getTeamCore` terms), `teams/teamProgram.ts` (`teamTermsOf`), `teams/teamMoney.ts` (`requireTeamMoneyIdentity`), `admin/teams/teamsAdminCore.ts` (`launchReadiness`, the gate); website `teams/atoms/TermsConfirm.tsx`, the team page banner, `actions/teams/acceptTeamTerms.ts`; app route `POST /api/mobile/teams/:teamId/terms`, `TeamSheets.TermsConfirm`, the team screen; admin `TeamSettingsForm`; help `content/help/organizers/team-accounts*.md` |
 | Staff tools (stage 5) | Migration `supabase/migrations/20261116180000_team_accounts_staff_tools.sql`; `admin/teams/teamsAdminCore.{setTeamStatusAdminCore,appointTeamOwnerAdminCore}`; admin `server/actions/teams.ts`, `app/(console)/teams/[teamId]/TeamStaffActions.tsx` |
-| Tests | `packages/services/src/__integration__/teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts`, `teams-messages.integration.test.ts`, `teams-promotions.integration.test.ts`, `teams-content.integration.test.ts`, `teams-convert.integration.test.ts`, `teams-staff.integration.test.ts`, `teams-verification.integration.test.ts`, `teams-promotions-commission.integration.test.ts`, `teams-emails.integration.test.ts`, `teams-age-places.integration.test.ts`, `teams-terms.integration.test.ts`; the team part of `rewards-p8.integration.test.ts` (invited promoters) |
+| Profile and usernames (2026-11-25) | Migration `supabase/migrations/20261125100000_team_profile_and_delete.sql` (`team_update_profile`, `username_history`, `username_states`, `username_redirect`, triggers `user_info_username_history` / `_hold`); `teams/teamProfileCore.ts`, `profile/usernameAvailabilityCore.ts`, `@abonten/core/usernames/usernames`; website `actions/teams/{updateTeamProfile,getTeamPhotoUploadSignature,saveTeamPhoto}.ts`, `actions/checkUsernameAvailability.ts`, `teams/molecules/{EditTeamProfileDialog,TeamPhotoButton}.tsx`, `hooks/useUsernameAvailability.ts`, `components/molecules/UsernameAvailabilityHint.tsx`, the profile layout's redirect; app routes `teams/[teamId]/{profile,photo,photo/signature}`, `usernames/check`; app `features/teams/TeamProfile.tsx`, `features/profile/useUsernameCheck.ts`, `components/profile/UsernameHint.tsx` |
+| Deleting a team (2026-11-25) | Same migration (`team_deletion_request` / `_approval`, `team_deletion_blockers`, `team_delete_request` / `_approve` / `_cancel` / `_finish`, `_team_delete_apply`, `admin_team_delete`, `team_delete_requests_sweep` + job, trigger `team_member_owners_end_deletion`; `anonymize_deleted_account` replaced: follows, alerts and conversations); `teams/teamDeletionCore.ts`, `teams/actingAccount.ts` (a deleted team reads as the person), `admin/teams/teamsAdminCore.deleteTeamAdminCore`, `@abonten/core/teams/teamDeletion`; website `actions/teams/{request,approve,cancel}TeamDeletion.ts`, `teams/organisms/TeamDeletionSection.tsx`; app routes `teams/[teamId]/deletion/**`; app `features/teams/TeamDeletion.tsx`; admin `server/actions/teams.deleteTeam`, `TeamStaffActions` |
+| Tests | `packages/services/src/__integration__/teams-profile-delete.integration.test.ts`, `usernames.integration.test.ts`, `teams.integration.test.ts`, `teams-acting.integration.test.ts`, `teams-money.integration.test.ts`, `teams-messages.integration.test.ts`, `teams-promotions.integration.test.ts`, `teams-content.integration.test.ts`, `teams-convert.integration.test.ts`, `teams-staff.integration.test.ts`, `teams-verification.integration.test.ts`, `teams-promotions-commission.integration.test.ts`, `teams-emails.integration.test.ts`, `teams-age-places.integration.test.ts`, `teams-terms.integration.test.ts`; the team part of `rewards-p8.integration.test.ts` (invited promoters) |
 
 ## 8. What remains
 
 Part 2 is built (stages 1 to 5), switched off. Before Everyone: counsel on N4 (team terms), N5 (ID checks for Owners and Finance), N9 (badge wording for teams) and K7 (18 as the minimum), with the draft wording in the legal register; then publish the team terms (a section of the Terms of Service) and their version in Admin › Teams, record counsel's approval there (§4m), list the help page, and roll out per X43 (staff, beta, everyone). Live ID checks (Smile ID) are what make X5 bite for Owners and Finance. Check-in stations and Leads (Part 3) will use the same roles and place limits.
+
+Known gaps shared with a person's account deletion (2026-11-25, not changed here): the Spotlight posts of a deleted account stay `published` (hidden on every read), so their media is never purged; its places stay listed with the deleted account as `owner_id`, so a customer can still open a new conversation about one (`open_conversation` checks only the place); the profile Reviews tabs print a deleted reviewer's raw `deleted_…` handle instead of "Former Abonten member". A deleted team still counts towards its maker's `max_teams_created`.

@@ -4,8 +4,8 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.6
-lastReviewed: 2026-10-24
+version: 1.7
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -38,6 +38,7 @@ complianceReviewRequired: yes
 | Phone OTP pending state | Cleared on success, after 5 attempts, or after the 5-minute TTL | 5 minutes | `phoneOtpStore.ts` |
 | Abonten Safety positions and sessions | `safety_housekeeping()` (job `safety-housekeeping`, 03:50): positions and the session's last position `location_retention_days` (7) after a session closes; sessions with their recipients, outbox rows and timeline `session_retention_days` (180) after they close; invite texts 180 days after they were queued | 7 / 180 days after the session closes | `20261021180000_safety_core.sql` |
 | Identity verification records (name and date of birth on the document, last four characters, keyed hashes, expiry, the verdict; never images or the full number) | `identity_housekeeping()` (job `identity-housekeeping`, 04:10): unsuccessful checks (rejected, failed, cancelled, expired) `retention_days_unsuccessful` (365) after their last change unless still the person's record; a deleted account's checks `retention_days_after_deletion` (730) after deletion (the trigger `user_info_identity_account_closed` stamps the date and clears the flags); checks tied to fraud (revoked, blocked, fraud signal, matched another account) `retention_days_fraud` (1825) after the decision. The images stay with Smile ID under its retention (legal K6) | 1 / 2 / 5 years — proposals for counsel (legal K2) | `20261023100000_identity_verification.sql` |
+| Usernames an account gave up (`username_history`: account, old and new handle, when) | Held for the account and redirected to its new handle for 30 days; the rows are kept after that (no purge job yet), and go with the account only on a hard delete. A deletion's placeholder handle is not recorded | 30 days held; rows kept | `20261125100000_team_profile_and_delete.sql` |
 | Field-programme reviews left open | `fieldops_run_housekeeping()` cron 02:25 closes reviews past `review_grace_days` (14) | 14 days after campaign completion | `20260911223818_fieldops_commissions.sql` |
 
 ## 2. Account deletion (user-initiated)
@@ -59,6 +60,8 @@ Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`)
 | **Events** | Upcoming published events with no active tickets → `canceled`; everything else `archived_at` set (leaves discovery and search; direct links still open, organizer shown as "Deleted user") |
 | **Places** | Kept published, `claimed = false`, verification cleared — the next owner can claim the listing |
 | **Verification cases** | Open cases withdrawn, an approved one revoked (`verification_transition`, actor `system`, reason `account_deleted`) |
+| **Followers, alerts, conversations** (since 2026-11-25) | Other people's follows of the account deleted (the follower count follows), their alerts on it set to `unsubscribed`, and every open conversation it takes part in closed, so nobody follows, watches or writes to an account that is gone |
+| **Team accounts** (since 2026-11-25) | A team deleted by its Owners (all of them) or by staff runs the same path on the team's account, then withdraws its invitations, removes every member (the rows stay, naming who was in it) and closes the team; the team's auth user is soft-deleted. `team_activity` keeps the name and @username it had. See `architecture/team-accounts.md` §4o |
 | **Abonten Safety** (since 2026-10-22) | Trigger `user_info_safety_forget` (on `status_id` becoming 4) runs `safety_forget_account`: the person's `safety_contact` rows (other people's names and numbers), every `safety_session` with its positions, recipients, timeline and texts, queued `safety_message` rows and their per-person opt-outs are deleted; where the person was someone else's linked contact, `contact_user_id` / `recipient_user_id` are set to null and the other person's contact row stays. Before this the soft delete left all of it behind, because the cascades fire only on a hard delete (migration `20261022140000`) |
 | **Kept with identity nulled** (`ON DELETE SET NULL`) | unchanged — nothing is deleted from `auth.users`, so these columns keep their ids and resolve to the anonymised profile |
 | **Kept, no FK to the user** | Credit ledger (`credit_*`), `reward_event`, field-ops member/owner ids |
@@ -72,7 +75,7 @@ Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`)
 
 - **Suspend / ban** (`setUserStatusCore`) changes `user_info.status_id`, revokes all sessions (`auth.admin.signOut(user, 'global')`), audits. Deletes nothing.
 - **Moderation** (`apply_moderation_action`) sets `moderation_state` — hidden/removed content stays in the database.
-- Admins have **no** "delete user data" tool; a privacy deletion request is fulfilled by the user's own delete-account action or, if the user cannot sign in, by an engineer with service-role access following `privacy-rights-operations.md`.
+- Staff can delete a **team account** (Admin › Teams › Delete team: `teams.manage`, step-up, a reason, audited as `teams.delete`; the same path as above). Admins have **no** "delete user data" tool for a person; a privacy deletion request is fulfilled by the user's own delete-account action or, if the user cannot sign in, by an engineer with service-role access following `privacy-rights-operations.md`.
 
 ## 4. No retention policy exists (POLICY DECISION REQUIRED)
 

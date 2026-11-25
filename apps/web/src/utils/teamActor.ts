@@ -31,6 +31,18 @@ export async function readActingTeamId(): Promise<string | null> {
   return UUID.test(value) ? value : null;
 }
 
+/**
+ * After the person deleted (or approved deleting) a team: if they were
+ * managing as it, they are back on their own account. Other members fall
+ * back the same way on their next request (resolveActingAccount reads a
+ * deleted team as the person's own account). Server Actions only.
+ */
+export async function forgetDeletedActingTeam(teamId: string): Promise<void> {
+  if ((await readActingTeamId()) === teamId) {
+    (await cookies()).delete(ACTING_TEAM_COOKIE);
+  }
+}
+
 export type Actor = {
   /** The signed-in person's client: the access rules see them. */
   supabase: SupabaseClient<Database>;

@@ -13493,6 +13493,121 @@ export type Database = {
           },
         ]
       }
+      team_deletion_approval: {
+        Row: {
+          approved_at: string
+          owner_id: string
+          request_id: string
+        }
+        Insert: {
+          approved_at?: string
+          owner_id: string
+          request_id: string
+        }
+        Update: {
+          approved_at?: string
+          owner_id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_deletion_approval_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_deletion_approval_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_deletion_approval_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "team_deletion_request"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_deletion_request: {
+        Row: {
+          created_at: string
+          end_reason: string | null
+          ended_at: string | null
+          ended_by: string | null
+          expires_at: string
+          id: string
+          owner_ids: string[]
+          requested_by: string | null
+          status: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          expires_at: string
+          id?: string
+          owner_ids: string[]
+          requested_by?: string | null
+          status?: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          expires_at?: string
+          id?: string
+          owner_ids?: string[]
+          requested_by?: string | null
+          status?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_deletion_request_ended_by_fkey"
+            columns: ["ended_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_deletion_request_ended_by_fkey"
+            columns: ["ended_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_deletion_request_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_deletion_request_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "team_deletion_request_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "team"
+            referencedColumns: ["account_id"]
+          },
+        ]
+      }
       team_invite: {
         Row: {
           created_at: string
@@ -15241,6 +15356,48 @@ export type Database = {
         }
         Relationships: []
       }
+      username_history: {
+        Row: {
+          changed_at: string
+          changed_xact: number
+          id: number
+          new_username: string | null
+          old_username: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_xact?: number
+          id?: never
+          new_username?: string | null
+          old_username: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_xact?: number
+          id?: never
+          new_username?: string | null
+          old_username?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "username_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "username_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       verification_case: {
         Row: {
           applicant_note: string | null
@@ -16567,6 +16724,10 @@ export type Database = {
       admin_team_appoint_owner: {
         Args: { p_team: string; p_user: string }
         Returns: string
+      }
+      admin_team_delete: {
+        Args: { p_staff: string; p_team: string }
+        Returns: Json
       }
       admin_team_set_status: {
         Args: { p_reason: string | null; p_team: string; p_to: string }
@@ -19698,6 +19859,24 @@ export type Database = {
         }
         Returns: Json
       }
+      team_delete_approve: {
+        Args: { p_by: string; p_request: string }
+        Returns: Json
+      }
+      team_delete_cancel: {
+        Args: { p_by: string; p_request: string }
+        Returns: Json
+      }
+      team_delete_finish: {
+        Args: { p_by: string; p_request: string }
+        Returns: Json
+      }
+      team_delete_request: {
+        Args: { p_by: string; p_days: number; p_team: string }
+        Returns: Json
+      }
+      team_delete_requests_sweep: { Args: never; Returns: number }
+      team_deletion_blockers: { Args: { p_team: string }; Returns: Json }
       team_finalize_create: {
         Args: {
           p_account: string
@@ -19795,6 +19974,10 @@ export type Database = {
       team_role_can: {
         Args: { p_capability: string; p_role: string }
         Returns: boolean
+      }
+      team_update_profile: {
+        Args: { p_by: string; p_patch: Json; p_team: string }
+        Returns: Json
       }
       ticket_pass_claim: {
         Args: {
@@ -19932,6 +20115,14 @@ export type Database = {
       user_block_set: {
         Args: { p_block?: boolean; p_blocked_id: string }
         Returns: boolean
+      }
+      username_redirect: { Args: { p_username: string }; Returns: string }
+      username_states: {
+        Args: { p_for: string; p_usernames: string[] }
+        Returns: {
+          state: string
+          username: string
+        }[]
       }
       verification_transition: {
         Args: {

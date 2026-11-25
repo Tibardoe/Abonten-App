@@ -4,7 +4,11 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card } from "@/components/ui";
 import { actionUnreachable } from "@/lib/actionUnreachable";
-import { appointTeamOwner, setTeamStatus } from "@/server/actions/teams";
+import {
+  appointTeamOwner,
+  deleteTeam,
+  setTeamStatus,
+} from "@/server/actions/teams";
 import type { TeamPerson, TeamStatus } from "@abonten/types/teamType";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -17,9 +21,10 @@ type Candidate = { person: TeamPerson; current: boolean; role: string };
 const nameOf = (p: TeamPerson) => p.name ?? p.username ?? p.id.slice(0, 8);
 
 /**
- * Admin › Teams › one team: pause it in a dispute, resume it, or make a
+ * Admin › Teams › one team: pause it in a dispute, resume it, make a
  * current or former member an Owner (a team paused because its last
- * Owner's account closed). teams.manage, a fresh sign-in and a reason.
+ * Owner's account closed), or delete it without its Owners (abuse, a legal
+ * order). teams.manage, a fresh sign-in and a reason.
  */
 export function TeamStaffActions({
   teamId,
@@ -88,6 +93,24 @@ export function TeamStaffActions({
       );
     });
 
+  const remove = () =>
+    start(async () => {
+      setMsg(null);
+      if (
+        !(await confirm(
+          `Delete ${teamName}? Everyone is removed from it, its profile is scrubbed, its upcoming events with no tickets are cancelled and the rest archived, its places are unclaimed and its credit is closed. Sales and payout records stay. Every member is told. This can't be undone.`,
+          { confirmLabel: "Delete team" },
+        ))
+      ) {
+        return;
+      }
+      done(
+        await deleteTeam({ teamId, reason: reason.trim() }).catch(
+          actionUnreachable,
+        ),
+      );
+    });
+
   const appoint = () =>
     start(async () => {
       setMsg(null);
@@ -113,7 +136,8 @@ export function TeamStaffActions({
   if (!stepUpFresh) {
     return (
       <Card className="flex items-center gap-2 p-3 text-sm">
-        Pausing a team or appointing an Owner needs a fresh identity check.
+        Pausing, deleting a team or appointing an Owner needs a fresh identity
+        check.
         <StepUpButton next={`/teams/${teamId}`} />
       </Card>
     );
@@ -185,6 +209,20 @@ export function TeamStaffActions({
             onClick={appoint}
           >
             Make Owner
+          </Button>
+        </div>
+      ) : null}
+
+      {status !== "closed" ? (
+        <div className="space-y-1 border-t border-border pt-3">
+          <p className="text-muted-foreground">
+            Delete the team without its Owners (abuse, a legal order). The same
+            checks as when Owners delete it: refused while it owes attendees, a
+            payout is moving, money is owed or a payment or promotion is
+            running.
+          </p>
+          <Button variant="danger" disabled={!ready} onClick={remove}>
+            Delete team
           </Button>
         </div>
       ) : null}

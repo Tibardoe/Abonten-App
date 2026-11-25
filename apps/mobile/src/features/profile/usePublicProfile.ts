@@ -91,6 +91,30 @@ export function usePublicProfile(username: string | undefined) {
 }
 
 /**
+ * An old handle whose account changed it in the last 30 days: the handle
+ * it has now (public.username_redirect, which anyone may ask), else null.
+ * Asked only once the handle itself turned out not to exist, so a shared
+ * link to the old /user/<handle> still finds the profile.
+ */
+export function useMovedUsername(
+  username: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...PUBLIC_PROFILE_KEY, "moved", username],
+    enabled: enabled && !!username,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase.rpc("username_redirect", {
+        p_username: username as string,
+      });
+      if (error) throw error;
+      return typeof data === "string" && data.length > 0 ? data : null;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/**
  * Keeps every cached profile of `userId` in step with a follow change —
  * optimistically (`delta`) or with the server's answer (`followerCount`).
  */

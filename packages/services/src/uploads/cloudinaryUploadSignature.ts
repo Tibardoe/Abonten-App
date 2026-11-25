@@ -139,6 +139,12 @@ export function isUploadSignatureKind(
 export async function buildCloudinaryUploadSignature(
   userId: string,
   kind: UploadSignatureKind,
+  /**
+   * The account whose folder the upload goes in, when it is not the
+   * caller's own: a team's photo (teams/teamProfileCore, issued only after
+   * the Owner check). The rate limit stays the caller's.
+   */
+  options: { folderOwnerId?: string } = {},
 ): Promise<UploadSignatureResult> {
   const allowed = await checkRateLimit(
     `cloudinary-signature:${userId}`,
@@ -154,10 +160,11 @@ export async function buildCloudinaryUploadSignature(
   }
 
   const timestamp = Math.round(Date.now() / 1000);
+  const owner = options.folderOwnerId ?? userId;
   const folder =
     kind === "content"
-      ? `${contentMediaEnvironmentPrefix()}${userId}`
-      : `${FOLDER_PREFIX[kind]}/${userId}`;
+      ? `${contentMediaEnvironmentPrefix()}${owner}`
+      : `${FOLDER_PREFIX[kind]}/${owner}`;
   const { allowedFormats } = UPLOAD_CONSTRAINTS[kind];
 
   // Every signed param must be echoed verbatim by the client or Cloudinary's

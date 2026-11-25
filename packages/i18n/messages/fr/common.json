@@ -969,5 +969,11 @@
   "openAmountEditorHint": "Les acheteurs choisissent un montant dans cette fourchette et reçoivent un billet pour ce montant. Utilisez la note du billet pour dire ce que le montant permet d'obtenir.",
   "chooseYourAmount": "Choisissez votre montant",
   "openAmountNoDiscounts": "Les codes promo et les prix de groupe ne s'appliquent pas aux montants que vous choisissez.",
-  "yourAmount": "Votre montant"
+  "yourAmount": "Votre montant",
+  "usernameChecking": "Vérification…",
+  "usernameAvailable": "@{username} est disponible",
+  "usernameTaken": "@{username} est déjà pris",
+  "usernameSuggestions": "Essayez l'un de ceux-ci :",
+  "usernameCheckFailed": "Nous n'avons pas pu vérifier ce nom d'utilisateur pour le moment. Vous pouvez quand même l'enregistrer.",
+  "accountNoLongerOnAbonten": "Ce compte n'est plus sur Abonten."
 }

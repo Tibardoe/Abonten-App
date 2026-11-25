@@ -2,7 +2,7 @@
 title: Comptes d'équipe
 summary: Gérez un organisateur ou un lieu avec d'autres personnes, chacune avec sa propre connexion et un rôle qui dit ce qu'elle peut faire.
 order: 90
-lastUpdated: 2026-11-21
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -52,6 +52,18 @@ Les membres de votre équipe ne gagnent ni récompenses ni commission de promote
 ## Les badges
 
 Une équipe qui réussit la vérification d'entreprise d'Abonten affiche **Entreprise vérifiée**. Une équipe affiche **Identité vérifiée** quand au moins un de ses Propriétaires a passé une vérification d'identité ; elle ne dit jamais lequel. Aucun de ces badges ne signifie qu'Abonten se porte garant de l'équipe, de ses événements ou de ses lieux.
+
+## Le profil de l'équipe
+
+Les propriétaires changent le @nom d'utilisateur, la photo, la bio, le site web et les réseaux sociaux de l'équipe sur sa page, dans **Paramètres › Équipes** (**Modifier le profil de l'équipe** et **Changer la photo**) ; le nom a son propre bouton **Renommer**. Pendant que vous saisissez un nouveau @nom d'utilisateur, vous voyez s'il est libre, avec quelques noms libres à choisir s'il ne l'est pas. Les liens vers l'ancien @nom d'utilisateur continuent de fonctionner pendant 30 jours, et personne d'autre ne peut le prendre pendant ce temps.
+
+## Supprimer une équipe
+
+Un propriétaire peut demander la suppression de l'équipe sur sa page. Tous les propriétaires doivent être d'accord : les autres sont prévenus et approuvent sur la page de l'équipe, chacun après s'être reconnecté, et n'importe quel propriétaire peut arrêter la demande. Une demande prend fin après 7 jours, ou dès que les propriétaires de l'équipe changent. Une équipe qui n'a qu'un propriétaire est supprimée dès que celui-ci confirme. Pour confirmer, vous saisissez le nom de l'équipe.
+
+Une équipe ne peut pas être supprimée tant qu'elle a des événements à venir pour lesquels des personnes ont des billets ou paient en plusieurs fois, tant qu'un versement est en cours ou que des gains attendent d'être versés, tant qu'un paiement ou une promotion Spotlight est en cours, ni pendant 7 jours après qu'un propriétaire a été retiré ou a changé de rôle par le fait de quelqu'un d'autre. La page de l'équipe indique ce qu'il faut faire d'abord.
+
+Quand une équipe est supprimée, tout le monde la quitte et les invitations en cours sont retirées ; les comptes des membres ne sont pas touchés. Sa page, sa photo, ses abonnés, ses alertes et ses publications Spotlight disparaissent, et ses conversations sont fermées. Les événements à venir pour lesquels personne n'a de billet sont annulés et les autres sont archivés ; ses lieux restent sur Abonten sans propriétaire. Les ventes et les versements restent enregistrés, et le crédit Abonten de l'équipe est perdu. C'est définitif.
 
 ## Quitter et retirer
 

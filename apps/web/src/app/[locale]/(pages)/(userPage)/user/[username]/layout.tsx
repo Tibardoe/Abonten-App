@@ -10,6 +10,7 @@ import { profilePath } from "@abonten/core/seo/paths";
 import { snippetText } from "@abonten/core/seo/snippet";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { permanentRedirect } from "next/navigation";
 import { Suspense, cache } from "react";
 
 // The profile as search engines see it. Only a host's profile (someone with
@@ -24,7 +25,17 @@ const loadProfile = cache(async (username: string) => {
     )
     .eq("username", username)
     .maybeSingle();
-  if (!data) return null;
+  if (!data) {
+    // A handle its account gave up in the last 30 days: the profile moved
+    // (username_redirect). Links shared or indexed under the old handle
+    // keep working; canonical and sitemap use the current one.
+    const { data: moved } = await publicSupabase.rpc("username_redirect", {
+      p_username: username,
+    });
+    return typeof moved === "string" && moved
+      ? { kind: "moved" as const, moved }
+      : null;
+  }
   const [events, places] = await Promise.all([
     publicSupabase
       .from("event")
@@ -40,6 +51,7 @@ const loadProfile = cache(async (username: string) => {
   ]);
   const isHost = (events.count ?? 0) > 0 || (places.count ?? 0) > 0;
   return {
+    kind: "found" as const,
     ...data,
     indexed: isHost && data.status_id === 1 && isIndexedAccount(data.id),
   };
@@ -54,8 +66,16 @@ export async function generateMetadata({
   const t = await getTranslations("account");
 
   const { username } = await params;
-  const profile = await loadProfile(username);
-  if (!profile) return { title: t("profileNotFound") };
+  const loaded = await loadProfile(username);
+  if (loaded?.kind === "moved") permanentRedirect(profilePath(loaded.moved));
+  const profile = loaded?.kind === "found" ? loaded : null;
+  // Nothing to index on a profile that does not exist.
+  if (!profile) {
+    return {
+      title: t("profileNotFound"),
+      robots: { index: false, follow: false },
+    };
+  }
   const name = profile.full_name?.trim() || `@${profile.username}`;
   const description =
     snippetText(profile.bio) || t("onAbontenHubEventsPlacesAnd", { name });
@@ -93,7 +113,10 @@ type LayoutProps = {
 
 export default async function layout({ children, params }: LayoutProps) {
   const username = (await params).username;
-  const profile = await loadProfile(username);
+  const loaded = await loadProfile(username);
+  // 308 to the profile's current handle (its main tab).
+  if (loaded?.kind === "moved") permanentRedirect(profilePath(loaded.moved));
+  const profile = loaded?.kind === "found" ? loaded : null;
 
   return (
     <div className="flex flex-col gap-5">

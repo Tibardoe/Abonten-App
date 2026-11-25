@@ -3,6 +3,7 @@ import { UploadProgress } from "@/components/UploadProgress";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ProfileCompletionCard } from "@/components/profile/ProfileCompletionCard";
+import { UsernameHint } from "@/components/profile/UsernameHint";
 import { FormSkeleton } from "@/components/skeletons";
 import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
@@ -10,6 +11,7 @@ import {
   ProfileUpdateRefused,
   useUpdateProfile,
 } from "@/features/profile/useUpdateProfile";
+import { useUsernameCheck } from "@/features/profile/useUsernameCheck";
 import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -104,6 +106,11 @@ export default function EditProfile() {
     Partial<Record<keyof FormState, string>>
   >({});
   const [saved, setSaved] = useState(false);
+  // Free or taken as they type, with free handles to tap; the save still
+  // answers "taken" if someone else takes it first.
+  const usernameCheck = useUsernameCheck(form.username, {
+    current: profile?.username ?? null,
+  });
 
   async function onChangePhoto() {
     avatarProgress.start();
@@ -282,14 +289,20 @@ export default function EditProfile() {
           </View>
         </View>
 
-        <Field label={t("username")} error={errors.username}>
-          <Input
-            value={form.username}
-            onChangeText={(v) => set("username", v)}
-            autoCapitalize="none"
-            autoCorrect={false}
+        <View className="gap-2">
+          <Field label={t("username")} error={errors.username}>
+            <Input
+              value={form.username}
+              onChangeText={(v) => set("username", v)}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </Field>
+          <UsernameHint
+            check={usernameCheck}
+            onPick={(handle) => set("username", handle)}
           />
-        </Field>
+        </View>
 
         <Field label={t("fullName")} error={errors.full_name}>
           <Input

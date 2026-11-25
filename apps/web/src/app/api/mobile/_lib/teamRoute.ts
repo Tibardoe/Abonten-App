@@ -6,7 +6,9 @@ import {
   tr,
 } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NextResponse } from "next/server";
 import type { ZodType, ZodTypeDef } from "zod";
 
@@ -16,10 +18,18 @@ import type { ZodType, ZodTypeDef } from "zod";
 // that turns an unexpected failure into a 500. The core gets the
 // service-role client: the team tables have no client grants.
 
+/** The request itself, for the few handlers that need more than the body. */
+export type TeamRouteContext = {
+  req: Request;
+  /** The person's own client (Bearer), e.g. to read when they signed in. */
+  supabase: SupabaseClient<Database>;
+};
+
 type Handler<T> = (
   svc: ServiceRoleClient,
   userId: string,
   input: T,
+  context: TeamRouteContext,
 ) => Promise<{ status: number; message?: string; data?: unknown }>;
 
 /**
@@ -58,6 +68,7 @@ export function teamRoute<P extends Record<string, string>>() {
           getSupabaseServiceClient(),
           auth.user.id,
           parsed.data,
+          { req, supabase: auth.supabase },
         );
         const res = apiJson(result);
         res.headers.set("Cache-Control", "private, no-store");

@@ -11,9 +11,15 @@ import type {
 } from "@abonten/types/teamType";
 import type {
   AppointTeamOwnerAdminInput,
+  DeleteTeamAdminInput,
   TeamSettingsInput,
   TeamStatusAdminInput,
 } from "@abonten/validation/teamSchemas";
+import {
+  afterTeamDeleted,
+  readTeamDeletionBlockers,
+  teamDeletionBlockerKey,
+} from "../../teams/teamDeletionCore";
 import { noticeTeamRoleChanged } from "../../teams/teamNotices";
 import {
   isTeamsKillSwitchOn,
@@ -335,6 +341,16 @@ export async function listTeamsAdminCore(
 
 export type TeamAdminDetail = {
   team: TeamAdminRow;
+  /**
+   * A deleted team (status closed): what it was called (its profile is
+   * scrubbed), when, and whether its Owners or staff deleted it.
+   */
+  deleted: {
+    name: string | null;
+    username: string | null;
+    by: "owners" | "staff";
+    at: string;
+  } | null;
   members: { person: TeamPerson; role: TeamRoleCode; joinedAt: string }[];
   /** People who left or were removed: staff may make one an Owner again. */
   formerMembers: { person: TeamPerson; role: TeamRoleCode }[];
@@ -455,7 +471,27 @@ export async function getTeamAdminCore(
         details: (a.details ?? {}) as Record<string, unknown>,
         createdAt: a.created_at,
       })),
+      deleted: deletedFrom(team.status, activityRows),
     },
+  };
+}
+
+function deletedFrom(
+  status: string,
+  activity: {
+    action: string;
+    details: unknown;
+    created_at: string;
+  }[],
+): TeamAdminDetail["deleted"] {
+  if (status !== "closed") return null;
+  const row = activity.find((a) => a.action === "team.deleted");
+  const details = (row?.details ?? {}) as Record<string, unknown>;
+  return {
+    name: typeof details.name === "string" ? details.name : null,
+    username: typeof details.username === "string" ? details.username : null,
+    by: details.by === "staff" ? "staff" : "owners",
+    at: row?.created_at ?? "",
   };
 }
 
@@ -581,5 +617,97 @@ export async function appointTeamOwnerAdminCore(
       ? "They are an Owner now, and the team is running again."
       : "They are an Owner now.",
     data: { resumed },
+  };
+}
+
+// ── Staff delete a team (abuse, a legal order) ──────────────────────
+
+/** What stops a deletion, in the console's words (it is English-only). */
+const STAFF_DELETE_BLOCKERS: Record<string, string> = {
+  teamDeleteBlockedEvents:
+    "The team has upcoming events with people holding tickets. Cancel those events first (buyers are refunded and told).",
+  teamDeleteBlockedPlans:
+    "People are paying in parts (Pay small small) for tickets to the team's events. Cancel those events first.",
+  teamDeleteBlockedPayout:
+    "A payout to the team is still being processed. Wait until it has settled.",
+  teamDeleteBlockedBalance:
+    "Abonten still owes the team earnings. Pay them out (Finance › Payouts) first.",
+  teamDeleteBlockedPayments:
+    "A payment for the team is still going through. Try again in a few minutes.",
+  teamDeleteBlockedPromotion:
+    "A paid Spotlight promotion of the team is running or in review. Cancel it in Content first.",
+};
+
+/**
+ * Deletes a team without its Owners' approval (abuse, a legal order): the
+ * same blockers as the Owners' path (but not their seven-day rule) and the
+ * same effects; every member is told, the step is audited. teams.manage +
+ * step-up (checked by the console's Server Action) + a reason.
+ */
+export async function deleteTeamAdminCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: DeleteTeamAdminInput,
+  requestMeta?: RequestMeta,
+): Promise<AdminEnvelope<{ deleted: true }>> {
+  try {
+    assertPermission(ctx, "teams.manage");
+  } catch (e) {
+    return denied(e);
+  }
+  const blockers = await readTeamDeletionBlockers(supabase, input.teamId);
+  if (!blockers) return { status: 500, message: "Couldn't check the team." };
+  const key = teamDeletionBlockerKey(blockers, { staff: true });
+  if (key) {
+    return {
+      status: 409,
+      message:
+        STAFF_DELETE_BLOCKERS[key] ??
+        "Something still stops the deletion. Try again later.",
+    };
+  }
+  const { data, error } = await supabase.rpc("admin_team_delete", {
+    p_team: input.teamId,
+    p_staff: ctx.userId,
+  });
+  if (error) {
+    if (/team:delete_blocked/.test(error.message ?? "")) {
+      return {
+        status: 409,
+        message: "Something still stops the deletion. Try again later.",
+      };
+    }
+    return staffFailure(error, "deleteTeamAdminCore");
+  }
+  const row = data as unknown as {
+    outcome: "deleted";
+    team_id: string;
+    name: string | null;
+    username: string | null;
+    member_ids: string[];
+    owner_ids: string[];
+  };
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: "teams.delete",
+    targetType: "team",
+    targetId: input.teamId,
+    summary: `Team deleted by staff (${row.name ?? row.username ?? input.teamId})`,
+    reason: input.reason,
+    before: {
+      name: row.name,
+      username: row.username,
+      owners: row.owner_ids,
+      members: row.member_ids?.length ?? 0,
+    },
+    after: { status: "closed" },
+    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+  });
+  await afterTeamDeleted(supabase, row, { byStaff: true });
+  return {
+    status: 200,
+    message: "Team deleted. Its members have been told.",
+    data: { deleted: true },
   };
 }

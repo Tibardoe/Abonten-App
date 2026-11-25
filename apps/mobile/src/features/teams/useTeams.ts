@@ -2,7 +2,11 @@ import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
 import { type TeamCapability, teamRoleCan } from "@abonten/core/teams/roles";
-import type { InviteTarget, TeamRoleCode } from "@abonten/types/teamType";
+import type {
+  InviteTarget,
+  TeamProfilePatch,
+  TeamRoleCode,
+} from "@abonten/types/teamType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import {
@@ -90,6 +94,47 @@ export const useAcceptTeamTerms = () =>
 export const useRenameTeam = () =>
   useTeamMutation((v: { teamId: string; name: string }) =>
     api.teams.rename(v.teamId, v.name),
+  );
+
+/** An Owner changes the team's username, bio, website or social links. */
+export const useUpdateTeamProfile = () =>
+  useTeamMutation((v: { teamId: string; patch: TeamProfilePatch }) =>
+    api.teams.updateProfile(v.teamId, v.patch),
+  );
+
+/** Saves a photo uploaded with the team's signature (its own folder). */
+export const useSaveTeamPhoto = () =>
+  useTeamMutation(
+    (v: {
+      teamId: string;
+      publicId: string;
+      version: number;
+      transformation: string | null;
+    }) =>
+      api.teams.savePhoto(v.teamId, {
+        publicId: v.publicId,
+        version: v.version,
+        transformation: v.transformation,
+      }),
+  );
+
+/**
+ * Deleting a team (every Owner agrees): ask, approve, stop. A 200 whose
+ * `data.state` is "deleted" means the team is gone.
+ */
+export const useRequestTeamDeletion = () =>
+  useTeamMutation((v: { teamId: string; confirmName: string }) =>
+    api.teams.requestDeletion(v.teamId, v.confirmName),
+  );
+
+export const useApproveTeamDeletion = () =>
+  useTeamMutation((v: { teamId: string; requestId: string }) =>
+    api.teams.approveDeletion(v.teamId, v.requestId),
+  );
+
+export const useCancelTeamDeletion = () =>
+  useTeamMutation((v: { teamId: string; requestId: string }) =>
+    api.teams.cancelDeletion(v.teamId, v.requestId),
   );
 
 export const useFindTeamInvitee = () =>

@@ -2,10 +2,10 @@
 title: Admin — Teams
 purpose: How to look up who runs a team, answer the common support questions about team accounts, and switch the programme on in stages.
 audience: Support, operations
-scope: Admin › Teams, the teams.view / teams.configure / teams.manage permissions, pausing and resuming a team, appointing an Owner, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire job
+scope: Admin › Teams, the teams.view / teams.configure / teams.manage permissions, pausing and resuming a team, appointing an Owner, deleting a team, deleted teams, the TEAMS_KILL_SWITCH deploy flag and the team-invites-expire and team-delete-requests-sweep jobs
 status: Approved
-version: 1.12
-lastReviewed: 2026-11-16
+version: 1.13
+lastReviewed: 2026-11-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -22,10 +22,11 @@ An organizer or a place can be run by a team: its own account, run by members wh
 |---|---|---|
 | `teams.view` | The settings, every team with its Owners and member count, and one team's members and activity | operations, support_admin, moderator (super_admin always) |
 | `teams.configure` | Change the settings. Fresh step-up and a reason; audited as `teams.settings.update` | operations (super_admin always) |
+| `teams.manage` | Pause, resume, make someone an Owner and delete a team. Fresh step-up and a reason; audited as `teams.pause` / `teams.resume` / `teams.owner.appoint` / `teams.delete` | operations (super_admin always) |
 
 ## Looking a team up
 
-Search by the team's name or username. A team's page shows its status (**Active**, **Paused**, **Closed**), who made it, its members with their roles, and every action with the member who took it ("System" for an invitation running out or an account closing). The "team account" link opens the team's own profile row in Users.
+Search by the team's name or username. A team's page shows its status (**Active**, **Paused**, **Deleted**), who made it, its members with their roles, and every action with the member who took it ("System" for an invitation running out or an account closing). The "team account" link opens the team's own profile row in Users.
 
 ## Common questions
 
@@ -56,6 +57,11 @@ Search by the team's name or username. A team's page shows its status (**Active*
 - **"Our Finance person can't ask for a payout."** When ID checks are required, Owners and Finance pass one before moving money (Settings › Identity verification); the team also needs one Owner with a check.
 - **"I can't see my team's events."** They need to choose the team under **Managing as** (Manage on the website, the top of Organizer in the app). Their role decides what they then see: Door staff only check people in, Front desk only bookings and the visit QR.
 - **"Our door staff can't see the guest list."** That is the Door staff role: they scan or type a ticket's code and see whether it worked, never who is coming. Make them a Manager if they need the list.
+- **"How do we change our team's @username, photo or bio?"** Owners do it on the team's page (Settings › Teams › the team: **Edit team profile**, **Change photo**). The field says at once whether a @username is free and suggests free ones. Links to the old @username keep working for 30 days and nobody else can take it in that time (people changing their own @username get the same). Staff cannot change it for them.
+- **"How do we delete our team?"** An Owner asks on the team's page, typing its name; every other Owner must approve there within 7 days (each after signing in again), and any Owner can stop it. A team with one Owner is deleted when that Owner confirms. The page says what stops it: upcoming events with ticket holders or people paying in parts (cancel them first), a payout on its way or earnings not yet paid out, a payment or Spotlight promotion running, or an Owner removed or demoted by someone else in the last 7 days. Sales and payout records stay; the team's credit is lost; members' own accounts are untouched.
+- **"Another Owner removed me / changed my role" (and maybe wants to delete the team).** The person was told who did it. A request to delete the team is refused for 7 days after that, so they have time to raise it. If it was not agreed, it is a dispute: **Pause team** while it is sorted out, and **Make Owner** if the business papers show they should run it. A pause also stops any deletion (nobody can act for a paused team).
+- **Deleting a team as staff (abuse, a legal order).** Open the team, give a reason (ticket number and the grounds), then **Delete team**. Needs `teams.manage` and a fresh sign-in; audited as `teams.delete` with the name, username, Owners and member count it had. The same checks as for Owners apply (except their seven-day rule): refused while it owes attendees, a payout is moving, money is owed, or a payment or promotion is running; settle those first (Finance, Content). Every member is told "Abonten closed …". It cannot be undone.
+- **A team shows as Deleted.** Its Owners agreed to delete it (or staff did: the page says which, and when). It is read-only: its members and activity stay for the record, its profile was scrubbed, its sales and payouts are kept. The name it had is shown in the title.
 - **"An event I published went out under my own name, not the team's."** It was published while **Managing as** was on their own account. Moving a published event to a team is not possible yet; they can cancel and publish it again as the team.
 
 ## Switching it on
@@ -70,6 +76,8 @@ Search by the team's name or username. A team's page shows its status (**Active*
 
 `TEAMS_KILL_SWITCH=true` on the web deployment stops new teams, invitations and accepting at once. Members can still leave and Owners can still remove members.
 
-## The job
+## The jobs
 
 `team-invites-expire` (pg_cron, every 15 minutes) ends invitations past their deadline and records it in the team's activity. If it stops, invitations stay "waiting" past their deadline but can no longer be accepted (the accept checks the deadline itself).
+
+`team-delete-requests-sweep` (pg_cron, every 15 minutes) ends requests to delete a team that ran past their 7 days, and requests that something now stops (an event sold a ticket, a payout started). If it stops, nothing is deleted by mistake: approving and deleting check the deadline and the blockers themselves, and the team page shows no request past its deadline.

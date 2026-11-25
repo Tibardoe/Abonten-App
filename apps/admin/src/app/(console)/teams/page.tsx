@@ -12,7 +12,7 @@ import { TeamSettingsForm } from "./TeamSettingsForm";
 const STATUS = {
   active: { label: "Active", tone: "success" },
   frozen: { label: "Paused", tone: "warning" },
-  closed: { label: "Closed", tone: "neutral" },
+  closed: { label: "Deleted", tone: "neutral" },
 } as const;
 
 export default async function TeamsPage({
@@ -111,7 +111,12 @@ export default async function TeamsPage({
                         <span className="mt-1 block text-xs text-muted-foreground">
                           {row.statusReason === "no_owner"
                             ? "no Owner left"
-                            : row.statusReason}
+                            : row.statusReason === "closed_by_owner"
+                              ? "by its Owners"
+                              : row.status === "closed" &&
+                                  row.statusReason === "staff"
+                                ? "by staff"
+                                : row.statusReason}
                         </span>
                       ) : null}
                     </td>

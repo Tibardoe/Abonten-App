@@ -969,5 +969,11 @@
   "openAmountEditorHint": "Os compradores escolhem um valor neste intervalo e recebem um bilhete por esse valor. Use a nota do bilhete para dizer o que o valor inclui.",
   "chooseYourAmount": "Escolha o seu valor",
   "openAmountNoDiscounts": "Os códigos promocionais e os preços de grupo não se aplicam aos valores que escolhe.",
-  "yourAmount": "O seu valor"
+  "yourAmount": "O seu valor",
+  "usernameChecking": "A verificar…",
+  "usernameAvailable": "@{username} está disponível",
+  "usernameTaken": "@{username} já está a ser usado",
+  "usernameSuggestions": "Experimente um destes:",
+  "usernameCheckFailed": "Não foi possível verificar este nome de utilizador agora. Pode guardá-lo na mesma.",
+  "accountNoLongerOnAbonten": "Esta conta já não está na Abonten."
 }

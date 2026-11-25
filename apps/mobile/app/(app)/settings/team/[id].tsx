@@ -2,12 +2,20 @@ import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { RowListSkeleton } from "@/components/skeletons";
+import { TeamDeletionSection } from "@/features/teams/TeamDeletion";
+import {
+  TeamProfileSheet,
+  useTeamPhotoUpload,
+} from "@/features/teams/TeamProfile";
 import {
   InviteMemberSheet,
   RoleChoice,
   teamTermsUrl,
 } from "@/features/teams/TeamSheets";
+import { chooseActingTeam, useActingChoice } from "@/features/teams/actingTeam";
 import {
+  TEAMS_KEY,
+  resetAccountQueries,
   useAcceptTeamTerms,
   useCancelTeamInvite,
   useLeaveTeam,
@@ -41,6 +49,7 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
@@ -324,7 +333,13 @@ function ActivityRow({ entry }: { entry: TeamActivityEntry }) {
             entry.action === "member.account_closed" &&
             entry.details.reason === "under_age"
               ? "member_under_age"
-              : entry.action.replace(/\./g, "_"),
+              : entry.action === "team.delete_cancelled" &&
+                  entry.details.reason === "owners_changed"
+                ? "team_delete_cancelled_owners"
+                : entry.action === "team.delete_cancelled" &&
+                    entry.details.reason === "blocked"
+                  ? "team_delete_cancelled_blocked"
+                  : entry.action.replace(/\./g, "_"),
           // A staff step (pause, resume, a new Owner) has no member actor.
           actor:
             entry.details.by === "staff"
@@ -357,7 +372,32 @@ export default function TeamScreen() {
   const acceptTerms = useAcceptTeamTerms();
   const [inviting, setInviting] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [editing, setEditing] = useState<TeamMember | null>(null);
+  const photo = useTeamPhotoUpload(teamId);
+  const qc = useQueryClient();
+  const acting = useActingChoice();
+
+  const changePhoto = async () => {
+    const res = await photo.pick();
+    if (!res) return;
+    if (res.ok) {
+      if (res.message) toast.success(res.message);
+    } else {
+      toast.error(res.message);
+    }
+  };
+
+  // The team is gone: anyone managing as it is back on their own account,
+  // and the page it was on no longer exists.
+  const afterDeleted = () => {
+    if (viewerId && acting?.teamId === teamId) {
+      chooseActingTeam(viewerId, null);
+      resetAccountQueries(qc);
+    }
+    void qc.invalidateQueries({ queryKey: TEAMS_KEY });
+    router.replace("/(app)/settings/teams");
+  };
 
   const detail = query.data?.status === 200 ? query.data.data : undefined;
   const notMember = query.data?.status === 404;
@@ -529,6 +569,29 @@ export default function TeamScreen() {
                   />
                 </View>
               ) : null}
+              {isOwner && active ? (
+                <View className="flex-row gap-2">
+                  <Button
+                    title={t("editProfile")}
+                    size="sm"
+                    variant="outline"
+                    leftIcon="create-outline"
+                    className="flex-1"
+                    onPress={() => setEditingProfile(true)}
+                  />
+                  <Button
+                    title={t("changePhoto")}
+                    loadingTitle={t("photoUploading")}
+                    size="sm"
+                    variant="outline"
+                    leftIcon="image-outline"
+                    className="flex-1"
+                    loading={photo.busy}
+                    disabled={photo.busy}
+                    onPress={() => void changePhoto()}
+                  />
+                </View>
+              ) : null}
 
               <View className="gap-2">
                 <AppText variant="sectionHeading">{t("membersTitle")}</AppText>
@@ -657,6 +720,16 @@ export default function TeamScreen() {
                 </View>
               ) : null}
 
+              {isOwner && active ? (
+                <TeamDeletionSection
+                  teamId={team.id}
+                  teamName={teamName}
+                  otherOwners={Math.max(0, owners.length - 1)}
+                  deletion={detail.deletion ?? null}
+                  onDeleted={afterDeleted}
+                />
+              ) : null}
+
               <InviteMemberSheet
                 open={inviting}
                 onClose={() => setInviting(false)}
@@ -670,6 +743,15 @@ export default function TeamScreen() {
                 verified={team.verified === true}
                 onClose={() => setRenaming(false)}
               />
+              {isOwner ? (
+                <TeamProfileSheet
+                  open={editingProfile}
+                  onClose={() => setEditingProfile(false)}
+                  teamId={team.id}
+                  username={team.username ?? ""}
+                  profile={detail.profile ?? null}
+                />
+              ) : null}
               <MemberSheet
                 teamId={team.id}
                 member={editing}

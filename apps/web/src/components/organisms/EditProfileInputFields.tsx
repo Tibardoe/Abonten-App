@@ -2,6 +2,7 @@
 
 import { updateUserDetails } from "@/actions/updateUserDetails";
 import { useToast } from "@/hooks/useToast";
+import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
 import { useValidationText } from "@/i18n/useValidationText";
 import {
   LISTER_SOCIAL_NETWORKS,
@@ -15,6 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
+import UsernameAvailabilityHint from "../molecules/UsernameAvailabilityHint";
 import { Button } from "../ui/button";
 
 type InitialDataProps = {
@@ -51,6 +53,12 @@ export default function EditProfileInputFields({
 
   const toast = useToast();
   const queryClient = useQueryClient();
+  // Taken handles are said as the person types, with free ones to tap;
+  // saving still relies on the database (a race answers "taken").
+  const usernameCheck = useUsernameAvailability({
+    username: form.watch("username") ?? "",
+    current: initialData.username,
+  });
 
   const userDetailsQueryKey = ["user-details", initialData.id];
 
@@ -144,6 +152,15 @@ export default function EditProfileInputFields({
               {errors.username.message}
             </p>
           )}
+          <UsernameAvailabilityHint
+            check={usernameCheck}
+            onPick={(handle) =>
+              form.setValue("username", handle, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          />
         </div>
 
         <div className="space-y-1.5">

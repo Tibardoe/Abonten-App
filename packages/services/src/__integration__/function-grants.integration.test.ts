@@ -44,6 +44,11 @@ type Call = { name: string; args?: Record<string, unknown>; why: string };
 // here is safe: the sweeps only touch rows already past their expiry.
 const SESSION_CALLABLE: Call[] = [
   {
+    name: "username_redirect",
+    args: { p_username: "nobody_here" },
+    why: "2026-11-25: the website's profile pages and the app follow a handle that moved (old links)",
+  },
+  {
     name: "expire_stale_ticket_checkouts",
     why: "self-heal before reading/validating a ticket checkout (getTicketCheckoutCore, validateCheckoutCore, generateTicket, updateTicketCheckoutQuantity…)",
   },
@@ -385,6 +390,26 @@ const SERVICE_ROLE_ONLY: Call[] = [
     name: "weekly_edition_document",
     args: { p_edition_id: ABSENT_ID },
     why: "Abonten Weekly reads go through the programme check in @abonten/services",
+  },
+  {
+    name: "team_update_profile",
+    args: { p_team: ABSENT_ID, p_by: ABSENT_ID, p_patch: {} },
+    why: "2026-11-25: changes a team's username and photo once the service has checked the Owner",
+  },
+  {
+    name: "username_states",
+    args: { p_usernames: ["abc"], p_for: ABSENT_ID },
+    why: "2026-11-25: the username check is rate-limited in @abonten/services",
+  },
+  {
+    name: "team_delete_finish",
+    args: { p_request: ABSENT_ID, p_by: ABSENT_ID },
+    why: "2026-11-25: deletes a team once every Owner approved, after the service's fresh sign-in check",
+  },
+  {
+    name: "admin_team_delete",
+    args: { p_team: ABSENT_ID, p_staff: ABSENT_ID },
+    why: "2026-11-25: staff delete a team through the console (teams.manage, step-up, audit)",
   },
 ];
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { createTeam } from "@/actions/teams/createTeam";
+import UsernameAvailabilityHint from "@/components/molecules/UsernameAvailabilityHint";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/useToast";
+import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
 import AdultConfirm from "@/teams/atoms/AdultConfirm";
 import TermsConfirm from "@/teams/atoms/TermsConfirm";
 import { actionUnreachable } from "@/utils/actionUnreachable";
@@ -47,6 +49,12 @@ export default function CreateTeamDialog({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const ready = adult && (!terms || accepted);
+  // Taken handles are said as the person types, with free ones to tap.
+  const usernameCheck = useUsernameAvailability({
+    username,
+    forNewTeam: true,
+    name,
+  });
 
   useEffect(() => {
     if (open) {
@@ -119,6 +127,13 @@ export default function CreateTeamDialog({
               }}
             />
             <p className="text-xs text-muted-foreground">{t("usernameHint")}</p>
+            <UsernameAvailabilityHint
+              check={usernameCheck}
+              onPick={(handle) => {
+                setUsername(handle);
+                setError(null);
+              }}
+            />
           </div>
           <AdultConfirm checked={adult} onChange={setAdult} />
           {terms ? (

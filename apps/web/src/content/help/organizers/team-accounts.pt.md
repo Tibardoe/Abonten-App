@@ -2,7 +2,7 @@
 title: Contas de equipa
 summary: Gira um organizador ou um local com outras pessoas, cada uma com o seu próprio início de sessão e uma função que diz o que pode fazer.
 order: 90
-lastUpdated: 2026-11-21
+lastUpdated: 2026-11-25
 status: Draft
 owner: Abonten Hub
 listed: no
@@ -52,6 +52,18 @@ As pessoas da sua equipa não ganham recompensas nem comissão de promotor nos s
 ## Distintivos
 
 Uma equipa que passa a verificação de empresa da Abonten mostra **Empresa verificada**. Uma equipa mostra **Identidade verificada** quando pelo menos um dos seus Proprietários passou uma verificação de identidade; nunca diz qual. Nenhum dos distintivos significa que a Abonten garante a equipa, os seus eventos ou os seus locais.
+
+## O perfil da equipa
+
+Os proprietários mudam o @nome de utilizador, a fotografia, a biografia, o site e as redes sociais da equipa na sua página, em **Definições › Equipas** (**Editar o perfil da equipa** e **Mudar a fotografia**); o nome tem o seu próprio **Mudar o nome**. Enquanto escreve um novo @nome de utilizador, vê se está livre, com alguns livres para escolher se não estiver. As ligações para o @nome de utilizador antigo continuam a funcionar durante 30 dias, e ninguém o pode usar durante esse tempo.
+
+## Eliminar uma equipa
+
+Um proprietário pode pedir para eliminar a equipa na sua página. Todos os proprietários têm de concordar: os outros são avisados e aprovam na página da equipa, cada um depois de iniciar sessão de novo, e qualquer proprietário pode parar o pedido. Um pedido termina ao fim de 7 dias, ou assim que os proprietários da equipa mudam. Uma equipa com um só proprietário é eliminada assim que esse proprietário confirma. Para confirmar, escreve o nome da equipa.
+
+Uma equipa não pode ser eliminada enquanto tiver próximos eventos com pessoas que têm bilhetes ou que pagam em prestações, enquanto houver um pagamento a caminho ou ganhos a aguardar pagamento, enquanto houver um pagamento ou uma promoção Spotlight em curso, nem durante 7 dias depois de outra pessoa ter removido um proprietário ou mudado a sua função. A página da equipa diz o que fazer primeiro.
+
+Quando uma equipa é eliminada, todos saem dela e os convites em aberto são retirados; as contas dos membros não são afetadas. A página, a fotografia, os seguidores, os alertas e as publicações Spotlight desaparecem, e as conversas são fechadas. Os próximos eventos sem bilhetes de ninguém são cancelados e os restantes são arquivados; os locais ficam na Abonten sem proprietário. As vendas e os pagamentos ficam registados, e o crédito Abonten da equipa perde-se. Não é possível anular.
 
 ## Sair e remover
 
