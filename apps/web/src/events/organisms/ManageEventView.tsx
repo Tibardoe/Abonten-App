@@ -1,6 +1,7 @@
 "use client";
 
 import CheckInByCodeCard from "@/events/molecules/CheckInByCodeCard";
+import GatePartnerCard from "@/events/molecules/GatePartnerCard";
 import GiveComplimentaryCard from "@/events/molecules/GiveComplimentaryCard";
 import ManageEventPassCard from "@/events/molecules/ManageEventPassCard";
 import ManageEventRescheduleCard from "@/events/molecules/ManageEventRescheduleCard";
@@ -184,6 +185,11 @@ export default function ManageEventView({
                 <GiveComplimentaryCard event={event} />
               </div>
             )}
+            {/* Checked in by the organizer's own gate system (gate partner
+                connectors): read-only, set up by Abonten staff. */}
+            {covers(teamRole, "events.manage") ? (
+              <GatePartnerCard eventId={event.id} />
+            ) : null}
             {/* The person's own event: an Owner of a team may move it in. */}
             {teamRole === null && <MoveEventToTeamCard eventId={event.id} />}
           </>
@@ -243,7 +249,14 @@ export default function ManageEventView({
           <ManageEventAttendeesSection eventId={event.id} />
         )}
 
-        {activeTab === "checkin" && <CheckInByCodeCard eventId={event.id} />}
+        {activeTab === "checkin" && (
+          <>
+            {covers(teamRole, "events.manage") ? (
+              <GatePartnerCard eventId={event.id} compact />
+            ) : null}
+            <CheckInByCodeCard eventId={event.id} />
+          </>
+        )}
       </div>
     </div>
   );

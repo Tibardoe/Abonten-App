@@ -131,6 +131,8 @@ type TicketForTransfer = {
   status: string;
   transfer_count: number;
   expires_at: string;
+  /** A partner gate checks it in with the partner's own code. */
+  partner_gate: string | null;
   ticket_type: {
     event: { id: string; status: string } | null;
   } | null;
@@ -143,7 +145,7 @@ async function readTicket(
   const { data, error } = await svc
     .from("ticket")
     .select(
-      "id, user_id, status, transfer_count, expires_at, ticket_type:ticket_type_id(event:event_id(id, status))",
+      "id, user_id, status, transfer_count, expires_at, partner_gate, ticket_type:ticket_type_id(event:event_id(id, status))",
     )
     .eq("id", ticketId)
     .maybeSingle();
@@ -255,6 +257,9 @@ export async function getTicketTransferStateCore(
     new Date(ticket.expires_at).getTime() <= Date.now()
   )
     block = "event_over";
+  // The code a partner gate admits is the partner's: it cannot move here
+  // (docs/architecture/gate-partner-connectors.md).
+  else if (ticket.partner_gate) block = "partner_gate";
   else if (ticket.transfer_count >= program.maxMoves) block = "too_many_moves";
   else if (!(await organizerAllows(svc, event.id))) block = "organizer_off";
 
@@ -496,6 +501,12 @@ export async function sendTicketCore(
   }
   if (await isAccountRestricted(userId)) {
     return { status: 403, message: restrictedAccountMessage() };
+  }
+  // A ticket checked in by a partner's gate system carries the partner's
+  // code: it stays with the person it was issued to.
+  const ticket = await readTicket(svc, input.ticketId);
+  if (ticket?.partner_gate) {
+    return { status: 409, message: tr("ticketTransferPartnerGate") };
   }
 
   let toUserId: string | null = null;

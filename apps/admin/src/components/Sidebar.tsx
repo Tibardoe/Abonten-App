@@ -10,6 +10,7 @@ import {
   Clapperboard,
   ClipboardCheck,
   Compass,
+  DoorOpen,
   Flag,
   Gift,
   Globe,
@@ -126,6 +127,12 @@ const ITEMS: Item[] = [
     label: "Ticket transfers",
     icon: Send,
     permission: "transfers.view",
+  },
+  {
+    href: "/gate-partners",
+    label: "Gate partners",
+    icon: DoorOpen,
+    permission: "gatepartners.view",
   },
   {
     href: "/teams",

@@ -125,5 +125,9 @@
   "rescheduleBannerChoicePostponed": "Your ticket stays valid for the new date. If you'd rather not wait, you can get a full refund, service fee included, until the new date is set.",
   "rescheduleBannerChoiceVenue": "Your ticket is valid at the new venue. If you can't get there, you can get a full refund, service fee included, until {refundUntil}.",
   "rescheduleKeptNoteVenue": "You're keeping your ticket for the new venue.",
-  "amountPaid": "Amount paid: {amount}"
+  "amountPaid": "Amount paid: {amount}",
+  "gateScannedBy": "Scanned at the gate by the organiser's check-in system",
+  "gateCodeOnItsWay": "Your gate code is on its way",
+  "gateCodeOnItsWayBody": "The organizer checks tickets in with their own system. Your code will appear here in a few minutes, and we'll email it to you.",
+  "sendBlockedPartnerGate": "This ticket can't be sent: the gate checks it in with a code issued to you."
 }

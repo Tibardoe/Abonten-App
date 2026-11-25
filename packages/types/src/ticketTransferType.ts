@@ -34,7 +34,9 @@ export type TicketSendBlock =
   | "not_active"
   | "event_over"
   | "too_many_moves"
-  | "restricted";
+  | "restricted"
+  /** Checked in by a partner's gate system with the partner's code. */
+  | "partner_gate";
 
 export type OutgoingTicketTransfer = {
   id: string;

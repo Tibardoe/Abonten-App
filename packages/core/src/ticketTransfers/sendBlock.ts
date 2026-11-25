@@ -12,6 +12,7 @@ export function ticketSendBlockMessageKey(
   | "sendBlockedOrganizerOff"
   | "sendBlockedTooManyMoves"
   | "sendBlockedRestricted"
+  | "sendBlockedPartnerGate"
   | null {
   switch (block) {
     case "organizer_off":
@@ -20,6 +21,8 @@ export function ticketSendBlockMessageKey(
       return "sendBlockedTooManyMoves";
     case "restricted":
       return "sendBlockedRestricted";
+    case "partner_gate":
+      return "sendBlockedPartnerGate";
     default:
       return null;
   }

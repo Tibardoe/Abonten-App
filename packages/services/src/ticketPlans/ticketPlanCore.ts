@@ -31,6 +31,7 @@ import type {
 } from "@abonten/types/ticketPlanType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { moveRefundOpenFor } from "../events/rescheduleWindow";
+import { eventHasGatePartner } from "../gatePartners/gatePartnerConfig";
 import { coreT, requestLocale, tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { initiateChargeForAttempt } from "../payments/chargeInit";
@@ -148,6 +149,11 @@ async function computeOffer(
   const { program } = await resolveTicketPlanAccess(service, userId);
   if (!program.enabled) return no("programme_off");
   if (!(await eventOffersPlans(event.id))) return no("not_offered");
+  // A gate partner registers whole sales only (docs/architecture/
+  // gate-partner-connectors.md): no paying in parts for a linked event.
+  if ((await eventHasGatePartner(event.id)) !== false) {
+    return no("not_offered");
+  }
   if (!event.ticket_type.some(isPaidType)) return no("free_event");
   if (userId && event.organizer_id === userId) return no("own_event");
   if (event.status !== "published") return no("not_on_sale");

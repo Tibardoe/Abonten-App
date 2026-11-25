@@ -1,0 +1,337 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hapniin Partner API",
+    "version": "1.0.0",
+    "description": "Push completed sales into Hapniin and receive a revenue-share commission. See https://dash.hapniin.com/partner-docs for the full guide (authentication, idempotency, rate limits, webhooks)."
+  },
+  "servers": [
+    {
+      "url": "https://dash.hapniin.com",
+      "description": "Live and sandbox (selected by which API key you use)"
+    }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/api/partner/v1/events": {
+      "get": {
+        "summary": "List sellable events and products",
+        "description": "Every live, unseated event and its sellable products, priced at the current active price.",
+        "operationId": "listEvents",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/partner/v1/orders": {
+      "post": {
+        "summary": "Register a completed sale",
+        "description": "Registers a sale already completed on the partner's own platform. The order is created PAID immediately; pricing is always resolved from Hapniin's own current prices, never taken from the request. Seated-venue events are not supported.",
+        "operationId": "createOrder",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "A unique string per attempted sale (a UUID works well). A retry with the same key replays the original result instead of creating a duplicate order.",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OrderRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created (or idempotent replay of a prior success)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": {
+            "description": "A request with this Idempotency-Key is already being processed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/partner/v1/orders/{id}": {
+      "get": {
+        "summary": "Look up an order's status",
+        "description": "Accepts either the order's id or its shortId. Scoped to orders attributed to the authenticated partner.",
+        "operationId": "getOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Order id or shortId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderStatusResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "pk_live_... / pk_sandbox_...",
+        "description": "May be scoped to events:read, orders:write, and/or orders:read. An unscoped key (the default) has full access."
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid API key",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The API key is valid but not scoped for this endpoint",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Validation or business-rule error — see the `code` field",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found (or not attributed to this partner)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "More than 100 requests in the last 60 seconds for this key",
+        "headers": {
+          "Retry-After": {
+            "schema": { "type": "integer" },
+            "description": "Seconds to wait before retrying"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string", "example": "PRODUCT_NOT_FOUND" },
+              "message": { "type": "string" }
+            },
+            "required": ["code", "message"]
+          }
+        },
+        "required": ["error"]
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["TICKET", "MERCHANDISE", "ADDON"]
+          },
+          "code": { "type": "string", "nullable": true },
+          "price": {
+            "type": "number",
+            "description": "Current active price, in the event's currency"
+          }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "slug": { "type": "string" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "timezone": { "type": "string" },
+          "currency": { "type": "string", "example": "NGN" },
+          "isOnline": { "type": "boolean" },
+          "venueName": { "type": "string", "nullable": true },
+          "venueCity": { "type": "string", "nullable": true },
+          "venueCountry": { "type": "string", "nullable": true },
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          }
+        }
+      },
+      "EventsResponse": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Event" }
+          }
+        }
+      },
+      "OrderRequestItem": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["productId", "quantity"]
+      },
+      "OrderRequestAttendee": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" }
+        },
+        "required": ["firstName", "lastName", "email"]
+      },
+      "OrderRequestAnswer": {
+        "type": "object",
+        "properties": {
+          "questionId": { "type": "string" },
+          "answer": { "type": "string" }
+        },
+        "required": ["questionId", "answer"]
+      },
+      "OrderRequest": {
+        "type": "object",
+        "properties": {
+          "eventId": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phone": { "type": "string" },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/components/schemas/OrderRequestItem" }
+          },
+          "attendees": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderRequestAttendee" },
+            "description": "Optional. Fewer entries than the total quantity is fine — remaining tickets default to the buyer's own name/email."
+          },
+          "answers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderRequestAnswer" },
+            "description": "Optional custom-question answers."
+          }
+        },
+        "required": ["eventId", "firstName", "lastName", "email", "items"]
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "shortId": { "type": "string" },
+              "status": { "type": "string", "example": "PAID" },
+              "totalPrice": { "type": "number" },
+              "currency": { "type": "string" },
+              "attendeeCount": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "OrderStatusAttendee": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "ticketCode": { "type": "string" },
+          "status": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" }
+        }
+      },
+      "OrderStatusResponse": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "shortId": { "type": "string" },
+              "status": { "type": "string" },
+              "totalPrice": { "type": "number" },
+              "currency": { "type": "string" },
+              "createdAt": { "type": "string", "format": "date-time" },
+              "paidAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "attendees": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/OrderStatusAttendee" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

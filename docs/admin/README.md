@@ -51,6 +51,7 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Safety | `safety.view` | [safety.md](safety.md) |
 | Identity | `identity.view` | [identity.md](identity.md) |
 | Pay small small | `plans.view` | [ticket-plans.md](ticket-plans.md) |
+| Gate partners | `gatepartners.view` | [gate-partners.md](gate-partners.md) |
 | Support | `support.view` | [support.md](support.md) |
 | Blocked users, Users | `users.view` | [users.md](users.md) |
 | Organizers, Events, Places | `organizers.view`, `events.view`, `places.view` | [catalog.md](catalog.md) |

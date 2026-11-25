@@ -250,6 +250,10 @@ export type {
   StartIdentityVerificationResponse,
 } from "./types";
 export type {
+  ConfirmGatePartnerVoidsResult,
+  EventGatePartnerResult,
+} from "./types";
+export type {
   AcceptTicketTransferResult,
   EventTicketTransferSettingResult,
   SendTicketBody,

@@ -19,6 +19,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketEntryCode } from "@abonten/core/gatePartners/ticketEntryCode";
 import { ticketCancelDecision } from "@abonten/core/refundPolicy";
 import { ticketRefundState } from "@abonten/core/refundStatus";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
@@ -108,9 +109,12 @@ export default function TicketDetailScreen() {
     return <ScreenError message={t("thisTicketCouldNotBeFound")} />;
   }
 
+  // The code the gate admits: Abonten's, or a partner gate's (its code
+  // and QR, or "on its way" until the partner has issued it).
+  const entry = ticketEntryCode(ticket);
   const qr =
-    ticket.qr_public_id && ticket.qr_version
-      ? buildCloudinaryUrl(ticket.qr_public_id, ticket.qr_version, {
+    entry.kind !== "partner_pending" && entry.qrPublicId && entry.qrVersion
+      ? buildCloudinaryUrl(entry.qrPublicId, entry.qrVersion, {
           width: 320,
           height: 320,
           lossless: true,
@@ -269,7 +273,9 @@ export default function TicketDetailScreen() {
               label={t("seat", { seat_number: ticket.seat_number })}
             />
           ) : null}
-          <TicketCodeRow code={ticket.ticket_code} />
+          {entry.kind === "partner_pending" ? null : (
+            <TicketCodeRow code={entry.code} />
+          )}
           {used && ticket.used_at ? (
             <Row
               icon="checkmark-done-circle-outline"
@@ -294,6 +300,16 @@ export default function TicketDetailScreen() {
               style={{ width: 220, height: 220 }}
               contentFit="contain"
             />
+          ) : entry.kind === "partner_pending" ? (
+            <View className="w-full items-center gap-1 rounded-lg bg-muted p-4">
+              <Icon name="hourglass-outline" size={32} tone="muted" />
+              <AppText variant="bodyStrong" className="mt-1 text-center">
+                {t("gateCodeOnItsWay")}
+              </AppText>
+              <AppText variant="meta" className="text-center">
+                {t("gateCodeOnItsWayBody")}
+              </AppText>
+            </View>
           ) : (
             <View className="h-56 w-56 items-center justify-center rounded-lg bg-muted">
               <Icon name="qr-code-outline" size={40} tone="muted" />
@@ -302,7 +318,13 @@ export default function TicketDetailScreen() {
               </AppText>
             </View>
           )}
-          <AppText variant="caption">{t("showThisAtEntry")}</AppText>
+          {entry.kind === "abonten" ? (
+            <AppText variant="caption">{t("showThisAtEntry")}</AppText>
+          ) : entry.kind === "partner" ? (
+            <AppText variant="caption" className="text-center">
+              {t("gateScannedBy")}
+            </AppText>
+          ) : null}
         </View>
 
         {/* A pass for several shows (docs/architecture/show-passes.md). */}

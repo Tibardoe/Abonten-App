@@ -10,7 +10,9 @@
     "'Courier New', Courier, monospace": "A CSS font stack.",
     "not found": "Cloudinary's own result code for a missing asset, compared against.",
     "Helvetica": "A PDF font name (the ticket receipt fallback font).",
-    "Abonten Hub": "The product name."
+    "Abonten Hub": "The product name.",
+    "Hapniin": "Brand name of a gate partner (a ticketing platform whose check-in system admits partner tickets; docs/architecture/gate-partner-connectors.md).",
+    "packages/services/src/gatePartners/__fixtures__/": "Test-only stand-in for Hapniin's partner API (built from its OpenAPI file): its schema-check messages and sample venue are read by tests, never by a person."
   },
   "texts": [
     "Compiled",
@@ -23,9 +25,12 @@
     "'Courier New', Courier, monospace",
     "not found",
     "Helvetica",
-    "Abonten Hub"
+    "Abonten Hub",
+    "Hapniin"
   ],
-  "files": [],
+  "files": [
+    "packages/services/src/gatePartners/__fixtures__/"
+  ],
   "entries": [
     {
       "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",

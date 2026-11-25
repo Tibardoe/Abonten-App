@@ -10,6 +10,7 @@ import {
   getFormattedEventDate,
 } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketEntryCode } from "@abonten/core/gatePartners/ticketEntryCode";
 import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import { openAmountPaidOf } from "@abonten/core/openAmountTickets";
 import {
@@ -44,6 +45,13 @@ export default function TicketModal({
   const tt = useTranslations("tickets");
   const toast = useToast();
   const paidAmount = openAmountPaidOf(event);
+  // The code the gate admits: Abonten's, or a partner gate's (its code and
+  // QR, or "on its way" until the partner has issued it).
+  const entry = ticketEntryCode(event);
+  const qr =
+    entry.kind === "partner_pending" || !entry.qrPublicId
+      ? null
+      : { publicId: entry.qrPublicId, version: entry.qrVersion };
 
   const handleDOwnloadPdf = async () => {
     try {
@@ -74,7 +82,9 @@ export default function TicketModal({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = buildTicketPdfFilename(event.ticket_code);
+    link.download = buildTicketPdfFilename(
+      data.ticketCode || event.ticket_code,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -174,7 +184,9 @@ export default function TicketModal({
                 </p>
               ) : null}
 
-              <TicketCodeReveal code={event.ticket_code} />
+              {entry.kind === "partner_pending" ? null : (
+                <TicketCodeReveal code={entry.code} />
+              )}
 
               <p className="text-sm text-muted-foreground mb-4">
                 {t("location2", {
@@ -194,25 +206,39 @@ export default function TicketModal({
                 })}
               </p>
 
-              <div className="mt-4 flex justify-center">
-                <div className="relative h-56 w-56 border border-border">
-                  <Image
-                    src={buildCloudinaryUrl(
-                      event.qr_public_id,
-                      event.qr_version,
-                      {
+              {qr ? (
+                <div className="mt-4 flex justify-center">
+                  <div className="relative h-56 w-56 border border-border">
+                    <Image
+                      src={buildCloudinaryUrl(qr.publicId, qr.version, {
                         width: 224,
                         height: 224,
                         lossless: true,
-                      },
-                    )}
-                    alt={event.event.title}
-                    fill
-                    className="object-contain"
-                    sizes="224px"
-                  />
+                      })}
+                      alt={event.event.title}
+                      fill
+                      className="object-contain"
+                      sizes="224px"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : null}
+
+              {/* A partner gate checks this ticket in (docs/architecture/
+                  gate-partner-connectors.md). */}
+              {entry.kind === "partner" ? (
+                <p className="mt-3 text-center text-sm text-muted-foreground">
+                  {tt("gateScannedBy")}
+                </p>
+              ) : null}
+              {entry.kind === "partner_pending" ? (
+                <div className="mt-4 rounded-lg border border-border bg-background p-4 text-center">
+                  <p className="font-semibold">{tt("gateCodeOnItsWay")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {tt("gateCodeOnItsWayBody")}
+                  </p>
+                </div>
+              ) : null}
 
               <p className="text-xs text-right mt-5">www.abontenhub.com</p>
             </div>

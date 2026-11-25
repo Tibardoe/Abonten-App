@@ -5,6 +5,10 @@ import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
+import {
+  dispatchGatePartnerPushes,
+  sessionHasGatePushes,
+} from "@abonten/services/gatePartners/gatePushCore";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { notifyOrganizerOfSale } from "@abonten/services/notifications/notifyOrganizerOfSale";
@@ -338,15 +342,29 @@ export default async function generateTicket(
     }
   }
 
-  after(() =>
-    ticketPurchaseNotification(
+  // An event whose gate is run by a partner's check-in system: the sale is
+  // registered with the partner first (after the response, never blocking
+  // the buyer), so the receipt usually carries the partner's codes. What is
+  // not done here the gate-partners job finishes, and then tells the buyer
+  // (docs/architecture/gate-partner-connectors.md).
+  after(async () => {
+    if (await sessionHasGatePushes(checkoutSessionId)) {
+      await dispatchGatePartnerPushes({
+        sessionId: checkoutSessionId,
+        budgetMs: 20_000,
+        notifyBuyer: false,
+      }).catch((error) =>
+        logger.error(`Gate partner push after issuance failed: ${error}`),
+      );
+    }
+    await ticketPurchaseNotification(
       allInsertedTicketIds,
       totalAmount,
       authOverride,
     ).catch((error) =>
       logger.error(`Failed sending ticket purchase email: ${error}`),
-    ),
-  );
+    );
+  });
 
   // In-app "ticket confirmed" notification (+ mobile push). Awaited inline
   // rather than deferred with after(): the webhook fulfilment path can

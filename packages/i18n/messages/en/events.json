@@ -618,5 +618,28 @@
   "rescheduleConfirmDateTitle": "Move this date of {title} to {when}?",
   "thisEventIsPostponed": "This event is postponed. A new date is to come: tickets go on sale again then.",
   "showPostponed": "Postponed",
-  "atPlaceName": "At {name}"
+  "atPlaceName": "At {name}",
+  "gatePartner": {
+    "title": "Check-in with {partner}",
+    "body": "Tickets sold on Abonten for this event are registered with {partner} and carry {partner} codes. Your gate checks them in with the {partner} scanner, not Abonten's.",
+    "setByStaff": "Abonten set this link up with you. To change it, contact Abonten.",
+    "partnerEvent": "Event on {partner}",
+    "salesLabel": "Sales on Abonten",
+    "salesOn": "On sale",
+    "salesPaused": "Paused by Abonten",
+    "ticketsLabel": "Ticket types",
+    "productLine": "{product} on {partner}, {price}",
+    "countsCodes": "{count, plural, =0 {No ticket has its gate code yet.} one {# ticket has its gate code.} other {# tickets have their gate codes.}}",
+    "countsWaiting": "{count, plural, =0 {No sale is waiting to be registered.} one {# sale is still being registered.} other {# sales are still being registered.}}",
+    "needsStaff": "{count, plural, one {# sale needs Abonten staff. We're on it.} other {# sales need Abonten staff. We're on it.}}",
+    "toVoidTitle": "{count, plural, one {# code to void in {partner}} other {# codes to void in {partner}}}",
+    "toVoidBody": "These tickets were cancelled or refunded on Abonten. Void their codes in {partner} so your gate turns them away, then mark them here.",
+    "markVoided": "Mark as voided",
+    "confirmVoidedTitle": "{count, plural, one {Mark # code as voided?} other {Mark # codes as voided?}}",
+    "confirmVoided": "Only once you have voided them in {partner}.",
+    "voidedSaved": "Marked as voided.",
+    "couldNotSave": "Couldn't save that. Try again.",
+    "checkInTitle": "Check-in happens in {partner}",
+    "checkInBody": "Tickets for this event carry {partner} codes. Scan them with the {partner} scanner: this page can't check them in."
+  }
 }

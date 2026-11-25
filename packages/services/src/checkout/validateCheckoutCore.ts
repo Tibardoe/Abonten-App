@@ -21,6 +21,7 @@ import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { ReferralHint } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { gatePartnerSaleProblem } from "../gatePartners/gateSaleCheck";
 import { coreT, requestLocale, tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -420,6 +421,21 @@ export async function validateCheckoutCore(
   // A group price at least as good as the code wins outright: the code is
   // not claimed, so it stays unused for this buyer.
   const promoApplied = order.promoApplied;
+
+  // An event whose gate is run by a partner's check-in system: the sale is
+  // registered with the partner, which prices it from its own catalog, so
+  // Abonten charges exactly that or does not sell (no promo code, no group
+  // price, a mapped type at the partner's price).
+  const gateRefusal = await gatePartnerSaleProblem({
+    eventId,
+    currency:
+      (typeById.get(order.lines[0]?.id ?? "")?.currency as string | null) ??
+      null,
+    lines: order.lines,
+    promoCode,
+    occurrenceId,
+  });
+  if (gateRefusal) return gateRefusal;
 
   const expiresAt = getCheckoutExpiryTimestamp();
 

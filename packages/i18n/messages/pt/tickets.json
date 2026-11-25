@@ -125,5 +125,9 @@
   "rescheduleBannerChoicePostponed": "O seu bilhete continua válido para a nova data. Se preferir não esperar, pode receber o reembolso total, taxa de serviço incluída, até a nova data ser definida.",
   "rescheduleBannerChoiceVenue": "O seu bilhete vale no novo local. Se não puder ir, pode receber o reembolso total, taxa de serviço incluída, até {refundUntil}.",
   "rescheduleKeptNoteVenue": "Mantém o seu bilhete para o novo local.",
-  "amountPaid": "Valor pago: {amount}"
+  "amountPaid": "Valor pago: {amount}",
+  "gateScannedBy": "Lido à entrada pelo sistema de controlo do organizador",
+  "gateCodeOnItsWay": "O seu código de entrada está a caminho",
+  "gateCodeOnItsWayBody": "O organizador valida os bilhetes com o seu próprio sistema. O seu código aparecerá aqui dentro de alguns minutos e enviá-lo-emos por e-mail.",
+  "sendBlockedPartnerGate": "Este bilhete não pode ser enviado: a entrada valida-o com um código emitido em seu nome."
 }

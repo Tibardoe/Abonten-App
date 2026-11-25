@@ -1,6 +1,7 @@
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { buildCloudinaryUrl } from "./cloudinaryUrl";
 import { formatDateWithSuffix, getFormattedEventDate } from "./dateFormatter";
+import { ticketEntryCode } from "./gatePartners/ticketEntryCode";
 import type { CoreTranslator } from "./i18n/translator";
 import { ticketTypeLabel } from "./ticketTiers";
 
@@ -16,6 +17,12 @@ export type TicketPdfData = {
   flyerImageUrl: string;
   qrImageUrl: string;
   attendeeName?: string | null;
+  /**
+   * The ticket is checked in by the organizer's own gate system with a
+   * partner's code ("partner"), still on its way ("partner_pending"), or
+   * by Abonten (null). @abonten/core/gatePartners/ticketEntryCode.
+   */
+  gate?: "partner" | "partner_pending" | null;
 };
 
 /**
@@ -39,8 +46,15 @@ export function buildTicketPdfData(
     locale,
   );
 
+  // A partner gate's code and QR replace Abonten's own on every receipt.
+  const entry = ticketEntryCode(ticket);
+  const qr =
+    entry.kind === "partner_pending"
+      ? null
+      : { publicId: entry.qrPublicId, version: entry.qrVersion };
+
   return {
-    ticketCode: ticket.ticket_code,
+    ticketCode: entry.kind === "partner_pending" ? "" : (entry.code ?? ""),
     status: ticket.status,
     issuedAt: formatDateWithSuffix(ticket.issued_at, undefined, locale),
     ticketTypeName: ticket.ticket_type.type,
@@ -53,12 +67,15 @@ export function buildTicketPdfData(
       ticket.event.flyer_version,
       { width: 500, height: 224 },
     ),
-    qrImageUrl: buildCloudinaryUrl(ticket.qr_public_id, ticket.qr_version, {
-      width: 224,
-      height: 224,
-      lossless: true,
-    }),
+    qrImageUrl: qr?.publicId
+      ? buildCloudinaryUrl(qr.publicId, qr.version, {
+          width: 224,
+          height: 224,
+          lossless: true,
+        })
+      : "",
     attendeeName,
+    gate: entry.kind === "abonten" ? null : entry.kind,
   };
 }
 
@@ -77,6 +94,11 @@ export type TicketPdfLabels = {
   location: string;
   date: string;
   qrCode: string;
+  /**
+   * A partner gate: who scans it ("Scanned at the gate by the organiser's
+   * check-in system") or that its code is on its way. Null otherwise.
+   */
+  gateNote: string | null;
 };
 
 /**
@@ -101,6 +123,12 @@ export function ticketPdfLabels(
     location: t("ticketReceipt.location"),
     date: t("ticketReceipt.date"),
     qrCode: t("ticketReceipt.qrCode"),
+    gateNote:
+      ticket.gate === "partner"
+        ? t("ticketReceipt.gateScannedBy")
+        : ticket.gate === "partner_pending"
+          ? t("ticketReceipt.gateCodeOnItsWay")
+          : null,
   };
 }
 

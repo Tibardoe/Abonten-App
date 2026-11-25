@@ -125,5 +125,9 @@
   "rescheduleBannerChoicePostponed": "Votre billet reste valable pour la nouvelle date. Si vous préférez ne pas attendre, vous pouvez être remboursé intégralement, frais de service compris, jusqu'à ce que la nouvelle date soit fixée.",
   "rescheduleBannerChoiceVenue": "Votre billet est valable dans le nouveau lieu. Si vous ne pouvez pas y aller, vous pouvez être remboursé intégralement, frais de service compris, jusqu'au {refundUntil}.",
   "rescheduleKeptNoteVenue": "Vous gardez votre billet pour le nouveau lieu.",
-  "amountPaid": "Montant payé : {amount}"
+  "amountPaid": "Montant payé : {amount}",
+  "gateScannedBy": "Scanné à l'entrée par le système de contrôle de l'organisateur",
+  "gateCodeOnItsWay": "Votre code d'entrée arrive",
+  "gateCodeOnItsWayBody": "L'organisateur contrôle les billets avec son propre système. Votre code apparaîtra ici dans quelques minutes, et nous vous l'enverrons par e-mail.",
+  "sendBlockedPartnerGate": "Ce billet ne peut pas être envoyé : l'entrée le contrôle avec un code émis à votre nom."
 }

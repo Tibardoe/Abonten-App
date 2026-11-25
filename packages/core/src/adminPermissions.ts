@@ -113,6 +113,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "teams.manage",
   "social.view",
   "social.manage",
+  "gatepartners.view",
+  "gatepartners.manage",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -182,6 +184,8 @@ const FINANCE_ADMIN: AdminPermissionKey[] = [
   "plans.configure",
   "transfers.view",
   "transfers.configure",
+  "gatepartners.view",
+  "gatepartners.manage",
 ];
 
 const SUPPORT_ADMIN: AdminPermissionKey[] = [
@@ -210,6 +214,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "plans.view",
   "transfers.view",
   "teams.view",
+  "gatepartners.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -369,6 +374,7 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "transfers.configure",
   "teams.configure",
   "teams.manage",
+  "gatepartners.manage",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

@@ -15,7 +15,10 @@ import {
   ticketPdfLabels,
 } from "@abonten/core/ticketPdfData";
 import { coreTranslator } from "@abonten/i18n/server";
-import { generateQRCodeDataURL } from "@abonten/services/tickets/generateTicketCode";
+import {
+  generatePartnerQRCodeDataURL,
+  generateQRCodeDataURL,
+} from "@abonten/services/tickets/generateTicketCode";
 import { renderToBuffer } from "@react-pdf/renderer";
 import {
   TICKET_PDF_FALLBACK_FONT,
@@ -54,10 +57,16 @@ async function loadPdfImage(url: string): Promise<PdfImageData | null> {
  * issuance encoded (generateQRCodeDataURL), not a placeholder.
  */
 async function loadQr(ticket: TicketPdfData): Promise<PdfImageData | null> {
+  // A gate partner's code still on its way: no QR yet (the receipt says so).
+  if (ticket.gate === "partner_pending" || !ticket.ticketCode) return null;
   const fetched = await loadPdfImage(ticket.qrImageUrl);
   if (fetched) return fetched;
   try {
-    const dataUrl = await generateQRCodeDataURL(ticket.ticketCode);
+    // A partner gate scans its plain code; Abonten's door its /verify/ link.
+    const dataUrl =
+      ticket.gate === "partner"
+        ? await generatePartnerQRCodeDataURL(ticket.ticketCode)
+        : await generateQRCodeDataURL(ticket.ticketCode);
     const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
     logger.warn("Ticket PDF: QR image unavailable, redrew it from the code", {
       ticketCode: ticket.ticketCode,

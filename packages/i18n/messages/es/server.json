@@ -654,7 +654,15 @@
     "thatSeatingPlanWasnTFound": "No se encontró ese plano de asientos.",
     "theSectionsAreNotInTheExpected": "Las secciones no tienen la forma esperada.",
     "thisEventWasnTFound": "No se encontró este evento.",
-    "ticketsAreBeingBoughtForThisEvent": "Se están comprando entradas para este evento ahora mismo. Inténtalo de nuevo en un momento."
+    "ticketsAreBeingBoughtForThisEvent": "Se están comprando entradas para este evento ahora mismo. Inténtalo de nuevo en un momento.",
+    "aPartnerPriceDiffersFromTheAbonten": "Un precio del socio no coincide con el precio en Abonten.",
+    "mapEveryTicketTypeOfTheEvent": "Vincula cada tipo de entrada del evento a un producto del socio.",
+    "thePartnerSellsInAnotherCurrency": "El socio vende en otra moneda.",
+    "thisEventCannotBeLinked": "Este evento no se puede vincular: {0}",
+    "thisEventSTicketsAreLinkedTo": "Las entradas de este evento están vinculadas al sistema de acceso del organizador y no se pueden cambiar.",
+    "ticketsForThisEventAreIssuedThrough": "Las entradas de este evento se emiten a través del sistema de acceso del organizador; solo se pueden comprar.",
+    "ticketsForThisEventCannotBeSent": "Las entradas de este evento no se pueden enviar a otra persona.",
+    "ticketsWereAlreadySoldThroughThisLink": "Ya se vendieron entradas a través de este vínculo; ponlo en pausa en su lugar."
   },
   "defaultPaymentMethodUpdated": "Método de pago predeterminado actualizado",
   "defaultPayoutAccountUpdated": "Cuenta de cobro predeterminada actualizada",
@@ -1586,5 +1594,11 @@
   "rescheduleSmsPostponed": "Abonten: {title} se aplaza, fecha por confirmar. Conserva tu entrada o pide el reembolso completo: {link}",
   "openAmountTicketsArePaidAtOnce": "Una entrada cuyo importe eliges se paga de una vez, no poco a poco.",
   "openAmountTicketsCantBeGiven": "Una entrada cuyo importe elige el comprador no se puede regalar. Elige otro tipo de entrada.",
-  "openAmountLineCantChange": "El importe de esta entrada no se puede cambiar aquí. Quítala y vuelve a elegir."
+  "openAmountLineCantChange": "El importe de esta entrada no se puede cambiar aquí. Quítala y vuelve a elegir.",
+  "gatePartnerSalesPaused": "Ahora mismo no se pueden comprar entradas para este evento en Abonten.",
+  "gatePartnerNoPromoCodes": "No se pueden usar códigos promocionales para este evento.",
+  "gatePartnerTicketsLocked": "Las entradas de este evento están vinculadas a tu propio sistema de control de acceso, así que no se pueden cambiar aquí. Contacta con Abonten para cambiarlas.",
+  "gatePartnerNoComplimentary": "Las entradas de este evento las valida tu propio sistema de acceso. Regala entradas desde ese sistema.",
+  "gatePartnerCheckInElsewhere": "Las entradas de este evento se validan con {partner}. Escanéalas con el escáner de {partner}.",
+  "ticketTransferPartnerGate": "Esta entrada no se puede enviar a otra persona: en el acceso se valida con un código emitido a tu nombre."
 }

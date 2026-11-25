@@ -45,7 +45,7 @@ export function useTicketReceipt() {
       try {
         const named = new File(
           Paths.cache,
-          buildTicketPdfFilename(data.ticketCode),
+          buildTicketPdfFilename(data.ticketCode || ticket.ticket_code),
         );
         if (named.exists) named.delete();
         await new File(uri).copy(named);

@@ -1052,6 +1052,14 @@
     "listing_views_weekly": {
       "title": "{views, plural, one {Deine Angebote hatten diese Woche # Aufruf} other {Deine Angebote hatten diese Woche # Aufrufe}}",
       "body": "{social, plural, =0 {Am häufigsten angesehen: {top}.} one {Am häufigsten angesehen: {top}. # kam über Abontens eigene Beiträge.} other {Am häufigsten angesehen: {top}. # kamen über Abontens eigene Beiträge.}}"
+    },
+    "gate_codes_ready": {
+      "title": "{count, plural, one {Dein Einlasscode ist bereit} other {Deine Einlasscodes sind bereit}}",
+      "body": "{hasTitle, select, yes {Öffne dein Ticket für {title}: Es zeigt jetzt den Code, der am Einlass gescannt wird.} other {Öffne dein Ticket: Es zeigt jetzt den Code, der am Einlass gescannt wird.}}"
+    },
+    "gate_tickets_to_void": {
+      "title": "{count, plural, one {# Ticket in {partner} stornieren} other {# Tickets in {partner} stornieren}}",
+      "body": "{hasTitle, select, yes {Auf Abonten storniert oder erstattet für {title}: {codes}} other {Auf Abonten storniert oder erstattet: {codes}}}"
     }
   },
   "openStatus": {
@@ -1280,7 +1288,9 @@
     "statusValue": "{status, select, active {Aktiv} used {Eingecheckt} cancelled {Storniert} expired {Abgelaufen} other {Unbekannt}}",
     "ticketCode": "Ticketcode",
     "ticketType": "Tickettyp",
-    "title": "Beleg"
+    "title": "Beleg",
+    "gateScannedBy": "Wird am Einlass mit dem Check-in-System des Veranstalters gescannt",
+    "gateCodeOnItsWay": "Dein Einlasscode ist unterwegs"
   },
   "ticketTiers": {
     "freeEventPromoCodes": "Promo-Codes sind bei einem kostenlosen Event nicht verfügbar. Entferne sie oder mache das Event kostenpflichtig.",

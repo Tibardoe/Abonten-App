@@ -125,5 +125,9 @@
   "rescheduleBannerChoicePostponed": "Dein Ticket bleibt für den neuen Termin gültig. Wenn du nicht warten möchtest, bekommst du den vollen Betrag samt Servicegebühr zurück, bis der neue Termin feststeht.",
   "rescheduleBannerChoiceVenue": "Dein Ticket gilt am neuen Ort. Wenn du nicht hinkommst, bekommst du bis {refundUntil} den vollen Betrag samt Servicegebühr zurück.",
   "rescheduleKeptNoteVenue": "Du behältst dein Ticket für den neuen Ort.",
-  "amountPaid": "Bezahlter Betrag: {amount}"
+  "amountPaid": "Bezahlter Betrag: {amount}",
+  "gateScannedBy": "Wird am Einlass mit dem Check-in-System des Veranstalters gescannt",
+  "gateCodeOnItsWay": "Dein Einlasscode ist unterwegs",
+  "gateCodeOnItsWayBody": "Der Veranstalter prüft die Tickets mit seinem eigenen System. Dein Code erscheint hier in wenigen Minuten, und wir schicken ihn dir per E-Mail.",
+  "sendBlockedPartnerGate": "Dieses Ticket kann nicht gesendet werden: Der Einlass prüft es mit einem Code, der auf dich ausgestellt ist."
 }

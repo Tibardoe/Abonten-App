@@ -10,6 +10,7 @@ import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketEntryCodeText } from "@abonten/core/gatePartners/ticketEntryCode";
 import { logger } from "@abonten/core/logger";
 import {
   buildTicketPdfData,
@@ -42,6 +43,12 @@ export default withActionLocale(async function ticketPurchaseNotification(
   ticketIds: string[],
   orderAmount?: number | null,
   authOverride?: AuthOverride,
+  /**
+   * "gate_codes_ready": a partner gate issued the codes after the receipt
+   * went out saying they were on their way; this sends the tickets again
+   * with them (docs/architecture/gate-partner-connectors.md).
+   */
+  variant?: "purchase" | "gate_codes_ready",
 ) {
   try {
     if (!emailIsConfigured()) {
@@ -132,8 +139,10 @@ export default withActionLocale(async function ticketPurchaseNotification(
     );
 
     const pdfBuffers = await Promise.all(
-      ticketPdfDatas.map(async (pdfData) => ({
-        filename: buildTicketPdfFilename(pdfData.ticketCode),
+      ticketPdfDatas.map(async (pdfData, index) => ({
+        filename: buildTicketPdfFilename(
+          pdfData.ticketCode || tickets[index].ticket_code,
+        ),
         content: await generateTicketPdfBuffer(pdfData, locale),
       })),
     );
@@ -146,22 +155,36 @@ export default withActionLocale(async function ticketPurchaseNotification(
         ? formatMoney(currency, orderAmount, { locale })
         : words.t("ticket.free");
 
+    // A partner gate's code replaces Abonten's; one still on its way says so.
     const ticketLines: EmailTicketLine[] = tickets.map((ticket) => ({
-      ticketCode: ticket.ticket_code,
+      ticketCode:
+        ticketEntryCodeText(ticket) ?? words.t("ticket.gateCodeOnItsWay"),
       ticketTypeName: ticketTypeLabel(
         coreTFor(locale),
         ticket.ticket_type.type,
       ),
     }));
+    const gate = ticketPdfDatas.some((d) => d.gate === "partner_pending")
+      ? "partner_pending"
+      : ticketPdfDatas.some((d) => d.gate === "partner")
+        ? "partner"
+        : null;
+    const codesReady = variant === "gate_codes_ready";
 
     const { data, error } = await sendEmail({
       from: "Abonten Hub <tickets@abontenhub.com>",
       to: [email],
-      subject: words.t("ticket.subject", {
-        eventTitle: firstTicket.event.title,
-      }),
+      subject: codesReady
+        ? words.t("ticket.gateCodesReadySubject", {
+            eventTitle: firstTicket.event.title,
+          })
+        : words.t("ticket.subject", {
+            eventTitle: firstTicket.event.title,
+          }),
       react: TicketPurchaseEmailTemplate({
         words,
+        gate,
+        codesReady,
         eventTitle: firstTicket.event.title,
         eventDate: firstPdfData.eventDate,
         eventTime: firstPdfData.eventTime,

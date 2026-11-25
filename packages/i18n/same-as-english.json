@@ -51,6 +51,7 @@
     "discovery:events",
     "discovery:tabs.events",
     "emails:cancellation.event",
+    "emails:gateVoid.codeNumber",
     "emails:reschedule.event",
     "emails:ticket.event",
     "events:event",

@@ -1,3 +1,4 @@
+import { gatePartnerName } from "@abonten/core/gatePartners/gateLinkRules";
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -16,6 +17,8 @@ import { getSupabaseServiceClient } from "../supabase/serviceClient";
 type TicketRow = {
   id: string;
   status: string;
+  /** Checked in by a partner's gate system (gate partner connectors). */
+  partner_gate?: string | null;
   ticket_checkout_id?: string | null;
   occurrence: { starts_at: string; ends_at: string | null } | null;
   ticket_type: {
@@ -45,7 +48,7 @@ export type CheckedInTicket = {
 };
 
 export type CheckInTicketCoreResult =
-  | { status: 400 | 403 | 404 | 500; message: string }
+  | { status: 400 | 403 | 404 | 409 | 500; message: string }
   | {
       status: 200;
       message: string;
@@ -57,6 +60,11 @@ export type CheckInTicketCoreResult =
 // ticket UUID. Passing a non-UUID string into `.eq("id", …)` makes Postgres
 // throw a cast error, so the two have to be routed to different columns.
 const TICKET_CODE_RE = /^TKT-[A-Z0-9]+$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Anything else a scanner reads may be a gate partner's code (Hapniin's
+// TCK-…): looked up only to say where those tickets are checked in.
+const PARTNER_CODE_RE = /^[A-Z0-9][A-Z0-9_-]{2,63}$/i;
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -80,19 +88,31 @@ export async function checkInTicketCore(
 ): Promise<CheckInTicketCoreResult> {
   const ref = ticketRef.trim();
   const byCode = TICKET_CODE_RE.test(ref);
+  const byPartnerCode =
+    !byCode && !UUID_RE.test(ref) && PARTNER_CODE_RE.test(ref);
+  const select =
+    "id, status, partner_gate, ticket_checkout_id, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(type, description, amount_mode, event:event_id(id, organizer_id, postponed_at))";
 
-  const { data: rawTicket, error: ticketError } = await supabase
-    .from("ticket")
-    .select(
-      "id, status, ticket_checkout_id, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(type, description, amount_mode, event:event_id(id, organizer_id, postponed_at))",
-    )
-    .eq(byCode ? "ticket_code" : "id", ref)
-    .maybeSingle();
+  const { data: rawTicket, error: ticketError } = byPartnerCode
+    ? await supabase
+        .from("ticket")
+        .select(select)
+        .in("partner_code", [...new Set([ref, ref.toUpperCase()])])
+        .limit(1)
+        .maybeSingle()
+    : await supabase
+        .from("ticket")
+        .select(select)
+        .eq(byCode ? "ticket_code" : "id", ref)
+        .maybeSingle();
 
   if (ticketError || !rawTicket) {
     return {
       status: 404,
-      message: byCode ? tr("thatCodeDoesnTMatchA") : tr("ticketNotFound"),
+      message:
+        byCode || byPartnerCode
+          ? tr("thatCodeDoesnTMatchA")
+          : tr("ticketNotFound"),
     };
   }
 
@@ -107,6 +127,18 @@ export async function checkInTicketCore(
     return {
       status: 404,
       message: tr("thatTicketIsForADifferent"),
+    };
+  }
+
+  // The organizer's own gate system admits these tickets with the
+  // partner's code; Abonten's door does not (docs/architecture/
+  // gate-partner-connectors.md). Checking in here would mean nothing there.
+  if (ticket.partner_gate) {
+    return {
+      status: 409,
+      message: tr("gatePartnerCheckInElsewhere", {
+        partner: gatePartnerName(ticket.partner_gate),
+      }),
     };
   }
 

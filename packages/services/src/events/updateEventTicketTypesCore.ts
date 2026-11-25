@@ -17,6 +17,7 @@ import {
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { gatePartnerLockRefusal } from "../gatePartners/gatePartnerConfig";
 import { coreT, tr } from "../i18n/requestLocale";
 import { requireVerifiedIdentity } from "../identity/identityCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -113,6 +114,9 @@ export async function updateEventTicketTypesCore(
   input: UpdateEventTicketTypesCoreInput,
 ): Promise<UpdateEventTicketTypesCoreResult> {
   const { eventId, freeEvent, singleTicket } = input;
+  // A linked event's tickets must stay what the partner sells.
+  const gateLocked = await gatePartnerLockRefusal(eventId, "edit");
+  if (gateLocked) return gateLocked;
   // A type whose amount the buyer chooses is priced at its minimum and
   // admits one person, whatever the client sent.
   const multipleTickets = (input.multipleTickets ?? []).map((tier) =>

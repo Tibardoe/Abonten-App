@@ -33,7 +33,11 @@ export function parseTicketCode(raw: string): string | null {
     }
   }
   const match = value.match(/TKT-[A-Z0-9]+/i);
-  return match ? match[0].toUpperCase() : null;
+  if (match) return match[0].toUpperCase();
+  // A gate partner's QR is its plain code (Hapniin's TCK-…): the server
+  // says these tickets are checked in with the organizer's own system
+  // (docs/architecture/gate-partner-connectors.md).
+  return /^[A-Z0-9][A-Z0-9_-]{2,63}$/i.test(value) ? value.toUpperCase() : null;
 }
 
 type Outcome = {
