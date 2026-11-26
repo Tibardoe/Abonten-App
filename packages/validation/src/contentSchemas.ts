@@ -212,6 +212,12 @@ export const followSchema = z.object({
   targetKind: z.enum(["organizer", "place"]),
   targetId: uuid,
   following: z.boolean(),
+  /**
+   * Followed from a tile of the "On Abonten" wall: the follow is counted
+   * against that entry (only when it is new and the entry is for this
+   * target).
+   */
+  showcaseEntryId: uuid.optional(),
 });
 
 export const followStatusSchema = z.object({

@@ -113,6 +113,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "teams.manage",
   "social.view",
   "social.manage",
+  "showcase.view",
+  "showcase.edit",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -147,6 +149,8 @@ const MODERATOR: AdminPermissionKey[] = [
   "teams.view",
   "social.view",
   "social.manage",
+  "showcase.view",
+  "showcase.edit",
 ];
 
 const FINANCE_ADMIN: AdminPermissionKey[] = [
@@ -210,6 +214,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "plans.view",
   "transfers.view",
   "teams.view",
+  "showcase.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -234,6 +239,7 @@ const ANALYST: AdminPermissionKey[] = [
   "discovery.view",
   "weekly.view",
   "spotlight.view",
+  "showcase.view",
 ];
 
 // Runs the regional promotion programme (Field Ops): campaigns, teams,
@@ -254,6 +260,7 @@ const FIELD_OPS_MANAGER: AdminPermissionKey[] = [
   "verification.view",
   "audit.view",
   "weekly.view",
+  "showcase.view",
 ];
 
 // operations = everything except financial mutations / admin management /

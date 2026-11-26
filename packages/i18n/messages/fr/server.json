@@ -168,6 +168,7 @@
   "couldnTLoadAbontenWeekly": "Impossible de charger Abonten Weekly.",
   "couldnTLoadBlockedAccounts": "Impossible de charger les comptes bloqués.",
   "couldnTLoadMobileMoneyNetworks": "Impossible de charger les réseaux de mobile money",
+  "couldnTLoadOnAbonten": "Impossible de charger qui est sur Abonten.",
   "couldnTLoadRatings": "Impossible de charger les notes.",
   "couldnTLoadReviews": "Impossible de charger les avis.",
   "couldnTLoadTheCheckIn": "Impossible de charger le code d'enregistrement.",

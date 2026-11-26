@@ -168,6 +168,7 @@
   "couldnTLoadAbontenWeekly": "Não foi possível carregar o Abonten Weekly.",
   "couldnTLoadBlockedAccounts": "Não foi possível carregar as contas bloqueadas.",
   "couldnTLoadMobileMoneyNetworks": "Não foi possível carregar as redes de mobile money",
+  "couldnTLoadOnAbonten": "Não foi possível carregar quem está no Abonten.",
   "couldnTLoadRatings": "Não foi possível carregar as classificações.",
   "couldnTLoadReviews": "Não foi possível carregar as avaliações.",
   "couldnTLoadTheCheckIn": "Não foi possível carregar o código de check-in.",
