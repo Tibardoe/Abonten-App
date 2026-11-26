@@ -1,11 +1,10 @@
 "use client";
 
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import {
-  useInvalidatePlaceClaimState,
-  usePlaceClaimState,
-} from "@/hooks/usePlaceClaimState";
+import { usePlaceClaimInvite } from "@/hooks/usePlaceClaimInvite";
+import { useInvalidatePlaceClaimState } from "@/hooks/usePlaceClaimState";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import ClaimPlaceModal from "@/places/organisms/ClaimPlaceModal";
+import type { PlaceClaimOwnerRef } from "@abonten/core/placeClaimInvite";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -13,6 +12,8 @@ type ClaimPlaceButtonProps = {
   placeId: string;
   placeName: string;
   ownerId: string;
+  claimed: boolean | null | undefined;
+  owner: PlaceClaimOwnerRef;
   /**
    * "overlay" (default) sits on the cover photo; "inline" is the button in
    * the page's actions where Message was, for a place nobody manages.
@@ -35,59 +36,70 @@ const VARIANT_CLASS = {
 } as const;
 
 /**
- * Entry point for the "Claim this Place" flow on the public details page --
- * visible only to a signed-in user who is NOT the current owner (the
- * inverse of updatePlace.ts's ownership check: a claimant isn't the
- * current owner by definition). Deliberately lives on the public details
- * page rather than /manage/places/[placeId] -- claiming is for a DIFFERENT
- * user who wants to take over from the current owner, not something the
- * owner does to their own place.
- *
- * Tracks the caller's own pending/approved claim state (usePlaceClaimState,
- * same RLS-scoped read pattern as the mobile app already used) so
- * re-opening the modal, or reloading the page, doesn't keep inviting a
- * duplicate submission that only the DB's unique constraint used to catch.
+ * The prominent "Claim this place", shown only where nobody real is behind
+ * the place: its owner's account was deleted, or Abonten listed it and
+ * nobody has claimed it (@abonten/core/placeClaimInvite). On a place
+ * someone runs there is no button: the "…" menu's quiet "I own this
+ * business" (PlaceMoreMenu) opens the same form as a dispute. The visitor's
+ * own waiting request reads "Claim pending review"; the owner and their
+ * team see nothing. Signed out, it signs in first and comes back here.
  */
 export default function ClaimPlaceButton({
   placeId,
   placeName,
   ownerId,
+  claimed,
+  owner,
   variant = "overlay",
 }: ClaimPlaceButtonProps) {
   const t = useTranslations("places");
   const classes = VARIANT_CLASS[variant];
 
-  const { data: user } = useCurrentUser();
-  const { data: claimState } = usePlaceClaimState(placeId, user?.id, ownerId);
+  const { invite, userId } = usePlaceClaimInvite({
+    placeId,
+    ownerId,
+    claimed,
+    owner,
+  });
   const invalidateClaimState = useInvalidatePlaceClaimState();
+  const requireAuth = useRequireAuth();
   const [showModal, setShowModal] = useState(false);
 
-  if (!user || user.id === ownerId) return null;
+  // The form stays open once sent: the request turning "pending" changes
+  // the button, not the form's confirmation and uploads.
+  const modal = showModal ? (
+    <ClaimPlaceModal
+      placeId={placeId}
+      placeName={placeName}
+      mode="claim"
+      onClose={() => setShowModal(false)}
+      onSubmitted={() => invalidateClaimState(placeId, userId ?? undefined)}
+    />
+  ) : null;
 
-  if (claimState?.status === "pending") {
-    return <span className={classes.pending}>{t("claimPendingReview")}</span>;
+  if (invite.kind === "pending") {
+    return (
+      <>
+        <span className={classes.pending}>{t("claimPendingReview")}</span>
+        {modal}
+      </>
+    );
   }
 
-  if (claimState?.status === "approved") return null;
+  if (invite.kind !== "claim") return modal;
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setShowModal(true)}
+        onClick={async () => {
+          if (await requireAuth()) setShowModal(true);
+        }}
         className={classes.button}
       >
         {t("claimThisPlace")}
       </button>
-
-      {showModal && (
-        <ClaimPlaceModal
-          placeId={placeId}
-          placeName={placeName}
-          onClose={() => setShowModal(false)}
-          onSubmitted={() => invalidateClaimState(placeId, user.id)}
-        />
-      )}
+      {modal}
     </>
   );
 }

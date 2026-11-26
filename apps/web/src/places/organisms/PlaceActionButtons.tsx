@@ -6,6 +6,7 @@ import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButto
 import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
 import RequestBookingButton from "@/places/molecules/RequestBookingButton";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import type { PlaceClaimOwnerRef } from "@abonten/core/placeClaimInvite";
 import { useTranslations } from "next-intl";
 import { FiPhone } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io5";
@@ -25,6 +26,8 @@ type PlaceActionButtonsProps = {
    * their place.
    */
   hasOwner: boolean;
+  claimed: boolean | null | undefined;
+  owner: PlaceClaimOwnerRef;
   location: string;
   phone: string | null;
   whatsapp: string | null;
@@ -44,6 +47,8 @@ export default function PlaceActionButtons({
   placeName,
   ownerId,
   hasOwner,
+  claimed,
+  owner,
   location,
   phone,
   whatsapp,
@@ -67,6 +72,8 @@ export default function PlaceActionButtons({
             placeId={placeId}
             placeName={placeName}
             ownerId={ownerId}
+            claimed={claimed}
+            owner={owner}
             variant="inline"
           />
         </div>

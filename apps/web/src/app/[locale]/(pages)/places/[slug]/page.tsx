@@ -4,7 +4,6 @@ import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
 import GetTheAppLink from "@/components/atoms/GetTheAppLink";
 import JsonLd from "@/components/atoms/JsonLd";
 import StarRatingDisplay from "@/components/atoms/Rating";
-import ReportButton from "@/components/atoms/ReportButton";
 import EventCard from "@/components/molecules/EventCard";
 import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
@@ -16,6 +15,7 @@ import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButto
 import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
 import PlaceCard from "@/places/molecules/PlaceCard";
 import PlaceCheckIn from "@/places/molecules/PlaceCheckIn";
+import PlaceMoreMenu from "@/places/molecules/PlaceMoreMenu";
 import PlaceOpenStatusBadge from "@/places/molecules/PlaceOpenStatusBadge";
 import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceSpecialHoursList from "@/places/molecules/PlaceSpecialHoursList";
@@ -285,10 +285,14 @@ export default async function page({
             {/* On phones the actions sit in the photo's top corner, away
                 from the name, so a long name keeps the full width. */}
             <div className="text-white shrink-0 flex items-center gap-1 md:gap-2 absolute right-3 top-3 md:static md:mt-2">
+              {/* Only where nobody runs the place; elsewhere the "…"
+                  holds the quiet "I own this business". */}
               <ClaimPlaceButton
                 placeId={place.id}
                 placeName={place.name}
                 ownerId={place.owner_id}
+                claimed={place.claimed}
+                owner={place.owner}
               />
               <AddPlaceToFavoriteButton placeId={place.id} compact />
               <FollowButton
@@ -307,13 +311,12 @@ export default async function page({
                 compact
                 className="border-white/40 bg-black/20 text-white hover:bg-black/30"
               />
-              <ReportButton
-                targetType="place"
-                targetId={place.id}
-                targetLabel={place.name}
+              <PlaceMoreMenu
+                placeId={place.id}
+                placeName={place.name}
                 ownerId={place.owner_id}
-                variant="icon"
-                className="inline-flex items-center text-white/80 hover:text-white"
+                claimed={place.claimed}
+                owner={place.owner}
               />
             </div>
           </div>
@@ -385,6 +388,8 @@ export default async function page({
                 placeName={place.name}
                 ownerId={place.owner_id}
                 hasOwner={placeHasOwner(place.owner)}
+                claimed={place.claimed}
+                owner={place.owner}
                 location={locationWkb}
                 phone={place.phone}
                 whatsapp={place.whatsapp}

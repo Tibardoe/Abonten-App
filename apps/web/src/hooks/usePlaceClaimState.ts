@@ -18,6 +18,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 export type PlaceClaimState = {
   /** The caller's most recent claim on this place, if any. */
   status: "none" | "pending" | "approved" | "rejected";
+  /** When staff decided it (placeClaimInvite's wait after a refusal). */
+  reviewedAt: string | null;
   /** Signed-in, not the owner, and no pending/approved claim already. */
   canClaim: boolean;
 };
@@ -27,23 +29,27 @@ async function fetchClaimState(
   placeId: string,
   ownerId: string | null | undefined,
 ): Promise<PlaceClaimState> {
-  if (!userId) return { status: "none", canClaim: false };
-  if (ownerId && userId === ownerId) return { status: "none", canClaim: false };
+  if (!userId) return { status: "none", reviewedAt: null, canClaim: false };
+  if (ownerId && userId === ownerId) {
+    return { status: "none", reviewedAt: null, canClaim: false };
+  }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("place_claim_request")
-    .select("status, created_at")
+    .select("status, created_at, reviewed_at")
     .eq("place_id", placeId)
     .eq("claimant_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  // Not known is not "no request": the page offers nothing until it is.
+  if (error) throw error;
 
   const status =
     (data?.status as PlaceClaimState["status"] | undefined) ?? "none";
   // A rejected claimant may re-request; a pending/approved one may not.
   const canClaim = status !== "pending" && status !== "approved";
-  return { status, canClaim };
+  return { status, reviewedAt: data?.reviewed_at ?? null, canClaim };
 }
 
 export function placeClaimStateKey(
