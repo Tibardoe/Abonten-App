@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  eventShareAction,
   eventShareOffer,
   hasShareImages,
   isShareFormatFor,
@@ -124,5 +125,24 @@ describe("share paths", () => {
       "abonten-pilot-lounge-osu-story.png",
     );
     expect(shareImageFileName("***", "post")).toBe("abonten-listing-post.png");
+  });
+});
+
+describe("eventShareAction", () => {
+  it("asks people to reserve a spot only when the free event takes registrations", () => {
+    expect(eventShareAction({ kind: "free" }, true)).toBe("free");
+    expect(eventShareAction({ kind: "free" }, null)).toBe("free");
+    expect(eventShareAction({ kind: "free" }, false)).toBe("none");
+  });
+
+  it("leaves tickets and nothing-on-sale alone", () => {
+    const tickets = {
+      kind: "tickets" as const,
+      fromAmount: 50,
+      currency: "GHS",
+      single: true,
+    };
+    expect(eventShareAction(tickets, false)).toBe("tickets");
+    expect(eventShareAction({ kind: "none" }, true)).toBe("none");
   });
 });

@@ -4,8 +4,8 @@ purpose: Describe the share kit — the ready-made images organizers and place o
 audience: Engineers, founder, support
 scope: GET /api/share/..., packages/core/src/shareKit, packages/core/src/social/roundups.ts, apps/web/src/shareKit, apps/mobile/src/features/shareKit
 status: Approved
-version: 1.1
-lastReviewed: 2026-11-21
+version: 1.2
+lastReviewed: 2026-11-26
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -25,7 +25,7 @@ Every public event and place has ready-made images its owner can post to their o
 | Organizer profile | `welcome` | 1080×1350 |
 | Weekly roundup (Abonten's own posts) | `cover` | 1080×1350 |
 
-- **Event price line** (`eventShareOffer`): "Tickets from {lowest price}" (or "Tickets {price}" when there is one paid tier), "Free entry" for the FREE tier, nothing otherwise; the button says "Get your tickets", "Reserve your spot" or "See it on Abonten" to match. Prices are formatted in the image's language and the event's currency.
+- **Event price line** (`eventShareOffer`): "Tickets from {lowest price}" (or "Tickets {price}" when there is one paid tier), "Free entry" for the FREE tier, nothing otherwise; the button says "Get your tickets", "Reserve your spot" or "See it on Abonten" to match (`eventShareAction`). A free event that takes no registrations (`require_registration` false, "Free entry. No ticket or registration needed.") keeps "Free entry" but its button says "See it on Abonten": there is nothing to reserve on Abonten. Abonten's own posts (Admin › Social captions and story stickers) follow the same rule. Prices are formatted in the image's language and the event's currency.
 - **Pictures**: event flyers are shown whole (their words matter); place covers fill the frame. A missing or unreachable picture draws the title in its place, never a failed image.
 - **Words** come from `server.json` › `shareKit` in the image's language (`?hl=`, default English), dates from `getFormattedEventDate` in the event's time zone, place categories from `placeCategoryLabel`.
 - **Font**: the receipt's Noto Sans subset (`public/fonts/receipt`), which has the letters of Ghanaian languages and the cedi sign; the brand's own font files are WOFF2, which the renderer cannot read.

@@ -11,6 +11,7 @@ import { logger } from "@abonten/core/logger";
 import { foldSearchText } from "@abonten/core/search/foldSearchText";
 import { cityPath, eventPath, placePath } from "@abonten/core/seo/paths";
 import {
+  eventShareAction,
   eventShareOffer,
   shareImageFileName,
   shareImagePath,
@@ -157,6 +158,7 @@ type EventRow = {
   archived_at: string | null;
   postponed_at: string | null;
   moderation_state: string | null;
+  require_registration: boolean | null;
   place: { name: string | null; social_links: unknown } | null;
   organizer: OrganizerRow | null;
   event_occurrence: { starts_at: string; ends_at: string }[] | null;
@@ -190,7 +192,7 @@ type OrganizerRow = {
 const POST_COLUMNS =
   "id, subject_kind, subject_key, event_id, place_id, roundup_key, event_ids, channel, status, queued_on, created_at, posted_at, posted_by, note, updated_at, updated_by";
 const EVENT_COLUMNS =
-  "id, event_code, title, starts_at, ends_at, timezone, address, country_code, status, archived_at, postponed_at, moderation_state, place:place_id(name, social_links), organizer:organizer_id(id, username, full_name, social_links), event_occurrence(starts_at, ends_at), ticket_type(type, price, currency)";
+  "id, event_code, title, starts_at, ends_at, timezone, address, country_code, status, archived_at, postponed_at, moderation_state, require_registration, place:place_id(name, social_links), organizer:organizer_id(id, username, full_name, social_links), event_occurrence(starts_at, ends_at), ticket_type(type, price, currency)";
 const PLACE_COLUMNS =
   "id, slug, name, address, country_code, status, moderation_state, temporary_status, social_links, place_category(name, slug)";
 
@@ -333,7 +335,7 @@ function eventFacts(
     when: time ? `${date} · ${time}` : date,
     venue: venue || null,
     price,
-    offer: offer.kind,
+    offer: eventShareAction(offer, e.require_registration),
     city,
   };
 }

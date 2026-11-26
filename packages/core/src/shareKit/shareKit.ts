@@ -128,3 +128,18 @@ export function eventShareOffer(tiers: readonly ShareTier[]): ShareOffer {
   if (tiers.some((t) => t.type === FREE_TICKET_TYPE)) return { kind: "free" };
   return { kind: "none" };
 }
+
+/**
+ * Which call to action an event's offer gets on its image and in Abonten's
+ * posts. A free event that asks nobody to register (`require_registration`
+ * false: the page says "Free entry. No ticket or registration needed.") has
+ * nothing to reserve on Abonten, so it gets the "See it on Abonten" action
+ * of an event with nothing on sale; its price line still says "Free entry".
+ */
+export function eventShareAction(
+  offer: ShareOffer,
+  requireRegistration: boolean | null | undefined,
+): ShareOffer["kind"] {
+  if (offer.kind === "free" && requireRegistration === false) return "none";
+  return offer.kind;
+}

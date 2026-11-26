@@ -12,6 +12,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import {
   type ShareImageFormat,
   type ShareSubjectKind,
+  eventShareAction,
   eventShareOffer,
   shareSubjectPath,
 } from "@abonten/core/shareKit/shareKit";
@@ -56,7 +57,7 @@ async function eventCard(
     await publicSupabase
       .from("event")
       .select(
-        "event_code, title, starts_at, ends_at, timezone, address, status, flyer_public_id, flyer_version, event_occurrence(starts_at, ends_at), ticket_type(type, price, currency), place:place_id(name)",
+        "event_code, title, starts_at, ends_at, timezone, address, status, require_registration, flyer_public_id, flyer_version, event_occurrence(starts_at, ends_at), ticket_type(type, price, currency), place:place_id(name)",
       )
       .eq("event_code", code.toUpperCase())
       .maybeSingle(),
@@ -84,10 +85,11 @@ async function eventCard(
       : offer.kind === "free"
         ? t("shareKit.freeEntry")
         : null;
+  const action = eventShareAction(offer, row.require_registration);
   const cta =
-    offer.kind === "tickets"
+    action === "tickets"
       ? t("shareKit.ctaTickets")
-      : offer.kind === "free"
+      : action === "free"
         ? t("shareKit.ctaFree")
         : t("shareKit.ctaDetails");
   const place = row.place as { name: string | null } | null;
