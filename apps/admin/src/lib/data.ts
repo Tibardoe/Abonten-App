@@ -146,6 +146,10 @@ import {
   listAdminStaffCore,
 } from "@abonten/services/admin/settings/adminSettingsCore";
 import {
+  getShowcaseAdminViewCore,
+  getShowcaseSettingsCore,
+} from "@abonten/services/admin/showcase/showcaseAdminCore";
+import {
   getSocialQueueSettingsCore,
   listSocialQueueCore,
 } from "@abonten/services/admin/social/socialQueueAdminCore";
@@ -1081,6 +1085,17 @@ export async function loadSocialQueue(filter: {
     getSocialQueueSettingsCore(svc, ctx),
   ]);
   return { ctx, queue, settings };
+}
+
+/** Admin › Showcase: one market's wall (entries, cities) and the settings. */
+export async function loadShowcase(filter: { market?: string | null }) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [view, settings] = await Promise.all([
+    getShowcaseAdminViewCore(svc, ctx, { countryCode: filter.market ?? null }),
+    getShowcaseSettingsCore(svc, ctx),
+  ]);
+  return { ctx, view, settings };
 }
 
 /** Admin › Teams: the programme switches and limits. */
