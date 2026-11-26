@@ -5585,7 +5585,7 @@
     "yourBookingRequestHasBeenSent": "260cf8de",
     "yourBookings": "4400cc6d",
     "yourClaimForThisPlaceIs": "1a1b662c",
-    "yourClaimRequestHasBeenSubmitted": "0475c313",
+    "yourClaimRequestHasBeenSubmitted": "87d3320b",
     "yourCoverIsUnchangedPleaseTry": "c796273e",
     "yourPlaceNeedsACoverPhoto": "53195b82",
     "yourReview": "41bed490",
@@ -5600,7 +5600,22 @@
     "metaTitle": "96c100a6",
     "metaTitleInCity": "18d2493f",
     "noOwnerBody": "fe680efb",
-    "noOwnerTitle": "015b4f45"
+    "noOwnerTitle": "015b4f45",
+    "iOwnThisBusiness": "c08c02d8",
+    "placeMoreOptions": "f1d27958",
+    "disputeTitle": "00902096",
+    "disputeIntro": "c26ff28a",
+    "disputeNoteLabel": "11a504ef",
+    "disputeNotePlaceholder": "a191024d",
+    "disputeNoteRequired": "e933e47b",
+    "disputeProofLabel": "60373185",
+    "disputeSubmit": "ddc87345",
+    "disputeSentTitle": "168996e3",
+    "disputeSentBody": "5093f506",
+    "disputeWait": "8c0456e0",
+    "addDocument": "1cf9a15b",
+    "claimAlreadyPending": "843fd32d",
+    "claimRunsPlace": "5d9ce585"
   },
   "plans": {
     "plans": "cf2e5f26"
@@ -7970,7 +7985,11 @@
     "teamDeleted": "a050b7cc",
     "teamDeleteCancelled": "25bf0a04",
     "deleteAccountBlockedPromotion": "b95db2cb",
-    "deleteAccountBlockedPromotionPayment": "98f03744"
+    "deleteAccountBlockedPromotionPayment": "98f03744",
+    "youAlreadyManageThisPlace": "5d9ce585",
+    "disputeTooSoon": "8c0456e0",
+    "tellUsHowTheBusinessIsYours": "f9952bfe",
+    "thisOwnerMustWaitToClaimAgain": "d10c7621"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",

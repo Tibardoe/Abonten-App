@@ -2,7 +2,7 @@
 title: Einen Ort beanspruchen und verifizieren
 summary: Übernimm den Eintrag eines Geschäfts, das dir gehört, und lass ihn dann von Abonten verifizieren – was du einreichst, wie die Prüfung abläuft und was „verifiziert“ bedeutet.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-26
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,12 +15,22 @@ Beanspruchen und Verifizieren sind zwei verschiedene Dinge.
 
 ## Einen bestehenden Eintrag beanspruchen
 
-Ein Ort kann bereits eingetragen sein – von einem anderen Nutzer oder einem Abonten-Außendienstteam –, ohne dass du als tatsächlicher Inhaber Zugriff darauf hast.
+Ein Ort kann bereits eingetragen sein, ohne dass du als tatsächlicher Inhaber Zugriff darauf hast. Was die Seite des Orts anbietet, hängt davon ab, ob jemand den Eintrag verwaltet.
 
-1. Melde dich an und öffne die Seite des Orts.
-2. Wähle **Diesen Ort beanspruchen**. Die Option erscheint nur, wenn du nicht schon Inhaber bist.
-3. Füge eine Notiz, eine Kontakttelefonnummer und -E-Mail-Adresse sowie unterstützende Dokumente hinzu.
-4. Absenden. Pro Ort kannst du einen offenen Anspruch haben.
+**Noch niemand verwaltet ihn.** Abonten hat den Ort eingetragen und niemand hat ihn beansprucht, oder das Konto, das ihn verwaltet hat, wurde gelöscht. Die Seite zeigt **Diesen Ort beanspruchen**.
+
+1. Öffne die Seite des Orts und wähle **Diesen Ort beanspruchen**. Bist du nicht angemeldet, meldest du dich zuerst an und kommst dann zur Seite zurück.
+2. Füge eine Notiz, eine Kontakttelefonnummer und -E-Mail-Adresse sowie unterstützende Dokumente hinzu (Fotos oder PDF).
+3. Absenden. Pro Ort kannst du einen offenen Anspruch haben.
+
+**Ein anderes Konto verwaltet ihn.** Der Eintrag wurde beansprucht oder von jemandem angelegt, der sagt, dass er ihm gehört. Es gibt keine Schaltfläche zum Beanspruchen. Wenn der Betrieb dir gehört:
+
+1. Öffne die Seite des Orts und wähle **…** und dann **Das ist mein Betrieb**.
+2. Erkläre, warum der Betrieb dir gehört. Das ist Pflicht.
+3. Sende einen Nachweis: eine Gewerbeanmeldung, eine Rechnung oder einen Mietvertrag für die Adresse auf den Namen des Betriebs oder ein Schreiben des Betriebs. Fotos oder PDF, höchstens drei.
+4. Wähle **Zur Prüfung senden**.
+
+Das Abonten-Team prüft deine Anfrage. Am Eintrag ändert sich in der Zwischenzeit nichts, und das Konto, das ihn verwaltet, wird nicht automatisch über deine Anfrage informiert. Wird sie nicht genehmigt, kannst du für denselben Ort 30 Tage später eine neue senden.
 
 Das Abonten-Team prüft Ansprüche. Ist entschieden, wirst du in der App benachrichtigt:
 
@@ -87,7 +97,7 @@ Sie werden vertraulich gespeichert. Nur prüfende Personen bei Abonten können s
 
 ## Streitfälle
 
-Beansprucht jemand anderes einen Ort, der dir gehört, prüft Abonten die Nachweise beider Seiten. Ein Geschäft zu beanspruchen, das dir nicht gehört, oder Dokumente einzureichen, die nicht deine sind, verstößt gegen die AGB und kann zur Einschränkung des Kontos führen.
+Sagt jemand, dass ein Ort, den du verwaltest, ihm gehört, prüft das Abonten-Team die Nachweise beider Seiten, bevor sich etwas ändert, und kann dich nach deinen fragen. Dein Eintrag bleibt deiner und funktioniert während der Prüfung weiter. Ein Geschäft zu beanspruchen, das dir nicht gehört, oder Dokumente einzureichen, die nicht deine sind, verstößt gegen die AGB und kann zur Einschränkung des Kontos führen.
 
 ## Einträge eines Abonten-Außendienstteams
 

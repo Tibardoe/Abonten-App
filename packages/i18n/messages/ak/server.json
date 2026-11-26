@@ -1613,5 +1613,9 @@
   "teamDeleted": "The team has been deleted.",
   "teamDeleteCancelled": "The request to delete the team has been stopped.",
   "deleteAccountBlockedPromotion": "One of your Spotlight promotions is still running or waiting for review. Cancel it first, then delete your account.",
-  "deleteAccountBlockedPromotionPayment": "A payment for one of your Spotlight promotions is still going through. Try again in a few minutes."
+  "deleteAccountBlockedPromotionPayment": "A payment for one of your Spotlight promotions is still going through. Try again in a few minutes.",
+  "youAlreadyManageThisPlace": "You already manage this place.",
+  "disputeTooSoon": "Abonten staff have already reviewed your last request for this place. You can send a new one from {date}.",
+  "tellUsHowTheBusinessIsYours": "Another account manages this place. Tell us how the business is yours.",
+  "thisOwnerMustWaitToClaimAgain": "Abonten staff turned down this owner's last request for that listing. They can ask again from {date}."
 }

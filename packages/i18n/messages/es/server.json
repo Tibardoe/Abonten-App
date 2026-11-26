@@ -1613,5 +1613,9 @@
   "teamDeleted": "El equipo se ha eliminado.",
   "teamDeleteCancelled": "Se detuvo la solicitud para eliminar el equipo.",
   "deleteAccountBlockedPromotion": "Una de tus promociones de Spotlight sigue activa o pendiente de revisión. Cancélala primero y luego elimina tu cuenta.",
-  "deleteAccountBlockedPromotionPayment": "Todavía se está procesando un pago de una de tus promociones de Spotlight. Inténtalo de nuevo en unos minutos."
+  "deleteAccountBlockedPromotionPayment": "Todavía se está procesando un pago de una de tus promociones de Spotlight. Inténtalo de nuevo en unos minutos.",
+  "youAlreadyManageThisPlace": "Ya gestionas este lugar.",
+  "disputeTooSoon": "El equipo de Abonten ya revisó tu última solicitud para este lugar. Podrás enviar una nueva a partir del {date}.",
+  "tellUsHowTheBusinessIsYours": "Otra cuenta gestiona este lugar. Cuéntanos por qué el negocio es tuyo.",
+  "thisOwnerMustWaitToClaimAgain": "El equipo de Abonten rechazó la última solicitud de este propietario para esa ficha. Podrá volver a pedirla a partir del {date}."
 }
