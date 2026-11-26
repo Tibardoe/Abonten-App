@@ -4,7 +4,7 @@ purpose: How the "On Abonten" wall works end to end — who can be on it, how el
 audience: Engineering, operations and support
 scope: "showcase_program_setting, showcase_entry, showcase_daily_count and the showcase_* functions (migration 20261126100000); @abonten/core/showcase/rules; @abonten/services/showcase and @abonten/services/admin/showcase; the website's OnAbontenShowcase on the landing page and Explore, /on-abonten; GET /api/mobile/showcase, /showcase/directory, POST /showcase/tap; the app's Explore tab section and the on-abonten screen; the follow paths' showcaseEntryId; Admin › Showcase; SHOWCASE_KILL_SWITCH."
 status: Review required
-version: 1.0
+version: 1.1
 lastReviewed: 2026-11-26
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -77,7 +77,7 @@ The dot pulses (`animate-ping` on the web, a Reanimated opacity loop in the app)
 | `account_restricted`: suspended or banned | `owner_restricted`: the owner is suspended or banned |
 | `team_paused`: a team account whose team is frozen or closed | `team_paused`: the owning team is frozen or closed |
 | `no_upcoming_event`: no event of theirs in this market that the Explore rule has on (`_explore_event_candidates`: published, not archived, **not postponed**, not hidden or removed, a date not ended) and that is not restricted | `not_published`, `moderated` (restricted, hidden or removed), `permanently_closed` |
-| | `not_claimed`: put up by Abonten's own staff (the owner is an active admin) and nobody has claimed it |
+| | `not_claimed`: put up by Abonten's own staff (the owner is an active admin) and nobody has claimed it; since 2026-11-26 the shared `place_listed_by_abonten()`, the same test the place page uses to invite a claim (`@abonten/core/placeClaimInvite`, migration `20261126140000`) |
 
 The next event is the Explore rule's, so a run of shows counts once at its earliest show (`coalesce(series_id, id)`). The rule is called **once per kind for the whole set** (a host's own events in the market, and the events held at each place, separately, because a run's earliest show for a host and for a venue can differ), never once per row, and not at all when there is nothing to ask about.
 

@@ -12,9 +12,10 @@
 --
 --   1. public.place_listed_by_abonten(owner, claimed): the place was put up
 --      by Abonten's own staff (its owner is an active admin_user) and
---      nobody has claimed it. The same test as the On Abonten showcase's
---      'not_claimed' (PR #145, _showcase_subject_state), which can call
---      this function once both are in.
+--      nobody has claimed it. The On Abonten showcase (20261126100000)
+--      tested the same thing inline for its 'not_claimed' reason;
+--      _showcase_subject_state now calls this function instead, so the
+--      wall and the place page cannot drift apart (section 5).
 --   2. public.place_claim_situation(place, claimant): where a request
 --      stands. 'owner' or 'team_member' (the claimant already runs the
 --      place), 'owner_deleted' or 'listed_by_abonten' (nobody is behind
@@ -36,9 +37,27 @@
 --      disputes-only view. A decided request has no situation; its audit
 --      entry says whether it was a dispute.
 --
--- Everything here is service-role only. Nothing existing is replaced.
+-- Everything here is service-role only. Replaced: _showcase_subject_state
+-- (only its 'not_claimed' test changes; written against the fingerprint
+-- below, so the showcase migration must be applied first).
 
 begin;
+
+-- ---------------------------------------------------------------------------
+-- 0. What this migration was written against
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = '_showcase_subject_state'
+      and md5(replace(p.prosrc, E'\r', '')) = '2490da7121d7167e21fa7c9d61bdbe4e'
+  ) then
+    raise exception 'migration check: _showcase_subject_state is not the version this migration was written against (apply 20261126100000_on_abonten_showcase first)';
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
 -- 1. Listed by Abonten
@@ -249,7 +268,134 @@ revoke all on function public.admin_place_claims_page(text, boolean, integer, ti
 grant execute on function public.admin_place_claims_page(text, boolean, integer, timestamptz, uuid, integer) to service_role;
 
 -- ---------------------------------------------------------------------------
--- 5. Checks
+-- 5. The On Abonten showcase reads the same "listed by Abonten" test
+-- ---------------------------------------------------------------------------
+
+-- Unchanged but for the 'not_claimed' line. create or replace keeps its
+-- grants (service role only) and its comment.
+create or replace function public._showcase_subject_state(
+  p_country   text,
+  p_host_ids  uuid[],
+  p_place_ids uuid[]
+)
+returns table (
+  subject_kind   text,
+  subject_id     uuid,
+  reason         text,
+  next_event_id  uuid,
+  next_start     timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_hidden boolean := p_country = any ((select public.hidden_listing_countries())::text[]);
+  v_hosts  uuid[]  := coalesce(p_host_ids, '{}'::uuid[]);
+  v_places uuid[]  := coalesce(p_place_ids, '{}'::uuid[]);
+begin
+  return query
+  with host_events as materialized (
+    select coalesce(array_agg(e.id), '{}'::uuid[]) as ids
+    from public.event e
+    where e.organizer_id = any (v_hosts)
+      and e.country_code = p_country
+      and e.status = 'published'
+      and e.archived_at is null
+      and e.postponed_at is null
+      and coalesce(e.moderation_state, 'visible') = 'visible'
+  ),
+  place_events as materialized (
+    select coalesce(array_agg(e.id), '{}'::uuid[]) as ids
+    from public.event e
+    where e.place_id = any (v_places)
+      and e.status = 'published'
+      and e.archived_at is null
+      and e.postponed_at is null
+      and coalesce(e.moderation_state, 'visible') = 'visible'
+  ),
+  -- The Explore rule, once for every host's events and once for every
+  -- place's (never once per row), and not at all when there is nothing to
+  -- ask about (the lateral call runs only for a non-empty list). Two calls,
+  -- because a run of shows is listed once at its earliest show: a host's
+  -- next show and a venue's next show of the same run can be different
+  -- shows.
+  host_on as materialized (
+    select c.id, c.organizer_id, c.sort_start
+    from host_events he
+    cross join lateral public._explore_event_candidates(
+      null, null, null,
+      p_with_distance => false,
+      p_only_ids => he.ids
+    ) c
+    where cardinality(he.ids) > 0
+  ),
+  place_on as materialized (
+    select c.id, e.place_id, c.sort_start
+    from place_events pe
+    cross join lateral public._explore_event_candidates(
+      null, null, null,
+      p_with_distance => false,
+      p_only_ids => pe.ids
+    ) c
+    join public.event e on e.id = c.id
+    where cardinality(pe.ids) > 0
+  ),
+  host_next as (
+    select distinct on (h.organizer_id) h.organizer_id, h.id, h.sort_start
+    from host_on h
+    order by h.organizer_id, h.sort_start, h.id
+  ),
+  place_next as (
+    select distinct on (p.place_id) p.place_id, p.id, p.sort_start
+    from place_on p
+    order by p.place_id, p.sort_start, p.id
+  )
+  select 'host'::text,
+         hid,
+         case
+           when v_hidden then 'market_closed'
+           when u.id is null or u.status_id = 4 then 'account_deleted'
+           when u.status_id <> 1 then 'account_restricted'
+           when u.account_kind = 'team' and coalesce(t.status, 'closed') <> 'active' then 'team_paused'
+           when hn.id is null then 'no_upcoming_event'
+         end,
+         hn.id,
+         hn.sort_start
+  from unnest(v_hosts) as hid
+  left join public.user_info u on u.id = hid
+  left join public.team t on t.account_id = hid
+  left join host_next hn on hn.organizer_id = hid
+  union all
+  select 'place'::text,
+         pid,
+         case
+           when p.id is null then 'missing'
+           when v_hidden then 'market_closed'
+           when p.country_code <> p_country then 'other_market'
+           when o.id is null or o.status_id = 4 then 'ownerless'
+           when o.status_id <> 1 then 'owner_restricted'
+           when o.account_kind = 'team' and coalesce(ot.status, 'closed') <> 'active' then 'team_paused'
+           when p.status <> 'published' then 'not_published'
+           when p.moderation_state in ('restricted', 'hidden', 'removed') then 'moderated'
+           when p.temporary_status = 'permanently_closed' then 'permanently_closed'
+           -- Put up by Abonten's own staff and never claimed: nobody runs it
+           -- (the same test as the place page's claim invite).
+           when public.place_listed_by_abonten(p.owner_id, p.claimed) then 'not_claimed'
+         end,
+         pn.id,
+         pn.sort_start
+  from unnest(v_places) as pid
+  left join public.place p on p.id = pid
+  left join public.user_info o on o.id = p.owner_id
+  left join public.team ot on ot.account_id = p.owner_id
+  left join place_next pn on pn.place_id = pid;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 6. Checks
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -274,6 +420,17 @@ begin
       and not t.tgisinternal
   ) then
     raise exception 'migration check: the place_claim_request guard is missing';
+  end if;
+  if not exists (
+    select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = '_showcase_subject_state'
+      and position('public.place_listed_by_abonten(p.owner_id, p.claimed)' in p.prosrc) > 0
+  ) then
+    raise exception 'migration check: _showcase_subject_state was not replaced';
+  end if;
+  if has_function_privilege('anon', 'public._showcase_subject_state(text, uuid[], uuid[])', 'execute')
+     or has_function_privilege('authenticated', 'public._showcase_subject_state(text, uuid[], uuid[])', 'execute') then
+    raise exception 'migration check: _showcase_subject_state must stay service-role only';
   end if;
   -- No such place: no situation.
   if public.place_claim_situation(gen_random_uuid(), gen_random_uuid()) is not null then
