@@ -114,6 +114,21 @@ const SESSION_CALLABLE: Call[] = [
 // with real fixtures in money-path-lockdown, so they are not repeated here.)
 const SERVICE_ROLE_ONLY: Call[] = [
   {
+    name: "place_claim_situation",
+    args: { p_place_id: ABSENT_ID, p_claimant_id: ABSENT_ID },
+    why: "Admin › Claims and the guard on new requests: it reads staff accounts and team memberships (2026-11-26)",
+  },
+  {
+    name: "place_listed_by_abonten",
+    args: { p_owner_id: ABSENT_ID, p_claimed: false },
+    why: "whether staff listed a place; the apps work it out from public columns (2026-11-26)",
+  },
+  {
+    name: "admin_place_claims_page",
+    args: { p_status: "pending", p_limit: 1 },
+    why: "the Admin › Claims list, with every claimant's contact details (2026-11-26)",
+  },
+  {
     name: "orphan_refund_retry_candidates",
     args: { p_limit: 1 },
     why: "read by the payment-reconcile sweep only: it lists charges with no order (card checks, late captures) owed back to people (2026-11-17)",

@@ -26,6 +26,7 @@ import {
 describe("staff roles have no direct Data API powers", () => {
   let service: SupabaseClient<Database>;
   let victim: TestUser;
+  let claimant: TestUser;
   let eventId: string;
   let ticketTypeId: string;
   let placeId: string;
@@ -38,6 +39,9 @@ describe("staff roles have no direct Data API powers", () => {
   beforeAll(async () => {
     service = getServiceClient();
     victim = await createTestUser(service);
+    // Someone else's claim on the victim's place: an owner cannot claim
+    // their own place (place_claim_request_guard, 2026-11-26).
+    claimant = await createTestUser(service);
     const { data: roles } = await service.from("admin_role").select("key");
     roleKeys = (roles ?? []).map((r) => r.key as string).sort();
     for (const key of roleKeys) {
@@ -82,7 +86,7 @@ describe("staff roles have no direct Data API powers", () => {
     placeId = (place as { id: string }).id;
     const { data: claim, error: claimError } = await service
       .from("place_claim_request")
-      .insert({ place_id: placeId, claimant_id: victim.id } as never)
+      .insert({ place_id: placeId, claimant_id: claimant.id } as never)
       .select("id")
       .single();
     if (claimError) throw new Error(`claim: ${claimError.message}`);
@@ -131,6 +135,7 @@ describe("staff roles have no direct Data API powers", () => {
       await deleteTestUser(service, u.id);
     }
     await deleteTestUser(service, victim.id);
+    await deleteTestUser(service, claimant.id);
   }, 120_000);
 
   it("every role in the live matrix is covered", () => {

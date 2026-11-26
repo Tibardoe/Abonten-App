@@ -8,11 +8,13 @@ import {
 import type {
   AdminContext,
   AdminNoteEntry,
+  ClaimCurrentOwner,
   ClaimDetail,
   ClaimListItem,
+  ClaimSituation,
   ClaimStatus,
 } from "@abonten/types/adminTypes";
-import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { requireVerifiedIdentity } from "../../identity/identityCore";
 import { createNotificationCore } from "../../notifications/createNotification";
@@ -31,8 +33,49 @@ import {
 // service-role client). Rejection is a guarded status update, mirroring the
 // old reviewPlaceClaimRequest action. Every path is permission-checked,
 // audited, optimistic-concurrency guarded, and notifies the claimant.
+//
+// Ownership disputes (2026-11-26, migration 20261126140000): a waiting
+// claim on a place someone else runs, or on a place of the team the
+// claimant is in, is a dispute. Where a claim stands is worked out when it
+// is read (public.place_claim_situation), so a claim becomes a dispute the
+// moment another claim on the same place is approved. The list puts
+// disputes first; the detail names who runs the place now and since when;
+// approving one needs the place's name typed (confirmPlaceName). Nobody is
+// told when a dispute is filed: staff decide whether to contact the owner.
 
 const NOTE_TARGET = "place_claim";
+
+const SITUATIONS: readonly ClaimSituation[] = [
+  "owner",
+  "team_member",
+  "owner_deleted",
+  "listed_by_abonten",
+  "dispute",
+];
+
+function asSituation(value: unknown): ClaimSituation | null {
+  return SITUATIONS.includes(value as ClaimSituation)
+    ? (value as ClaimSituation)
+    : null;
+}
+
+/** Approving it takes the place from an account that runs it. */
+export function situationIsDispute(situation: ClaimSituation | null): boolean {
+  return situation === "dispute" || situation === "team_member";
+}
+
+/** Names compared the way a person types them: case and spacing aside. */
+export function sameName(
+  typed: string | null | undefined,
+  name: string | null | undefined,
+): boolean {
+  const norm = (v: string | null | undefined) =>
+    (v ?? "").normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase();
+  return norm(name) !== "" && norm(typed) === norm(name);
+}
+
+/** The list's cursor: the last row's place in the order. */
+type ClaimsCursor = { rank: number; createdAt: string; id: string };
 
 async function resolveNames(
   supabase: ServiceRoleClient,
@@ -52,6 +95,8 @@ async function resolveNames(
 
 export type ListClaimsFilters = {
   status?: ClaimStatus | "all";
+  /** Waiting ownership disputes only (the list's "Disputes" view). */
+  disputesOnly?: boolean;
   cursor?: string | null;
   pageSize?: number;
 };
@@ -75,27 +120,20 @@ export async function listClaimsCore(
 
   const canPii = ctx.permissions.includes("users.view_pii");
   const pageSize = filters.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
-  const cursor = decodeCursor<SimpleCursor>(filters.cursor);
+  const cursor = decodeCursor<ClaimsCursor>(filters.cursor);
+  // Disputes are waiting claims by definition.
+  const status = filters.disputesOnly
+    ? "pending"
+    : (filters.status ?? "pending");
 
-  let query = supabase
-    .from("place_claim_request")
-    .select(
-      "id, status, place_id, claimant_id, contact_email, contact_phone, created_at, reviewed_at, place(name, slug), place_claim_document(count)",
-    )
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(pageSize + 1);
-
-  if (!filters.status || filters.status !== "all") {
-    query = query.eq("status", filters.status ?? "pending");
-  }
-  if (cursor) {
-    query = query.or(
-      `created_at.lt.${cursor.sortValue},and(created_at.eq.${cursor.sortValue},id.lt.${cursor.id})`,
-    );
-  }
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc("admin_place_claims_page", {
+    p_status: status,
+    p_disputes_only: !!filters.disputesOnly,
+    p_after_rank: cursor ? Number(cursor.rank) || 0 : undefined,
+    p_after_created: cursor?.createdAt,
+    p_after_id: cursor?.id,
+    p_limit: pageSize + 1,
+  });
   if (error) {
     logger.error(`listClaimsCore failed: ${error.message}`);
     return {
@@ -110,39 +148,130 @@ export async function listClaimsCore(
   const rows = data ?? [];
   const names = await resolveNames(
     supabase,
-    rows.map((r) => r.claimant_id as string),
+    rows.map((r) => r.claimant_id),
   );
 
-  const mapped: ClaimListItem[] = rows.map((r) => {
-    const place = r.place as { name?: string; slug?: string } | null;
-    const docEmbed = r.place_claim_document as { count: number }[] | undefined;
-    return {
-      id: r.id as string,
+  const ranked = rows.map((r) => {
+    const situation = asSituation(r.situation);
+    const item: ClaimListItem = {
+      id: r.id,
       status: r.status as ClaimStatus,
-      placeId: r.place_id as string,
-      placeName: place?.name ?? null,
-      placeSlug: place?.slug ?? null,
-      claimantId: r.claimant_id as string,
-      claimantName: names.get(r.claimant_id as string) ?? null,
-      documentCount: Array.isArray(docEmbed) ? (docEmbed[0]?.count ?? 0) : 0,
-      contactEmail: canPii ? ((r.contact_email as string) ?? null) : null,
-      contactPhone: canPii ? ((r.contact_phone as string) ?? null) : null,
-      createdAt: r.created_at as string,
-      reviewedAt: (r.reviewed_at as string) ?? null,
+      situation,
+      isDispute: situationIsDispute(situation),
+      placeId: r.place_id,
+      placeName: r.place_name ?? null,
+      placeSlug: r.place_slug ?? null,
+      claimantId: r.claimant_id,
+      claimantName: names.get(r.claimant_id) ?? null,
+      documentCount: r.document_count ?? 0,
+      contactEmail: canPii ? (r.contact_email ?? null) : null,
+      contactPhone: canPii ? (r.contact_phone ?? null) : null,
+      createdAt: r.created_at,
+      reviewedAt: r.reviewed_at ?? null,
     };
+    return { item, rank: r.sort_rank ?? 0 };
   });
 
-  const { page, hasNextPage } = splitPage(mapped, pageSize);
+  const { page, hasNextPage } = splitPage(ranked, pageSize);
   const last = page[page.length - 1];
   const nextCursor =
     hasNextPage && last
-      ? encodeCursor<SimpleCursor>({
-          sortValue: String(last.createdAt),
-          id: last.id,
+      ? encodeCursor<ClaimsCursor>({
+          rank: last.rank,
+          createdAt: last.item.createdAt,
+          id: last.item.id,
         })
       : null;
 
-  return { status: 200, data: page, nextCursor, hasNextPage };
+  return {
+    status: 200,
+    data: page.map((p) => p.item),
+    nextCursor,
+    hasNextPage,
+  };
+}
+
+/**
+ * Who runs the place now: the account, a team's active Owners, and since
+ * when it has had the place: an approved claim of its own, the team being
+ * made from the person who held it (team_convert_account), or listing it.
+ */
+async function loadCurrentOwner(
+  supabase: ServiceRoleClient,
+  place: { id: string; owner_id: string; created_at: string | null },
+): Promise<ClaimCurrentOwner | null> {
+  const [{ data: owner }, { data: team }, { data: approved }] =
+    await Promise.all([
+      supabase
+        .from("user_info")
+        .select("id, full_name, username, status_id, account_kind")
+        .eq("id", place.owner_id)
+        .maybeSingle(),
+      supabase
+        .from("team")
+        .select("status, created_at")
+        .eq("account_id", place.owner_id)
+        .maybeSingle(),
+      supabase
+        .from("place_claim_request")
+        .select("reviewed_at")
+        .eq("place_id", place.id)
+        .eq("claimant_id", place.owner_id)
+        .eq("status", "approved")
+        .order("reviewed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+  if (!owner) return null;
+
+  const isTeam = owner.account_kind === "team" || !!team;
+  let teamOwners: ClaimCurrentOwner["teamOwners"] = [];
+  if (isTeam) {
+    const { data: members } = await supabase
+      .from("team_member")
+      .select("user_id")
+      .eq("team_id", place.owner_id)
+      .eq("role", "owner")
+      .eq("status", "active");
+    const ids = (members ?? []).map((m) => m.user_id);
+    if (ids.length > 0) {
+      const { data: people } = await supabase
+        .from("user_info")
+        .select("id, full_name, username")
+        .in("id", ids);
+      teamOwners = (people ?? []).map((p) => ({
+        id: p.id,
+        name: p.full_name ?? null,
+        username: p.username ?? null,
+      }));
+    }
+  }
+
+  let since: string | null = place.created_at;
+  let sinceBasis: ClaimCurrentOwner["sinceBasis"] = "listed";
+  if (approved?.reviewed_at) {
+    since = approved.reviewed_at;
+    sinceBasis = "claim_approved";
+  } else if (
+    team?.created_at &&
+    place.created_at &&
+    new Date(team.created_at).getTime() > new Date(place.created_at).getTime()
+  ) {
+    since = team.created_at;
+    sinceBasis = "team_created";
+  }
+
+  return {
+    id: owner.id,
+    name: owner.full_name ?? null,
+    username: owner.username ?? null,
+    kind: isTeam ? "team" : "person",
+    statusId: owner.status_id ?? null,
+    teamStatus: team?.status ?? null,
+    teamOwners,
+    since,
+    sinceBasis,
+  };
 }
 
 export async function getClaimDetailCore(
@@ -179,7 +308,7 @@ export async function getClaimDetailCore(
   ] = await Promise.all([
     supabase
       .from("place")
-      .select("id, name, slug, status, owner_id, claimed, verified")
+      .select("id, name, slug, status, owner_id, claimed, verified, created_at")
       .eq("id", c.place_id)
       .maybeSingle(),
     supabase
@@ -238,6 +367,27 @@ export async function getClaimDetailCore(
 
   void pendingElsewhere; // reserved for a future "N pending on this place" hint
 
+  // Where a waiting claim stands now, and whose place it would take. A
+  // decided claim has neither.
+  let situation: ClaimSituation | null = null;
+  let currentOwner: ClaimCurrentOwner | null = null;
+  if (c.status === "pending" && place) {
+    const { data: found, error: situationError } = await supabase.rpc(
+      "place_claim_situation",
+      { p_place_id: c.place_id, p_claimant_id: c.claimant_id },
+    );
+    if (situationError) {
+      logger.error(`getClaimDetailCore situation: ${situationError.message}`);
+      return { status: 500, message: "Something went wrong" };
+    }
+    situation = asSituation(found);
+    currentOwner = await loadCurrentOwner(supabase, {
+      id: place.id,
+      owner_id: place.owner_id,
+      created_at: place.created_at ?? null,
+    });
+  }
+
   return {
     status: 200,
     data: {
@@ -259,6 +409,9 @@ export async function getClaimDetailCore(
         claimed: !!place?.claimed,
         verified: !!place?.verified,
       },
+      situation,
+      isDispute: situationIsDispute(situation),
+      currentOwner,
       claimant: {
         id: c.claimant_id,
         username: claimant?.username ?? null,
@@ -286,6 +439,11 @@ export async function reviewClaimCore(
      * but unverified when the reviewer asked for both.
      */
     alsoVerify?: boolean;
+    /**
+     * Approving an ownership dispute takes the place from the account that
+     * runs it, so the reviewer types the place's name to approve one.
+     */
+    confirmPlaceName?: string;
   },
   requestMeta?: Record<string, unknown>,
 ): Promise<AdminEnvelope> {
@@ -325,7 +483,36 @@ export async function reviewClaimCore(
 
   const verifyToo = !!input.alsoVerify && input.decision === "approve";
 
+  // Whether approving takes the place from an account that runs it, and
+  // whose it is now (for the audit entry).
+  const [{ data: situationValue, error: situationError }, { data: owned }] =
+    await Promise.all([
+      supabase.rpc("place_claim_situation", {
+        p_place_id: claim.place_id,
+        p_claimant_id: claim.claimant_id,
+      }),
+      supabase
+        .from("place")
+        .select("owner_id")
+        .eq("id", claim.place_id)
+        .maybeSingle(),
+    ]);
+  if (situationError) {
+    logger.error(`reviewClaimCore situation: ${situationError.message}`);
+    return { status: 500, message: "Something went wrong" };
+  }
+  const situation = asSituation(situationValue);
+  const dispute = situationIsDispute(situation);
+  const previousOwnerId = (owned?.owner_id as string | undefined) ?? null;
+
   if (input.decision === "approve") {
+    if (dispute && !sameName(input.confirmPlaceName, place?.name)) {
+      return {
+        status: 400,
+        message:
+          "This is an ownership dispute: type the place's name exactly to approve it.",
+      };
+    }
     // The person taking over a listing must be traceable, when required.
     const identityGate = await requireVerifiedIdentity(
       supabase,
@@ -442,14 +629,19 @@ export async function reviewClaimCore(
           ? "Approved and verified"
           : "Approved"
         : "Rejected"
-    } claim for ${placeName}`,
+    } ${dispute ? "ownership dispute" : "claim"} for ${placeName}`,
     reason: input.reason ?? null,
-    before: { status: "pending" },
+    before: {
+      status: "pending",
+      situation,
+      owner_id: previousOwnerId,
+    },
     after: {
       status: input.decision === "approve" ? "approved" : "rejected",
       verified: verifyToo,
       place_id: claim.place_id,
       claimant_id: claim.claimant_id,
+      dispute,
     },
     requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
   });
