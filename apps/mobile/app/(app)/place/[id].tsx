@@ -13,6 +13,10 @@ import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlight
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
+import {
+  type PlaceAction,
+  PlaceActionsSheet,
+} from "@/components/places/PlaceActionsSheet";
 import { PlaceSpecialHoursList } from "@/components/places/PlaceSpecialHoursList";
 import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSection";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
@@ -22,7 +26,7 @@ import { useDirections } from "@/features/directions/DirectionsSheet";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useLogPlaceView } from "@/features/places/placeEngagement";
-import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
+import { usePlaceClaimInvite } from "@/features/places/usePlaceClaimInvite";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
 import {
   usePlaceUpcomingEvents,
@@ -64,6 +68,7 @@ import {
   ScreenError,
   SectionTitle,
   Stars,
+  useModalHandoff,
   useToast,
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
@@ -143,6 +148,8 @@ export default function PlaceDetailScreen() {
       ?.defaultCurrency ?? "";
   const detailView = useQueryView(detail);
   const [claimOpen, setClaimOpen] = useState(false);
+  const [claimMode, setClaimMode] = useState<"claim" | "dispute">("claim");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
     targetType: "place";
@@ -180,6 +187,44 @@ export default function PlaceDetailScreen() {
         }),
     });
 
+  // Claiming (@abonten/core/placeClaimInvite): a card only where nobody
+  // runs the place; where someone does, "I own this business" in the ⋯
+  // menu opens the same sheet as a dispute. Signed out, it signs in first
+  // and comes back here.
+  const { invite: claimInvite, runsPlace } = usePlaceClaimInvite(place);
+  const handoff = useModalHandoff();
+  const openClaim = (mode: "claim" | "dispute") => {
+    if (!session) {
+      if (pathname) setPendingRedirect(pathname);
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    setClaimMode(mode);
+    setClaimOpen(true);
+  };
+  const placeActions: { action: PlaceAction; label: string }[] = [
+    ...(session && place && !runsPlace
+      ? [{ action: "report" as const, label: t("reportThisPlace") }]
+      : []),
+    ...(place && claimInvite.kind === "dispute"
+      ? [{ action: "dispute" as const, label: t("iOwnThisBusiness") }]
+      : []),
+  ];
+  const onPlaceAction = (action: PlaceAction) => {
+    handoff.after(() => {
+      if (action === "dispute") {
+        openClaim("dispute");
+      } else if (place) {
+        setReportTarget({
+          targetType: "place",
+          targetId: place.id,
+          label: place.name,
+        });
+      }
+    });
+    setMenuOpen(false);
+  };
+
   const placeSlug = place?.slug;
   const header = (
     <AppHeader
@@ -206,16 +251,12 @@ export default function PlaceDetailScreen() {
             id={id}
             shareTitle={place?.name ?? t("place")}
             shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
-            onReport={
-              session && place?.owner_id && place.owner_id !== session.user.id
-                ? () =>
-                    setReportTarget({
-                      targetType: "place",
-                      targetId: place.id,
-                      label: place.name,
-                    })
-                : undefined
+            onMore={
+              placeActions.length > 0 ? () => setMenuOpen(true) : undefined
             }
+            moreLabel={t("placeMoreOptions", {
+              name: place?.name ?? t("thisPlace"),
+            })}
           />
         </View>
       }
@@ -240,7 +281,6 @@ export default function PlaceDetailScreen() {
     coords,
   });
 
-  const { data: claim } = usePlaceClaimState(place?.id, place?.owner_id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
   const similarPlaces: PlaceType[] =
     useSimilarPlaces(place?.id, place?.category_id, coords).data ?? [];
@@ -514,18 +554,18 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
 
-          {/* Claim this place */}
-          {claim?.status === "pending" ? (
+          {/* Claim this place: only where nobody runs it */}
+          {claimInvite.kind === "pending" ? (
             <View className="flex-row items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2.5">
               <Icon name="hourglass-outline" size={16} tone="muted" />
               <AppText variant="small" tone="muted" className="flex-1">
                 {t("yourClaimForThisPlaceIs")}
               </AppText>
             </View>
-          ) : claim?.canClaim ? (
+          ) : claimInvite.kind === "claim" ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => setClaimOpen(true)}
+              onPress={() => openClaim("claim")}
               className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
             >
               <Icon
@@ -535,10 +575,14 @@ export default function PlaceDetailScreen() {
               />
               <View className="flex-1">
                 <AppText variant="bodyStrong">
-                  {hasOwner ? t("ownThisPlace") : t("noOwnerTitle")}
+                  {claimInvite.reason === "owner_deleted"
+                    ? t("noOwnerTitle")
+                    : t("ownThisPlace")}
                 </AppText>
                 <AppText variant="meta">
-                  {hasOwner ? t("claimItToManageItsDetails") : t("noOwnerBody")}
+                  {claimInvite.reason === "owner_deleted"
+                    ? t("noOwnerBody")
+                    : t("claimItToManageItsDetails")}
                 </AppText>
               </View>
               <Icon name="chevron-forward" size={16} tone="muted" />
@@ -772,7 +816,7 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
 
-          {session && place.owner_id !== session.user.id ? (
+          {session && !runsPlace ? (
             <Pressable
               accessibilityRole="button"
               className="items-center py-2 active:opacity-60"
@@ -807,6 +851,23 @@ export default function PlaceDetailScreen() {
           onClose={() => setClaimOpen(false)}
           placeId={place.id}
           placeName={place.name}
+          mode={claimMode}
+          retryAfter={
+            claimMode === "dispute" && claimInvite.kind === "dispute"
+              ? claimInvite.retryAfter
+              : null
+          }
+        />
+
+        <PlaceActionsSheet
+          open={menuOpen}
+          onClose={() => {
+            handoff.cancel();
+            setMenuOpen(false);
+          }}
+          onDismiss={handoff.onDismiss}
+          actions={placeActions}
+          onAction={onPlaceAction}
         />
 
         {directions.sheet}

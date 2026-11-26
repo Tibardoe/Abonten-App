@@ -1,8 +1,115 @@
 import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadClaimDetail } from "@/lib/data";
+import type { ClaimCurrentOwner } from "@abonten/types/adminTypes";
 import Link from "next/link";
 import { ReviewPanel } from "./ReviewPanel";
+
+const ACCOUNT_STATUS: Record<number, string> = {
+  1: "active",
+  2: "suspended",
+  3: "banned",
+  4: "deleted",
+};
+
+const SINCE_BASIS: Record<ClaimCurrentOwner["sinceBasis"], string> = {
+  claim_approved: "their claim was approved",
+  team_created: "the team was made from the person who held it",
+  listed: "they listed it",
+};
+
+function day(iso: string | null): string {
+  return iso ? new Date(iso).toISOString().slice(0, 10) : "unknown";
+}
+
+function nameOf(p: {
+  name: string | null;
+  username: string | null;
+  id: string;
+}) {
+  return p.name || (p.username ? `@${p.username}` : `${p.id.slice(0, 8)}…`);
+}
+
+/** Who runs the place now, for a waiting claim. */
+function CurrentOwnerCard({
+  owner,
+  isDispute,
+  situation,
+}: {
+  owner: ClaimCurrentOwner;
+  isDispute: boolean;
+  situation: string | null;
+}) {
+  return (
+    <Card
+      className={
+        isDispute ? "border-destructive/60 bg-destructive/5 p-4" : "p-4"
+      }
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <h3 className="text-sm font-semibold">Who runs the place now</h3>
+        {isDispute ? <Badge tone="danger">Ownership dispute</Badge> : null}
+      </div>
+      {isDispute ? (
+        <p className="mb-3 text-sm">
+          {situation === "team_member"
+            ? "The claimant is a member of the team that owns this place. Approving moves the place out of the team to the claimant personally."
+            : "Another account runs this place. Approving takes it away from them at once. They were not told about this claim: decide whether to contact them before you decide."}
+        </p>
+      ) : null}
+      <dl className="grid grid-cols-2 gap-2 text-sm">
+        <dt className="text-muted-foreground">
+          {owner.kind === "team" ? "Team" : "Owner"}
+        </dt>
+        <dd>
+          <Link
+            href={`/users/${owner.id}`}
+            className="text-primary hover:underline"
+          >
+            {nameOf(owner)}
+          </Link>
+          {owner.username && owner.name ? (
+            <span className="text-muted-foreground"> @{owner.username}</span>
+          ) : null}
+        </dd>
+        <dt className="text-muted-foreground">Account</dt>
+        <dd>
+          {owner.statusId ? (ACCOUNT_STATUS[owner.statusId] ?? "—") : "—"}
+          {owner.teamStatus && owner.teamStatus !== "active"
+            ? ` · team ${owner.teamStatus}`
+            : ""}
+        </dd>
+        {owner.kind === "team" ? (
+          <>
+            <dt className="text-muted-foreground">Team Owners</dt>
+            <dd>
+              {owner.teamOwners.length === 0
+                ? "none"
+                : owner.teamOwners.map((o, i) => (
+                    <span key={o.id}>
+                      {i > 0 ? ", " : ""}
+                      <Link
+                        href={`/users/${o.id}`}
+                        className="text-primary hover:underline"
+                      >
+                        {nameOf(o)}
+                      </Link>
+                    </span>
+                  ))}
+            </dd>
+          </>
+        ) : null}
+        <dt className="text-muted-foreground">Has had it since</dt>
+        <dd>
+          {day(owner.since)}{" "}
+          <span className="text-muted-foreground">
+            ({SINCE_BASIS[owner.sinceBasis]})
+          </span>
+        </dd>
+      </dl>
+    </Card>
+  );
+}
 
 export default async function ClaimDetailPage({
   params,
@@ -44,6 +151,15 @@ export default async function ClaimDetailPage({
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {c.currentOwner &&
+          (c.isDispute || c.situation === "listed_by_abonten") ? (
+            <CurrentOwnerCard
+              owner={c.currentOwner}
+              isDispute={c.isDispute}
+              situation={c.situation}
+            />
+          ) : null}
+
           <Card className="p-4">
             <h3 className="mb-2 text-sm font-semibold">Place</h3>
             <dl className="grid grid-cols-2 gap-2 text-sm">
@@ -182,6 +298,9 @@ export default async function ClaimDetailPage({
             canVerify={ctx.permissions.includes("verification.review")}
             documentCount={c.documents.length}
             placeAlreadyVerified={c.place.verified}
+            isDispute={c.isDispute}
+            placeName={c.place.name}
+            currentOwnerName={c.currentOwner ? nameOf(c.currentOwner) : null}
           />
         </div>
       </div>

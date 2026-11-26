@@ -21,8 +21,9 @@ export function placeHasOwner(owner: PlaceOwnerRef): boolean {
 
 /**
  * The embed that answers it, for a place read through the Data API:
- * `select("*, owner:user_info!place_owner_id_fkey(status_id)")`. user_info
- * is publicly readable, so a signed-out read works too.
+ * `select("*, owner:user_info!place_owner_id_fkey(status_id, is_admin)")`.
+ * `is_admin` says whether Abonten's own staff listed it (placeClaimInvite).
+ * user_info is publicly readable, so a signed-out read works too.
  */
 export const PLACE_OWNER_EMBED =
-  "owner:user_info!place_owner_id_fkey(status_id)";
+  "owner:user_info!place_owner_id_fkey(status_id, is_admin)";

@@ -4,8 +4,8 @@ purpose: Review place ownership claims, understand what approval does to the lis
 audience: operations, support_admin (view), super_admin
 scope: /claims, /claims/[id]
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.2
+lastReviewed: 2026-11-26
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -14,25 +14,51 @@ complianceReviewRequired: no
 
 # Admin › Claims
 
-Source: `packages/services/src/admin/claims/claimsAdminCore.ts`; RPC `approve_place_claim` (the **only** code path that changes `place.owner_id`); tables `place_claim_request`, `place_claim_document` (private bucket, purged 30 days after decision).
+Source: `packages/services/src/admin/claims/claimsAdminCore.ts`; RPC `approve_place_claim` (the **only** code path that changes `place.owner_id`); tables `place_claim_request`, `place_claim_document` (private bucket, purged 30 days after decision); `place_claim_situation()` and `admin_place_claims_page()` (migration `20261126140000_claim_invite_disputes`).
+
+## Where claims come from (since 2026-11-26)
+
+The place page offers claiming by one rule (`@abonten/core/placeClaimInvite`, website and app):
+
+- **Nobody is behind the place** — its owner's account was deleted, or Abonten's own staff listed it and nobody has claimed it (the owner is an active staff account and the place is not marked claimed). Visitors see a prominent **Claim this place**.
+- **Someone runs the place** — it was claimed, or listed by its owner (Verified or not). There is no claim button. The place's "…" menu has a quiet **I own this business**, which opens the same form worded as an ownership dispute: another account manages this place, send proof, Abonten staff will review it and nothing changes meanwhile. An explanation is required.
+- The owner and members of the team that owns the place are offered nothing, and the database refuses a claim from them.
+
+## Ownership disputes
+
+A waiting claim on a place that **someone else runs** is an **ownership dispute**. So is a claim by a member of the team that owns the place (approving it would move the place out of the team to that person). Where a claim stands is worked out each time it is read, not stored: a claim filed on a place nobody ran becomes a dispute the moment another claim on that place is approved.
+
+- **Nobody is told when a dispute is filed.** Abonten does not notify the current owner automatically; telling them would invite harassment. You decide whether to contact them (through Support, by message or phone), usually before deciding a dispute. Record what you asked and what they said in an internal note. Rejecting a dispute tells the current owner nothing either.
+- **The owner is told when you approve a dispute** (below): only then, and only that the place was moved.
+- **Repeat disputes.** After you reject someone's claim on a place another account runs, that person cannot file another dispute on the same place for 30 days (the database refuses it, on the website, in the app and through Field Ops claim assistance). They see the date they may ask again. Other people are not affected, and a place nobody runs can be claimed again at once. One waiting claim per person per place and the website's 5 claims an hour still apply.
 
 ## The list
 
-Pending, approved and rejected claims with place, claimant, submitted date. Permission `claims.view`. The claimant's contact phone/email show with `users.view_pii`.
+Pending, approved and rejected claims with place, claimant, documents and submitted date. Permission `claims.view`. The claimant's contact phone/email show with `users.view_pii`.
+
+- **Pending** lists ownership disputes first, marked **Ownership dispute** (red), then the rest, newest first. The **Situation** column says what each waiting claim is: *Ownership dispute*, *Dispute: own team's place*, *Listed by Abonten*, *Owner's account deleted*, or *Already the owner*.
+- **Disputes** lists waiting ownership disputes only.
+- Decided claims have no situation; the audit entry of the decision says whether it was a dispute.
 
 ## Claim detail
 
-Place summary and current owner (with how the listing was created — by a user, or by a field team under the owner's consent), the claimant's note and contact details, uploaded documents (signed URLs, expire quickly), whether the claimant already owns other places, reports against the place, and the decision panel.
+Place summary and current owner, the claimant's note and contact details, uploaded documents (signed URLs, expire quickly), and the decision panel.
+
+For a waiting dispute (and a place Abonten listed) a **Who runs the place now** card shows the account that has the place, its account state (active, suspended, banned), for a team its state and its active Owners, and **since when** it has had the place, as far as the records show: the date its own claim was approved, the date the team was made from the person who held the place, or the date it was listed.
 
 ## Deciding (`claims.review`, no step-up)
 
-**Approve** → `approve_place_claim(request, admin)`: transfers `owner_id` to the claimant, sets `claimed = true`, marks the request approved, notifies the claimant, audits `claim.approve`. The previous owner loses management access immediately and is **not** notified automatically — message them through Support if appropriate.
+**Approve** → `approve_place_claim(request, admin)`: transfers `owner_id` to the claimant, sets `claimed = true`, marks the request approved, notifies the claimant, audits `claim.approve`. The previous owner loses management access immediately. For an ordinary claim (a place Abonten listed, or whose owner's account was deleted) nobody else is told.
+
+**Approving an ownership dispute** asks for more: type the place's name in the panel (case and spacing do not matter; the server checks it too), then confirm a question that names who loses the place. The audit entry records `before.situation`, `before.owner_id` (the owner who lost it), `after.dispute = true` and `after.previous_owner_notified`, and its summary says "ownership dispute".
+
+When a dispute is approved and the place has moved, the account that ran it is told at once, in the app and by push, in its own language (notice `place_ownership_moved`): "<Place> was moved to another account. After reviewing proof of ownership, Abonten staff moved <Place> to the account that runs the business. If you think this is a mistake, contact support@abontenhub.com." It never names the new owner. A team is told as the team: its Owners each get a copy. There is no email for this notice. If they write to Support, look at the claim, its documents and your notes, and say no more about the new owner than the notice does. Approve a dispute only on strong proof, after weighing both sides; if in doubt, reject with a reason and let the claimant come back with better evidence.
 
 Since 2026-09-12 approving a claim **no longer verifies the place**. Verification is its own reviewed step with its own evidence and audit trail — see [verification.md](verification.md). A reviewer who judges the claim's attached documents good enough can tick **Also mark this place verified**, which runs `approve_place_claim_and_verify()` (both in one transaction) and audits `claim.approve_and_verify`. That option needs `verification.review` on top of `claims.review`, and it only appears when the claim actually carries documents and the place is not already verified.
 
 If a verified place later changes owner through a claim, its badge is revoked automatically and any open verification request is withdrawn.
 
-**Reject** → status `rejected`, notification to the claimant, audit `claim.rejected`. The claimant may file a new claim.
+**Reject** → status `rejected`, notification to the claimant, audit `claim.rejected`. The claimant may file a new claim, except a new dispute on the same place within 30 days (above).
 
 Both require a reason.
 

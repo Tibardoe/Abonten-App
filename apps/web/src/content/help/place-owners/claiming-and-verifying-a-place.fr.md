@@ -2,7 +2,7 @@
 title: Revendiquer et faire vérifier un lieu
 summary: Prendre le contrôle de la fiche d'un établissement qui vous appartient, puis demander à Abonten de la vérifier : quoi envoyer, comment se passe l'examen et ce que « vérifié » signifie.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-26
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,12 +15,22 @@ Revendiquer et faire vérifier sont deux choses différentes.
 
 ## Revendiquer une fiche déjà présente sur Abonten
 
-Un lieu peut déjà être publié (ajouté par un autre utilisateur ou par une équipe de terrain Abonten) sans que vous, le véritable propriétaire, en ayez le contrôle.
+Un lieu peut déjà être publié sans que vous, le véritable propriétaire, en ayez le contrôle. Ce que propose la page du lieu dépend de qui gère la fiche.
 
-1. Connectez-vous et ouvrez la page du lieu.
-2. Choisissez **Revendiquer ce lieu**. Ce bouton n'apparaît que si vous n'êtes pas déjà le propriétaire.
-3. Ajoutez une note, un téléphone et une adresse e-mail de contact, et tout document justificatif.
-4. Envoyez. Vous pouvez avoir une seule revendication en attente par lieu.
+**Personne ne la gère encore.** Abonten a publié le lieu et personne ne l'a revendiqué, ou le compte qui le gérait a été supprimé. La page affiche **Revendiquer ce lieu**.
+
+1. Ouvrez la page du lieu et choisissez **Revendiquer ce lieu**. Si vous n'êtes pas connecté, vous vous connectez d'abord, puis vous revenez sur la page.
+2. Ajoutez une note, un téléphone et une adresse e-mail de contact, et tout document justificatif (photos ou PDF).
+3. Envoyez. Vous pouvez avoir une seule revendication en attente par lieu.
+
+**Un autre compte la gère.** La fiche a été revendiquée, ou publiée par quelqu'un qui dit qu'elle est à lui. Il n'y a pas de bouton pour la revendiquer. Si l'établissement vous appartient :
+
+1. Ouvrez la page du lieu et choisissez **…** puis **Cet établissement m'appartient**.
+2. Expliquez en quoi l'établissement vous appartient. C'est obligatoire.
+3. Envoyez une preuve : un certificat d'enregistrement de l'entreprise, une facture ou un bail pour l'adresse au nom de l'entreprise, ou une lettre de l'entreprise. Photos ou PDF, trois au maximum.
+4. Choisissez **Envoyer pour examen**.
+
+L'équipe Abonten examine votre demande. Rien ne change sur la fiche pendant ce temps, et le compte qui la gère n'est pas prévenu automatiquement de votre demande. Si elle n'est pas approuvée, vous pourrez en envoyer une nouvelle pour le même lieu 30 jours plus tard.
 
 L'équipe d'Abonten examine les revendications. Quand une décision est prise, vous êtes prévenu dans l'application :
 
@@ -87,7 +97,7 @@ Ils sont conservés de façon privée. Seules les personnes chargées de l'exame
 
 ## Litiges
 
-Si quelqu'un d'autre revendique un lieu qui vous appartient, Abonten examine les justificatifs des deux parties. Revendiquer un établissement qui n'est pas le vôtre, ou envoyer des documents qui ne sont pas les vôtres, enfreint les Conditions et peut entraîner la restriction du compte.
+Si quelqu'un affirme qu'un lieu que vous gérez lui appartient, l'équipe Abonten examine les justificatifs des deux parties avant tout changement, et peut vous contacter pour vous demander les vôtres. Votre fiche reste la vôtre et continue de fonctionner pendant l'examen. Si l'équipe décide que l'établissement appartient à quelqu'un d'autre et transfère la fiche sur son compte, vous en êtes informé aussitôt dans l'application. Si vous pensez qu'il s'agit d'une erreur, écrivez à support@abontenhub.com. Revendiquer un établissement qui n'est pas le vôtre, ou envoyer des documents qui ne sont pas les vôtres, enfreint les Conditions et peut entraîner la restriction du compte.
 
 ## Fiches créées par une équipe de terrain Abonten
 

@@ -2,7 +2,7 @@
 title: Reclamar y verificar un lugar
 summary: Toma el control de la ficha de un negocio que es tuyo y pide a Abonten que la verifique: qué enviar, cómo es la revisión y qué significa «verificado».
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-26
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,12 +15,22 @@ Reclamar y verificar son dos cosas distintas.
 
 ## Reclamar una ficha que ya está en Abonten
 
-Puede que un lugar ya esté publicado (lo añadió otro usuario o un equipo de campo de Abonten) sin que tú, su propietario real, tengas control sobre él.
+Puede que un lugar ya esté publicado sin que tú, su propietario real, tengas control sobre él. Lo que ofrece la página del lugar depende de si alguien gestiona la ficha.
 
-1. Inicia sesión y abre la página del lugar.
-2. Elige **Reclamar este lugar**. Solo aparece si no eres ya el propietario.
-3. Añade una nota, un teléfono y un correo de contacto, y cualquier documento que lo respalde.
-4. Envíala. Puedes tener una sola reclamación pendiente por lugar.
+**Nadie la gestiona todavía.** Abonten publicó el lugar y nadie lo ha reclamado, o se eliminó la cuenta que lo gestionaba. La página muestra **Reclamar este lugar**.
+
+1. Abre la página del lugar y elige **Reclamar este lugar**. Si no has iniciado sesión, primero inicias sesión y luego vuelves a la página.
+2. Añade una nota, un teléfono y un correo de contacto, y cualquier documento que lo respalde (fotos o PDF).
+3. Envíala. Puedes tener una sola reclamación pendiente por lugar.
+
+**Otra cuenta la gestiona.** La ficha se reclamó, o la publicó alguien que dice que es suya. No hay botón para reclamarla. Si el negocio es tuyo:
+
+1. Abre la página del lugar y elige **…** y luego **Este negocio es mío**.
+2. Explica por qué el negocio es tuyo. Es obligatorio.
+3. Envía una prueba: un registro mercantil, una factura o un contrato de alquiler de la dirección a nombre del negocio, o una carta del negocio. Fotos o PDF, hasta tres.
+4. Elige **Enviar para revisión**.
+
+El equipo de Abonten revisa tu solicitud. Nada cambia en la ficha mientras tanto, y la cuenta que la gestiona no recibe ningún aviso automático de tu solicitud. Si no se aprueba, podrás enviar una nueva para el mismo lugar 30 días después.
 
 El equipo de Abonten revisa las reclamaciones. Cuando hay una decisión, recibes un aviso en la aplicación:
 
@@ -87,7 +97,7 @@ Se guardan de forma privada. Solo las personas de revisión de Abonten pueden ab
 
 ## Disputas
 
-Si otra persona reclama un lugar que es tuyo, Abonten revisa las pruebas de ambas partes. Reclamar un negocio que no es tuyo, o enviar documentos que no son tuyos, incumple los Términos y puede llevar a restringir la cuenta.
+Si alguien dice que un lugar que gestionas es suyo, el equipo de Abonten revisa las pruebas de ambas partes antes de cambiar nada, y puede contactarte para pedirte las tuyas. Tu ficha sigue siendo tuya y funcionando mientras tanto. Si el equipo decide que el negocio es de otra persona y pasa la ficha a su cuenta, te avisamos en la app al momento. Si crees que es un error, escribe a support@abontenhub.com. Reclamar un negocio que no es tuyo, o enviar documentos que no son tuyos, incumple los Términos y puede llevar a restringir la cuenta.
 
 ## Fichas creadas por un equipo de campo de Abonten
 

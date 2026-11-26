@@ -16848,6 +16848,32 @@ export type Database = {
         Args: { p_organizer_id?: string }
         Returns: Json
       }
+      admin_place_claims_page: {
+        Args: {
+          p_after_created?: string
+          p_after_id?: string
+          p_after_rank?: number
+          p_disputes_only?: boolean
+          p_limit?: number
+          p_status: string
+        }
+        Returns: {
+          claimant_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          document_count: number
+          id: string
+          is_dispute: boolean
+          place_id: string
+          place_name: string | null
+          place_slug: string | null
+          reviewed_at: string | null
+          situation: string | null
+          sort_rank: number
+          status: string
+        }[]
+      }
       admin_platform_analytics: {
         Args: {
           p_bucket: string
@@ -19401,8 +19427,16 @@ export type Database = {
         Args: { p_max_attempts: number; p_phone_e164: string; p_purpose: string }
         Returns: boolean
       }
+      place_claim_situation: {
+        Args: { p_claimant_id: string; p_place_id: string }
+        Returns: string | null
+      }
       place_is_open_now: {
         Args: { p_now?: string; p_place_id: string }
+        Returns: boolean
+      }
+      place_listed_by_abonten: {
+        Args: { p_claimed: boolean; p_owner_id: string }
         Returns: boolean
       }
       place_visit_code: { Args: { p_place_id: string }; Returns: Json }

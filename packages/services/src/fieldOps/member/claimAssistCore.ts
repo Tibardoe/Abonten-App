@@ -1,7 +1,9 @@
+import { formatDate } from "@abonten/core/i18n/format";
 import { logger } from "@abonten/core/logger";
+import { placeClaimRefusal } from "@abonten/core/placeClaimInvite";
 import type { FieldOpsOnboarding } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { tr } from "../../i18n/requestLocale";
+import { requestLocale, tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -129,10 +131,27 @@ export async function submitClaimAssistCore(
       .select("id")
       .single();
     if (claimErr) {
-      if (claimErr.code === "23505") {
+      // The one-waiting-request index and the guard on new requests
+      // (place_claim_request_guard, migration 20261126140000).
+      const refusal = placeClaimRefusal(claimErr);
+      if (refusal === "pending") {
         return {
           status: 409,
           message: tr("someoneHasAlreadyFiledAClaim"),
+        };
+      }
+      if (refusal === "runs_place") {
+        return {
+          status: 409,
+          message: tr("thisOwnerAlreadyHoldsThatListing"),
+        };
+      }
+      if (refusal === "dispute_wait") {
+        return {
+          status: 409,
+          message: tr("thisOwnerMustWaitToClaimAgain", {
+            date: formatDate(claimErr.details, requestLocale()),
+          }),
         };
       }
       return dbErr(claimErr, tr("couldNotFileTheClaim"));

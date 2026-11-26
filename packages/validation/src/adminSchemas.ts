@@ -159,6 +159,9 @@ export const reviewClaimSchema = z.object({
   // enough to also verify the place. Needs verification.review on top of
   // claims.review; runs as one transaction (approve_place_claim_and_verify).
   alsoVerify: z.boolean().optional(),
+  // Approving an ownership dispute takes the place from the account that
+  // runs it: the reviewer types the place's name (reviewClaimCore checks).
+  confirmPlaceName: z.string().trim().max(300).optional(),
 });
 
 // ─────────────────────────────────────────────────────────────

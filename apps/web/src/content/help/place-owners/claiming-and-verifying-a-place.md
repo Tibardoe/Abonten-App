@@ -2,7 +2,7 @@
 title: Claiming and verifying a place
 summary: Take control of a listing for a business you own, then ask Abonten to verify it — what to send, how review works, and what "verified" means.
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-26
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,12 +15,22 @@ Claiming and verifying are two different things.
 
 ## Claiming a listing that is already on Abonten
 
-A place may already be listed — added by another user, or by an Abonten field team — while you, the actual owner, have no control over it.
+A place may already be listed while you, the actual owner, have no control over it. What the place page offers depends on whether anyone runs the listing.
 
-1. Sign in and open the place page.
-2. Choose **Claim this place**. It appears only when you are not already the owner.
-3. Add a note, a contact phone and email, and any supporting documents.
-4. Submit. You can have one pending claim per place.
+**Nobody runs it yet.** Abonten listed the place and nobody has claimed it, or the account that ran it was deleted. The page shows **Claim this place**.
+
+1. Open the place page and choose **Claim this place**. If you are not signed in, you sign in first and come back to the page.
+2. Add a note, a contact phone and email, and any supporting documents (photos or PDFs).
+3. Submit. You can have one pending claim per place.
+
+**Another account runs it.** The listing was claimed, or listed by someone who says it is theirs. There is no claim button. If the business is yours:
+
+1. Open the place page and choose **…** then **I own this business**.
+2. Explain how the business is yours. This is required.
+3. Send proof: a business registration, a utility bill or lease for the address in the business's name, or a letter from the business. Photos or PDFs, up to three.
+4. Choose **Send for review**.
+
+Abonten staff review your request. Nothing changes on the listing while they do, and the account that runs it is not told automatically that you asked. If your request is not approved, you can send a new one for the same place 30 days later.
 
 Abonten staff review claims. When a decision is made you are notified in the app:
 
@@ -87,7 +97,7 @@ They are stored privately. Only Abonten reviewers can open them, through links t
 
 ## Disputes
 
-If someone else claims a place you own, Abonten reviews both sides' evidence. Claiming a business you do not own, or sending documents that are not yours, breaks the Terms and can lead to account restriction.
+If someone says a place you run is theirs, Abonten staff review both sides' evidence before anything changes, and may contact you to ask for yours. Your listing stays yours and keeps working while they review it. If staff decide the business is someone else's and move the listing to their account, you are told in the app at once. If you think that is a mistake, contact support@abontenhub.com. Claiming a business you do not own, or sending documents that are not yours, breaks the Terms and can lead to account restriction.
 
 ## Listings made by an Abonten field team
 

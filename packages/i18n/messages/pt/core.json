@@ -728,6 +728,10 @@
       "body": "{hasPlace, select, yes {O seu pedido para reivindicar {place} foi rejeitado.} other {O seu pedido para reivindicar o local foi rejeitado.}}",
       "title": "O seu pedido de reivindicação não foi aprovado"
     },
+    "place_ownership_moved": {
+      "title": "{hasPlace, select, yes {{place} foi transferido para outra conta} other {O seu local foi transferido para outra conta}}",
+      "body": "{hasPlace, select, yes {Depois de analisar provas de propriedade, a equipa do Abonten transferiu {place} para a conta que gere o negócio. Se acha que se trata de um erro, escreva para {supportEmail}.} other {Depois de analisar provas de propriedade, a equipa do Abonten transferiu o seu local para a conta que gere o negócio. Se acha que se trata de um erro, escreva para {supportEmail}.}}"
+    },
     "promotion_credit_earned": {
       "body": "{amount} de crédito de promoção de eventos que terminaram em {month}. Utilize-o para destacar um evento ou um local.",
       "title": "Ganhou crédito de promoção"

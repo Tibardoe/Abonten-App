@@ -13,6 +13,9 @@ export function ReviewPanel({
   canVerify,
   documentCount,
   placeAlreadyVerified,
+  isDispute,
+  placeName,
+  currentOwnerName,
 }: {
   claimId: string;
   canReview: boolean;
@@ -22,15 +25,27 @@ export function ReviewPanel({
   canVerify: boolean;
   documentCount: number;
   placeAlreadyVerified: boolean;
+  /**
+   * Approving takes the place from an account that runs it: the reviewer
+   * types the place's name, and the question says who loses it.
+   */
+  isDispute: boolean;
+  placeName: string | null;
+  currentOwnerName: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [reason, setReason] = useState("");
   const [alsoVerify, setAlsoVerify] = useState(false);
+  const [typedName, setTypedName] = useState("");
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null,
   );
   const confirm = useConfirm();
+  // The server checks the same (reviewClaimCore's sameName).
+  const norm = (v: string) =>
+    v.normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase();
+  const nameMatches = !!placeName && norm(typedName) === norm(placeName);
 
   function run(decision: "approve" | "reject") {
     setMsg(null);
@@ -42,6 +57,8 @@ export function ReviewPanel({
           reason: reason.trim() || undefined,
           expectedStatus: "pending",
           alsoVerify: decision === "approve" ? alsoVerify : undefined,
+          confirmPlaceName:
+            decision === "approve" && isDispute ? typedName : undefined,
         });
         if (res.status === 200) {
           setMsg({ tone: "ok", text: res.message ?? "Done." });
@@ -91,6 +108,28 @@ export function ReviewPanel({
             here.
           </p>
 
+          {isDispute ? (
+            <div className="space-y-1.5 rounded border border-destructive/60 bg-destructive/5 p-2 text-xs">
+              <p className="font-medium text-destructive">Ownership dispute</p>
+              <p>
+                {currentOwnerName ?? "The current owner"} runs this place now
+                and loses it the moment you approve. Only approve on strong
+                proof, after weighing both sides.
+              </p>
+              <label className="block space-y-1">
+                <span className="text-muted-foreground">
+                  Type the place's name to approve
+                </span>
+                <input
+                  value={typedName}
+                  onChange={(e) => setTypedName(e.target.value)}
+                  placeholder={placeName ?? ""}
+                  className="w-full rounded border border-border bg-background p-1.5 text-sm"
+                />
+              </label>
+            </div>
+          ) : null}
+
           {canVerify && !placeAlreadyVerified ? (
             <label className="flex items-start gap-2 rounded border border-border p-2 text-xs">
               <input
@@ -123,14 +162,21 @@ export function ReviewPanel({
           <div className="grid grid-cols-2 gap-2">
             <Button
               size="sm"
-              disabled={pending}
+              disabled={pending || (isDispute && !nameMatches)}
               onClick={async () => {
                 const confirmed = await confirm(
-                  alsoVerify
-                    ? "Approve this claim, transfer ownership AND verify the place?"
-                    : "Approve this claim and transfer ownership?",
+                  isDispute
+                    ? `Take ${placeName ?? "this place"} from ${currentOwnerName ?? "its current owner"}? They lose the place at once and are not told automatically. The claimant becomes its owner.${alsoVerify ? " The place is also verified." : ""}`
+                    : alsoVerify
+                      ? "Approve this claim, transfer ownership AND verify the place?"
+                      : "Approve this claim and transfer ownership?",
                   {
-                    confirmLabel: alsoVerify ? "Approve and verify" : "Approve",
+                    confirmLabel: isDispute
+                      ? "Approve the dispute"
+                      : alsoVerify
+                        ? "Approve and verify"
+                        : "Approve",
+                    danger: isDispute,
                   },
                 );
                 if (confirmed) run("approve");

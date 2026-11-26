@@ -681,6 +681,10 @@
       "title": "Your claim request was not approved",
       "body": "{hasPlace, select, yes {Your request to claim {place} was rejected.} other {Your request to claim the place was rejected.}}"
     },
+    "place_ownership_moved": {
+      "title": "{hasPlace, select, yes {{place} was moved to another account} other {Your place was moved to another account}}",
+      "body": "{hasPlace, select, yes {After reviewing proof of ownership, Abonten staff moved {place} to the account that runs the business. If you think this is a mistake, contact {supportEmail}.} other {After reviewing proof of ownership, Abonten staff moved your place to the account that runs the business. If you think this is a mistake, contact {supportEmail}.}}"
+    },
     "review_reply_place": {
       "title": "The owner replied to your review",
       "body": "{hasName, select, yes {See the reply on your review of {name}.} other {See the reply on your place review.}}"

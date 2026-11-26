@@ -4,8 +4,8 @@ purpose: From sign-up to a verified, managed listing with bookings and reviews.
 audience: Product, support, operations
 scope: Web and Android app; admin Claims module
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-18
+version: 1.2
+lastReviewed: 2026-11-26
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -27,8 +27,8 @@ flowchart LR
 |---|---|---|---|---|
 | **Sign up** | Any method | `user_info`; owner role derived from `place.owner_id` | — | help getting-started |
 | **Create place** | Name, category, pin, contact, hours, services, photos; draft autosave; publish | `place_drafts`; `postPlaceCore` → `create_place`; `place_opening_hours`, `place_service`, `place_photo` | Duplicate of an existing listing | help place-owners/managing-your-place |
-| **Claim** (already listed) | Claim this place; note, contact, documents | `place_claim_request` (one pending per place/claimant); documents in private bucket | Rejected → new claim | help place-owners/claiming… |
-| **Staff review** | — | Admin › Claims: `approve_place_claim` transfers `owner_id`, sets claimed+verified; documents purged after 30 days | Disputed claims | admin/claims |
+| **Claim** (already listed) | Nobody runs it (Abonten listed it, or its owner's account was deleted): **Claim this place**. Another account runs it: "…" › **I own this business** (a dispute, explanation required). Note, contact, documents | `@abonten/core/placeClaimInvite` (web and app); `place_claim_request` (one pending per place/claimant; `place_claim_request_guard` refuses the owner, its team and a repeat dispute within 30 days of a rejection); documents in private bucket | Rejected → new claim (a dispute on the same place after 30 days) | help place-owners/claiming… |
+| **Staff review** | — | Admin › Claims: disputes listed first and labelled (`admin_place_claims_page`); approving a dispute needs the place's name typed; `approve_place_claim` transfers `owner_id` and sets claimed (verifying is separate); documents purged after 30 days | Ownership disputes (the current owner is not told automatically) | admin/claims |
 | **Field-team onboarding** (alternative) | Gives OTP/consent to a team member | Listing created under the owner via `postPlaceCore`; owner signs in with the same phone | — | field-operations/onboarding-places |
 | **Manage** | Edit details, photos (reorder, cover), hours, services, temporary/permanent closure; insights | `updatePlaceCore`, `placePhotoCore`, `placeHoursStatusCore`, `placeServiceCore`; `place_analytics_event` (views from the website and, since 2026-10-18, the app; the owner's own are not recorded) | Media upload limits | help managing-your-place |
 | **Discovery** | Appears in Explore/search/map; open-now badge | `get_filtered_places`, `get_nearby_places`; `computePlaceOpenStatus` | Hidden/restricted | troubleshooting |

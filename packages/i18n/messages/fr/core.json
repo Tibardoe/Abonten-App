@@ -728,6 +728,10 @@
       "body": "{hasPlace, select, yes {Votre demande de revendication de {place} a été rejetée.} other {Votre demande de revendication du lieu a été rejetée.}}",
       "title": "Votre demande de revendication n'a pas été approuvée"
     },
+    "place_ownership_moved": {
+      "title": "{hasPlace, select, yes {{place} a été transféré à un autre compte} other {Votre lieu a été transféré à un autre compte}}",
+      "body": "{hasPlace, select, yes {Après avoir examiné des preuves de propriété, l'équipe Abonten a transféré {place} au compte qui gère l'établissement. Si vous pensez qu'il s'agit d'une erreur, écrivez à {supportEmail}.} other {Après avoir examiné des preuves de propriété, l'équipe Abonten a transféré votre lieu au compte qui gère l'établissement. Si vous pensez qu'il s'agit d'une erreur, écrivez à {supportEmail}.}}"
+    },
     "promotion_credit_earned": {
       "body": "{amount} de crédit promotionnel grâce aux événements terminés en {month}. Utilisez-le pour mettre en avant un événement ou un lieu.",
       "title": "Vous avez gagné du crédit promotionnel"

@@ -730,9 +730,29 @@ export type DashboardSnapshot = {
 
 export type ClaimStatus = "pending" | "approved" | "rejected";
 
+/**
+ * Where a waiting claim stands, worked out when it is read
+ * (public.place_claim_situation): the claimant already runs the place
+ * (owner / team_member), nobody is behind it (owner_deleted /
+ * listed_by_abonten), or someone else runs it (dispute). Null for a
+ * decided claim.
+ */
+export type ClaimSituation =
+  | "owner"
+  | "team_member"
+  | "owner_deleted"
+  | "listed_by_abonten"
+  | "dispute";
+
 export type ClaimListItem = {
   id: string;
   status: ClaimStatus;
+  situation: ClaimSituation | null;
+  /**
+   * Approving it takes the place from an account that runs it: someone
+   * else's (dispute), or the team the claimant is in (team_member).
+   */
+  isDispute: boolean;
   placeId: string;
   placeName: string | null;
   placeSlug: string | null;
@@ -743,6 +763,26 @@ export type ClaimListItem = {
   contactPhone: string | null; // only for users.view_pii
   createdAt: string;
   reviewedAt: string | null;
+};
+
+export type ClaimCurrentOwner = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  kind: "person" | "team";
+  /** user_status id: 1 active, 2 suspended, 3 banned, 4 deleted. */
+  statusId: number | null;
+  /** A team's state ("active", "frozen", "closed"); null for a person. */
+  teamStatus: string | null;
+  /** A team's active Owners. */
+  teamOwners: { id: string; name: string | null; username: string | null }[];
+  /** When this account got the place, as far as the records show. */
+  since: string | null;
+  /**
+   * How it got it: an approved claim, the team being made from the
+   * person who held it, or listing it.
+   */
+  sinceBasis: "claim_approved" | "team_created" | "listed";
 };
 
 export type ClaimDocumentView = {
@@ -773,6 +813,13 @@ export type ClaimDetail = {
     claimed: boolean;
     verified: boolean;
   };
+  situation: ClaimSituation | null;
+  isDispute: boolean;
+  /**
+   * Who runs the place now, for a waiting claim: the account, its team's
+   * Owners when it is a team, and since when it has had the place.
+   */
+  currentOwner: ClaimCurrentOwner | null;
   claimant: {
     id: string;
     username: string | null;

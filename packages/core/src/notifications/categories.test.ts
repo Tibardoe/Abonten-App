@@ -10,6 +10,7 @@ describe("notificationCategory", () => {
       "refund_failed",
       "verification_approved",
       "place_claim_rejected",
+      "place_ownership_moved",
       "fieldops_commission_paid",
       "promotion_started",
       "announcement",

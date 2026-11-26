@@ -244,6 +244,8 @@ export function useActingTeams() {
     role: choice?.role ?? null,
     can,
     programEnabled: loaded?.programEnabled ?? false,
+    /** The read has answered (or failed): `teams` is not just a default. */
+    loaded: !!userId && !q.isPending,
   };
 }
 

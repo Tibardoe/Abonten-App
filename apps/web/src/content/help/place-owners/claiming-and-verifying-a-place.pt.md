@@ -2,7 +2,7 @@
 title: Reivindicar e verificar um local
 summary: Assuma o controlo da página de um negócio que é seu e peça depois ao Abonten que a verifique: o que enviar, como funciona a análise e o que significa «verificado».
 order: 1
-lastUpdated: 2026-10-04
+lastUpdated: 2026-11-26
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,12 +15,22 @@ Reivindicar e verificar são duas coisas diferentes.
 
 ## Reivindicar uma página que já está no Abonten
 
-Um local pode já estar publicado (adicionado por outro utilizador ou por uma equipa de campo do Abonten) sem que tenha controlo sobre ele, mesmo sendo o verdadeiro proprietário.
+Um local pode já estar publicado sem que tenha controlo sobre ele, mesmo sendo o verdadeiro proprietário. O que a página do local oferece depende de alguém gerir a página ou não.
 
-1. Inicie sessão e abra a página do local.
-2. Escolha **Reivindicar este local**. Só aparece se ainda não for o proprietário.
-3. Acrescente uma nota, um telefone e um e-mail de contacto e os documentos que o comprovem.
-4. Envie. Pode ter um único pedido de reivindicação pendente por local.
+**Ninguém a gere ainda.** O Abonten publicou o local e ninguém o reivindicou, ou a conta que o geria foi eliminada. A página mostra **Reivindicar este local**.
+
+1. Abra a página do local e escolha **Reivindicar este local**. Se não tiver sessão iniciada, inicia sessão primeiro e depois volta à página.
+2. Acrescente uma nota, um telefone e um e-mail de contacto e os documentos que o comprovem (fotos ou PDF).
+3. Envie. Pode ter um único pedido de reivindicação pendente por local.
+
+**Outra conta gere-a.** A página foi reivindicada, ou publicada por alguém que diz que é sua. Não há botão para a reivindicar. Se o negócio for seu:
+
+1. Abra a página do local e escolha **…** e depois **Este negócio é meu**.
+2. Explique porque é que o negócio é seu. É obrigatório.
+3. Envie uma prova: um registo comercial, uma fatura ou um contrato de arrendamento da morada em nome do negócio, ou uma carta do negócio. Fotos ou PDF, até três.
+4. Escolha **Enviar para análise**.
+
+A equipa do Abonten analisa o seu pedido. Nada muda na página entretanto, e a conta que a gere não é avisada automaticamente do seu pedido. Se não for aprovado, poderá enviar um novo para o mesmo local 30 dias depois.
 
 A equipa do Abonten analisa as reivindicações. Quando houver uma decisão, é avisado na aplicação:
 
@@ -87,7 +97,7 @@ São guardados de forma privada. Só as pessoas da equipa de revisão do Abonten
 
 ## Disputas
 
-Se outra pessoa reivindicar um local que é seu, o Abonten analisa as provas de ambas as partes. Reivindicar um negócio que não é seu, ou enviar documentos que não são seus, viola os Termos e pode levar à restrição da conta.
+Se alguém disser que um local que gere é seu, a equipa do Abonten analisa as provas de ambas as partes antes de mudar alguma coisa, e pode contactá-lo para lhe pedir as suas. A sua página continua a ser sua e a funcionar entretanto. Se a equipa decidir que o negócio é de outra pessoa e transferir a página para a conta dela, é avisado de imediato na aplicação. Se acha que se trata de um erro, escreva para support@abontenhub.com. Reivindicar um negócio que não é seu, ou enviar documentos que não são seus, viola os Termos e pode levar à restrição da conta.
 
 ## Páginas criadas por uma equipa de campo do Abonten
 

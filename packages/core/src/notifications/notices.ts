@@ -103,6 +103,10 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   place_booking_declined: n("place_booking_declined"),
   place_claim_approved: n("place_claim_approved"),
   place_claim_rejected: n("place_claim_rejected"),
+  // To the account that ran a place when staff approved an ownership
+  // dispute against it (claimsAdminCore, 2026-11-26). Never names the new
+  // owner.
+  place_ownership_moved: n("place_ownership_moved"),
   review_reply_place: n("review_reply_place"),
   review_reply_event: n("review_reply_event"),
   // Money (services)

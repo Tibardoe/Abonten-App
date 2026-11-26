@@ -1,7 +1,16 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
-import { translatorFor } from "@abonten/ui-native/i18n";
+import { formatDate } from "@abonten/core/i18n/format";
+import {
+  CLAIM_DOC_BUCKET,
+  claimDocExtension,
+  claimDocPath,
+  claimDocProblem,
+  guessClaimDocMime,
+} from "@abonten/core/placeClaimDocuments";
+import { placeClaimRefusal } from "@abonten/core/placeClaimInvite";
+import { getCurrentLocale, translatorFor } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Native echo of the web submitPlaceClaimRequest action + getPlaceClaimRequests
@@ -19,18 +28,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // <claimant_id>/<claim_request_id>/<uuid>.<ext> (storage RLS keys on the
 // first path segment = the caller's uid) and are indexed in
 // `place_claim_document`. Only the claimant and admin reviewers can read
-// them — see migration 20260903190000_add_place_claim_documents.sql.
+// them — see migration 20260903190000_add_place_claim_documents.sql. The
+// limits and the stored path are @abonten/core/placeClaimDocuments, shared
+// with the website's form.
+//
+// The database refuses some requests (place_claim_request_guard, migration
+// 20261126140000): from someone who already runs the place, and an
+// ownership dispute from someone whose last request for the same place
+// staff turned down less than 30 days ago. Each refusal reaches the person
+// as a sentence in their language (placeClaimRefusal).
 
-export const CLAIM_DOC_BUCKET = "place-claim-documents";
-export const CLAIM_DOC_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
-export const CLAIM_DOC_MAX_FILES = 3;
-export const CLAIM_DOC_ACCEPTED_MIME = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "application/pdf",
-];
+export {
+  CLAIM_DOC_MAX_FILES,
+  CLAIM_DOC_MAX_BYTES,
+  CLAIM_DOC_ACCEPTED_MIME,
+} from "@abonten/core/placeClaimDocuments";
 
 export type StagedClaimDoc = {
   /** Local key so the list can track it before it has a server id. */
@@ -47,6 +59,8 @@ export type StagedClaimDoc = {
 export type PlaceClaimState = {
   /** The caller's most recent claim on this place, if any. */
   status: "none" | "pending" | "approved" | "rejected";
+  /** When staff decided it (placeClaimInvite's wait after a refusal). */
+  reviewedAt: string | null;
   /** Signed-in, not the owner, and no pending/approved claim already. */
   canClaim: boolean;
 };
@@ -55,79 +69,48 @@ export function validateClaimDoc(file: {
   mimeType: string;
   sizeBytes: number | null;
 }): string | null {
-  if (!CLAIM_DOC_ACCEPTED_MIME.includes(file.mimeType)) {
+  const problem = claimDocProblem(file);
+  if (problem === "type") {
     return translatorFor("places")("onlyJpgPngWebpOrPdf");
   }
-  if (file.sizeBytes != null && file.sizeBytes > CLAIM_DOC_MAX_BYTES) {
+  if (problem === "size") {
     return translatorFor("places")("thatFileIsOver10Mb");
   }
   return null;
 }
 
-const EXT_TO_MIME: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-  heic: "image/heic",
-  heif: "image/heic",
-  pdf: "application/pdf",
-};
-
 /**
- * Best-effort MIME for a picked file. The image picker often omits
- * `mimeType`, and a bare fallback would let an unsupported file (e.g. a
- * `.gif` or `.tiff`) slip past validateClaimDoc. Prefer the picker's value,
- * then the URI/name extension, then the caller's fallback.
+ * Best-effort MIME for a picked file (guessClaimDocMime): the picker's
+ * value, then the URI/name extension, then the caller's fallback.
  */
-export function guessMime(
-  uri: string,
-  name: string | undefined,
-  pickerMime: string | undefined,
-  fallback: string,
-): string {
-  if (pickerMime && pickerMime !== "application/octet-stream")
-    return pickerMime;
-  const ext = (name ?? uri).split("?")[0].split(".").pop()?.toLowerCase();
-  if (ext && EXT_TO_MIME[ext]) return EXT_TO_MIME[ext];
-  return fallback;
-}
-
-function extensionFor(mimeType: string, name: string): string {
-  const fromName = name.includes(".") ? name.split(".").pop() : null;
-  if (fromName) return fromName.toLowerCase();
-  const map: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "image/heic": "heic",
-    "application/pdf": "pdf",
-  };
-  return map[mimeType] ?? "bin";
-}
+export const guessMime = guessClaimDocMime;
 
 async function fetchClaimState(
   userId: string | undefined,
   placeId: string,
   ownerId: string | null | undefined,
 ): Promise<PlaceClaimState> {
-  if (!userId) return { status: "none", canClaim: false };
-  if (ownerId && userId === ownerId) return { status: "none", canClaim: false };
+  if (!userId) return { status: "none", reviewedAt: null, canClaim: false };
+  if (ownerId && userId === ownerId) {
+    return { status: "none", reviewedAt: null, canClaim: false };
+  }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("place_claim_request")
-    .select("status, created_at")
+    .select("status, created_at, reviewed_at")
     .eq("place_id", placeId)
     .eq("claimant_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  // Not known is not "no request": the page offers nothing until it is.
+  if (error) throw error;
 
   const status =
     (data?.status as PlaceClaimState["status"] | undefined) ?? "none";
   // A rejected claimant may re-request; a pending/approved one may not.
   const canClaim = status !== "pending" && status !== "approved";
-  return { status, canClaim };
+  return { status, reviewedAt: data?.reviewed_at ?? null, canClaim };
 }
 
 export function usePlaceClaimState(
@@ -153,8 +136,12 @@ export async function uploadClaimDocument(
   claimId: string,
   file: StagedClaimDoc,
 ): Promise<string> {
-  const ext = extensionFor(file.mimeType, file.name);
-  const path = `${userId}/${claimId}/${uuidv4()}.${ext}`;
+  const path = claimDocPath(
+    userId,
+    claimId,
+    uuidv4(),
+    claimDocExtension(file.mimeType, file.name),
+  );
 
   // RN: read the local file into an ArrayBuffer for supabase-js. `fetch` on a
   // file:// URI is the supported Expo path (no extra base64 dependency).
@@ -213,10 +200,17 @@ export function useSubmitPlaceClaim(placeId: string | undefined) {
         .select("id")
         .single();
       if (error) {
-        if (error.code === "23505")
+        const t = translatorFor("places");
+        const refusal = placeClaimRefusal(error);
+        if (refusal === "pending") throw new Error(t("claimAlreadyPending"));
+        if (refusal === "runs_place") throw new Error(t("claimRunsPlace"));
+        if (refusal === "dispute_wait") {
           throw new Error(
-            "You already have a pending claim request for this place.",
+            t("disputeWait", {
+              date: formatDate(error.details, getCurrentLocale()),
+            }),
           );
+        }
         throw error;
       }
       return { claimId: data.id as string };
