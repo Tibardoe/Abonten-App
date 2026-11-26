@@ -30,6 +30,7 @@ import akRewards from "@abonten/i18n/messages/ak/rewards.json";
 import akSafety from "@abonten/i18n/messages/ak/safety.json";
 import akSearch from "@abonten/i18n/messages/ak/search.json";
 import akSettings from "@abonten/i18n/messages/ak/settings.json";
+import akShowcase from "@abonten/i18n/messages/ak/showcase.json";
 import akSpotlight from "@abonten/i18n/messages/ak/spotlight.json";
 import akTeams from "@abonten/i18n/messages/ak/teams.json";
 import akTicketPlans from "@abonten/i18n/messages/ak/ticketPlans.json";
@@ -67,6 +68,7 @@ import deRewards from "@abonten/i18n/messages/de/rewards.json";
 import deSafety from "@abonten/i18n/messages/de/safety.json";
 import deSearch from "@abonten/i18n/messages/de/search.json";
 import deSettings from "@abonten/i18n/messages/de/settings.json";
+import deShowcase from "@abonten/i18n/messages/de/showcase.json";
 import deSpotlight from "@abonten/i18n/messages/de/spotlight.json";
 import deTeams from "@abonten/i18n/messages/de/teams.json";
 import deTicketPlans from "@abonten/i18n/messages/de/ticketPlans.json";
@@ -104,6 +106,7 @@ import enRewards from "@abonten/i18n/messages/en/rewards.json";
 import enSafety from "@abonten/i18n/messages/en/safety.json";
 import enSearch from "@abonten/i18n/messages/en/search.json";
 import enSettings from "@abonten/i18n/messages/en/settings.json";
+import enShowcase from "@abonten/i18n/messages/en/showcase.json";
 import enSpotlight from "@abonten/i18n/messages/en/spotlight.json";
 import enTeams from "@abonten/i18n/messages/en/teams.json";
 import enTicketPlans from "@abonten/i18n/messages/en/ticketPlans.json";
@@ -141,6 +144,7 @@ import esRewards from "@abonten/i18n/messages/es/rewards.json";
 import esSafety from "@abonten/i18n/messages/es/safety.json";
 import esSearch from "@abonten/i18n/messages/es/search.json";
 import esSettings from "@abonten/i18n/messages/es/settings.json";
+import esShowcase from "@abonten/i18n/messages/es/showcase.json";
 import esSpotlight from "@abonten/i18n/messages/es/spotlight.json";
 import esTeams from "@abonten/i18n/messages/es/teams.json";
 import esTicketPlans from "@abonten/i18n/messages/es/ticketPlans.json";
@@ -178,6 +182,7 @@ import frRewards from "@abonten/i18n/messages/fr/rewards.json";
 import frSafety from "@abonten/i18n/messages/fr/safety.json";
 import frSearch from "@abonten/i18n/messages/fr/search.json";
 import frSettings from "@abonten/i18n/messages/fr/settings.json";
+import frShowcase from "@abonten/i18n/messages/fr/showcase.json";
 import frSpotlight from "@abonten/i18n/messages/fr/spotlight.json";
 import frTeams from "@abonten/i18n/messages/fr/teams.json";
 import frTicketPlans from "@abonten/i18n/messages/fr/ticketPlans.json";
@@ -215,6 +220,7 @@ import ptRewards from "@abonten/i18n/messages/pt/rewards.json";
 import ptSafety from "@abonten/i18n/messages/pt/safety.json";
 import ptSearch from "@abonten/i18n/messages/pt/search.json";
 import ptSettings from "@abonten/i18n/messages/pt/settings.json";
+import ptShowcase from "@abonten/i18n/messages/pt/showcase.json";
 import ptSpotlight from "@abonten/i18n/messages/pt/spotlight.json";
 import ptTeams from "@abonten/i18n/messages/pt/teams.json";
 import ptTicketPlans from "@abonten/i18n/messages/pt/ticketPlans.json";
@@ -259,6 +265,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     safety: enSafety,
     search: enSearch,
     settings: enSettings,
+    showcase: enShowcase,
     spotlight: enSpotlight,
     teams: enTeams,
     ticketPlans: enTicketPlans,
@@ -298,6 +305,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     safety: akSafety,
     search: akSearch,
     settings: akSettings,
+    showcase: akShowcase,
     spotlight: akSpotlight,
     teams: akTeams,
     ticketPlans: akTicketPlans,
@@ -337,6 +345,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     safety: deSafety,
     search: deSearch,
     settings: deSettings,
+    showcase: deShowcase,
     spotlight: deSpotlight,
     teams: deTeams,
     ticketPlans: deTicketPlans,
@@ -376,6 +385,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     safety: esSafety,
     search: esSearch,
     settings: esSettings,
+    showcase: esShowcase,
     spotlight: esSpotlight,
     teams: esTeams,
     ticketPlans: esTicketPlans,
@@ -415,6 +425,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     safety: frSafety,
     search: frSearch,
     settings: frSettings,
+    showcase: frShowcase,
     spotlight: frSpotlight,
     teams: frTeams,
     ticketPlans: frTicketPlans,
@@ -454,6 +465,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     safety: ptSafety,
     search: ptSearch,
     settings: ptSettings,
+    showcase: ptShowcase,
     spotlight: ptSpotlight,
     teams: ptTeams,
     ticketPlans: ptTicketPlans,
