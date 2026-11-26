@@ -10,6 +10,7 @@ import EventCategoryChips from "@/events/molecules/EventCategoryChips";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import NoEventsInLocation from "@/events/molecules/NoEventsInLocation";
 import EventsMapView from "@/events/organisms/EventsMapView";
+import OnAbontenShowcase from "@/showcase/organisms/OnAbontenShowcase";
 import { locationLabelFromSlug } from "@/utils/locationLabel";
 import { requestTimeZone } from "@/utils/requestTimeZone";
 import { eventCategoryLabel } from "@abonten/core/categoryLabels";
@@ -209,6 +210,10 @@ export default async function EventsTabContent({
             urlPath={`location/${location}/explore/around-you`}
             hideWhenEmpty
           />
+
+          {/* "On Abonten", below the first row: the hosts and places of
+              this area's market (and city). Hidden while off or thin. */}
+          <OnAbontenShowcase lat={lat} lng={lng} />
 
           <EventsSlider
             heading={t("fromTopRatedOrganizers")}

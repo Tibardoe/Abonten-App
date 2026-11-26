@@ -1,0 +1,23 @@
+{
+  "title": "On Abonten",
+  "subtitle": "Hosts and places you'll find on Abonten. Tap one to see what's on.",
+  "hosts": "Hosts",
+  "places": "Places",
+  "seeAll": "See all",
+  "seeAllLabel": "See all the hosts and places on Abonten",
+  "pause": "Pause",
+  "play": "Play",
+  "nextUp": "{date} · {title}",
+  "onNow": "On now · {title}",
+  "openNow": "Open now",
+  "categoryInArea": "{category} · {area}",
+  "soonLine": "On today or this weekend: {line}",
+  "tileLabel": "{name}. {line}",
+  "openPage": "Open {name}",
+  "metaTitle": "Hosts and places on Abonten",
+  "metaDescription": "The hosts and places on Abonten: see what's on next and follow the ones you like.",
+  "directoryIntro": "The hosts and places on Abonten, with what each has on next.",
+  "directoryIntroIn": "The hosts and places on Abonten around {city}, with what each has on next.",
+  "directoryEmpty": "Nothing to show here yet. Check back soon.",
+  "couldNotLoad": "Couldn't load who's on Abonten."
+}

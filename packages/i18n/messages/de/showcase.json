@@ -1,0 +1,23 @@
+{
+  "title": "Auf Abonten",
+  "subtitle": "Veranstalter und Orte, die du auf Abonten findest. Tippe auf einen, um zu sehen, was los ist.",
+  "hosts": "Veranstalter",
+  "places": "Orte",
+  "seeAll": "Alle ansehen",
+  "seeAllLabel": "Alle Veranstalter und Orte auf Abonten ansehen",
+  "pause": "Anhalten",
+  "play": "Abspielen",
+  "nextUp": "{date} · {title}",
+  "onNow": "Läuft gerade · {title}",
+  "openNow": "Jetzt geöffnet",
+  "categoryInArea": "{category} · {area}",
+  "soonLine": "Heute oder dieses Wochenende: {line}",
+  "tileLabel": "{name}. {line}",
+  "openPage": "{name} öffnen",
+  "metaTitle": "Veranstalter und Orte auf Abonten",
+  "metaDescription": "Die Veranstalter und Orte auf Abonten: sieh, was als Nächstes los ist, und folge denen, die dir gefallen.",
+  "directoryIntro": "Die Veranstalter und Orte auf Abonten, mit dem, was bei jedem als Nächstes ansteht.",
+  "directoryIntroIn": "Die Veranstalter und Orte auf Abonten rund um {city}, mit dem, was bei jedem als Nächstes ansteht.",
+  "directoryEmpty": "Hier gibt es noch nichts zu sehen. Schau bald wieder vorbei.",
+  "couldNotLoad": "Konnte nicht laden, wer auf Abonten ist."
+}

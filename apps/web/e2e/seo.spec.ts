@@ -252,3 +252,15 @@ test("the team accounts guide is public, translated and not indexed", async ({
   );
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
+
+// "See all" of the On Abonten wall (docs/architecture/showcase.md) exists
+// only while the wall is on for the visitor; it ships off, so here it is a
+// 404, never an empty page a search engine could index. (When it is on for
+// staff or beta only it renders with noindex; open to everyone, it carries
+// its canonical and its language versions.)
+test("the On Abonten directory is not a page while the wall is off", async ({
+  page,
+}) => {
+  const response = await page.goto("/on-abonten");
+  expect(response?.status()).toBe(404);
+});
