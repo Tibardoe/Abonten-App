@@ -22,6 +22,7 @@ import {
   moveShowcaseEntryCore,
   removeShowcaseEntryCore,
   searchShowcaseCandidatesCore,
+  updateShowcaseEntryCore,
   updateShowcaseSettingsCore,
 } from "../admin/showcase/showcaseAdminCore";
 import { setFollowCore } from "../content/followCore";
@@ -627,6 +628,38 @@ describe("the On Abonten wall", () => {
     expect(moved.data?.entries[0]?.id).toBe(second.id);
     expect(moved.data?.entries[1]?.id).toBe(first.id);
 
+    // City and note: a city of this market only.
+    const edited = await updateShowcaseEntryCore(svc, ctx, {
+      entryId: first.id,
+      regionId: kumasiId,
+      note: "Asked by the venue",
+    });
+    expect(edited.status, edited.message).toBe(200);
+    const afterEdit = (await adminEntries()).get(first.subjectId);
+    expect(afterEdit?.regionName).toBe("Kumasi");
+    expect(afterEdit?.note).toBe("Asked by the venue");
+    const { data: lagos } = await service
+      .from("market_region")
+      .select("id")
+      .eq("country_code", "NG")
+      .eq("slug", "lagos")
+      .single();
+    const wrongCity = await updateShowcaseEntryCore(svc, ctx, {
+      entryId: first.id,
+      regionId: (lagos as { id: string }).id,
+      note: null,
+    });
+    expect(wrongCity.status).toBe(400);
+    expect(
+      (
+        await updateShowcaseEntryCore(svc, ctx, {
+          entryId: first.id,
+          regionId: null,
+          note: null,
+        })
+      ).status,
+    ).toBe(200);
+
     // Already on the wall.
     const twice = await addShowcaseEntryCore(svc, ctx, {
       countryCode: "GH",
@@ -672,6 +705,7 @@ describe("the On Abonten wall", () => {
     const actions = (audit ?? []).map((a) => a.action);
     expect(actions).toContain("showcase.entry.add");
     expect(actions).toContain("showcase.entry.move");
+    expect(actions).toContain("showcase.entry.update");
     expect(actions).toContain("showcase.entry.remove");
   });
 
