@@ -275,6 +275,17 @@ Built 2026-11-20 at the founder's request ("build reschedule with your suggested
 | RS7 | How often an event may be postponed, and does it count as a move? | `event_reschedule()`, `MAX_POSTPONEMENTS` | Once, single-date events only; it does not count as a move, setting the new date does | **Decided (2026-11-20, same).** |
 | RS8 | An event with several dates | `event_reschedule()` (`p_occurrence_id`) | One date at a time, twice per date, only that date's holders told and refunded; a new venue is for every date; it can't be postponed | **Decided (2026-11-20, same).** |
 
+## On Abonten showcase
+
+Built 2026-11-26 with the founder's picks ("go with your picks and build the showcase"): [architecture/showcase.md](architecture/showcase.md), handbook [admin/showcase.md](admin/showcase.md). Ships switched off.
+
+| # | Decision | Current implementation | Default taken | Status |
+|---|---|---|---|---|
+| SC1 | Paid "Featured" placement on the wall | Not built: every entry is staff-picked and free; nothing is sold | Deferred: revisit once the wall is open to everyone and its taps and follows show it is worth paying for; needs its own label (legal P2) | **Deferred (2026-11-26, the founder's pick).** |
+| SC2 | When to open the wall to everyone | `showcase_program_setting` (`enabled` false, audience `staff`); the minimum per row (4) hides a thin row by itself | When about ten well-known hosts and places qualify in the market (each "Showing" in Admin › Showcase), and after legal P1 and P2 | Open — the founder's call; switching on for staff is an ordinary check |
+| SC3 | How many entries a row needs before it shows | `min_per_row` 4 (1–20), `max_per_row` 24 | 4: a wall of two or three names looks worse than none | **Decided (2026-11-26, the founder's pick).** |
+| SC4 | Telling hosts how many people tapped or followed them from the wall | Counted per entry per day (`showcase_daily_count`), shown in Admin › Showcase only | A line in the Monday views note (`listing_views_weekly_notices()`) | Open — not built |
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |

@@ -55,6 +55,10 @@ Search reads generated `search_tsv` columns on `event`, `place`, `user_info`, `p
 
 `weekly_program_setting` (one row), `weekly_scope` (Ghana seeded; regional centre + radius), `weekly_edition` (one per scope per Monday, `version` for concurrency), `weekly_section`, `weekly_item` (polymorphic `subject_type` + `subject_id`, no foreign key; validity computed at read time). All service-role only. See [weekly-highlights.md](weekly-highlights.md).
 
+## On Abonten showcase
+
+`showcase_program_setting` (one row: switch, audience, fewest and most per row), `showcase_entry` (a host account or a place on one market's wall, optionally one launched city, a staff order and note; once per market), `showcase_daily_count` (taps and follows from the wall per entry per market day). Whether an entry shows is computed on every read (`_showcase_subject_state`). All service-role only. See [showcase.md](showcase.md).
+
 ## Spotlight and Stories
 
 `content_program_setting` (one row); `follow` (organizer or place targets); `content_post` (one table for Spotlights and Stories: `kind`, `publisher_kind`, status, `moderation_state`, `expires_at`, counters, `search_tsv`) with `content_media` per item; engagement `content_like`, `content_reaction`, `content_save`, `content_share`, `content_comment`, `content_comment_like`, `content_not_interested`, `content_mute`, `content_story_seen`; telemetry `content_view`, `content_click` (hashed viewer key, `valid` flag) rolled up into `content_post_daily_stat`; promotions `content_promotion_pricing` and `content_audience_snapshot` (budget pricing and measured audience), `content_campaign`, `content_campaign_checkout`, `content_campaign_ledger` (append-only), `content_campaign_event`, `content_campaign_conversion`. `payment_attempt.content_campaign_checkout_id` is the fifth payment target. No client writes. See [spotlight-and-stories.md](spotlight-and-stories.md).
