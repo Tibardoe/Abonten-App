@@ -78,6 +78,8 @@ Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-storie
 | `teams.configure` | Team account switches, audience and limits — in `STEP_UP_PERMISSIONS` | operations |
 | `social.view` | Admin › Social: the posting queue for Abonten's own channels (pictures, captions, tagged links) and its settings ([admin/social.md](../admin/social.md)) | operations, moderator |
 | `social.manage` | Mark queued posts posted or skipped, put them back, change the queue settings (no step-up) | operations, moderator |
+| `showcase.view` | Admin › Showcase: every market's "On Abonten" entries, whether each shows and why not, tap and follow counts, the settings ([admin/showcase.md](../admin/showcase.md)) | operations, moderator, support_admin, analyst, field_ops_manager |
+| `showcase.edit` | Add, move, edit and remove entries; change the settings (saving the settings needs a fresh sign-in, checked by the console's action) | operations, moderator |
 
 Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles

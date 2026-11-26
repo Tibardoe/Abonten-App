@@ -232,6 +232,41 @@
   }
 }
 
+/* The "On Abonten" wall (src/showcase): each row's track holds its tiles
+   twice and moves left by half its width per loop, so the second copy
+   takes the first one's place without a seam. Only a transform moves (the
+   compositor runs it, no script per frame). It stops under the pointer, on
+   focus, and when the row says so (Pause, a finger on it, off screen). */
+@keyframes showcaseDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.showcase-track {
+  animation: showcaseDrift var(--showcase-duration, 60s) linear infinite;
+  will-change: transform;
+}
+
+.showcase-track[data-reverse="true"] {
+  animation-direction: reverse;
+}
+
+.showcase-row:hover .showcase-track,
+.showcase-row:focus-within .showcase-track,
+.showcase-row[data-paused="true"] .showcase-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .showcase-track {
+    animation: none;
+  }
+}
+
 .animate-floatFast {
   animation: floatFast 4s ease-in-out infinite;
 }

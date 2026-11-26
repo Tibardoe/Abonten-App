@@ -178,6 +178,15 @@ The plan in [specifications/tickets-entry-and-teams.md](specifications/tickets-e
 | N8 | Imported lists | Part 5 | The organizer answers for the data; Abonten uses it only for entry, never for marketing, and deletes it 30 days after the event. | Open |
 | N9 | Badge wording for teams | Part 2; extends H3 and K3 | "Verified business" and "ID checked" for a team. Drafted 2026-11-16 in `core` `verification.badgeLabel.team` / `badgeExplanation.team` and `identity.badgeExplanationTeam`, shown only while teams are switched on. Wording for counsel: label "Verified business"; explanation "Abonten reviewed documents supporting this business's registration and that the Owner who manages this team may act for it. Verification is not a guarantee of any event, its delivery, safety or quality." "ID checked" on a team: "Abonten checked the government ID and a live selfie of at least one of this team's Owners. It doesn't mean Abonten vouches for the team, its events or its places." Question: is "at least one Owner" honest enough when other members are unchecked, and does a renamed team's badge going back to review (X42) need saying. | Open — wording above |
 
+## P — The On Abonten showcase
+
+Built 2026-11-26, switched off: [architecture/showcase.md](architecture/showcase.md), handbook [admin/showcase.md](admin/showcase.md).
+
+| # | Item | Where | Question for counsel | Status |
+|---|---|---|---|---|
+| P1 | Showing businesses' and organizers' names, logos and photos on the "On Abonten" wall (the landing page, Explore, the app, the "See all" page) | `showcase_entry` (staff-picked per market); the tiles reuse each account's own public profile picture or place cover and name | Do the Terms' licence for profile and listing content (with F1) cover Abonten showing a business's name and logo in its own promotional section of the site, or is the business's consent needed first (and in what form: a tick when they list, an email)? Does a business have to be able to ask to be taken off, and how quickly? Is a trademark (a business's logo) a problem when shown as a link to its own Abonten page? | Open |
+| P2 | The wording "On Abonten" and that nothing implies an endorsement or an agreement | The section title and subtitle (`showcase` messages in five languages); never "partners" or "trusted by" | Is "On Abonten" with the subtitle "Hosts and places you'll find on Abonten. Tap one to see what's on." clear enough that Abonten does not endorse them or have a deal with them, under consumer-protection and advertising rules? Does the Verified mark on a tile need its explanation there too (it opens on a tap, as elsewhere)? If paid "Featured" places are ever sold (decision SC1), what label do they need? | Open |
+
 ## Specifications waiting on this register
 
 | Specification | Blocking legal items |

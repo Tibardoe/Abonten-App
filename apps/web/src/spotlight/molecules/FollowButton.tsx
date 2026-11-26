@@ -22,6 +22,7 @@ export default function FollowButton({
   variant = "default",
   className,
   known,
+  showcaseEntryId,
 }: {
   kind: FollowTargetKind;
   targetId: string;
@@ -33,6 +34,8 @@ export default function FollowButton({
   className?: string;
   /** The viewer's follow state when a post document already carries it. */
   known?: boolean;
+  /** On an "On Abonten" tile: a new follow is counted against the entry. */
+  showcaseEntryId?: string;
 }) {
   const locale = useLocale();
   const t = useTranslations("spotlight");
@@ -48,6 +51,7 @@ export default function FollowButton({
     targetId,
     visible,
     showCount ? undefined : known,
+    showcaseEntryId,
   );
 
   if (!visible) return null;

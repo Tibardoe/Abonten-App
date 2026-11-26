@@ -4,6 +4,7 @@ import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
 import RefreshErrorRetry from "@/components/molecules/RefreshErrorRetry";
 import ViewToggle from "@/components/molecules/ViewToggle";
+import OnAbontenShowcase from "@/showcase/organisms/OnAbontenShowcase";
 import { EXPLORE_PLACES_RADIUS_KM } from "@abonten/core/explorePlaceSections";
 import { getTranslations } from "next-intl/server";
 import NoPlacesEmptyState from "../molecules/NoPlacesEmptyState";
@@ -147,6 +148,9 @@ export default async function PlacesTabContent({
       ) : (
         <>
           <PlacesSlider heading={t("aroundYou")} places={aroundYou} />
+
+          {/* "On Abonten", below the first row (as on the Events tab). */}
+          <OnAbontenShowcase lat={lat} lng={lng} />
 
           <PlacesSlider heading={t("openNow")} places={openNowPlaces} />
 

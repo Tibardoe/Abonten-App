@@ -10,35 +10,51 @@ import { Alert, Pressable, View } from "react-native";
 // (VerifiedBadgePopover). Both read BADGE_EXPLANATION so they cannot drift.
 //
 // "overlay" is the pill that sits on a dark hero image; "inline" is the small
-// badge next to a name on a light card.
+// badge next to a name on a light card; "icon" is the tick alone, for a
+// narrow tile where the word would push the name out of sight (the "On
+// Abonten" wall). All three explain themselves when tapped.
 export function VerifiedPill({
   subjectType,
   variant = "inline",
   team = false,
 }: {
   subjectType: VerificationSubjectType;
-  variant?: "overlay" | "inline";
+  variant?: "overlay" | "inline" | "icon";
   /** The organizer is a team: the badge is the business check. */
   team?: boolean;
 }) {
   const t = useTranslations("verification");
   const tc = useTranslations("core");
 
+  const label = t("whatThisMeans", { item: badgeLabel(tc, subjectType, team) });
+  const explain = () =>
+    Alert.alert(
+      badgeLabel(tc, subjectType, team),
+      badgeExplanation(tc, subjectType, team),
+      [{ text: t("gotIt") }],
+    );
+
+  if (variant === "icon") {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        hitSlop={8}
+        onPress={explain}
+        className="active:opacity-70"
+      >
+        <Icon name="checkmark-circle" size={16} tone="primary" />
+      </Pressable>
+    );
+  }
+
   const overlay = variant === "overlay";
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t("whatThisMeans", {
-        item: badgeLabel(tc, subjectType, team),
-      })}
+      accessibilityLabel={label}
       hitSlop={6}
-      onPress={() =>
-        Alert.alert(
-          badgeLabel(tc, subjectType, team),
-          badgeExplanation(tc, subjectType, team),
-          [{ text: t("gotIt") }],
-        )
-      }
+      onPress={explain}
       className={
         overlay
           ? "flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1 active:opacity-70"

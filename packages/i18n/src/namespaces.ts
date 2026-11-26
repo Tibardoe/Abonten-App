@@ -32,6 +32,7 @@ export const I18N_NAMESPACES = [
   "safety",
   "search",
   "settings",
+  "showcase",
   "spotlight",
   "teams",
   "ticketPlans",

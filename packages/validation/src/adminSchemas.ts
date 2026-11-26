@@ -541,6 +541,92 @@ export const socialQueueSettingsSchema = z.object({
     .partial(),
 });
 
+// ── Showcase (Admin › Showcase, the "On Abonten" wall) ──────
+
+const showcaseCountry = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z]{2}$/, "Choose a market")
+  .transform((v) => v.toUpperCase());
+
+const showcaseNote = z
+  .string()
+  .trim()
+  .max(500, "Keep the note under 500 characters")
+  .optional()
+  .nullable();
+
+export const showcaseEntriesSchema = z.object({
+  countryCode: showcaseCountry,
+});
+
+export const showcaseSearchSchema = z.object({
+  countryCode: showcaseCountry,
+  q: z.string().trim().min(2, "Type at least two characters").max(80),
+  kind: z.enum(["host", "place", "any"]).default("any"),
+});
+
+export const showcaseAddSchema = z.object({
+  countryCode: showcaseCountry,
+  subjectKind: z.enum(["host", "place"]),
+  subjectId: z.string().uuid(),
+  regionId: z.string().uuid().optional().nullable(),
+  note: showcaseNote,
+});
+
+export const showcaseUpdateEntrySchema = z.object({
+  entryId: z.string().uuid(),
+  regionId: z.string().uuid().nullable(),
+  note: showcaseNote,
+});
+
+export const showcaseMoveSchema = z.object({
+  entryId: z.string().uuid(),
+  direction: z.enum(["up", "down"]),
+});
+
+export const showcaseRemoveSchema = z.object({
+  entryId: z.string().uuid(),
+});
+
+export const showcaseSettingsSchema = z.object({
+  expectedUpdatedAt: z.string().min(1),
+  reason: z
+    .string()
+    .trim()
+    .min(5, "Give a short reason for this change")
+    .max(500),
+  patch: z
+    .object({
+      enabled: z.boolean(),
+      audience: z.enum(["staff", "beta", "all"]),
+      betaUserIds: z
+        .array(z.string().uuid("Each beta tester is a user id"))
+        .max(500),
+      minPerRow: z
+        .number()
+        .int("A whole number")
+        .min(1, "At least 1")
+        .max(20, "At most 20"),
+      maxPerRow: z
+        .number()
+        .int("A whole number")
+        .min(4, "At least 4")
+        .max(60, "At most 60"),
+    })
+    .strict()
+    .partial(),
+});
+
+export type ShowcaseSearchInput = z.infer<typeof showcaseSearchSchema>;
+export type ShowcaseAddInput = z.infer<typeof showcaseAddSchema>;
+export type ShowcaseUpdateEntryInput = z.infer<
+  typeof showcaseUpdateEntrySchema
+>;
+export type ShowcaseMoveInput = z.infer<typeof showcaseMoveSchema>;
+export type ShowcaseRemoveInput = z.infer<typeof showcaseRemoveSchema>;
+export type ShowcaseSettingsInput = z.infer<typeof showcaseSettingsSchema>;
+
 export type SocialPostStatusInput = z.infer<typeof socialPostStatusSchema>;
 export type SocialQueueSettingsInput = z.infer<
   typeof socialQueueSettingsSchema

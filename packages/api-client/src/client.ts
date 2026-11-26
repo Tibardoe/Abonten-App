@@ -26,6 +26,7 @@ import type {
   SearchResults,
   SearchSuggestionsResponse,
 } from "@abonten/types/searchType";
+import type { ShowcaseWall } from "@abonten/types/showcaseType";
 import type { InviteTarget, TeamRoleCode } from "@abonten/types/teamType";
 import type { SendTicketTarget } from "@abonten/types/ticketTransferType";
 import type {
@@ -2806,6 +2807,47 @@ export function createApiClient(options: ApiClientOptions) {
       },
     },
 
+    showcase: {
+      /**
+       * The "On Abonten" wall for the Explore tab: data null when it is not
+       * on for the caller or too thin to show. Never cached by the server.
+       */
+      wall(params: { lat?: number; lng?: number }) {
+        const qs = new URLSearchParams();
+        if (params.lat != null) qs.set("lat", String(params.lat));
+        if (params.lng != null) qs.set("lng", String(params.lng));
+        const query = qs.toString();
+        return request<ApiEnvelope<ShowcaseWall | null>>(
+          `/api/mobile/showcase${query ? `?${query}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * "See all": every host and place that shows on the wall, in two
+       * groups (wall null: nothing to list yet). Status 404 while it is
+       * not on for the caller.
+       */
+      directory(params: { lat?: number; lng?: number }) {
+        const qs = new URLSearchParams();
+        if (params.lat != null) qs.set("lat", String(params.lat));
+        if (params.lng != null) qs.set("lng", String(params.lng));
+        const query = qs.toString();
+        return request<
+          ApiEnvelope<{ wall: ShowcaseWall | null; isPublic: boolean }>
+        >(`/api/mobile/showcase/directory${query ? `?${query}` : ""}`, {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /** Count a tap on a tile. Never in the way: failures are ignored. */
+      tap(entryId: string) {
+        return request<ApiEnvelope<{ counted: boolean }>>(
+          "/api/mobile/showcase/tap",
+          { method: "POST", body: { entryId }, auth: true },
+        );
+      },
+    },
+
     discovery: {
       /** Which Discovery features the caller may use. Ships all-off. */
       program() {
@@ -3661,10 +3703,19 @@ export function createApiClient(options: ApiClientOptions) {
         targetKind: FollowTargetKind,
         targetId: string,
         following: boolean,
+        /** Followed from an "On Abonten" tile: counted against its entry. */
+        opts: { showcaseEntryId?: string } = {},
       ) {
         return request<FollowStatusResult>("/api/mobile/content/follow", {
           method: "POST",
-          body: { targetKind, targetId, following },
+          body: {
+            targetKind,
+            targetId,
+            following,
+            ...(opts.showcaseEntryId
+              ? { showcaseEntryId: opts.showcaseEntryId }
+              : {}),
+          },
           auth: true,
         });
       },

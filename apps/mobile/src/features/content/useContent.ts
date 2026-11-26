@@ -193,6 +193,8 @@ export function useFollow(
   enabled: boolean,
   /** Already known from a post document: skip the status request. */
   known?: boolean,
+  /** Followed from this "On Abonten" wall entry: counted against it. */
+  showcaseEntryId?: string,
 ) {
   const t = useTranslations("spotlight");
 
@@ -234,7 +236,9 @@ export function useFollow(
 
   const toggle = useMutation({
     mutationFn: (following: boolean) =>
-      api.content.setFollow(kind, targetId as string, following),
+      api.content.setFollow(kind, targetId as string, following, {
+        showcaseEntryId,
+      }),
     onMutate: (following) => {
       const previous =
         qc.getQueryData<FollowStatus>(key) ??
