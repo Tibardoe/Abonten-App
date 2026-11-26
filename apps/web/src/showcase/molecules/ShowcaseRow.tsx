@@ -2,7 +2,14 @@
 
 import { cn } from "@/components/lib/utils";
 import type { ShowcaseTile as Tile } from "@abonten/types/showcaseType";
-import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import ShowcaseTile from "./ShowcaseTile";
 
 // One row of the "On Abonten" wall, drifting slowly sideways.
@@ -12,7 +19,9 @@ import ShowcaseTile from "./ShowcaseTile";
 // the second copy takes the first one's place without a seam. A short row
 // is repeated inside each half until a half is wider than a wide screen.
 // Only the first set is in the accessibility tree and the tab order; every
-// repeat is aria-hidden and inert.
+// repeat is aria-hidden and out of the tab order (`HiddenCopy`) but still
+// takes clicks: as the row drifts, the tiles on screen are often a repeat,
+// and `inert` there made a click on a tile or on Follow do nothing.
 //
 // It stops while the pointer is over it, while something in it has focus,
 // while a finger is on it (and a moment after), when the visitor pressed
@@ -26,6 +35,47 @@ const MIN_TILES_PER_HALF = 8;
 const SECONDS_PER_TILE = 7;
 const MIN_SECONDS = 40;
 const TOUCH_GRACE_MS = 2500;
+
+// A repeat of the row: hidden from screen readers and taken out of the tab
+// order, but a mouse or a finger can still use it. Links and buttons inside
+// get tabindex -1, and again whenever the tiles re-render (Follow turning
+// into Following swaps the button).
+function HiddenCopy({
+  className,
+  children,
+}: {
+  className: string;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const takeOutOfTabOrder = () => {
+      for (const el of root.querySelectorAll<HTMLElement>(
+        "a[href], button, input, select, textarea, [tabindex]",
+      )) {
+        if (el.getAttribute("tabindex") !== "-1") {
+          el.setAttribute("tabindex", "-1");
+        }
+      }
+    };
+    takeOutOfTabOrder();
+    const observer = new MutationObserver(takeOutOfTabOrder);
+    observer.observe(root, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["tabindex"],
+    });
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={className} aria-hidden="true">
+      {children}
+    </div>
+  );
+}
 
 function Half({
   tiles,
@@ -41,32 +91,44 @@ function Half({
   now: Date;
 }) {
   const repeats = Array.from({ length: copies - 1 }, (_, i) => i + 1);
-  return (
-    <div
-      className="flex shrink-0 gap-3 pr-3"
-      aria-hidden={hidden || undefined}
-      inert={hidden || undefined}
+  const first = (
+    <ul
+      className="flex shrink-0 gap-3"
+      aria-labelledby={hidden ? undefined : labelledBy}
     >
-      <ul
-        className="flex shrink-0 gap-3"
-        aria-labelledby={hidden ? undefined : labelledBy}
-      >
-        {tiles.map((tile) => (
-          <li key={tile.entryId}>
-            <ShowcaseTile tile={tile} now={now} />
-          </li>
-        ))}
+      {tiles.map((tile) => (
+        <li key={tile.entryId}>
+          <ShowcaseTile tile={tile} now={now} />
+        </li>
+      ))}
+    </ul>
+  );
+  const more =
+    repeats.length > 0 ? (
+      <ul className="flex shrink-0 gap-3">
+        {repeats.flatMap((copy) =>
+          tiles.map((tile) => (
+            <li key={`${copy}-${tile.entryId}`}>
+              <ShowcaseTile tile={tile} now={now} />
+            </li>
+          )),
+        )}
       </ul>
-      {repeats.length > 0 ? (
-        <ul className="flex shrink-0 gap-3" aria-hidden inert>
-          {repeats.flatMap((copy) =>
-            tiles.map((tile) => (
-              <li key={`${copy}-${tile.entryId}`}>
-                <ShowcaseTile tile={tile} now={now} />
-              </li>
-            )),
-          )}
-        </ul>
+    ) : null;
+
+  if (hidden) {
+    return (
+      <HiddenCopy className="flex shrink-0 gap-3 pr-3">
+        {first}
+        {more}
+      </HiddenCopy>
+    );
+  }
+  return (
+    <div className="flex shrink-0 gap-3 pr-3">
+      {first}
+      {more ? (
+        <HiddenCopy className="flex shrink-0 gap-3">{more}</HiddenCopy>
       ) : null}
     </div>
   );

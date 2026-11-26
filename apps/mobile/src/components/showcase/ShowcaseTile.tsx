@@ -162,6 +162,7 @@ export function ShowcaseTile({
             </AppText>
             {tile.verified ? (
               <VerifiedPill
+                variant="icon"
                 subjectType={tile.kind === "host" ? "organizer" : "place"}
                 team={tile.kind === "host" && tile.isTeam}
               />
