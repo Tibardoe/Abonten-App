@@ -426,6 +426,30 @@ const SERVICE_ROLE_ONLY: Call[] = [
     args: { p_team: ABSENT_ID, p_staff: ABSENT_ID },
     why: "2026-11-25: staff delete a team through the console (teams.manage, step-up, audit)",
   },
+  {
+    name: "showcase_wall",
+    args: { p_lat: 5.6037, p_lng: -0.187 },
+    why: "2026-11-26: the On Abonten wall is read through the programme and audience check in @abonten/services",
+  },
+  {
+    name: "showcase_admin_entries",
+    args: { p_country_code: "GH" },
+    why: "2026-11-26: Admin › Showcase reads it with showcase.view",
+  },
+  {
+    name: "showcase_entry_add",
+    args: {
+      p_subject_kind: "host",
+      p_subject_id: ABSENT_ID,
+      p_country_code: "GH",
+    },
+    why: "2026-11-26: staff put hosts and places on the wall through the console (showcase.edit, audit)",
+  },
+  {
+    name: "showcase_count",
+    args: { p_entry_id: ABSENT_ID, p_kind: "tap" },
+    why: "2026-11-26: taps and follows are counted only after the service's own checks",
+  },
 ];
 
 describe("database grants match how each function is actually reached", () => {

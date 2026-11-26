@@ -1,0 +1,23 @@
+{
+  "title": "En Abonten",
+  "subtitle": "Organizadores y lugares que encontrarás en Abonten. Toca uno para ver qué hay.",
+  "hosts": "Organizadores",
+  "places": "Lugares",
+  "seeAll": "Ver todo",
+  "seeAllLabel": "Ver todos los organizadores y lugares en Abonten",
+  "pause": "Pausar",
+  "play": "Reanudar",
+  "nextUp": "{date} · {title}",
+  "onNow": "Ahora · {title}",
+  "openNow": "Abierto ahora",
+  "categoryInArea": "{category} · {area}",
+  "soonLine": "Hoy o este fin de semana: {line}",
+  "tileLabel": "{name}. {line}",
+  "openPage": "Abrir {name}",
+  "metaTitle": "Organizadores y lugares en Abonten",
+  "metaDescription": "Los organizadores y lugares en Abonten: mira qué viene y sigue a los que te gusten.",
+  "directoryIntro": "Los organizadores y lugares en Abonten, con lo próximo de cada uno.",
+  "directoryIntroIn": "Los organizadores y lugares en Abonten cerca de {city}, con lo próximo de cada uno.",
+  "directoryEmpty": "Todavía no hay nada que mostrar aquí. Vuelve pronto.",
+  "couldNotLoad": "No se pudo cargar quién está en Abonten."
+}

@@ -164,6 +164,7 @@
   "couldnTLoadAbontenWeekly": "Couldn't load Abonten Weekly.",
   "couldnTLoadBlockedAccounts": "Couldn't load blocked accounts.",
   "couldnTLoadMobileMoneyNetworks": "Couldn't load mobile money networks",
+  "couldnTLoadOnAbonten": "Couldn't load who's on Abonten.",
   "couldnTLoadRatings": "Couldn't load ratings.",
   "couldnTLoadReviews": "Couldn't load reviews.",
   "couldnTLoadTheCheckIn": "Couldn't load the check-in code.",

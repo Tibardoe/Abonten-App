@@ -1,3 +1,4 @@
+import OnAbontenShowcase from "@/showcase/organisms/OnAbontenShowcase";
 import type { IndexedCity } from "@/utils/searchIndexing";
 import { cityPath } from "@abonten/core/seo/paths";
 import { WEEKLY_PRODUCT_NAME } from "@abonten/core/weekly/copy";
@@ -9,7 +10,7 @@ import { FiArrowRight, FiArrowUpRight } from "react-icons/fi";
 // for, as ordinary links. The hero only offers a search box, so without
 // this a search engine reaching the homepage found nowhere to go (three
 // links, all to sign-in) and people arriving from a search had nothing to
-// read before typing.
+// read before typing. Below the cities: the "On Abonten" wall.
 export default async function LandingSections({
   cities,
 }: {
@@ -77,6 +78,12 @@ export default async function LandingSections({
           </ul>
         </section>
       ) : null}
+
+      {/* "On Abonten": the hosts and places on Abonten, below the first
+          row. Loaded in the browser (this page is cached for everyone and
+          the tiles carry the visitor's own follow state); hidden while the
+          programme is off for the visitor or too few qualify. */}
+      <OnAbontenShowcase className="mx-auto w-[90%] pb-16 md:pb-24" />
 
       <section
         aria-label={t("whatYouCanDoOnAbonten")}

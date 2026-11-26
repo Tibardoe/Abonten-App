@@ -6,6 +6,7 @@ import type {
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
+import { recordShowcaseFollow } from "../showcase/showcaseWallCore";
 import { notifyFollow } from "./contentNotifyCore";
 import { readContentSettings } from "./contentProgram";
 import {
@@ -84,7 +85,13 @@ export async function getFollowStatusCore(
 export async function setFollowCore(
   supabase: ServiceRoleClient,
   userId: string,
-  input: { targetKind: FollowTargetKind; targetId: string; following: boolean },
+  input: {
+    targetKind: FollowTargetKind;
+    targetId: string;
+    following: boolean;
+    /** Followed from this "On Abonten" wall entry (counted, see below). */
+    showcaseEntryId?: string;
+  },
 ): Promise<Envelope<FollowStatus>> {
   if (await accountIsRestricted(supabase, userId)) {
     return {
@@ -150,6 +157,16 @@ export async function setFollowCore(
       { kind: input.targetKind, ownerId: target.ownerId, label: target.label },
       userId,
     );
+    // Followed from a tile of the "On Abonten" wall: counted against that
+    // entry. Only a new follow row gets here, so pressing again never
+    // counts twice; counting never fails the follow.
+    if (input.showcaseEntryId) {
+      await recordShowcaseFollow(supabase, userId, {
+        entryId: input.showcaseEntryId,
+        targetKind: input.targetKind,
+        targetId: input.targetId,
+      });
+    }
   }
   return getFollowStatusCore(supabase, userId, input);
 }

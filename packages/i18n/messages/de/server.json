@@ -168,6 +168,7 @@
   "couldnTLoadAbontenWeekly": "Abonten Weekly konnte nicht geladen werden.",
   "couldnTLoadBlockedAccounts": "Blockierte Konten konnten nicht geladen werden.",
   "couldnTLoadMobileMoneyNetworks": "Mobile-Money-Netze konnten nicht geladen werden",
+  "couldnTLoadOnAbonten": "Konnte nicht laden, wer auf Abonten ist.",
   "couldnTLoadRatings": "Bewertungen konnten nicht geladen werden.",
   "couldnTLoadReviews": "Bewertungen konnten nicht geladen werden.",
   "couldnTLoadTheCheckIn": "Der Check-in-Code konnte nicht geladen werden.",

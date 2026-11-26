@@ -24,6 +24,7 @@ import {
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { whereText } from "@/components/explore/areaCopy";
 import { YourEventsCard } from "@/components/organizer/YourEventsCard";
+import { OnAbontenShowcase } from "@/components/showcase/OnAbontenShowcase";
 import { ExploreSkeleton } from "@/components/skeletons";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import {
@@ -303,6 +304,9 @@ export default function Explore() {
             events={eventRows.aroundYou}
             onViewAll={() => openSection("event", "aroundYou", t("aroundYou"))}
           />
+          {/* "On Abonten", below the first row: the hosts and places of
+              this area's market. Hidden while off for this person or thin. */}
+          <OnAbontenShowcase location={coords} />
           <EventSliderRow
             title={t("topRatedOrganizers")}
             events={eventRows.topRatedOrganizers}
@@ -348,6 +352,7 @@ export default function Explore() {
           places={placeRows.aroundYou}
           onViewAll={() => openSection("place", "aroundYou", t("aroundYou"))}
         />
+        <OnAbontenShowcase location={coords} />
         <PlaceSliderRow
           title={t("openNow")}
           places={placeRows.openNow}

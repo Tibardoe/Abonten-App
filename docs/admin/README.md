@@ -48,6 +48,7 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Spotlight & Stories | `spotlight.view` | [spotlight.md](spotlight.md) |
 | Abonten Weekly | `weekly.view` | [weekly.md](weekly.md) |
 | Social | `social.view` | [social.md](social.md) |
+| Showcase | `showcase.view` | [showcase.md](showcase.md) |
 | Safety | `safety.view` | [safety.md](safety.md) |
 | Identity | `identity.view` | [identity.md](identity.md) |
 | Pay small small | `plans.view` | [ticket-plans.md](ticket-plans.md) |

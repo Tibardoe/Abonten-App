@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   Compass,
   Flag,
+  GalleryHorizontal,
   Gift,
   Globe,
   IdCard,
@@ -168,6 +169,12 @@ const ITEMS: Item[] = [
     label: "Social",
     icon: Megaphone,
     permission: "social.view",
+  },
+  {
+    href: "/showcase",
+    label: "Showcase",
+    icon: GalleryHorizontal,
+    permission: "showcase.view",
   },
   {
     href: "/safety",

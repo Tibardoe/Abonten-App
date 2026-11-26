@@ -12957,6 +12957,165 @@ export type Database = {
           },
         ]
       }
+      showcase_daily_count: {
+        Row: {
+          day: string
+          entry_id: string
+          follows: number
+          taps: number
+        }
+        Insert: {
+          day: string
+          entry_id: string
+          follows?: number
+          taps?: number
+        }
+        Update: {
+          day?: string
+          entry_id?: string
+          follows?: number
+          taps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcase_daily_count_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "showcase_entry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showcase_entry: {
+        Row: {
+          country_code: string
+          created_at: string
+          created_by: string | null
+          host_account_id: string | null
+          id: string
+          note: string | null
+          place_id: string | null
+          position: number
+          region_id: string | null
+          subject_id: string | null
+          subject_kind: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          created_by?: string | null
+          host_account_id?: string | null
+          id?: string
+          note?: string | null
+          place_id?: string | null
+          position: number
+          region_id?: string | null
+          subject_kind: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          created_by?: string | null
+          host_account_id?: string | null
+          id?: string
+          note?: string | null
+          place_id?: string | null
+          position?: number
+          region_id?: string | null
+          subject_kind?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcase_entry_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "market"
+            referencedColumns: ["country_code"]
+          },
+          {
+            foreignKeyName: "showcase_entry_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_entry_host_account_id_fkey"
+            columns: ["host_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_entry_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "place"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_entry_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "market_region"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showcase_entry_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showcase_program_setting: {
+        Row: {
+          audience: string
+          beta_user_ids: string[]
+          enabled: boolean
+          id: number
+          max_per_row: number
+          min_per_row: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          audience?: string
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          max_per_row?: number
+          min_per_row?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          audience?: string
+          beta_user_ids?: string[]
+          enabled?: boolean
+          id?: number
+          max_per_row?: number
+          min_per_row?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showcase_program_setting_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_post: {
         Row: {
           channel: string
@@ -19852,6 +20011,58 @@ export type Database = {
           p_muted?: boolean
         }
         Returns: undefined
+      }
+      showcase_admin_entries: {
+        Args: { p_country_code: string }
+        Returns: Json
+      }
+      showcase_count: {
+        Args: {
+          p_entry_id: string
+          p_kind: string
+          p_target_id?: string
+          p_target_kind?: string
+        }
+        Returns: boolean
+      }
+      showcase_entry_add: {
+        Args: {
+          p_actor?: string
+          p_country_code: string
+          p_note?: string
+          p_region_id?: string
+          p_subject_id: string
+          p_subject_kind: string
+        }
+        Returns: string
+      }
+      showcase_entry_move: {
+        Args: { p_actor?: string; p_direction: string; p_entry_id: string }
+        Returns: boolean
+      }
+      showcase_subject_check: {
+        Args: {
+          p_country_code: string
+          p_host_ids?: string[]
+          p_place_ids?: string[]
+        }
+        Returns: {
+          next_event_id: string
+          next_start: string
+          reason: string
+          subject_id: string
+          subject_kind: string
+        }[]
+      }
+      showcase_wall: {
+        Args: {
+          p_country_code?: string
+          p_lat?: number
+          p_limit?: number
+          p_lng?: number
+          p_viewer?: string
+        }
+        Returns: Json
       }
       social_links_valid: { Args: { p_links: Json }; Returns: boolean }
       social_queue_listings: { Args: { p_limit?: number }; Returns: Json }

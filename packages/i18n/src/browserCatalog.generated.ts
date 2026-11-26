@@ -41,6 +41,7 @@ export const BROWSER_NAMESPACE_LOADERS: Record<
   safety: (locale) => import(`../messages/${locale}/safety.json`),
   search: (locale) => import(`../messages/${locale}/search.json`),
   settings: (locale) => import(`../messages/${locale}/settings.json`),
+  showcase: (locale) => import(`../messages/${locale}/showcase.json`),
   spotlight: (locale) => import(`../messages/${locale}/spotlight.json`),
   teams: (locale) => import(`../messages/${locale}/teams.json`),
   ticketPlans: (locale) => import(`../messages/${locale}/ticketPlans.json`),
