@@ -26,10 +26,11 @@ export type PlaceDetail = {
   category_id: number | null;
   owner_id: string | null;
   /**
-   * The owner account's status only: placeHasOwner says whether anyone is
-   * behind the place. Absent in an older cache (counts as owned).
+   * The owner account's status and whether it is Abonten staff:
+   * placeHasOwner / placeStewardship say whether anyone real is behind the
+   * place. Absent in an older cache (counts as owned).
    */
-  owner?: { status_id: number | null } | null;
+  owner?: { status_id: number | null; is_admin?: boolean | null } | null;
   website_url: string | null;
   phone: string | null;
   whatsapp: string | null;

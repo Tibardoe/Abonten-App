@@ -9,7 +9,8 @@ import {
   validateClaimDoc,
 } from "@/features/places/usePlaceClaim";
 import { uuidv4 } from "@/lib/uuid";
-import { formatFileSize } from "@abonten/core/i18n/format";
+import { formatDate, formatFileSize } from "@abonten/core/i18n/format";
+import { DISPUTE_NOTE_MIN_LENGTH } from "@abonten/core/placeClaimInvite";
 import {
   AppText,
   Button,
@@ -33,6 +34,11 @@ import { Pressable, View } from "react-native";
 // (same as web), plus up to three private "proof of ownership" attachments
 // (photo or PDF) that upload to the private place-claim-documents bucket
 // once the claim row exists.
+//
+// `mode="dispute"` is the same request on a place another account runs
+// ("I own this business" in the place's ⋯ menu; placeClaimInvite): worded
+// as what it is, with an explanation required, and not offered while a
+// recent refusal makes the person wait (`retryAfter`).
 
 type Phase = "form" | "uploading" | "done";
 
@@ -108,13 +114,19 @@ export function ClaimPlaceSheet({
   onClose,
   placeId,
   placeName,
+  mode = "claim",
+  retryAfter = null,
 }: {
   open: boolean;
   onClose: () => void;
   placeId: string;
   placeName: string;
+  mode?: "claim" | "dispute";
+  /** Staff turned the last request down recently: when to ask again. */
+  retryAfter?: Date | null;
 }) {
   const t = useTranslations("places");
+  const dispute = mode === "dispute";
 
   const toast = useToast();
   const { session } = useSession();
@@ -254,6 +266,10 @@ export function ClaimPlaceSheet({
 
   function onSubmit() {
     setError(null);
+    if (dispute && note.trim().length < DISPUTE_NOTE_MIN_LENGTH) {
+      setError(t("disputeNoteRequired"));
+      return;
+    }
     submit.mutate(
       { note, contactPhone: phone, contactEmail: email },
       {
@@ -275,11 +291,35 @@ export function ClaimPlaceSheet({
   const failedCount = docs.filter((d) => d.status === "error").length;
   const uploadingBusy = phase === "uploading";
 
+  if (retryAfter) {
+    return (
+      <Sheet
+        open={open}
+        onClose={onClose}
+        title={t("disputeTitle", { placeName })}
+        footer={<Button title={t("done")} onPress={onClose} />}
+      >
+        <View className="flex-row gap-2 rounded-xl border border-border bg-card p-3">
+          <Icon name="time-outline" size={18} tone="muted" />
+          <AppText variant="small" tone="muted" className="flex-1">
+            {t("disputeWait", {
+              date: formatDate(retryAfter, getCurrentLocale()),
+            })}
+          </AppText>
+        </View>
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={t("claim", { placeName: placeName })}
+      title={
+        dispute
+          ? t("disputeTitle", { placeName })
+          : t("claim", { placeName: placeName })
+      }
       minHeightRatio={0.6}
       footer={
         phase === "done" ? (
@@ -295,7 +335,9 @@ export function ClaimPlaceSheet({
                     ? t("submitting2")
                     : uploadingBusy
                       ? t("uploadingDocuments")
-                      : t("submitClaim2")
+                      : dispute
+                        ? t("disputeSubmit")
+                        : t("submitClaim2")
               }
               onPress={onSubmit}
               disabled={submit.isPending || uploadingBusy}
@@ -308,12 +350,14 @@ export function ClaimPlaceSheet({
         <View className="items-center gap-3 py-4">
           <Icon name="checkmark-circle" size={44} tone="success" />
           <AppText variant="bodyStrong" className="text-center">
-            {t("claimRequestSubmitted")}
+            {dispute ? t("disputeSentTitle") : t("claimRequestSubmitted")}
           </AppText>
           <AppText variant="muted" className="text-center">
-            {t("claimReviewNote", {
-              documents: docs.length > 0 ? "yes" : "no",
-            })}
+            {dispute
+              ? t("disputeSentBody")
+              : t("claimReviewNote", {
+                  documents: docs.length > 0 ? "yes" : "no",
+                })}
           </AppText>
           {failedCount > 0 ? (
             <View className="w-full gap-2 pt-2">
@@ -338,15 +382,25 @@ export function ClaimPlaceSheet({
           <View className="flex-row gap-2 rounded-xl border border-border bg-card p-3">
             <Icon name="shield-checkmark-outline" size={18} tone="muted" />
             <AppText variant="small" tone="muted" className="flex-1">
-              {t("claimingLetsYouManageThisPlace")}
+              {dispute
+                ? t("disputeIntro")
+                : t("claimingLetsYouManageThisPlace")}
             </AppText>
           </View>
 
-          <Field label={t("whyAreYouTheOwnerOptional")}>
+          <Field
+            label={
+              dispute ? t("disputeNoteLabel") : t("whyAreYouTheOwnerOptional")
+            }
+          >
             <Input
               value={note}
               onChangeText={setNote}
-              placeholder={t("tellUsHowYouReConnected")}
+              placeholder={
+                dispute
+                  ? t("disputeNotePlaceholder")
+                  : t("tellUsHowYouReConnected")
+              }
               multiline
               numberOfLines={4}
               maxLength={1000}
@@ -357,7 +411,9 @@ export function ClaimPlaceSheet({
           {/* §12 — supporting documents */}
           <View className="gap-2">
             <AppText variant="label">
-              {t("proofOfOwnershipAuthorizationOptional")}
+              {dispute
+                ? t("disputeProofLabel")
+                : t("proofOfOwnershipAuthorizationOptional")}
             </AppText>
             <AppText variant="caption">
               {t("aBusinessRegistrationAUtilityBill", {

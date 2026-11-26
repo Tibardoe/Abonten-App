@@ -6,7 +6,8 @@ import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The event / place detail header's right-side actions: report (when the
-// viewer is a signed-in non-owner) + share + favourite, mirroring the web
+// viewer is a signed-in non-owner) or a ⋯ menu (`onMore`, the place screen:
+// report and "I own this business") + share + favourite, mirroring the web
 // detail hero's control cluster. Sharing sends the https URL as text so the
 // target app unfurls it into a rich preview card from the page's Open Graph
 // tags (flyer / cover included there).
@@ -17,6 +18,8 @@ export function DetailHeaderActions({
   shareUrl,
   onShared,
   onReport,
+  onMore,
+  moreLabel,
 }: {
   kind: "event" | "place";
   id: string | undefined;
@@ -26,6 +29,10 @@ export function DetailHeaderActions({
   onShared?: () => void;
   /** When set, a flag button is shown that opens the report sheet. */
   onReport?: () => void;
+  /** When set, a ⋯ button that opens the screen's own menu (in place of the flag). */
+  onMore?: () => void;
+  /** The ⋯ button's accessible name. */
+  moreLabel?: string;
 }) {
   const t = useTranslations("common");
   const tc = useTranslations("core");
@@ -33,7 +40,17 @@ export function DetailHeaderActions({
   const share = useShareLink();
   return (
     <View className="flex-row items-center gap-1">
-      {onReport ? (
+      {onMore ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={moreLabel ?? t("moreOptions")}
+          hitSlop={8}
+          onPress={onMore}
+          className="p-1 active:opacity-70"
+        >
+          <Icon name="ellipsis-horizontal" size={22} tone="foreground" />
+        </Pressable>
+      ) : onReport ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={reportTitle(tc, kind)}
