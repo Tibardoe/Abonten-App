@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "@abonten/core/brand/contacts";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -42,6 +43,10 @@ import {
 // disputes first; the detail names who runs the place now and since when;
 // approving one needs the place's name typed (confirmPlaceName). Nobody is
 // told when a dispute is filed: staff decide whether to contact the owner.
+// When an approved dispute has moved the place, the account that ran it is
+// told (notice place_ownership_moved, never naming the new owner; a team's
+// Owners get it through notification_fan_out_to_team), and the audit entry
+// says whether that notice was written.
 
 const NOTE_TARGET = "place_claim";
 
@@ -424,6 +429,54 @@ export async function getClaimDetailCore(
   };
 }
 
+/**
+ * After an approved ownership dispute: tells the account that ran the place
+ * (a person, or a team whose Owners get the copy) that it was moved, in
+ * their own language, without naming the new owner. Only when the place
+ * really moved away from them. Answers whether the notice was written, or
+ * null when no notice was due.
+ */
+async function notifyPreviousOwner(
+  supabase: ServiceRoleClient,
+  input: {
+    dispute: boolean;
+    previousOwnerId: string | null;
+    placeId: string;
+    claimantId: string;
+    placeName: string | null;
+    placeSlug: string | null;
+  },
+): Promise<boolean | null> {
+  if (
+    !input.dispute ||
+    !input.previousOwnerId ||
+    input.previousOwnerId === input.claimantId
+  ) {
+    return null;
+  }
+  const { data: now, error } = await supabase
+    .from("place")
+    .select("owner_id")
+    .eq("id", input.placeId)
+    .maybeSingle();
+  if (error) {
+    logger.error(`notifyPreviousOwner place read: ${error.message}`);
+    return false;
+  }
+  if (now?.owner_id !== input.claimantId) return null;
+
+  const sent = await createNotificationCore(supabase, {
+    userId: input.previousOwnerId,
+    type: "place_ownership_moved",
+    notice: {
+      id: "place_ownership_moved",
+      params: { place: input.placeName, supportEmail: SUPPORT_EMAIL },
+    },
+    link: input.placeSlug ? `/places/${input.placeSlug}` : null,
+  });
+  return sent.status === 200;
+}
+
 export async function reviewClaimCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
@@ -504,6 +557,9 @@ export async function reviewClaimCore(
   const situation = asSituation(situationValue);
   const dispute = situationIsDispute(situation);
   const previousOwnerId = (owned?.owner_id as string | undefined) ?? null;
+  // Set when an approved dispute moved the place: whether its previous
+  // owner's notice was written.
+  let previousOwnerNotified: boolean | null = null;
 
   if (input.decision === "approve") {
     if (dispute && !sameName(input.confirmPlaceName, place?.name)) {
@@ -588,6 +644,14 @@ export async function reviewClaimCore(
         },
       });
     }
+    previousOwnerNotified = await notifyPreviousOwner(supabase, {
+      dispute,
+      previousOwnerId,
+      placeId: claim.place_id as string,
+      claimantId: claim.claimant_id as string,
+      placeName: place?.name ?? null,
+      placeSlug: place?.slug ?? null,
+    });
   } else {
     const { data: updated, error: updErr } = await supabase
       .from("place_claim_request")
@@ -642,6 +706,9 @@ export async function reviewClaimCore(
       place_id: claim.place_id,
       claimant_id: claim.claimant_id,
       dispute,
+      ...(previousOwnerNotified === null
+        ? {}
+        : { previous_owner_notified: previousOwnerNotified }),
     },
     requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
   });

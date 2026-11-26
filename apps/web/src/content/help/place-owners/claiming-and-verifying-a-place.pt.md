@@ -97,7 +97,7 @@ São guardados de forma privada. Só as pessoas da equipa de revisão do Abonten
 
 ## Disputas
 
-Se alguém disser que um local que gere é seu, a equipa do Abonten analisa as provas de ambas as partes antes de mudar alguma coisa, e pode contactá-lo para lhe pedir as suas. A sua página continua a ser sua e a funcionar entretanto. Reivindicar um negócio que não é seu, ou enviar documentos que não são seus, viola os Termos e pode levar à restrição da conta.
+Se alguém disser que um local que gere é seu, a equipa do Abonten analisa as provas de ambas as partes antes de mudar alguma coisa, e pode contactá-lo para lhe pedir as suas. A sua página continua a ser sua e a funcionar entretanto. Se a equipa decidir que o negócio é de outra pessoa e transferir a página para a conta dela, é avisado de imediato na aplicação. Se acha que se trata de um erro, escreva para support@abontenhub.com. Reivindicar um negócio que não é seu, ou enviar documentos que não são seus, viola os Termos e pode levar à restrição da conta.
 
 ## Páginas criadas por uma equipa de campo do Abonten
 

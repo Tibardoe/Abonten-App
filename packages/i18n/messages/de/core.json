@@ -728,6 +728,10 @@
       "body": "{hasPlace, select, yes {Deine Anfrage, {place} zu beanspruchen, wurde abgelehnt.} other {Deine Anfrage, den Ort zu beanspruchen, wurde abgelehnt.}}",
       "title": "Dein Anspruch wurde nicht genehmigt"
     },
+    "place_ownership_moved": {
+      "title": "{hasPlace, select, yes {{place} wurde einem anderen Konto übertragen} other {Dein Ort wurde einem anderen Konto übertragen}}",
+      "body": "{hasPlace, select, yes {Nach Prüfung von Eigentumsnachweisen hat das Abonten-Team {place} dem Konto übertragen, das den Betrieb führt. Wenn du das für einen Fehler hältst, schreib an {supportEmail}.} other {Nach Prüfung von Eigentumsnachweisen hat das Abonten-Team deinen Ort dem Konto übertragen, das den Betrieb führt. Wenn du das für einen Fehler hältst, schreib an {supportEmail}.}}"
+    },
     "promotion_credit_earned": {
       "body": "{amount} Promotion-Guthaben aus Events, die im {month} endeten. Nutze es, um ein Event oder einen Ort hervorzuheben.",
       "title": "Du hast Promotion-Guthaben verdient"

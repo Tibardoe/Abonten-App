@@ -97,7 +97,7 @@ Sie werden vertraulich gespeichert. Nur prüfende Personen bei Abonten können s
 
 ## Streitfälle
 
-Sagt jemand, dass ein Ort, den du verwaltest, ihm gehört, prüft das Abonten-Team die Nachweise beider Seiten, bevor sich etwas ändert, und kann dich nach deinen fragen. Dein Eintrag bleibt deiner und funktioniert während der Prüfung weiter. Ein Geschäft zu beanspruchen, das dir nicht gehört, oder Dokumente einzureichen, die nicht deine sind, verstößt gegen die AGB und kann zur Einschränkung des Kontos führen.
+Sagt jemand, dass ein Ort, den du verwaltest, ihm gehört, prüft das Abonten-Team die Nachweise beider Seiten, bevor sich etwas ändert, und kann dich nach deinen fragen. Dein Eintrag bleibt deiner und funktioniert während der Prüfung weiter. Entscheidet das Team, dass der Betrieb jemand anderem gehört, und überträgt es den Eintrag auf dessen Konto, wirst du sofort in der App informiert. Wenn du das für einen Fehler hältst, schreib an support@abontenhub.com. Ein Geschäft zu beanspruchen, das dir nicht gehört, oder Dokumente einzureichen, die nicht deine sind, verstößt gegen die AGB und kann zur Einschränkung des Kontos führen.
 
 ## Einträge eines Abonten-Außendienstteams
 

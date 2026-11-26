@@ -97,7 +97,7 @@ Se guardan de forma privada. Solo las personas de revisión de Abonten pueden ab
 
 ## Disputas
 
-Si alguien dice que un lugar que gestionas es suyo, el equipo de Abonten revisa las pruebas de ambas partes antes de cambiar nada, y puede contactarte para pedirte las tuyas. Tu ficha sigue siendo tuya y funcionando mientras tanto. Reclamar un negocio que no es tuyo, o enviar documentos que no son tuyos, incumple los Términos y puede llevar a restringir la cuenta.
+Si alguien dice que un lugar que gestionas es suyo, el equipo de Abonten revisa las pruebas de ambas partes antes de cambiar nada, y puede contactarte para pedirte las tuyas. Tu ficha sigue siendo tuya y funcionando mientras tanto. Si el equipo decide que el negocio es de otra persona y pasa la ficha a su cuenta, te avisamos en la app al momento. Si crees que es un error, escribe a support@abontenhub.com. Reclamar un negocio que no es tuyo, o enviar documentos que no son tuyos, incumple los Términos y puede llevar a restringir la cuenta.
 
 ## Fichas creadas por un equipo de campo de Abonten
 

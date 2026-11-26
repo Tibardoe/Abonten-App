@@ -97,7 +97,7 @@ They are stored privately. Only Abonten reviewers can open them, through links t
 
 ## Disputes
 
-If someone says a place you run is theirs, Abonten staff review both sides' evidence before anything changes, and may contact you to ask for yours. Your listing stays yours and keeps working while they review it. Claiming a business you do not own, or sending documents that are not yours, breaks the Terms and can lead to account restriction.
+If someone says a place you run is theirs, Abonten staff review both sides' evidence before anything changes, and may contact you to ask for yours. Your listing stays yours and keeps working while they review it. If staff decide the business is someone else's and move the listing to their account, you are told in the app at once. If you think that is a mistake, contact support@abontenhub.com. Claiming a business you do not own, or sending documents that are not yours, breaks the Terms and can lead to account restriction.
 
 ## Listings made by an Abonten field team
 

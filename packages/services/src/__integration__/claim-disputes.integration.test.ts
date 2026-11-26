@@ -1,7 +1,3 @@
-import type { AdminContext } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
-import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 //
 // Claiming a place someone runs is an ownership dispute (migration
@@ -18,13 +14,23 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 //     otherwise file dispute after dispute); a place nobody runs can be
 //     claimed again at once;
 //   * approving a dispute needs the place's name typed, and the audit
-//     entry records the dispute and the owner who lost the place.
+//     entry records the dispute and the owner who lost the place;
+//   * the account that lost the place gets one notice in its language
+//     (a team's Owners a copy each, queued for push), never naming the new
+//     owner; filing or rejecting a dispute tells the owner nothing, and an
+//     ordinary claim sends no notice to anyone new.
+import { localizeNotificationRow } from "@abonten/core/notifications/notices";
+import type { AdminContext } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   getClaimDetailCore,
   listClaimsCore,
   reviewClaimCore,
 } from "../admin/claims/claimsAdminCore";
+import { coreTFor } from "../i18n/requestLocale";
 import { createTeamCore } from "../teams/teamCore";
 import { resetTeamSettingsCache } from "../teams/teamProgram";
 import {
@@ -115,6 +121,27 @@ describe("ownership disputes on place claims", () => {
     });
     expect(error, error?.message).toBeNull();
     return data;
+  }
+
+  type NoticeRow = {
+    id: string;
+    type: string;
+    title: string;
+    body: string | null;
+    link: string | null;
+    data: unknown;
+  };
+
+  async function noticesOf(userId: string, type?: string) {
+    let query = service
+      .from("notification")
+      .select("id, type, title, body, link, data")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true });
+    if (type) query = query.eq("type", type);
+    const { data, error } = await query;
+    expect(error, error?.message).toBeNull();
+    return (data ?? []) as NoticeRow[];
   }
 
   async function backdate(claimId: string, ms: number) {
@@ -390,6 +417,9 @@ describe("ownership disputes on place claims", () => {
       .eq("id", first);
     const later = await fileAs(claimant, place);
     expect(later.error, later.error?.message).toBeNull();
+
+    // Disputes filed and turned down: the owner was told nothing.
+    expect(await noticesOf(owner.id)).toEqual([]);
   });
 
   it("lets a turned-down claimant claim a place nobody runs again at once", async () => {
@@ -405,9 +435,10 @@ describe("ownership disputes on place claims", () => {
     expect(again.error, again.error?.message).toBeNull();
   });
 
-  it("approves a dispute only with the place's name typed, and audits who lost it", async () => {
+  it("approves a dispute only with the place's name typed, tells who lost it, and audits that", async () => {
     const owner = await person();
     const claimant = await person();
+    await service.from("user_info").update({ locale: "fr" }).eq("id", owner.id);
     const place = await makePlace(owner.id, {
       claimed: true,
       name: "Chez Ama Osu",
@@ -458,10 +489,111 @@ describe("ownership disputes on place claims", () => {
       situation: "dispute",
       owner_id: owner.id,
     });
-    expect(audit?.after).toMatchObject({ dispute: true });
+    expect(audit?.after).toMatchObject({
+      dispute: true,
+      previous_owner_notified: true,
+    });
+
+    // The previous owner: one notice, in French, that never names the
+    // account the place went to.
+    const told = await noticesOf(owner.id);
+    expect(told.map((n) => n.type)).toEqual(["place_ownership_moved"]);
+    expect(told[0].title).toBe(
+      "Chez Ama Osu a été transféré à un autre compte",
+    );
+    expect(told[0].body).toContain("support@abontenhub.com");
+    expect(told[0].link).toMatch(/^\/places\//);
+    expect((told[0].data as { notice?: { id?: string } }).notice?.id).toBe(
+      "place_ownership_moved",
+    );
+    const { data: newOwner } = await service
+      .from("user_info")
+      .select("full_name, username")
+      .eq("id", claimant.id)
+      .single();
+    const words = `${told[0].title} ${told[0].body}`;
+    expect(words).not.toContain(newOwner?.full_name as string);
+    expect(words).not.toContain(newOwner?.username as string);
+
+    // The claimant's notices are what they were: the approval only.
+    expect((await noticesOf(claimant.id)).map((n) => n.type)).toEqual([
+      "place_claim_approved",
+    ]);
   });
 
-  it("approves an ordinary claim without the typed name", async () => {
+  it("tells a team's Owners, in their language, when a dispute moves the team's place", async () => {
+    await service
+      .from("team_program_setting")
+      .update({ enabled: true, audience: "all" })
+      .eq("id", 1);
+    resetTeamSettingsCache();
+    try {
+      const teamOwner = await person();
+      const door = await person();
+      await service
+        .from("user_info")
+        .update({ locale: "de" })
+        .eq("id", teamOwner.id);
+      const made = await createTeamCore(svc, teamOwner.id, {
+        adult: true,
+        name: "Moved Crew",
+        username: `cdm_${tag()}`,
+      });
+      if (made.status !== 200) throw new Error(made.message);
+      const teamId = made.data.id;
+      const { error: joinError } = await service.from("team_member").insert({
+        team_id: teamId,
+        user_id: door.id,
+        role: "door",
+        status: "active",
+        added_by: teamOwner.id,
+      });
+      expect(joinError, joinError?.message).toBeNull();
+      const place = await makePlace(teamId, {
+        claimed: true,
+        name: "Team Buka",
+      });
+      const claimant = await person();
+      const claimId = await file(claimant, place);
+
+      const ok = await reviewClaimCore(svc, ctx, {
+        claimId,
+        decision: "approve",
+        confirmPlaceName: "Team Buka",
+      });
+      expect(ok.status, ok.message).toBe(200);
+
+      // The team account is told once ...
+      expect(await noticesOf(teamId, "place_ownership_moved")).toHaveLength(1);
+      // ... and its Owner gets one copy, queued for push, which reads in
+      // the Owner's own language.
+      const copies = await noticesOf(teamOwner.id, "place_ownership_moved");
+      expect(copies).toHaveLength(1);
+      expect((copies[0].data as { team_id?: string }).team_id).toBe(teamId);
+      const inGerman = localizeNotificationRow(
+        { t: coreTFor("de"), locale: "de" },
+        copies[0],
+      );
+      expect(inGerman.title).toBe(
+        "Team Buka wurde einem anderen Konto übertragen",
+      );
+      const { data: deliveries } = await service
+        .from("notification_delivery")
+        .select("channel, source")
+        .eq("notification_id", copies[0].id);
+      expect(deliveries).toEqual([{ channel: "push", source: "app" }]);
+      // Door staff run nothing about the team's profile: no copy.
+      expect(await noticesOf(door.id, "place_ownership_moved")).toEqual([]);
+    } finally {
+      await service
+        .from("team_program_setting")
+        .update({ enabled: false })
+        .eq("id", 1);
+      resetTeamSettingsCache();
+    }
+  });
+
+  it("approves an ordinary claim without the typed name, and tells nobody new", async () => {
     const claimant = await person();
     const place = await makePlace(staff.id);
     const claimId = await file(claimant, place);
@@ -470,5 +602,31 @@ describe("ownership disputes on place claims", () => {
       decision: "approve",
     });
     expect(ok.status, ok.message).toBe(200);
+
+    // A place whose owner's account was deleted: nobody to tell either.
+    const gone = await person();
+    const orphaned = await makePlace(gone.id);
+    await service.from("user_info").update({ status_id: 4 }).eq("id", gone.id);
+    const other = await person();
+    const orphanClaim = await file(other, orphaned);
+    const ok2 = await reviewClaimCore(svc, ctx, {
+      claimId: orphanClaim,
+      decision: "approve",
+    });
+    expect(ok2.status, ok2.message).toBe(200);
+
+    expect(await noticesOf(staff.id, "place_ownership_moved")).toEqual([]);
+    expect(await noticesOf(gone.id)).toEqual([]);
+    expect((await noticesOf(claimant.id)).map((n) => n.type)).toEqual([
+      "place_claim_approved",
+    ]);
+    const { data: audit } = await service
+      .from("admin_audit_log")
+      .select("after")
+      .eq("target_type", "place_claim")
+      .eq("target_id", claimId)
+      .single();
+    expect(audit?.after).toMatchObject({ dispute: false });
+    expect(audit?.after).not.toHaveProperty("previous_owner_notified");
   });
 });

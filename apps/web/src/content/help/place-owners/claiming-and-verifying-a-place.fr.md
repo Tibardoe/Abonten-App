@@ -97,7 +97,7 @@ Ils sont conservés de façon privée. Seules les personnes chargées de l'exame
 
 ## Litiges
 
-Si quelqu'un affirme qu'un lieu que vous gérez lui appartient, l'équipe Abonten examine les justificatifs des deux parties avant tout changement, et peut vous contacter pour vous demander les vôtres. Votre fiche reste la vôtre et continue de fonctionner pendant l'examen. Revendiquer un établissement qui n'est pas le vôtre, ou envoyer des documents qui ne sont pas les vôtres, enfreint les Conditions et peut entraîner la restriction du compte.
+Si quelqu'un affirme qu'un lieu que vous gérez lui appartient, l'équipe Abonten examine les justificatifs des deux parties avant tout changement, et peut vous contacter pour vous demander les vôtres. Votre fiche reste la vôtre et continue de fonctionner pendant l'examen. Si l'équipe décide que l'établissement appartient à quelqu'un d'autre et transfère la fiche sur son compte, vous en êtes informé aussitôt dans l'application. Si vous pensez qu'il s'agit d'une erreur, écrivez à support@abontenhub.com. Revendiquer un établissement qui n'est pas le vôtre, ou envoyer des documents qui ne sont pas les vôtres, enfreint les Conditions et peut entraîner la restriction du compte.
 
 ## Fiches créées par une équipe de terrain Abonten
 

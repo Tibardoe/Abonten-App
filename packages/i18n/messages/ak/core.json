@@ -728,6 +728,10 @@
       "body": "{hasPlace, select, yes {Your request to claim {place} was rejected.} other {Your request to claim the place was rejected.}}",
       "title": "Your claim request was not approved"
     },
+    "place_ownership_moved": {
+      "title": "{hasPlace, select, yes {{place} was moved to another account} other {Your place was moved to another account}}",
+      "body": "{hasPlace, select, yes {After reviewing proof of ownership, Abonten staff moved {place} to the account that runs the business. If you think this is a mistake, contact {supportEmail}.} other {After reviewing proof of ownership, Abonten staff moved your place to the account that runs the business. If you think this is a mistake, contact {supportEmail}.}}"
+    },
     "promotion_credit_earned": {
       "body": "{amount} of promotion credit from events that ended in {month}. Use it to feature an event or place.",
       "title": "You earned promotion credit"

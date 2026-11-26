@@ -78,6 +78,25 @@ describe("renderNotice", () => {
     ).toBe("Honey Trap est reporté");
   });
 
+  it("tells the account that lost a place, without naming the new owner", () => {
+    const params = { place: "Buka", supportEmail: "support@abontenhub.com" };
+    expect(
+      renderNotice(i18nEn, { id: "place_ownership_moved", params }),
+    ).toEqual({
+      title: "Buka was moved to another account",
+      body: "After reviewing proof of ownership, Abonten staff moved Buka to the account that runs the business. If you think this is a mistake, contact support@abontenhub.com.",
+    });
+    expect(
+      renderNotice(i18nEn, {
+        id: "place_ownership_moved",
+        params: { place: null, supportEmail: "support@abontenhub.com" },
+      })?.title,
+    ).toBe("Your place was moved to another account");
+    const fr = renderNotice(i18nFr, { id: "place_ownership_moved", params });
+    expect(fr?.title).toBe("Buka a été transféré à un autre compte");
+    expect(fr?.body).toContain("support@abontenhub.com");
+  });
+
   it("words a missing name itself", () => {
     expect(
       renderNotice(i18nEn, {

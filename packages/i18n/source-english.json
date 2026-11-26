@@ -1765,6 +1765,8 @@
     "notices.place_claim_approved.body": "5ae00247",
     "notices.place_claim_rejected.title": "0947a3cc",
     "notices.place_claim_rejected.body": "53cb4689",
+    "notices.place_ownership_moved.title": "fb19bd38",
+    "notices.place_ownership_moved.body": "c5b47d28",
     "notices.review_reply_place.title": "8cc9c9ac",
     "notices.review_reply_place.body": "c74b8e47",
     "notices.review_reply_event.title": "854bc094",
