@@ -238,7 +238,10 @@ is true.
    or — online mode — opens the consent link `/consent/field/<token>` on
    their own phone. Their Abonten account is created/found right there and
    will own the listing. The link (HMAC-signed onboarding + phone) lasts a
-   day; a code lasts 5 minutes, so the page's **Send me a new code**
+   day; an owner's code lasts 30 minutes (sign-in codes 5: the owner is
+   often reached through someone else and the code is relayed by hand,
+   `pendingOtpTtlMs` in `profile/phoneOtpStore.ts`, and the text says
+   so), and the page's **Send me a new code**
    (`resendConsentCodeCore`) sends a fresh one to the link's phone only,
    under the usual per-number cooldown plus 5 an hour per onboarding, and
    only while the onboarding is a draft or needs changes.

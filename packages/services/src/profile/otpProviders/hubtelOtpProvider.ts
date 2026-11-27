@@ -42,8 +42,11 @@ function codeHash(requestId: string, code: string): string {
 }
 
 /** Plain ASCII keeps it one GSM-7 segment (an en dash or curly quote would double the price). */
-export function otpMessage(code: string): string {
-  const minutes = Math.round(PENDING_OTP_TTL_MS / 60_000);
+export function otpMessage(
+  code: string,
+  ttlMs: number = PENDING_OTP_TTL_MS,
+): string {
+  const minutes = Math.round(ttlMs / 60_000);
   return tr("yourAbontenCodeIsItExpires", { code: code, minutes: minutes });
 }
 
@@ -62,7 +65,7 @@ export const hubtelOtpProvider: OtpProvider = {
     return CODE_LENGTH;
   },
 
-  async send(phoneE164): Promise<OtpSendResult> {
+  async send(phoneE164, _countryCode, options): Promise<OtpSendResult> {
     if (!isHubtelSmsConfigured()) {
       logger.error("Hubtel SMS credentials or sender ID are not configured.");
       return {
@@ -83,7 +86,7 @@ export const hubtelOtpProvider: OtpProvider = {
     // way and is not retried here (a retry is a second paid message).
     const sent = await sendHubtelSms({
       toE164: phoneE164,
-      content: otpMessage(code),
+      content: otpMessage(code, options?.ttlMs),
       clientReference: requestId,
     });
     if (!sent.ok) {

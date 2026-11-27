@@ -197,4 +197,10 @@ describe("hubtelOtpProvider", () => {
     expect(message.length).toBeLessThanOrEqual(160);
     expect(/^[\x20-\x7E]+$/.test(message)).toBe(true);
   });
+
+  it("says how long a longer-lived code lasts (a business owner's consent code)", () => {
+    const message = otpMessage("012345", 30 * 60 * 1000);
+    expect(message).toContain("30 minutes");
+    expect(message.length).toBeLessThanOrEqual(160);
+  });
 });
