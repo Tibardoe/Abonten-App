@@ -286,6 +286,11 @@ describe("a typo in a dated search", () => {
   // One long word shared by both titles: it is most of the query, which is
   // what used to carry the June event into a December search.
   const WORD = `kpanlogo${TOKEN}`;
+  // The title that says the date word has a word of its own. With TOKEN, the
+  // run's other events (dated a few days ahead) answered the search in late
+  // November and December, and five answers leave no room for the typo
+  // fallback, so the test failed for a month a year.
+  const LITERAL = `rmb${TOKEN}`;
   let december: string;
   let june: string;
   let literal: string;
@@ -300,7 +305,7 @@ describe("a typo in a dated search", () => {
       startsAt: nextInMonth(6),
     });
     literal = await fixtures.makeEvent({
-      title: `${TOKEN} December To Remember`,
+      title: `${LITERAL} December To Remember`,
       startsAt: nextInMonth(7),
     });
   });
@@ -326,7 +331,7 @@ describe("a typo in a dated search", () => {
   });
 
   it("still finds a title that says the date word, typo elsewhere", async () => {
-    expect(await eventIdsFor(anon, `${TOKEN} remembr december`)).toContain(
+    expect(await eventIdsFor(anon, `${LITERAL} remembr december`)).toContain(
       literal,
     );
   });
