@@ -33,7 +33,16 @@ export interface OtpProvider {
   isConfigured(): boolean;
   /** Which env variables it needs — for readiness reports. */
   requiredEnv(): string[];
-  send(phoneE164: string, countryCode: string): Promise<OtpSendResult>;
+  /**
+   * `ttlMs`: how long the code will be accepted, for the wording of a text
+   * the provider writes itself (Hubtel). Providers that set their own
+   * lifetime (Twilio Verify) ignore it.
+   */
+  send(
+    phoneE164: string,
+    countryCode: string,
+    options?: { ttlMs?: number },
+  ): Promise<OtpSendResult>;
   verify(
     requestId: string,
     prefix: string,

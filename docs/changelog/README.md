@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-11-27 — A business owner's code lasts 30 minutes
+
+- The founder kept losing owners' consent codes to the 5-minute limit while relaying them through a manager on Instagram or WhatsApp. A Field Ops owner-consent code now lasts 30 minutes, and the text says so; sign-in, phone-change and mobile money codes stay at 5 minutes. Still one code at a time, five tries, and the same send limits. `pendingOtpTtlMs` in `packages/services/src/profile/phoneOtpStore.ts`. Docs: `architecture/field-ops.md`, `field-operations/onboarding-places.md` 1.2.
+
 ## 2026-11-26 — Share images: no "Reserve your spot" when there is nothing to reserve
 
 - The founder noticed BuzStopBoys' Clean Ghana Festival image said "Reserve your spot on Abonten" while volunteers register on BuzStopBoys' own website. A free event that takes no registrations on Abonten now keeps "Free entry" with the button "See it on Abonten", on its share images and in Abonten's own posts (captions and story stickers in Admin › Social). One rule, `eventShareAction` in `@abonten/core/shareKit/shareKit`. Docs: `architecture/share-kit.md` 1.2.

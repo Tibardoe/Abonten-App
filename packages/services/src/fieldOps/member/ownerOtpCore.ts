@@ -19,6 +19,7 @@ import {
   claimOtpSend,
   clearPendingOtp,
   getPendingOtp,
+  pendingOtpTtlMs,
   recordOtpSent,
   registerVerifyAttempt,
 } from "../../profile/phoneOtpStore";
@@ -139,7 +140,10 @@ async function sendOwnerCode(
     if (!route.ok) return { ok: false, status: 400, message: route.message };
     providerCode = route.provider.code;
     const provider = route.provider;
-    send = (p) => provider.send(p, route.countryCode);
+    send = (p) =>
+      provider.send(p, route.countryCode, {
+        ttlMs: pendingOtpTtlMs(OTP_PURPOSE),
+      });
   }
   // The same atomic claim as a sign-in code (cooldown across purposes,
   // per-number caps, the send log the country ceiling reads).

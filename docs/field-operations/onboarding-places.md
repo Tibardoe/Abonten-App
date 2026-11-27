@@ -4,8 +4,8 @@ purpose: The five-step onboarding wizard for a place, the owner-consent rules, e
 audience: Field members
 scope: /field/onboard/[id]
 status: Approved
-version: 1.1
-lastReviewed: 2026-11-18
+version: 1.2
+lastReviewed: 2026-11-27
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -27,7 +27,7 @@ Name, category, the exact **location pin**, the business phone (type it the norm
 The owner must prove consent with **their own phone**:
 
 - **In person (offline):** enter the owner's number → a code goes to **their** phone via SMS → they type it into your screen. The number may not be yours or any team member's (refused outright), and codes are limited: 20 per hour per member, a 60-second cooldown per phone, 5 attempts, 5-minute validity.
-- **Remotely (online):** send them the **consent link** (`/consent/field/…`, valid for a day) to open on their own phone; the page asks for the code and shows what they are agreeing to, with a link to the Terms. Always offer both ways: "open this link and enter the code yourself, or reply with the code and I'll enter it" (some owners would rather not pass a code on). A code only lasts 5 minutes, so the page has **Send me a new code**: an owner who opens the link later gets a fresh code to the same phone (60-second cooldown per phone, 5 an hour per onboarding) without coming back to you.
+- **Remotely (online):** send them the **consent link** (`/consent/field/…`, valid for a day) to open on their own phone; the page asks for the code and shows what they are agreeing to, with a link to the Terms. Always offer both ways: "open this link and enter the code yourself, or reply with the code and I'll enter it" (some owners would rather not pass a code on). A code lasts 30 minutes (since 27 Nov 2026; it was 5), and the page has **Send me a new code**: an owner who opens the link later gets a fresh code to the same phone (60-second cooldown per phone, 5 an hour per onboarding) without coming back to you.
 
 When the code is verified, an Abonten account exists for that phone (with no session — the owner signs in later with the same number), and the onboarding is pinned to that owner. Owner ≠ member and owner ∉ team are enforced by the database.
 

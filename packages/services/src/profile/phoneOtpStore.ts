@@ -38,6 +38,21 @@ export type PendingOtp = {
 
 /** How long a code is good for (also the wording of the text message). */
 export const PENDING_OTP_TTL_MS = 5 * 60 * 1000;
+/**
+ * A business owner's consent code in a Field Ops onboarding lasts longer:
+ * the owner is often reached through someone else (a manager on Instagram,
+ * a colleague on WhatsApp) and the code is relayed by hand, which took more
+ * than five minutes every time (founder, 27 Nov 2026). Still one code at a
+ * time, five tries, and the same send limits.
+ */
+export const OWNER_CONSENT_OTP_TTL_MS = 30 * 60 * 1000;
+
+/** How long a pending code of this purpose stays good. */
+export function pendingOtpTtlMs(purpose: PhoneOtpPurpose): number {
+  return purpose === "fieldops-owner"
+    ? OWNER_CONSENT_OTP_TTL_MS
+    : PENDING_OTP_TTL_MS;
+}
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 const MAX_VERIFY_ATTEMPTS = 5;
 // Text-message codes per number and per caller address. Checked and
@@ -170,7 +185,7 @@ export async function getPendingOtp(
 
   const createdAt = new Date(data.created_at).getTime();
 
-  if (Date.now() - createdAt > PENDING_OTP_TTL_MS) {
+  if (Date.now() - createdAt > pendingOtpTtlMs(purpose)) {
     await clearPendingOtp(purpose, phoneE164);
     return null;
   }
